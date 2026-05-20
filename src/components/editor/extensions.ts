@@ -6,6 +6,7 @@ import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import { Callout } from './callout-extension';
+import { SlashCommand } from './slash-extension';
 
 const lowlight = createLowlight(common);
 
@@ -19,6 +20,7 @@ export function baseExtensions() {
     TaskList,
     TaskItem.configure({ nested: true }),
     Callout,
+    SlashCommand,
     Placeholder.configure({
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') return 'Heading';

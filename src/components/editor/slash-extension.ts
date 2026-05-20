@@ -1,0 +1,128 @@
+import { Extension } from '@tiptap/core';
+import { ReactRenderer } from '@tiptap/react';
+import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
+import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
+import { type SlashItem, SlashMenu, type SlashMenuRef } from './slash-menu';
+
+const items: SlashItem[] = [
+  {
+    title: 'Heading 1',
+    description: 'Large section header',
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+  },
+  {
+    title: 'Heading 2',
+    description: 'Medium section header',
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+  },
+  {
+    title: 'Heading 3',
+    description: 'Small section header',
+    command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+  },
+  {
+    title: 'Bullet list',
+    description: 'Simple bulleted list',
+    command: (editor) => editor.chain().focus().toggleBulletList().run(),
+  },
+  {
+    title: 'Numbered list',
+    description: 'Ordered list',
+    command: (editor) => editor.chain().focus().toggleOrderedList().run(),
+  },
+  {
+    title: 'Task list',
+    description: 'Checkbox list',
+    command: (editor) => editor.chain().focus().toggleTaskList().run(),
+  },
+  {
+    title: 'Quote',
+    description: 'Block quote',
+    command: (editor) => editor.chain().focus().toggleBlockquote().run(),
+  },
+  {
+    title: 'Code',
+    description: 'Code block with syntax highlight',
+    command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+  },
+  {
+    title: 'Divider',
+    description: 'Horizontal rule',
+    command: (editor) => editor.chain().focus().setHorizontalRule().run(),
+  },
+  {
+    title: 'Callout',
+    description: 'Highlighted aside',
+    command: (editor) => editor.chain().focus().setCallout('default').run(),
+  },
+];
+
+export const SlashCommand = Extension.create({
+  name: 'slashCommand',
+
+  addOptions(): { suggestion: Partial<SuggestionOptions<SlashItem, SlashItem>> } {
+    return {
+      suggestion: {
+        char: '/',
+        startOfLine: false,
+        command: ({ editor, range, props }) => {
+          editor.chain().focus().deleteRange(range).run();
+          props.command(editor);
+        },
+        items: ({ query }) =>
+          items.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())).slice(0, 10),
+        render: () => {
+          let component: ReactRenderer<
+            SlashMenuRef,
+            { items: SlashItem[]; command: (i: SlashItem) => void }
+          >;
+          let popup: Instance<TippyProps>;
+          return {
+            onStart: (props) => {
+              component = new ReactRenderer(SlashMenu, {
+                props: { items: props.items, command: (i: SlashItem) => props.command(i) },
+                editor: props.editor,
+              });
+              popup = tippy(document.body, {
+                getReferenceClientRect: props.clientRect as () => DOMRect,
+                appendTo: () => document.body,
+                content: component.element,
+                showOnCreate: true,
+                interactive: true,
+                trigger: 'manual',
+                placement: 'bottom-start',
+              });
+            },
+            onUpdate: (props) => {
+              component.updateProps({
+                items: props.items,
+                command: (i: SlashItem) => props.command(i),
+              });
+              popup.setProps({ getReferenceClientRect: props.clientRect as () => DOMRect });
+            },
+            onKeyDown: (props) => {
+              if (props.event.key === 'Escape') {
+                popup.hide();
+                return true;
+              }
+              return component.ref?.onKeyDown(props.event) ?? false;
+            },
+            onExit: () => {
+              popup.destroy();
+              component.destroy();
+            },
+          };
+        },
+      },
+    };
+  },
+
+  addProseMirrorPlugins() {
+    return [
+      Suggestion({
+        editor: this.editor,
+        ...this.options.suggestion,
+      } as SuggestionOptions<SlashItem, SlashItem>),
+    ];
+  },
+});

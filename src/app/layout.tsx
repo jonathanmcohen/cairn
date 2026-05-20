@@ -1,6 +1,7 @@
 import { AuthSessionProvider } from '@/components/session-provider';
 import { ThemeProvider } from '@/components/theme-provider';
 import type { ReactNode } from 'react';
+import 'tippy.js/dist/tippy.css';
 import './globals.css';
 
 export const metadata = {
