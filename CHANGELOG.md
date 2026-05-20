@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (Plan 3 — Search & trash)
+- Postgres full-text search with `pg_trgm` trigram fallback for typo-tolerant title matching.
+- `searchPages` helper returning snippets (`ts_headline`) and breadcrumbs.
+- `GET /api/search` route (viewer+, workspace-scoped).
+- ⌘K command palette with debounced query, arrow nav, breadcrumb path display.
+- Trash bin: `listTrash`, `restorePage` (cascade-aware via `deleted_root`), `hardDeletePage`.
+- Trash API: `GET /api/trash`, `POST /api/pages/[pageId]/restore`, `DELETE /api/trash/[pageId]`.
+- `/trash` route with Restore + Delete-forever actions.
+- `autoPurge` with `pg_try_advisory_xact_lock` and 1-hour throttle; fired opportunistically from trash and pages routes.
+- `system_meta` key/value table for cross-process flags (currently: `last_purge_at`).
+
 ### Added (Plan 2 — Pages & block editor)
 - Pages table with FTS columns/trigger and self-referential parent.
 - Page CRUD APIs (create, read, update, soft-delete, move) with role gates and workspace scoping.
