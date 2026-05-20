@@ -1,3 +1,7 @@
+// TODO(plan-6): Floating drag handle UI.
+// Slash menu (`/`) covers block insertion; per-block actions (move, duplicate,
+// delete) can be added later via a hover-positioned handle without modifying
+// the extension list below.
 import CharacterCount from '@tiptap/extension-character-count';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Placeholder from '@tiptap/extension-placeholder';
