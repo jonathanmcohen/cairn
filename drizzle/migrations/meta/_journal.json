@@ -15,6 +15,13 @@
       "when": 1779298135259,
       "tag": "0001_sticky_thunderbolt_ross",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1779298324815,
+      "tag": "0002_sudden_ravenous",
+      "breakpoints": true
     }
   ]
 }
