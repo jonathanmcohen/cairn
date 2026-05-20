@@ -5,7 +5,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-### Added
+### Added (Plan 2 — Pages & block editor)
+- Pages table with FTS columns/trigger and self-referential parent.
+- Page CRUD APIs (create, read, update, soft-delete, move) with role gates and workspace scoping.
+- Cycle detection on page move; cascade soft-delete with `deleted_root` flag.
+- Recursive sidebar page tree (server-rendered) with new-page button.
+- Empty-state CTA on the dashboard.
+- Page route with inline title rename and emoji icon picker.
+- TipTap editor (paragraph, H1/H2/H3, bullet/numbered/task lists, blockquote, code with syntax highlight, callout in 4 colors, divider).
+- Slash command menu for block insertion.
+- Debounced autosave (800 ms) with optimistic UI and stale-write conflict notice.
+- ⌘N keyboard shortcut to create a new page.
+- React `cache()` wrap on `getAuthContext` to dedupe per-request DB hits.
+- Fixed Next.js `typedRoutes` deprecation.
+
+### Added (Plan 1 — Foundation)
 - Multi-tenant workspace model with email/password authentication.
 - First-user bootstrap (creates workspace, becomes owner) and invite-token signup for subsequent users.
 - Roles: owner, admin, editor, viewer (enforced via `requireRole` helper).
