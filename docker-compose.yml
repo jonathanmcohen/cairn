@@ -1,0 +1,38 @@
+services:
+  cairn:
+    build: .
+    image: cairn:dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://cairn:${DB_PASSWORD}@db:5432/cairn
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${PUBLIC_URL}
+      CAIRN_MAX_UPLOAD_MB: 25
+      CAIRN_TRASH_RETENTION_DAYS: 30
+      CAIRN_LOG_LEVEL: info
+    volumes:
+      - cairn_uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: cairn
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: cairn
+    volumes:
+      - cairn_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cairn -d cairn"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  cairn_uploads:
+  cairn_db:
