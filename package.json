@@ -27,6 +27,7 @@
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@tiptap/core": "^2.10.0",
     "@tiptap/extension-character-count": "^2.10.0",
     "@tiptap/extension-code-block-lowlight": "^2.10.0",
     "@tiptap/extension-placeholder": "^2.10.0",

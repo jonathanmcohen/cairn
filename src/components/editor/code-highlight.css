@@ -37,3 +37,32 @@ pre code.hljs {
   border-radius: 0.5rem;
   font-size: 0.875rem;
 }
+
+.callout {
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  border-left: 3px solid hsl(var(--border));
+  background: hsl(var(--muted));
+  margin: 0.5rem 0;
+}
+.callout-blue {
+  background: rgb(219 234 254 / 0.6);
+  border-left-color: rgb(59 130 246);
+}
+.callout-green {
+  background: rgb(220 252 231 / 0.6);
+  border-left-color: rgb(34 197 94);
+}
+.callout-amber {
+  background: rgb(254 243 199 / 0.6);
+  border-left-color: rgb(245 158 11);
+}
+.dark .callout-blue {
+  background: rgb(30 58 138 / 0.4);
+}
+.dark .callout-green {
+  background: rgb(20 83 45 / 0.4);
+}
+.dark .callout-amber {
+  background: rgb(120 53 15 / 0.4);
+}

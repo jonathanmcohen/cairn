@@ -5,6 +5,7 @@ import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
+import { Callout } from './callout-extension';
 
 const lowlight = createLowlight(common);
 
@@ -17,6 +18,7 @@ export function baseExtensions() {
     CodeBlockLowlight.configure({ lowlight }),
     TaskList,
     TaskItem.configure({ nested: true }),
+    Callout,
     Placeholder.configure({
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') return 'Heading';
