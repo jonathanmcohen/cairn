@@ -1,6 +1,7 @@
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { eq } from 'drizzle-orm';
+import { cache } from 'react';
 
 export type MemberRole = schema.MemberRole;
 
@@ -16,7 +17,7 @@ export type AuthContext = {
   role: MemberRole;
 };
 
-export async function getAuthContext(): Promise<AuthContext | null> {
+export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const { auth } = await import('./config');
   const session = await auth();
   if (!session?.user?.id) return null;
@@ -28,7 +29,7 @@ export async function getAuthContext(): Promise<AuthContext | null> {
     .limit(1);
   if (!m) return null;
   return { userId: session.user.id, workspaceId: m.workspaceId, role: m.role };
-}
+});
 
 export async function requireRole(required: MemberRole): Promise<AuthContext> {
   const ctx = await getAuthContext();
