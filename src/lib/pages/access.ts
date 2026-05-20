@@ -7,7 +7,7 @@ import {
   getAuthContext,
   hasMinRole,
 } from '@/lib/auth/require-role';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 
 export type PageAccess = {
   page: schema.Page;
@@ -19,7 +19,11 @@ export async function requirePageAccess(pageId: string, required: MemberRole): P
   if (!ctx) throw new HttpError(401, 'Not authenticated');
 
   const db = getDb();
-  const [page] = await db.select().from(schema.pages).where(eq(schema.pages.id, pageId)).limit(1);
+  const [page] = await db
+    .select()
+    .from(schema.pages)
+    .where(and(eq(schema.pages.id, pageId), isNull(schema.pages.deletedAt)))
+    .limit(1);
   if (!page) throw new HttpError(404, 'Page not found');
   if (page.workspaceId !== ctx.workspaceId) {
     // Same status as not-found to avoid leaking page existence across workspaces.
