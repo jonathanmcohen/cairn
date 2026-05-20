@@ -54,3 +54,33 @@ describe('workspaces / users / workspace_members', () => {
     ).rejects.toThrow();
   });
 });
+
+describe('invite_tokens', () => {
+  it('creates and consumes an invite token', async () => {
+    const [ws] = await db
+      .insert(schema.workspaces)
+      .values({ name: 'Beta', slug: 'beta' })
+      .returning();
+    if (!ws) throw new Error('workspace insert returned no rows');
+    const [t] = await db
+      .insert(schema.inviteTokens)
+      .values({
+        workspaceId: ws.id,
+        email: 'invitee@example.com',
+        role: 'editor',
+        token: 'tok_test_123',
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      })
+      .returning();
+    if (!t) throw new Error('invite token insert returned no rows');
+    expect(t.usedAt).toBeNull();
+
+    const [updated] = await db
+      .update(schema.inviteTokens)
+      .set({ usedAt: new Date() })
+      .where(eq(schema.inviteTokens.id, t.id))
+      .returning();
+    if (!updated) throw new Error('invite token update returned no rows');
+    expect(updated.usedAt).not.toBeNull();
+  });
+});

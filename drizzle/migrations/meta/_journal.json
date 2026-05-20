@@ -8,6 +8,13 @@
       "when": 1779297864914,
       "tag": "0000_pink_the_spike",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779298135259,
+      "tag": "0001_sticky_thunderbolt_ross",
+      "breakpoints": true
     }
   ]
 }
