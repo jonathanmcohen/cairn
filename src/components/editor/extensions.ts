@@ -1,15 +1,20 @@
 import CharacterCount from '@tiptap/extension-character-count';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Placeholder from '@tiptap/extension-placeholder';
 import TaskItem from '@tiptap/extension-task-item';
 import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
+import { common, createLowlight } from 'lowlight';
+
+const lowlight = createLowlight(common);
 
 export function baseExtensions() {
   return [
     StarterKit.configure({
-      codeBlock: false, // replaced by lowlight in Task 20
+      codeBlock: false,
       heading: { levels: [1, 2, 3] },
     }),
+    CodeBlockLowlight.configure({ lowlight }),
     TaskList,
     TaskItem.configure({ nested: true }),
     Placeholder.configure({

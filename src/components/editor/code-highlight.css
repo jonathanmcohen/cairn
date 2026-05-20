@@ -1,0 +1,39 @@
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in {
+  color: hsl(var(--primary));
+  font-weight: 600;
+}
+
+.hljs-string,
+.hljs-attr,
+.hljs-symbol,
+.hljs-bullet {
+  color: hsl(var(--accent-foreground));
+}
+
+.hljs-comment,
+.hljs-quote {
+  color: hsl(var(--muted-foreground));
+  font-style: italic;
+}
+
+.hljs-number,
+.hljs-literal {
+  color: hsl(var(--destructive));
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-name {
+  color: hsl(var(--primary));
+}
+
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 0.75em;
+  background: hsl(var(--muted));
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+}
