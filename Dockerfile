@@ -1,0 +1,55 @@
+# syntax=docker/dockerfile:1.7
+ARG NODE_VERSION=22-alpine
+
+FROM node:${NODE_VERSION} AS base
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+FROM base AS builder
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ENV NEXT_TELEMETRY_DISABLED=1
+# Build-time placeholder env vars so the Next.js page-data collection passes
+# env validation. These are NOT baked into the runtime image; they are
+# overridden by real values when the container starts.
+ENV DATABASE_URL=postgres://build:build@localhost:5432/build
+ENV AUTH_SECRET=build-only-placeholder-secret-32chars
+ENV NEXTAUTH_URL=http://localhost:3000
+RUN pnpm build
+
+FROM node:${NODE_VERSION} AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+RUN addgroup -g 1001 -S cairn && adduser -u 1001 -S cairn -G cairn
+
+# Standalone bundle from Next.js
+COPY --from=builder --chown=cairn:cairn /app/.next/standalone ./
+COPY --from=builder --chown=cairn:cairn /app/.next/static ./.next/static
+COPY --from=builder --chown=cairn:cairn /app/public ./public
+
+# Drizzle migration files + transpiled entrypoint + minimal deps
+COPY --from=builder --chown=cairn:cairn /app/drizzle ./drizzle
+COPY --from=builder --chown=cairn:cairn /app/dist ./dist
+COPY --from=deps --chown=cairn:cairn /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
+COPY --from=deps --chown=cairn:cairn /app/node_modules/postgres ./node_modules/postgres
+COPY --from=deps --chown=cairn:cairn /app/node_modules/dotenv ./node_modules/dotenv
+
+RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
+VOLUME ["/data/uploads"]
+
+USER cairn
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD wget -qO- http://127.0.0.1:3000/api/health || exit 1
+
+CMD ["node", "dist/server/entrypoint.js"]

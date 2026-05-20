@@ -1,0 +1,24 @@
+import { runMigrations } from '../db/migrate.js';
+
+async function main() {
+  const url = process.env.DATABASE_URL;
+  if (!url) {
+    console.error('DATABASE_URL is required');
+    process.exit(1);
+  }
+  // biome-ignore lint/suspicious/noConsoleLog: cli startup
+  console.log('Running migrations...');
+  await runMigrations(url);
+  // biome-ignore lint/suspicious/noConsoleLog: cli startup
+  console.log('Migrations complete.');
+
+  // Hand off to the standalone Next.js server (lives at /app/server.js in the runner image).
+  // Path is resolved at runtime from /app/dist/server/entrypoint.js → /app/server.js.
+  const standaloneServer = '../../server.js';
+  await import(standaloneServer);
+}
+
+main().catch((err) => {
+  console.error('Startup failed:', err);
+  process.exit(1);
+});

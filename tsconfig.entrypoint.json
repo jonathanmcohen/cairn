@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "incremental": false,
+    "outDir": "dist",
+    "module": "ESNext",
+    "moduleResolution": "node",
+    "rootDir": "src"
+  },
+  "include": ["src/server/**/*", "src/db/**/*", "src/lib/env.ts"],
+  "exclude": ["node_modules", ".next", "tests"]
+}
