@@ -27,6 +27,7 @@ export const pages = pgTable(
     parentId: uuid('parent_id'),
     title: text('title').notNull().default('Untitled'),
     icon: text('icon'),
+    coverUrl: text('cover_url'),
     content: jsonb('content')
       .$type<unknown>()
       .notNull()
