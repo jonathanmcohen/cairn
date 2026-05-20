@@ -1,6 +1,7 @@
 import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { createPage } from '@/lib/pages/create';
+import { maybePurge } from '@/lib/pages/maybe-purge';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 
@@ -12,6 +13,7 @@ const CreateInput = z.object({
 
 export async function POST(req: Request): Promise<Response> {
   try {
+    maybePurge();
     const ctx = await requireRole('editor');
     const parsed = CreateInput.parse(await req.json().catch(() => ({})));
     const page = await createPage(getDb(), {
