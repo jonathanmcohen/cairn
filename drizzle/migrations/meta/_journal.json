@@ -22,6 +22,13 @@
       "when": 1779298324815,
       "tag": "0002_sudden_ravenous",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1779311188617,
+      "tag": "0003_fine_odin",
+      "breakpoints": true
     }
   ]
 }
