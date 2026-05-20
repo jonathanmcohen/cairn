@@ -1,0 +1,20 @@
+import { getDb } from '@/db/client';
+import { HttpError, requireRole } from '@/lib/auth/require-role';
+import { listTrash } from '@/lib/pages/trash';
+import { NextResponse } from 'next/server';
+
+export async function GET(): Promise<Response> {
+  try {
+    const ctx = await requireRole('viewer');
+    const entries = await listTrash(getDb(), ctx.workspaceId);
+    return NextResponse.json({ entries });
+  } catch (err) {
+    if (err instanceof HttpError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'unknown' },
+      { status: 500 },
+    );
+  }
+}
