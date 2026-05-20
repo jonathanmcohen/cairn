@@ -71,3 +71,30 @@ export async function restorePage(
     `);
   });
 }
+
+export type HardDeleteInput = {
+  pageId: string;
+  workspaceId: string;
+};
+
+export async function hardDeletePage(
+  db: PostgresJsDatabase<typeof schema>,
+  input: HardDeleteInput,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const found = (await tx.execute(rawSql`
+      SELECT id FROM pages
+      WHERE id = ${input.pageId}
+        AND workspace_id = ${input.workspaceId}
+        AND deleted_at IS NOT NULL
+        AND deleted_root = true
+      LIMIT 1
+    `)) as unknown as { id: string }[];
+    if (found.length === 0) throw new Error('Page not in trash');
+
+    await tx.execute(rawSql`
+      DELETE FROM pages WHERE id = ${input.pageId}
+    `);
+    // pages.parent_id FK has ON DELETE CASCADE; descendants removed automatically.
+  });
+}
