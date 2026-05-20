@@ -1,4 +1,6 @@
 import { Editor } from '@/components/editor/editor';
+import { PageIconPicker } from '@/components/page-icon-picker';
+import { PageTitleInput } from '@/components/page-title-input';
 import type * as schema from '@/db/schema';
 import { HttpError } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
@@ -17,8 +19,8 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-6 flex items-center gap-3">
-        <span className="text-3xl">{page.icon ?? '📄'}</span>
-        <h1 className="text-3xl font-semibold">{page.title}</h1>
+        <PageIconPicker pageId={page.id} initial={page.icon} />
+        <PageTitleInput pageId={page.id} initial={page.title} />
       </div>
       <Editor
         pageId={page.id}
