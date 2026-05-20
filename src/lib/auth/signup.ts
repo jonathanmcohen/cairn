@@ -4,17 +4,13 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import { hashPassword } from './password';
 
-export const SignupInput = z
-  .object({
-    email: z.string().email(),
-    password: z.string().min(12),
-    name: z.string().min(1),
-    workspaceName: z.string().min(1).optional(),
-    inviteToken: z.string().optional(),
-  })
-  .refine((v) => v.workspaceName || v.inviteToken, {
-    message: 'workspaceName or inviteToken required',
-  });
+export const SignupInput = z.object({
+  email: z.string().email(),
+  password: z.string().min(12),
+  name: z.string().min(1),
+  workspaceName: z.string().min(1).optional(),
+  inviteToken: z.string().optional(),
+});
 
 export type SignupInputT = z.infer<typeof SignupInput>;
 
