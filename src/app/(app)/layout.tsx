@@ -1,4 +1,5 @@
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
+import { SearchPalette } from '@/components/search-palette';
 import { Sidebar } from '@/components/sidebar';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { redirect } from 'next/navigation';
@@ -10,6 +11,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen">
       <KeyboardShortcuts />
+      <SearchPalette />
       <Sidebar workspaceId={ctx.workspaceId} />
       <main className="flex-1 p-8">{children}</main>
     </div>
