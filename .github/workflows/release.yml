@@ -54,6 +54,9 @@ jobs:
             type=raw,value=${{ steps.ver.outputs.major }}
             type=raw,value=latest,enable=${{ !contains(steps.ver.outputs.version, '-') }}
 
+      # SLSA provenance + SBOM attestation require the GitHub attestations API,
+      # which is unavailable for user-owned PRIVATE repos. Gate all supply-chain
+      # metadata on the repo being public so a private repo still builds + publishes.
       - name: Build and push
         id: build
         uses: docker/build-push-action@v6
@@ -63,12 +66,13 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          provenance: true
-          sbom: true
+          provenance: ${{ github.event.repository.visibility == 'public' }}
+          sbom: ${{ github.event.repository.visibility == 'public' }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Attest
+        if: ${{ github.event.repository.visibility == 'public' }}
         uses: actions/attest-build-provenance@v2
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/cairn
