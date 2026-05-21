@@ -67,7 +67,7 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-[50vh]',
+        class: 'prose dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
       },
       handleDrop(_view, event, _slice, moved) {
         if (moved) return false;

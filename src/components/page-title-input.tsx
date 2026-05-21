@@ -30,7 +30,7 @@ export function PageTitleInput({ pageId, initial }: PageTitleInputProps) {
       onKeyDown={(e) => {
         if (e.key === 'Enter') e.currentTarget.blur();
       }}
-      className="w-full bg-transparent text-3xl font-semibold outline-none focus:ring-0"
+      className="w-full bg-transparent text-3xl font-semibold outline-hidden focus:ring-0"
       placeholder="Untitled"
     />
   );

@@ -68,7 +68,7 @@ export function WorkspaceSwitcher({
             key={w.id}
             type="button"
             onClick={() => void switchTo(w.id)}
-            className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+            className="flex w-full items-center rounded-xs px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
           >
             <Check className={`mr-2 h-4 w-4 ${w.id === activeId ? 'opacity-100' : 'opacity-0'}`} />
             <span className="truncate">{w.name}</span>
@@ -78,7 +78,7 @@ export function WorkspaceSwitcher({
         <button
           type="button"
           onClick={() => void createWorkspace()}
-          className="flex w-full items-center rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
+          className="flex w-full items-center rounded-xs px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground"
         >
           <Plus className="mr-2 h-4 w-4" />
           Create workspace

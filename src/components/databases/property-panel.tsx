@@ -54,12 +54,12 @@ export function PropertyPanel({
         placeholder="Property name"
         value={name}
         onChange={(e) => setName(e.target.value)}
-        className="rounded border bg-transparent px-2 py-1 text-sm outline-none"
+        className="rounded border bg-transparent px-2 py-1 text-sm outline-hidden"
       />
       <select
         value={type}
         onChange={(e) => setType(e.target.value as (typeof TYPES)[number])}
-        className="rounded border bg-transparent px-2 py-1 text-sm outline-none"
+        className="rounded border bg-transparent px-2 py-1 text-sm outline-hidden"
       >
         {TYPES.map((t) => (
           <option key={t} value={t}>

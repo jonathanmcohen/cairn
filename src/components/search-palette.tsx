@@ -82,7 +82,7 @@ export function SearchPalette() {
           value={query}
           onValueChange={setQuery}
           placeholder="Search pages…"
-          className="w-full bg-transparent px-4 py-3 text-sm outline-none placeholder:text-muted-foreground"
+          className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         <Command.List className="max-h-80 overflow-y-auto border-t">
           {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}

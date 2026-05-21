@@ -22,7 +22,7 @@ export function GalleryView({ meta, rows }: ViewProps) {
       {rows.map((r) => {
         const title = titleProp ? renderValue(r.cells[titleProp.id]) : '';
         return (
-          <div key={r.row.id} className="rounded-md border bg-background p-3 shadow-sm">
+          <div key={r.row.id} className="rounded-md border bg-background p-3 shadow-xs">
             <div className="mb-2 font-medium">{title || 'Untitled'}</div>
             <dl className="space-y-1">
               {otherProps.map((p) => {

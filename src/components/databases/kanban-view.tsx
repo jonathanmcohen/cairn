@@ -69,7 +69,7 @@ export function KanbanView({ databaseId, meta, rows, view, onChange }: ViewProps
                   key={r.row.id}
                   draggable
                   onDragStart={() => setDragRowId(r.row.id)}
-                  className="cursor-grab rounded border bg-background p-2 text-sm shadow-sm"
+                  className="cursor-grab rounded border bg-background p-2 text-sm shadow-xs"
                 >
                   {cardTitle(r.cells)}
                 </div>

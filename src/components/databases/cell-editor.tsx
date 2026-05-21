@@ -42,7 +42,7 @@ export function CellEditor({
       return (
         <input
           type="number"
-          className="w-full bg-transparent outline-none"
+          className="w-full bg-transparent outline-hidden"
           defaultValue={local === null || local === undefined ? '' : String(local)}
           onBlur={(e) => void save(e.target.value === '' ? null : Number(e.target.value))}
         />
@@ -51,7 +51,7 @@ export function CellEditor({
       return (
         <input
           type="date"
-          className="w-full bg-transparent outline-none"
+          className="w-full bg-transparent outline-hidden"
           defaultValue={typeof local === 'string' ? local.slice(0, 10) : ''}
           onBlur={(e) => void save(e.target.value || null)}
         />
@@ -61,7 +61,7 @@ export function CellEditor({
         (property.config as { options?: { id: string; name: string }[] })?.options ?? [];
       return (
         <select
-          className="w-full bg-transparent outline-none"
+          className="w-full bg-transparent outline-hidden"
           value={typeof local === 'string' ? local : ''}
           onChange={(e) => void save(e.target.value || null)}
         >
@@ -79,7 +79,7 @@ export function CellEditor({
       return (
         <input
           type="text"
-          className="w-full bg-transparent outline-none"
+          className="w-full bg-transparent outline-hidden"
           defaultValue={
             Array.isArray(local)
               ? local.join(', ')

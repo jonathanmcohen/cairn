@@ -16,7 +16,7 @@ export function ReadOnlyView({ content }: { content: unknown }) {
     immediatelyRender: false,
     editorProps: {
       attributes: {
-        class: 'prose dark:prose-invert max-w-none focus:outline-none',
+        class: 'prose dark:prose-invert max-w-none focus:outline-hidden',
       },
     },
   });
