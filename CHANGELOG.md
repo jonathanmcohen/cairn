@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (Plan 5 — Databases)
+- 5 new tables (`databases`, `db_properties`, `db_rows`, `db_cells`, `db_views`) + property/view type enums.
+- Server helpers: create/get database, property CRUD with type-specific config validation, row+cell CRUD with type coercion, view CRUD.
+- Filter compilation (AND of conditions, 8 ops across 7 property types) and multi-column sort compilation.
+- API under `/api/databases/...` for databases, properties, rows (filter/sort query), and views.
+- TipTap `database` node inserted via slash menu, rendered as a React node view.
+- Table view (inline cell editing), kanban view (drag-to-reclassify), gallery view (cards).
+- View switcher with add-view, property panel with add-property.
+
 ### Added (Plan 4 — Files & markdown)
 - `files` table, `pages.cover_url` column, signed file URL helpers.
 - `POST /api/upload` (role+size+mime gated) and `GET /api/files/[id]?sig=&exp=` (HMAC-streamed).
