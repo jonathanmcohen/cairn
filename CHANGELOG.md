@@ -21,6 +21,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Sidebar workspace switcher (switch / create / invite) and an `/invite/[token]` landing page.
 - "No workspace" empty state for a logged-in user with no memberships, instead of redirecting to login.
 
+### Added (v0.2.0 Plan 3 — Public sharing)
+- Publish/unpublish a page to an anonymous, link-only read-only surface at `/p/<slug>` (editor+). `public_slug` is minted as `<slugified-title>-<6 hex>` on first publish, stays stable across re-publishes, and is retained when unpublished.
+- `POST /api/pages/[id]/publish` (returns `{ slug, url }`) and `POST /api/pages/[id]/unpublish`.
+- `/p/<slug>` server-renders read-only TipTap (`editable: false`, same extension set); resolves only `published = true AND deleted_at IS NULL`; emits `<meta name="robots" content="noindex">`.
+- Embedded images/files on public pages are re-signed server-side at render time (fresh 1-hour HMAC `/api/files/<id>` URLs derived from each node's stored `fileId`).
+- Embedded databases render read-only on the public page via `GET /api/public/databases/[id]`, authorized by the containing page's publication (no session, no write surface).
+- Middleware allowlists `/p/` and `/api/public` (Cairn's first unauthenticated content paths).
+- "Publish to web" / "Unpublish" + copy-public-link in the page overflow menu.
+
 ## [0.1.0] - 2026-05-20
 
 ### Added (Plan 6 — Release polish)
