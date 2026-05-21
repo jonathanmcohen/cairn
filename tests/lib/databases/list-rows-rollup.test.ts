@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { createProperty } from '@/lib/databases/properties';
-import { createRow, listRows } from '@/lib/databases/rows';
+import { createRow, listRows, updateCells } from '@/lib/databases/rows';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
 
@@ -53,6 +53,12 @@ async function setup() {
     name: 'Price',
     type: 'number',
   });
+  const due = await createProperty(db, {
+    databaseId: target,
+    workspaceId: u.workspaceId,
+    name: 'Due',
+    type: 'date',
+  });
   const rel = await createProperty(db, {
     databaseId: source,
     workspaceId: u.workspaceId,
@@ -74,19 +80,54 @@ async function setup() {
     type: 'rollup',
     config: { relationPropertyId: rel.id, targetPropertyId: price.id, fn: 'count' },
   });
+  const avgPrice = await createProperty(db, {
+    databaseId: source,
+    workspaceId: u.workspaceId,
+    name: 'Avg',
+    type: 'rollup',
+    config: { relationPropertyId: rel.id, targetPropertyId: price.id, fn: 'avg' },
+  });
+  const maxPrice = await createProperty(db, {
+    databaseId: source,
+    workspaceId: u.workspaceId,
+    name: 'Max',
+    type: 'rollup',
+    config: { relationPropertyId: rel.id, targetPropertyId: price.id, fn: 'max' },
+  });
+  const earliestDue = await createProperty(db, {
+    databaseId: source,
+    workspaceId: u.workspaceId,
+    name: 'Earliest',
+    type: 'rollup',
+    config: { relationPropertyId: rel.id, targetPropertyId: due.id, fn: 'earliest' },
+  });
   const t1 = await createRow(db, {
     databaseId: target,
     workspaceId: u.workspaceId,
     createdBy: u.userId,
-    cells: { [price.id]: 10 },
+    cells: { [price.id]: 10, [due.id]: '2026-01-10' },
   });
   const t2 = await createRow(db, {
     databaseId: target,
     workspaceId: u.workspaceId,
     createdBy: u.userId,
-    cells: { [price.id]: 25 },
+    cells: { [price.id]: 25, [due.id]: '2026-03-01' },
   });
-  return { ...u, source, target, price, rel, total, howMany, t1, t2 };
+  return {
+    ...u,
+    source,
+    target,
+    price,
+    due,
+    rel,
+    total,
+    howMany,
+    avgPrice,
+    maxPrice,
+    earliestDue,
+    t1,
+    t2,
+  };
 }
 
 describe('listRows rollup pass', () => {
@@ -135,5 +176,45 @@ describe('listRows rollup pass', () => {
     const byId = new Map(rows.map((r) => [r.row.id, r.cells]));
     expect(byId.get(rowA.id)?.[s.total.id]).toBe(10);
     expect(byId.get(rowB.id)?.[s.total.id]).toBe(35);
+  });
+});
+
+describe('listRows rollup pass — varied fns + live edits', () => {
+  it('computes avg / max over numbers and earliest over dates', async () => {
+    const s = await setup();
+    await createRow(db, {
+      databaseId: s.source,
+      workspaceId: s.workspaceId,
+      createdBy: s.userId,
+      cells: { [s.rel.id]: [s.t1.id, s.t2.id] },
+    });
+    const rows = await listRows(db, { databaseId: s.source, workspaceId: s.workspaceId });
+    const cells = rows[0]?.cells;
+    expect(cells?.[s.avgPrice.id]).toBeCloseTo(17.5);
+    expect(cells?.[s.maxPrice.id]).toBe(25);
+    // earliest Due is t1's 2026-01-10, normalized to an ISO string.
+    expect(String(cells?.[s.earliestDue.id])).toMatch(/^2026-01-10/);
+  });
+
+  it('reflects relation edits on the next read', async () => {
+    const s = await setup();
+    const row = await createRow(db, {
+      databaseId: s.source,
+      workspaceId: s.workspaceId,
+      createdBy: s.userId,
+      cells: { [s.rel.id]: [s.t1.id] }, // just Price 10
+    });
+    let rows = await listRows(db, { databaseId: s.source, workspaceId: s.workspaceId });
+    expect(rows.find((r) => r.row.id === row.id)?.cells[s.total.id]).toBe(10);
+
+    // Link a second related row.
+    await updateCells(db, {
+      rowId: row.id,
+      databaseId: s.source,
+      workspaceId: s.workspaceId,
+      cells: { [s.rel.id]: [s.t1.id, s.t2.id] },
+    });
+    rows = await listRows(db, { databaseId: s.source, workspaceId: s.workspaceId });
+    expect(rows.find((r) => r.row.id === row.id)?.cells[s.total.id]).toBe(35);
   });
 });
