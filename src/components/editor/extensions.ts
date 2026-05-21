@@ -1,8 +1,6 @@
-import CharacterCount from '@tiptap/extension-character-count';
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
-import Placeholder from '@tiptap/extension-placeholder';
-import TaskItem from '@tiptap/extension-task-item';
-import TaskList from '@tiptap/extension-task-list';
+import { TaskItem, TaskList } from '@tiptap/extension-list';
+import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import { Callout } from './callout-extension';
