@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.3.0 Plan 2 — Collaborative editing)
+- Live multiplayer editing: the page editor binds a Yjs `Y.Doc` synced through `cairn-collab` (Hocuspocus) via `useCollabDoc`; `Collaboration` + `CollaborationCursor` replace local history when a doc is supplied.
+- Collab server materializes the merged Yjs doc back into `pages.content` (debounced + flushed on last disconnect), so search/export/public-render keep reading `pages.content`; the existing FTS trigger refreshes `content_text`/`content_tsv`.
+- Read-only viewers connect with a viewer-role token and a non-editable editor that writes no awareness.
+
+### Changed
+- Retired the v0.1.0 debounced content PATCH and its 409 conflict path on the collaborative editing path (Yjs is conflict-free; the collab server is the writer). Title/icon/cover metadata PATCH is unchanged.
+
 ### Added (v0.3.0 Plan 1 — Collab infrastructure)
 - `0008` migration: `page_yjs` table (page_id PK → pages cascade, `state` bytea, `updated_at`) for Yjs document persistence.
 - Shared collab token lib (`src/lib/collab/token.ts`): HMAC-signed compact token (userId/pageId/role/exp ~5 min), mint + constant-time verify, reusing the `AUTH_SECRET` signing approach.

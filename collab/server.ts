@@ -31,9 +31,12 @@ async function materialize(pageId: string) {
   if (!ydoc) return;
   const state = Y.encodeStateAsUpdate(ydoc);
   const prose = yjsStateToProseDoc(state);
+  // sql.json binds the doc as a jsonb OBJECT. Passing JSON.stringify(prose) with
+  // a ::jsonb cast would store a jsonb STRING scalar, so the FTS trigger's
+  // jsonb_path_query('$.**.text') finds nothing and content_text stays empty.
   await sql`
     UPDATE pages
-    SET content = ${JSON.stringify(prose)}::jsonb, updated_at = now()
+    SET content = ${sql.json(prose as postgres.JSONValue)}, updated_at = now()
     WHERE id = ${pageId}::uuid
   `;
 }
