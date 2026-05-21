@@ -1,9 +1,11 @@
 import * as schema from '@/db/schema';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { type FilterCondition, compileFilters } from './filter';
+import { type SortSpec, compileSorts } from './sort';
 
-export type FilterCondition = { propertyId: string; op: string; value: unknown };
-export type SortSpec = { propertyId: string; direction: 'asc' | 'desc' };
+export type { FilterCondition } from './filter';
+export type { SortSpec } from './sort';
 
 export type RowWithCells = { row: schema.DbRow; cells: Record<string, unknown> };
 
@@ -150,9 +152,15 @@ export async function archiveRow(
 
 export async function listRows(
   db: PostgresJsDatabase<typeof schema>,
-  input: { databaseId: string; workspaceId: string; limit?: number; offset?: number },
+  input: {
+    databaseId: string;
+    workspaceId: string;
+    filters?: FilterCondition[];
+    sorts?: SortSpec[];
+    limit?: number;
+    offset?: number;
+  },
 ): Promise<RowWithCells[]> {
-  // Filter + sort compilation arrive in Task 5/6; this helper currently lists active rows in creation order.
   const [database] = await db
     .select({ workspaceId: schema.databases.workspaceId })
     .from(schema.databases)
@@ -160,11 +168,28 @@ export async function listRows(
     .limit(1);
   if (!database || database.workspaceId !== input.workspaceId) return [];
 
+  const props = await db
+    .select()
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.databaseId, input.databaseId));
+  const propsById = new Map(props.map((p) => [p.id, p]));
+
+  const filterClause = compileFilters(input.filters ?? [], propsById);
+  const sortClause = compileSorts(input.sorts ?? [], propsById);
+
+  const baseWhere = and(
+    eq(schema.dbRows.databaseId, input.databaseId),
+    isNull(schema.dbRows.archivedAt),
+  );
+  const where = filterClause ? and(baseWhere, filterClause) : baseWhere;
+
+  const orderBy = sortClause ?? schema.dbRows.createdAt;
+
   const rows = await db
     .select()
     .from(schema.dbRows)
-    .where(and(eq(schema.dbRows.databaseId, input.databaseId), isNull(schema.dbRows.archivedAt)))
-    .orderBy(schema.dbRows.createdAt)
+    .where(where)
+    .orderBy(orderBy)
     .limit(input.limit ?? 100)
     .offset(input.offset ?? 0);
   if (rows.length === 0) return [];
