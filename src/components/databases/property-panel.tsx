@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { computeFormula } from '@/lib/databases/formula';
 
@@ -13,6 +13,7 @@ const TYPES = [
   'checkbox',
   'url',
   'formula',
+  'relation',
 ] as const;
 
 export function PropertyPanel({
@@ -26,16 +27,33 @@ export function PropertyPanel({
   const [name, setName] = useState('');
   const [type, setType] = useState<(typeof TYPES)[number]>('text');
   const [expression, setExpression] = useState('');
+  const [targetDatabaseId, setTargetDatabaseId] = useState('');
+  const [databases, setDatabases] = useState<{ id: string; title: string }[]>([]);
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    if (type !== 'relation') return;
+    let cancelled = false;
+    void fetch('/api/databases')
+      .then((r) => r.json())
+      .then((data: { databases?: { id: string; title: string }[] }) => {
+        if (!cancelled) setDatabases(data.databases ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [type]);
 
   function configForType() {
     if (type === 'select' || type === 'multi_select') return { options: [] };
     if (type === 'formula') return { expression };
+    if (type === 'relation') return { targetDatabaseId };
     return {};
   }
 
   async function addProperty() {
     if (!name.trim()) return;
+    if (type === 'relation' && !targetDatabaseId) return;
     setBusy(true);
     await fetch(`/api/databases/${databaseId}/properties`, {
       method: 'POST',
@@ -49,6 +67,7 @@ export function PropertyPanel({
     setBusy(false);
     setName('');
     setExpression('');
+    setTargetDatabaseId('');
     setOpen(false);
     onChange();
   }
@@ -86,6 +105,23 @@ export function PropertyPanel({
             </option>
           ))}
         </select>
+        {type === 'relation' && (
+          <select
+            aria-label="Target database"
+            value={targetDatabaseId}
+            onChange={(e) => setTargetDatabaseId(e.target.value)}
+            className="rounded border bg-transparent px-2 py-1 text-sm outline-none"
+          >
+            <option value="">Target database…</option>
+            {databases
+              .filter((d) => d.id !== databaseId)
+              .map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.title || 'Untitled'}
+                </option>
+              ))}
+          </select>
+        )}
         <Button size="sm" disabled={busy} onClick={() => void addProperty()}>
           Add
         </Button>
