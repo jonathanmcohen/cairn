@@ -12,6 +12,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Dropped the v0.1.0 Drizzle-adapter `any` cast now that the users table carries the adapter's expected columns.
 - docker-compose passes through `AUTH_GOOGLE_*` / `AUTH_GITHUB_*`.
 
+### Added (v0.2.0 Plan 2 — Multi-workspace switching)
+- Active workspace resolved from an httpOnly `cairn_ws` cookie in `getAuthContext`, re-validated against live membership on every call (forged/stale cookie falls back to the oldest membership).
+- `POST /api/workspaces` — any authenticated user creates a workspace and becomes its owner; the new workspace is set active.
+- `POST /api/workspaces/switch` — set the active workspace for a workspace the caller is a member of.
+- `POST /api/workspaces/[id]/leave` — leave a workspace; rejected for the sole owner (no transfer/delete in v0.2.0).
+- `POST /api/invites/accept` — a logged-in user accepts an invite (email must match), joining with the invited role.
+- Sidebar workspace switcher (switch / create / invite) and an `/invite/[token]` landing page.
+- "No workspace" empty state for a logged-in user with no memberships, instead of redirecting to login.
+
 ## [0.1.0] - 2026-05-20
 
 ### Added (Plan 6 — Release polish)
