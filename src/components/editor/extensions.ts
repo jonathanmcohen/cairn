@@ -47,7 +47,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
   ];
 }
 
-export type CollabUser = { name: string; color: string };
+export type CollabUser = { id: string; name: string; color: string; image?: string | null };
 
 /**
  * Yjs-driven variant of baseExtensions():

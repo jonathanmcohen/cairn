@@ -7,27 +7,8 @@ import { PageTitleInput } from '@/components/page-title-input';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
 import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
+import { userColor } from '@/lib/collab/user-color';
 import { requirePageAccess } from '@/lib/pages/access';
-
-// Deterministic caret color per user, so collaborators are visually stable.
-const CARET_COLORS = [
-  '#ef4444',
-  '#f97316',
-  '#eab308',
-  '#22c55e',
-  '#06b6d4',
-  '#3b82f6',
-  '#8b5cf6',
-  '#ec4899',
-];
-
-function caretColor(userId: string): string {
-  let hash = 0;
-  for (let i = 0; i < userId.length; i++) {
-    hash = (hash * 31 + userId.charCodeAt(i)) | 0;
-  }
-  return CARET_COLORS[Math.abs(hash) % CARET_COLORS.length] ?? '#3b82f6';
-}
 
 export default async function PageView({ params }: { params: Promise<{ pageId: string }> }) {
   const { pageId } = await params;
@@ -42,8 +23,10 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   const session = await auth();
   const currentUser = {
+    id: ctx.userId,
     name: session?.user?.name ?? 'Anonymous',
-    color: caretColor(ctx.userId),
+    color: userColor(ctx.userId),
+    image: session?.user?.image ?? null,
   };
 
   return (
