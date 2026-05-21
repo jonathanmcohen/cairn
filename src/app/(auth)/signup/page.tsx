@@ -4,11 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signIn } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 
-export default function SignupPage() {
+function SignupForm() {
   const router = useRouter();
+  const search = useSearchParams();
+  const invite = search.get('invite') ?? '';
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [oauthProviders, setOauthProviders] = useState<{ id: string; name: string }[]>([]);
@@ -66,7 +68,7 @@ export default function SignupPage() {
             minLength={12}
           />
           <Field name="workspaceName" label="Workspace name (first user only)" />
-          <Field name="inviteToken" label="Invite token (invited users)" />
+          <Field name="inviteToken" label="Invite token (invited users)" defaultValue={invite} />
           {error && <p className="text-sm text-destructive">{error}</p>}
           <Button type="submit" className="w-full" disabled={busy}>
             {busy ? 'Creating...' : 'Sign up'}
@@ -93,12 +95,21 @@ export default function SignupPage() {
   );
 }
 
+export default function SignupPage() {
+  return (
+    <Suspense>
+      <SignupForm />
+    </Suspense>
+  );
+}
+
 function Field(props: {
   name: string;
   label: string;
   type?: string;
   required?: boolean;
   minLength?: number;
+  defaultValue?: string;
 }) {
   return (
     <div className="space-y-1.5">
@@ -109,6 +120,7 @@ function Field(props: {
         type={props.type ?? 'text'}
         required={props.required}
         minLength={props.minLength}
+        defaultValue={props.defaultValue}
       />
     </div>
   );
