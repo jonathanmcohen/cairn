@@ -1,6 +1,7 @@
 import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
+import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import type * as schema from '@/db/schema';
 import { HttpError } from '@/lib/auth/require-role';
@@ -22,7 +23,10 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
       <CoverImage pageId={page.id} initial={page.coverUrl} />
       <div className="mb-6 flex items-center gap-3">
         <PageIconPicker pageId={page.id} initial={page.icon} />
-        <PageTitleInput pageId={page.id} initial={page.title} />
+        <div className="flex-1">
+          <PageTitleInput pageId={page.id} initial={page.title} />
+        </div>
+        <PageMenu pageId={page.id} />
       </div>
       <Editor
         pageId={page.id}
