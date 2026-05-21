@@ -23,6 +23,14 @@ to anyone else.
 - 🗑️ **Trash bin** with 30-day auto-purge
 - 🗂️ **Inline databases** with table, kanban, and gallery views; AND filters
   + multi-column sort
+- 🧮 **Formula properties** — computed columns from a small, safe expression
+  language (arithmetic, comparisons, `if`, `concat`, `round`/`min`/`max`/`sum`,
+  date helpers); evaluated fresh on every read, never stored
+- 🔗 **Relations** — link rows to rows in another database in the same workspace
+- ➕ **Rollups** — aggregate a property across related rows
+  (`count`/`sum`/`avg`/`min`/`max`/`earliest`/`latest`)
+- 📅 **Calendar & timeline views** — place rows on a month grid or a horizontal
+  time axis by a date property
 - 📎 **File and image uploads** (HMAC-signed URLs, local-disk by default)
 - ⬇️⬆️ **Markdown import/export** per page and per subtree (`.zip`)
 - 👥 **Multi-tenant workspaces** with email/password auth and invite-token
@@ -38,6 +46,33 @@ to anyone else.
 - 💬 **Comments & @mentions** — block/range-anchored comment threads, resolve/reopen, @mention workspace members
 - 🔔 **Notifications** — a polled feed + unread bell, triggered by mentions and comment replies
 - 🌓 Light / dark / system theme
+
+### Database property types & views
+
+Inline databases support text, number, select, multi-select, checkbox, date, and
+URL properties, plus three **computed/linked** types added in v0.4.0:
+
+| Type | What it does | Config |
+|---|---|---|
+| **Formula** | A computed cell from an expression (e.g. `budget * 2`, `if(done, "✓", "…")`). | `{ expression }` |
+| **Relation** | Links to rows in another database **in the same workspace**. | `{ targetDatabaseId }` |
+| **Rollup** | Aggregates a property over a relation. | `{ relationPropertyId, targetPropertyId, fn }` |
+
+Views: **table**, **kanban**, **gallery**, and the v0.4.0 additions **calendar**
+(month grid) and **timeline** (horizontal time axis). Calendar and timeline each
+require a date property to place rows on.
+
+> **⚠️ Known limitations (v0.4.0)**
+> - **Formula and rollup values cannot be filtered or sorted.** They are computed
+>   in JS *after* the SQL fetch (always fresh, never stored), so the database
+>   filter/sort — which compiles to SQL — cannot see them. Computed columns
+>   **display only**. Filter and sort on stored properties (text, number, date,
+>   select, etc.) as usual.
+> - **Reverse / bidirectional relations are not yet supported.** A relation is
+>   single-direction: the target rows do not automatically gain a back-reference
+>   property. (Planned for a v0.4.x follow-up.)
+> - Relations cannot cross workspaces; a relation may only target a database in
+>   the same workspace.
 
 ## Quickstart (Docker)
 
@@ -142,7 +177,7 @@ full `DATABASE_URL` and `NEXTAUTH_URL` directly.
 cp .env.example .env   # full set; both compose AND pnpm read from here
 pnpm install
 pnpm dev               # http://localhost:3000
-pnpm test              # 365 tests, requires Docker for testcontainers
+pnpm test              # 441 tests, requires Docker for testcontainers
 pnpm lint              # Biome
 pnpm typecheck         # tsc
 pnpm build             # Next.js standalone + entrypoint compile
@@ -155,6 +190,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 v0.1.0 is the initial release. Planned for later versions:
 
 - **v0.3.x:** owner-transfer and workspace deletion; comment-reply threads
+- **v0.4.x:** reverse / bidirectional relations; filter & sort on computed
+  (formula/rollup) values
 - **v0.4.x+:** native mobile apps, public API + webhooks, templates,
   page version history, S3/MinIO backend, backup/restore CLI
 
