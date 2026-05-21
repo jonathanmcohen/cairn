@@ -84,10 +84,25 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
         const pastedFiles = Array.from(clipboardData?.files ?? []).filter((f) =>
           f.type.startsWith('image/'),
         );
-        if (pastedFiles.length === 0) return false;
-        event.preventDefault();
-        void uploadAndInsert(pastedFiles);
-        return true;
+        if (pastedFiles.length > 0) {
+          event.preventDefault();
+          void uploadAndInsert(pastedFiles);
+          return true;
+        }
+        // Check for markdown paste
+        const text = (event as ClipboardEvent).clipboardData?.getData('text/plain') ?? '';
+        if (looksLikeMarkdown(text)) {
+          event.preventDefault();
+          void (async () => {
+            const { markdownToProse } = await import('@/lib/markdown/to-prose');
+            const doc = markdownToProse(text);
+            if (doc.content && doc.content.length > 0) {
+              editorRef.current?.chain().focus().insertContent(doc.content).run();
+            }
+          })();
+          return true;
+        }
+        return false;
       },
     },
     onUpdate({ editor }) {
@@ -123,4 +138,9 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
       <EditorContent editor={editor} />
     </div>
   );
+}
+
+function looksLikeMarkdown(text: string): boolean {
+  if (!text.includes('\n')) return false;
+  return /(^|\n)(#{1,6}\s|[-*]\s|\d+\.\s|>\s|```|---$)/m.test(text);
 }
