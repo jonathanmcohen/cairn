@@ -1,0 +1,57 @@
+import { getDb } from '@/db/client';
+import { HttpError, requireRole } from '@/lib/auth/require-role';
+import { env } from '@/lib/env';
+import { getStorage } from '@/lib/files/get-storage';
+import { storeUpload } from '@/lib/files/upload';
+import { NextResponse } from 'next/server';
+
+function maxUploadBytes(): number {
+  // Read process.env directly so the limit can be toggled per request in tests
+  // and at runtime; fall back to the validated env() default (25 MB).
+  const raw = process.env.CAIRN_MAX_UPLOAD_MB;
+  const mb = raw !== undefined ? Number(raw) : env().CAIRN_MAX_UPLOAD_MB;
+  if (!Number.isFinite(mb) || mb <= 0) return env().CAIRN_MAX_UPLOAD_MB * 1024 * 1024;
+  return mb * 1024 * 1024;
+}
+
+export async function POST(req: Request): Promise<Response> {
+  try {
+    const ctx = await requireRole('editor');
+    const form = await req.formData();
+    const file = form.get('file');
+    if (!(file instanceof File)) {
+      return NextResponse.json({ error: 'missing file field' }, { status: 400 });
+    }
+    const max = maxUploadBytes();
+    if (file.size > max) {
+      return NextResponse.json({ error: 'file too large' }, { status: 413 });
+    }
+    const body = Buffer.from(await file.arrayBuffer());
+    try {
+      const result = await storeUpload({
+        db: getDb(),
+        storage: getStorage(),
+        secret: env().AUTH_SECRET,
+        workspaceId: ctx.workspaceId,
+        uploadedBy: ctx.userId,
+        filename: file.name,
+        mimeType: file.type,
+        body,
+      });
+      return NextResponse.json(result, { status: 201 });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'unknown';
+      if (/mime/i.test(message)) {
+        return NextResponse.json({ error: message }, { status: 415 });
+      }
+      throw err;
+    }
+  } catch (err) {
+    if (err instanceof HttpError)
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'unknown' },
+      { status: 500 },
+    );
+  }
+}
