@@ -17,15 +17,15 @@ const PUBLIC_PATHS = [
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
-// We do NOT validate the session in middleware (Edge runtime can't reach Postgres).
-// Pages re-validate via getAuthContext() in their server components.
+// We do NOT validate the session in the proxy (it runs lightweight cookie
+// checks only). Pages re-validate via getAuthContext() in their server components.
 const SESSION_COOKIE_NAMES = ['authjs.session-token', '__Secure-authjs.session-token'];
 
 function hasSessionCookie(req: NextRequest): boolean {
   return SESSION_COOKIE_NAMES.some((name) => req.cookies.has(name));
 }
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const hasSession = hasSessionCookie(req);

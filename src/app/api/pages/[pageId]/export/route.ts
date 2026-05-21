@@ -20,7 +20,7 @@ export async function GET(
         workspaceId: ctx.workspaceId,
         rootPageId: page.id,
       });
-      // @ts-expect-error: Node Readable → web Response works in Next 15
+      // @ts-expect-error: Node Readable → web Response works at runtime in Next 16
       return new Response(stream, {
         status: 200,
         headers: {

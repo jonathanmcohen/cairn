@@ -11,7 +11,7 @@ Cairn is a **self-hosted, Notion-style block-based notes app** for homelab deplo
 
 ## Tech stack
 
-- Next.js 15 (App Router, React 19, TypeScript strict) — single full-stack process, `output: 'standalone'`.
+- Next.js 16 (App Router, React 19, TypeScript strict, Turbopack) — single full-stack process, `output: 'standalone'`. The auth gate lives in `src/proxy.ts` (Next 16 renamed `middleware` → `proxy`, nodejs runtime).
 - Postgres 16 + Drizzle ORM. Migrations in `drizzle/migrations/`, applied at container startup via `src/server/entrypoint.ts`.
 - Auth.js v5 (NextAuth), **credentials provider with `jwt` session strategy** (NOT database — Credentials requires jwt; see Gotchas).
 - Tailwind + shadcn/ui (new-york style), `next-themes`.
@@ -52,7 +52,7 @@ Plans are executed **subagent-driven**: one implementer subagent per plan task (
 - **Recursive CTEs** (page tree, descendants, breadcrumbs) use raw SQL via `db.execute(rawSql\`...\`)` — Drizzle can't express them. `tx.execute()` returns rows directly (no `{rows}` wrapper); cast `as unknown as Row[]`.
 - **`db:generate` doesn't emit extensions/triggers/self-FKs** — append those to the generated migration SQL by hand (see `pages` trigger, `pg_trgm`, self-FK).
 - **typedRoutes:** dynamic hrefs (`/pages/${id}`) need `as Route` (`import type { Route } from 'next'`).
-- **Node Readable → web Response** for file/zip streaming needs a `// @ts-expect-error` (works in Next 15).
+- **Node Readable → web Response** for file/zip streaming needs a `// @ts-expect-error` (type mismatch persists, but works at runtime in Next 16).
 
 ## Commands
 

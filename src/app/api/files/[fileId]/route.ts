@@ -22,7 +22,7 @@ export async function GET(
   const [f] = await getDb().select().from(schema.files).where(eq(schema.files.id, fileId)).limit(1);
   if (!f) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
-  // @ts-expect-error: Node Readable → web Response works in Next 15
+  // @ts-expect-error: Node Readable → web Response works at runtime in Next 16
   return new Response(getStorage().read(f.path), {
     status: 200,
     headers: {
