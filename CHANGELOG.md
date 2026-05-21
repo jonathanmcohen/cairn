@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-05-20
+
+### Added (Plan 6 — Release polish)
+- Floating drag handle UI for per-block actions (move up/down, duplicate, delete).
+- GitHub Actions release workflow: tag-triggered, multi-arch (amd64+arm64), publishes to ghcr.io, generates SBOM + provenance attestations, creates a GitHub Release.
+- SECURITY.md and CONTRIBUTING.md.
+- Polished README with feature list, configuration table, and image badges.
+- CLAUDE.md project guide.
+
 ### Added (Plan 5 — Databases)
 - 5 new tables (`databases`, `db_properties`, `db_rows`, `db_cells`, `db_views`) + property/view type enums.
 - Server helpers: create/get database, property CRUD with type-specific config validation, row+cell CRUD with type coercion, view CRUD.
