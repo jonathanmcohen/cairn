@@ -5,13 +5,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 function LoginForm() {
   const router = useRouter();
   const search = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [oauthProviders, setOauthProviders] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    void fetch('/api/auth/providers')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data: Record<string, { id: string; name: string }>) => {
+        setOauthProviders(Object.values(data).filter((p) => p.id !== 'credentials'));
+      })
+      .catch(() => setOauthProviders([]));
+  }, []);
 
   async function onSubmit(fd: FormData) {
     setBusy(true);
@@ -36,6 +46,11 @@ function LoginForm() {
         <CardDescription>Use your workspace credentials.</CardDescription>
       </CardHeader>
       <CardContent>
+        {search.get('error') === 'AccessDenied' && (
+          <p className="mb-4 text-sm text-destructive">
+            This account isn't invited to any workspace. Ask an admin for an invite, then try again.
+          </p>
+        )}
         <form action={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
@@ -56,6 +71,22 @@ function LoginForm() {
             {busy ? 'Signing in...' : 'Sign in'}
           </Button>
         </form>
+        {oauthProviders.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <div className="text-center text-xs text-muted-foreground">or</div>
+            {oauthProviders.map((p) => (
+              <Button
+                key={p.id}
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => void signIn(p.id, { callbackUrl: search.get('next') ?? '/' })}
+              >
+                Continue with {p.name}
+              </Button>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );

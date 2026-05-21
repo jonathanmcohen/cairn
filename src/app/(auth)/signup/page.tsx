@@ -5,12 +5,22 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function SignupPage() {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [oauthProviders, setOauthProviders] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    void fetch('/api/auth/providers')
+      .then((r) => (r.ok ? r.json() : {}))
+      .then((data: Record<string, { id: string; name: string }>) => {
+        setOauthProviders(Object.values(data).filter((p) => p.id !== 'credentials'));
+      })
+      .catch(() => setOauthProviders([]));
+  }, []);
 
   async function onSubmit(formData: FormData) {
     setBusy(true);
@@ -62,6 +72,22 @@ export default function SignupPage() {
             {busy ? 'Creating...' : 'Sign up'}
           </Button>
         </form>
+        {oauthProviders.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <div className="text-center text-xs text-muted-foreground">or</div>
+            {oauthProviders.map((p) => (
+              <Button
+                key={p.id}
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => void signIn(p.id, { callbackUrl: '/' })}
+              >
+                Continue with {p.name}
+              </Button>
+            ))}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
