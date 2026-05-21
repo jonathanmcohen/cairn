@@ -3,6 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
+import { validateRelationCells } from './relations';
 import { compileSorts, type SortSpec } from './sort';
 
 export type { FilterCondition } from './filter';
@@ -47,6 +48,9 @@ export async function createRow(
           if (!prop) throw new Error('unreachable');
           return { rowId: row.id, propertyId: propId, value: coerce(prop.type, value) };
         });
+      const coercedByProp: Record<string, unknown> = {};
+      for (const cv of cellValues) coercedByProp[cv.propertyId] = cv.value;
+      await validateRelationCells(tx, props, coercedByProp);
       if (cellValues.length > 0) {
         await tx.insert(schema.dbCells).values(cellValues);
       }
@@ -83,10 +87,12 @@ export async function updateCells(
       .where(eq(schema.dbProperties.databaseId, input.databaseId));
     const propsById = new Map(props.map((p) => [p.id, p]));
 
+    const coercedByProp: Record<string, unknown> = {};
     for (const [propId, raw] of Object.entries(input.cells)) {
       const prop = propsById.get(propId);
       if (!prop) continue;
       const value = coerce(prop.type, raw);
+      coercedByProp[propId] = value;
       await tx
         .insert(schema.dbCells)
         .values({ rowId: input.rowId, propertyId: propId, value })
@@ -95,6 +101,7 @@ export async function updateCells(
           set: { value },
         });
     }
+    await validateRelationCells(tx, props, coercedByProp);
     await tx
       .update(schema.dbRows)
       .set({ updatedAt: new Date() })
