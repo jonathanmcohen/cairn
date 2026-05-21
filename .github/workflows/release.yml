@@ -79,6 +79,40 @@ jobs:
           subject-digest: ${{ steps.build.outputs.digest }}
           push-to-registry: true
 
+      - name: Docker meta (collab)
+        id: meta_collab
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/cairn-collab
+          tags: |
+            type=raw,value=${{ steps.ver.outputs.version }}
+            type=raw,value=${{ steps.ver.outputs.majorminor }}
+            type=raw,value=${{ steps.ver.outputs.major }}
+            type=raw,value=latest,enable=${{ !contains(steps.ver.outputs.version, '-') }}
+
+      - name: Build and push (collab)
+        id: build_collab
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.collab
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta_collab.outputs.tags }}
+          labels: ${{ steps.meta_collab.outputs.labels }}
+          provenance: ${{ github.event.repository.visibility == 'public' }}
+          sbom: ${{ github.event.repository.visibility == 'public' }}
+          cache-from: type=gha,scope=collab
+          cache-to: type=gha,mode=max,scope=collab
+
+      - name: Attest (collab)
+        if: ${{ github.event.repository.visibility == 'public' }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-name: ghcr.io/${{ github.repository_owner }}/cairn-collab
+          subject-digest: ${{ steps.build_collab.outputs.digest }}
+          push-to-registry: true
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -87,11 +121,10 @@ jobs:
           generate_release_notes: true
           prerelease: ${{ contains(steps.ver.outputs.version, '-') }}
           body: |
-            Container image: `ghcr.io/${{ github.repository_owner }}/cairn:${{ steps.ver.outputs.version }}`
+            Container images:
+            - `ghcr.io/${{ github.repository_owner }}/cairn:${{ steps.ver.outputs.version }}`
+            - `ghcr.io/${{ github.repository_owner }}/cairn-collab:${{ steps.ver.outputs.version }}`
 
-            Deploy:
-            ```
-            docker pull ghcr.io/${{ github.repository_owner }}/cairn:${{ steps.ver.outputs.version }}
-            ```
+            Deploy (3 containers: cairn, cairn-collab, db) — see docker-compose.yml.
 
             See [CHANGELOG.md](CHANGELOG.md) for the full feature list.
