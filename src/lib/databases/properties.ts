@@ -21,6 +21,9 @@ const ConfigByType: Record<schema.PropertyType, z.ZodTypeAny> = {
   date: NoConfig,
   checkbox: NoConfig,
   url: NoConfig,
+  formula: NoConfig,
+  relation: NoConfig,
+  rollup: NoConfig,
 };
 
 export async function createProperty(

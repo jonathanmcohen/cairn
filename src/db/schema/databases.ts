@@ -20,8 +20,11 @@ export const propertyType = pgEnum('property_type', [
   'date',
   'checkbox',
   'url',
+  'formula',
+  'relation',
+  'rollup',
 ]);
-export const viewType = pgEnum('view_type', ['table', 'kanban', 'gallery']);
+export const viewType = pgEnum('view_type', ['table', 'kanban', 'gallery', 'calendar', 'timeline']);
 
 export const databases = pgTable('databases', {
   id: uuid('id').primaryKey().defaultRandom(),
