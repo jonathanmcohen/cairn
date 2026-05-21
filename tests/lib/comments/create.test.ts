@@ -29,7 +29,16 @@ describe('createComment', () => {
   it('creates a page-level comment and surfaces mentioned userIds', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const mentioned = '11111111-1111-4111-8111-111111111111';
+    const [mentionedUser] = await db
+      .insert(schema.users)
+      .values({
+        email: `alice-${crypto.randomUUID()}@example.com`,
+        passwordHash: 'h',
+        name: 'Alice',
+      })
+      .returning();
+    if (!mentionedUser) throw new Error('failed to create mentioned user');
+    const mentioned = mentionedUser.id;
     const { comment: c, mentionedUserIds } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,

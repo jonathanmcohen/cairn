@@ -2,6 +2,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { extractMentions } from '@/lib/mentions/parse';
+import { notifyCommentReply, notifyMentions } from '@/lib/notifications/create';
 import { type CommentAnchor, CommentAnchorSchema } from './anchor';
 
 export type CreateCommentInput = {
@@ -24,6 +25,10 @@ export async function createComment(
   const body = input.body.trim();
   if (!body) throw new Error('comment body is required');
   const anchor = input.anchor == null ? null : CommentAnchorSchema.parse(input.anchor);
+
+  // `extractMentions` is the authoritative source of mentioned ids — run it on
+  // the server against the stored body.
+  const mentionedUserIds = extractMentions(body);
 
   const comment = await db.transaction(async (tx) => {
     const [page] = await tx
@@ -50,13 +55,26 @@ export async function createComment(
       })
       .returning();
     if (!inserted) throw new Error('failed to insert comment');
+
+    // Fire notification triggers in the same transaction so a notify failure
+    // rolls back the comment insert cleanly. notifyCommentReply runs AFTER the
+    // insert: its `ne(authorId, actorId)` filter excludes the just-added row.
+    await notifyMentions(tx, {
+      actorId: input.authorId,
+      pageId: input.pageId,
+      commentId: inserted.id,
+      workspaceId: input.workspaceId,
+      mentionedUserIds,
+    });
+    await notifyCommentReply(tx, {
+      actorId: input.authorId,
+      pageId: input.pageId,
+      commentId: inserted.id,
+      workspaceId: input.workspaceId,
+    });
+
     return inserted;
   });
 
-  // `extractMentions` is the authoritative source of mentioned ids — run it on
-  // the server against the stored body. NOTE: notifications for these userIds
-  // are created in v0.3.0 Plan 6 (notifyMentions); this plan only surfaces the
-  // ids — no notification rows are written here.
-  const mentionedUserIds = extractMentions(body);
   return { comment, mentionedUserIds };
 }
