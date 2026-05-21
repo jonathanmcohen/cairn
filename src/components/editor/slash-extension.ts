@@ -55,6 +55,33 @@ const items: SlashItem[] = [
     description: 'Highlighted aside',
     command: (editor) => editor.chain().focus().setCallout('default').run(),
   },
+  {
+    title: 'Image',
+    description: 'Upload and embed an image',
+    command: (editor) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.set('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) return;
+        const { signedUrl, file: meta } = (await res.json()) as {
+          signedUrl: string;
+          file: { id: string; name: string };
+        };
+        editor
+          .chain()
+          .focus()
+          .insertCairnImage({ src: signedUrl, alt: meta.name, fileId: meta.id })
+          .run();
+      };
+      input.click();
+    },
+  },
 ];
 
 export const SlashCommand = Extension.create({

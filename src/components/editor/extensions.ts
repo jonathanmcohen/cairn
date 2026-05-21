@@ -10,6 +10,7 @@ import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import { Callout } from './callout-extension';
+import { CairnImage } from './image-extension';
 import { SlashCommand } from './slash-extension';
 
 const lowlight = createLowlight(common);
@@ -24,6 +25,7 @@ export function baseExtensions() {
     TaskList,
     TaskItem.configure({ nested: true }),
     Callout,
+    CairnImage,
     SlashCommand,
     Placeholder.configure({
       placeholder: ({ node }) => {
