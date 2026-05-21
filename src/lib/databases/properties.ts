@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import * as schema from '@/db/schema';
+import { RelationConfig } from './relations';
 
 const SelectConfig = z.object({
   options: z
@@ -23,7 +24,7 @@ const ConfigByType: Record<schema.PropertyType, z.ZodTypeAny> = {
   checkbox: NoConfig,
   url: NoConfig,
   formula: FormulaConfig,
-  relation: NoConfig,
+  relation: RelationConfig,
   rollup: NoConfig,
 };
 
@@ -47,6 +48,17 @@ export async function createProperty(
       throw new Error('database not found in workspace');
     }
     const config = ConfigByType[input.type].parse(input.config ?? {});
+    if (input.type === 'relation') {
+      const targetId = (config as { targetDatabaseId: string }).targetDatabaseId;
+      const [target] = await tx
+        .select({ workspaceId: schema.databases.workspaceId })
+        .from(schema.databases)
+        .where(eq(schema.databases.id, targetId))
+        .limit(1);
+      if (!target || target.workspaceId !== input.workspaceId) {
+        throw new Error('relation target database not found in same workspace');
+      }
+    }
     const existing = await tx
       .select({ pos: schema.dbProperties.position })
       .from(schema.dbProperties)
@@ -105,6 +117,17 @@ export async function updateProperty(
     if (input.patch.name !== undefined) values.name = input.patch.name;
     if (input.patch.config !== undefined) {
       values.config = ConfigByType[prop.type].parse(input.patch.config);
+      if (prop.type === 'relation') {
+        const targetId = (values.config as { targetDatabaseId: string }).targetDatabaseId;
+        const [target] = await tx
+          .select({ workspaceId: schema.databases.workspaceId })
+          .from(schema.databases)
+          .where(eq(schema.databases.id, targetId))
+          .limit(1);
+        if (!target || target.workspaceId !== input.workspaceId) {
+          throw new Error('relation target database not found in same workspace');
+        }
+      }
     }
     const [updated] = await tx
       .update(schema.dbProperties)
