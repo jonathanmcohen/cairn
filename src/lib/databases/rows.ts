@@ -4,6 +4,7 @@ import * as schema from '@/db/schema';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
 import { resolveRelationCells, validateRelationCells } from './relations';
+import { resolveRollupCells } from './rollup/resolve';
 import { compileSorts, type SortSpec } from './sort';
 
 export type { FilterCondition } from './filter';
@@ -232,6 +233,10 @@ export async function listRows(
   // Resolve relation cells (to { ids, labels }) BEFORE formulas reference them.
   const relationProps = props.filter((p) => p.type === 'relation');
   await resolveRelationCells(db, relationProps, cellsByRow);
+
+  // Compute rollup cells AFTER relations (rollups read the resolved { ids }).
+  const rollupProps = props.filter((p) => p.type === 'rollup');
+  await resolveRollupCells(db, rollupProps, cellsByRow);
 
   // Build name -> id map (shared across rows) and the list of formula properties.
   const nameToId = new Map<string, string>(props.map((p) => [p.name, p.id]));
