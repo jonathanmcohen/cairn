@@ -1,0 +1,182 @@
+import * as schema from '@/db/schema';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+
+export type FilterCondition = { propertyId: string; op: string; value: unknown };
+export type SortSpec = { propertyId: string; direction: 'asc' | 'desc' };
+
+export type RowWithCells = { row: schema.DbRow; cells: Record<string, unknown> };
+
+export async function createRow(
+  db: PostgresJsDatabase<typeof schema>,
+  input: {
+    databaseId: string;
+    workspaceId: string;
+    createdBy: string;
+    cells?: Record<string, unknown>;
+  },
+): Promise<schema.DbRow> {
+  return db.transaction(async (tx) => {
+    const [database] = await tx
+      .select({ workspaceId: schema.databases.workspaceId })
+      .from(schema.databases)
+      .where(eq(schema.databases.id, input.databaseId))
+      .limit(1);
+    if (!database || database.workspaceId !== input.workspaceId) {
+      throw new Error('database not found in workspace');
+    }
+    const [row] = await tx
+      .insert(schema.dbRows)
+      .values({ databaseId: input.databaseId, createdBy: input.createdBy })
+      .returning();
+    if (!row) throw new Error('insert row failed');
+
+    if (input.cells) {
+      const props = await tx
+        .select()
+        .from(schema.dbProperties)
+        .where(eq(schema.dbProperties.databaseId, input.databaseId));
+      const propsById = new Map(props.map((p) => [p.id, p]));
+      const cellValues = Object.entries(input.cells)
+        .filter(([propId]) => propsById.has(propId))
+        .map(([propId, value]) => {
+          const prop = propsById.get(propId);
+          if (!prop) throw new Error('unreachable');
+          return { rowId: row.id, propertyId: propId, value: coerce(prop.type, value) };
+        });
+      if (cellValues.length > 0) {
+        await tx.insert(schema.dbCells).values(cellValues);
+      }
+    }
+    return row;
+  });
+}
+
+export async function updateCells(
+  db: PostgresJsDatabase<typeof schema>,
+  input: {
+    rowId: string;
+    databaseId: string;
+    workspaceId: string;
+    cells: Record<string, unknown>;
+  },
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .select({
+        databaseId: schema.dbRows.databaseId,
+        workspaceId: schema.databases.workspaceId,
+      })
+      .from(schema.dbRows)
+      .innerJoin(schema.databases, eq(schema.dbRows.databaseId, schema.databases.id))
+      .where(eq(schema.dbRows.id, input.rowId))
+      .limit(1);
+    if (!row || row.workspaceId !== input.workspaceId || row.databaseId !== input.databaseId) {
+      throw new Error('row not found in database');
+    }
+    const props = await tx
+      .select()
+      .from(schema.dbProperties)
+      .where(eq(schema.dbProperties.databaseId, input.databaseId));
+    const propsById = new Map(props.map((p) => [p.id, p]));
+
+    for (const [propId, raw] of Object.entries(input.cells)) {
+      const prop = propsById.get(propId);
+      if (!prop) continue;
+      const value = coerce(prop.type, raw);
+      await tx
+        .insert(schema.dbCells)
+        .values({ rowId: input.rowId, propertyId: propId, value })
+        .onConflictDoUpdate({
+          target: [schema.dbCells.rowId, schema.dbCells.propertyId],
+          set: { value },
+        });
+    }
+    await tx
+      .update(schema.dbRows)
+      .set({ updatedAt: new Date() })
+      .where(eq(schema.dbRows.id, input.rowId));
+  });
+}
+
+function coerce(type: schema.PropertyType, value: unknown): unknown {
+  if (value === null || value === undefined) return null;
+  switch (type) {
+    case 'number': {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : null;
+    }
+    case 'checkbox':
+      return Boolean(value);
+    case 'date': {
+      if (typeof value === 'string') {
+        const d = new Date(value);
+        return Number.isFinite(d.getTime()) ? d.toISOString() : null;
+      }
+      return null;
+    }
+    case 'multi_select':
+      return Array.isArray(value) ? value.map(String) : [];
+    case 'select':
+    case 'text':
+    case 'url':
+      return typeof value === 'string' ? value : String(value);
+  }
+}
+
+export async function archiveRow(
+  db: PostgresJsDatabase<typeof schema>,
+  input: { rowId: string; databaseId: string; workspaceId: string },
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [row] = await tx
+      .select({
+        databaseId: schema.dbRows.databaseId,
+        workspaceId: schema.databases.workspaceId,
+      })
+      .from(schema.dbRows)
+      .innerJoin(schema.databases, eq(schema.dbRows.databaseId, schema.databases.id))
+      .where(eq(schema.dbRows.id, input.rowId))
+      .limit(1);
+    if (!row || row.workspaceId !== input.workspaceId || row.databaseId !== input.databaseId) {
+      throw new Error('row not found');
+    }
+    await tx
+      .update(schema.dbRows)
+      .set({ archivedAt: new Date() })
+      .where(eq(schema.dbRows.id, input.rowId));
+  });
+}
+
+export async function listRows(
+  db: PostgresJsDatabase<typeof schema>,
+  input: { databaseId: string; workspaceId: string; limit?: number; offset?: number },
+): Promise<RowWithCells[]> {
+  // Filter + sort compilation arrive in Task 5/6; this helper currently lists active rows in creation order.
+  const [database] = await db
+    .select({ workspaceId: schema.databases.workspaceId })
+    .from(schema.databases)
+    .where(eq(schema.databases.id, input.databaseId))
+    .limit(1);
+  if (!database || database.workspaceId !== input.workspaceId) return [];
+
+  const rows = await db
+    .select()
+    .from(schema.dbRows)
+    .where(and(eq(schema.dbRows.databaseId, input.databaseId), isNull(schema.dbRows.archivedAt)))
+    .orderBy(schema.dbRows.createdAt)
+    .limit(input.limit ?? 100)
+    .offset(input.offset ?? 0);
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((r) => r.id);
+  const cells = await db.select().from(schema.dbCells).where(inArray(schema.dbCells.rowId, ids));
+
+  const cellsByRow = new Map<string, Record<string, unknown>>();
+  for (const c of cells) {
+    if (!cellsByRow.has(c.rowId)) cellsByRow.set(c.rowId, {});
+    const map = cellsByRow.get(c.rowId);
+    if (map) map[c.propertyId] = c.value;
+  }
+  return rows.map((r) => ({ row: r, cells: cellsByRow.get(r.id) ?? {} }));
+}
