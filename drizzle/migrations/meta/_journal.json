@@ -57,6 +57,13 @@
       "when": 1779372083155,
       "tag": "0007_little_major_mapleleaf",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1779386761338,
+      "tag": "0008_mean_legion",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ export * from './auth';
 export * from './databases';
 export * from './files';
 export * from './invite-tokens';
+export * from './page-yjs';
 export * from './pages';
 export * from './system-meta';
 export * from './users';
