@@ -1,26 +1,26 @@
 import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
+import { getAuthContext } from '@/lib/auth/require-role';
 import { appVersion } from '@/lib/version';
-import { eq } from 'drizzle-orm';
+import { listUserWorkspaces } from '@/lib/workspaces/list';
 import { Trash } from 'lucide-react';
 import Link from 'next/link';
 import { NewPageButton } from './new-page-button';
 import { SidebarTree } from './sidebar-tree';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
+import { WorkspaceSwitcher } from './workspace-switcher';
 
 export async function Sidebar({ workspaceId }: { workspaceId: string }) {
   const db = getDb();
-  const [ws] = await db
-    .select()
-    .from(schema.workspaces)
-    .where(eq(schema.workspaces.id, workspaceId))
-    .limit(1);
+  const ctx = await getAuthContext();
+  const workspaces = ctx ? await listUserWorkspaces(db, ctx.userId) : [];
 
   return (
     <aside className="flex h-screen w-64 flex-col border-r bg-card text-card-foreground">
-      <div className="flex items-center justify-between border-b p-4">
-        <div className="font-semibold">{ws?.name ?? 'Cairn'}</div>
+      <div className="flex items-center justify-between gap-2 border-b p-2">
+        <div className="min-w-0 flex-1">
+          <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
+        </div>
         <ThemeToggle />
       </div>
       <nav className="flex-1 overflow-y-auto p-3">
