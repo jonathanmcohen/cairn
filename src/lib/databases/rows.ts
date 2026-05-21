@@ -102,7 +102,7 @@ export async function updateCells(
   });
 }
 
-function coerce(type: schema.PropertyType, value: unknown): unknown {
+export function coerce(type: schema.PropertyType, value: unknown): unknown {
   if (value === null || value === undefined) return null;
   switch (type) {
     case 'number': {
@@ -120,6 +120,19 @@ function coerce(type: schema.PropertyType, value: unknown): unknown {
     }
     case 'multi_select':
       return Array.isArray(value) ? value.map(String) : [];
+    case 'relation': {
+      if (!Array.isArray(value)) return [];
+      const seen = new Set<string>();
+      const ids: string[] = [];
+      for (const v of value) {
+        if (typeof v !== 'string') continue;
+        const t = v.trim();
+        if (t === '' || seen.has(t)) continue;
+        seen.add(t);
+        ids.push(t);
+      }
+      return ids;
+    }
     case 'select':
     case 'text':
     case 'url':
