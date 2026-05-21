@@ -1,12 +1,9 @@
 import { z } from 'zod';
 
 const Schema = z.object({
-  DATABASE_URL: z
-    .string()
-    .url()
-    .or(z.string().regex(/^postgres(ql)?:\/\//)),
+  DATABASE_URL: z.url().or(z.string().regex(/^postgres(ql)?:\/\//)),
   AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 chars'),
-  NEXTAUTH_URL: z.string().url(),
+  NEXTAUTH_URL: z.url(),
   CAIRN_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(25),
   CAIRN_TRASH_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   CAIRN_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),

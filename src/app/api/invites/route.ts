@@ -6,7 +6,7 @@ import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
 const CreateInvite = z.object({
-  email: z.string().email(),
+  email: z.email(),
   role: z.enum(['admin', 'editor', 'viewer']),
   expiresInDays: z.number().int().positive().max(30).default(7),
 });

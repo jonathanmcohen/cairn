@@ -12,10 +12,10 @@ const CreateInput = z.object({
 });
 
 const FilterArray = z
-  .array(z.object({ propertyId: z.string().uuid(), op: z.string(), value: z.unknown() }))
+  .array(z.object({ propertyId: z.uuid(), op: z.string(), value: z.unknown() }))
   .default([]);
 const SortArray = z
-  .array(z.object({ propertyId: z.string().uuid(), direction: z.enum(['asc', 'desc']) }))
+  .array(z.object({ propertyId: z.uuid(), direction: z.enum(['asc', 'desc']) }))
   .default([]);
 
 export async function POST(req: Request, { params }: Ctx): Promise<Response> {

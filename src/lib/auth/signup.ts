@@ -5,7 +5,7 @@ import * as schema from '@/db/schema';
 import { hashPassword } from './password';
 
 export const SignupInput = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(12),
   name: z.string().min(1),
   workspaceName: z.string().min(1).optional(),

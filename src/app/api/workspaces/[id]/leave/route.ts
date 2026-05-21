@@ -4,7 +4,7 @@ import { getDb } from '@/db/client';
 import { getAuthContext, HttpError } from '@/lib/auth/require-role';
 import { LeaveError, leaveWorkspace } from '@/lib/workspaces/leave';
 
-const IdSchema = z.string().uuid();
+const IdSchema = z.uuid();
 
 export async function POST(
   _req: Request,

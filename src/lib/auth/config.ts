@@ -11,7 +11,7 @@ import { applyOAuthGate } from './oauth-gate';
 import { verifyPassword } from './password';
 
 const CredentialsSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1),
 });
 

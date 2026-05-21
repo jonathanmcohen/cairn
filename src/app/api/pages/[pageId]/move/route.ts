@@ -6,7 +6,7 @@ import { requirePageAccess } from '@/lib/pages/access';
 import { movePage } from '@/lib/pages/move';
 
 const MoveInput = z.object({
-  newParentId: z.string().uuid().nullable(),
+  newParentId: z.uuid().nullable(),
 });
 
 export async function POST(

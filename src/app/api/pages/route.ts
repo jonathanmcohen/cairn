@@ -6,7 +6,7 @@ import { createPage } from '@/lib/pages/create';
 import { maybePurge } from '@/lib/pages/maybe-purge';
 
 const CreateInput = z.object({
-  parentId: z.string().uuid().optional(),
+  parentId: z.uuid().optional(),
   title: z.string().min(1).max(200).optional(),
   icon: z.string().max(8).optional(),
 });

@@ -5,7 +5,7 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { createDatabase } from '@/lib/databases/create';
 
 const CreateInput = z.object({
-  pageId: z.string().uuid(),
+  pageId: z.uuid(),
   name: z.string().min(1).max(200).optional(),
 });
 

@@ -6,7 +6,7 @@ import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { ACTIVE_WORKSPACE_COOKIE, getAuthContext, HttpError } from '@/lib/auth/require-role';
 
-const SwitchInput = z.object({ workspaceId: z.string().uuid() });
+const SwitchInput = z.object({ workspaceId: z.uuid() });
 
 export async function POST(req: Request): Promise<Response> {
   try {

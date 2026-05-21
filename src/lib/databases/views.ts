@@ -7,7 +7,7 @@ const ViewConfigSchema = z.object({
   sorts: z
     .array(
       z.object({
-        propertyId: z.string().uuid(),
+        propertyId: z.uuid(),
         direction: z.enum(['asc', 'desc']),
       }),
     )
@@ -15,14 +15,14 @@ const ViewConfigSchema = z.object({
   filters: z
     .array(
       z.object({
-        propertyId: z.string().uuid(),
+        propertyId: z.uuid(),
         op: z.string(),
         value: z.unknown(),
       }),
     )
     .default([]),
-  groupBy: z.string().uuid().nullable().default(null),
-  visibleProperties: z.array(z.string().uuid()).default([]),
+  groupBy: z.uuid().nullable().default(null),
+  visibleProperties: z.array(z.uuid()).default([]),
 });
 
 export type ViewConfig = z.infer<typeof ViewConfigSchema>;
