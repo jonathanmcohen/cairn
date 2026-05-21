@@ -34,6 +34,9 @@ to anyone else.
 - 🌐 **Public page sharing** — publish any page to an unlisted, read-only
   `/p/<slug>` link (anonymous, `noindex`), including embedded images and
   read-only databases
+- 👥 **Real-time collaboration** — multiple people edit the same page live (Yjs/Hocuspocus), with remote cursors and presence
+- 💬 **Comments & @mentions** — block/range-anchored comment threads, resolve/reopen, @mention workspace members
+- 🔔 **Notifications** — a polled feed + unread bell, triggered by mentions and comment replies
 - 🌓 Light / dark / system theme
 
 ## Quickstart (Docker)
@@ -109,6 +112,23 @@ to anyone with the link — no login required. Published pages are **unlisted**
 inline databases render read-only. Unpublishing makes the link return 404
 (the slug is retained, so re-publishing reuses the same URL).
 
+### Collaboration setup
+
+Real-time editing runs in a second container, **`cairn-collab`** (a Hocuspocus
+Yjs server sharing the same Postgres). A homelab deploy now runs **three**
+containers: `cairn`, `cairn-collab`, and `db` — all wired in `docker-compose.yml`.
+
+The browser connects to the collab server via `COLLAB_URL` (the public WS URL of
+the `cairn-collab` service; set it in `.env`). Images:
+
+```
+ghcr.io/jonathanmcohen/cairn:0.3.0          # the Next.js app
+ghcr.io/jonathanmcohen/cairn-collab:0.3.0   # the collab (Hocuspocus) server
+```
+
+Public/read-only `/p/<slug>` pages do not use the collab socket and have no
+presence or comments.
+
 ## Local development
 
 For `pnpm dev`, `pnpm build`, or `pnpm test` run outside the container, the
@@ -122,7 +142,7 @@ full `DATABASE_URL` and `NEXTAUTH_URL` directly.
 cp .env.example .env   # full set; both compose AND pnpm read from here
 pnpm install
 pnpm dev               # http://localhost:3000
-pnpm test              # 260+ tests, requires Docker for testcontainers
+pnpm test              # 365 tests, requires Docker for testcontainers
 pnpm lint              # Biome
 pnpm typecheck         # tsc
 pnpm build             # Next.js standalone + entrypoint compile
@@ -134,9 +154,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 v0.1.0 is the initial release. Planned for later versions:
 
-- **v0.2.x:** real-time collaborative editing (Yjs), comments + mentions;
-  owner-transfer and workspace deletion carried forward from v0.2.0
-- **v0.3.x+:** native mobile apps, public API + webhooks, templates,
+- **v0.3.x:** owner-transfer and workspace deletion; comment-reply threads
+- **v0.4.x+:** native mobile apps, public API + webhooks, templates,
   page version history, S3/MinIO backend, backup/restore CLI
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.

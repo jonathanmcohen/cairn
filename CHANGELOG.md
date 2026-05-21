@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-05-21
+
+### Added (v0.3.0 Plan 6 — Notifications & release)
+- `0010` migration: `notifications` table (per-user, workspace-scoped, `mention` | `comment_reply`).
+- Notification helpers (`notifyMentions`, `notifyCommentReply`) fired on comment create; dedupe + skip-self.
+- Notifications feed API (`GET /api/notifications` with `unreadOnly` + pagination; `POST /api/notifications/read`).
+- Notification bell: polls unread every ~30s, unread-count badge, dropdown linking to each page/comment.
+- Release workflow now builds + publishes the `cairn-collab` image alongside `cairn` (multi-arch, private-repo-safe).
+- Bumped version to 0.3.0.
+
 ### Added (v0.3.0 Plan 5 — @mentions)
 - `GET /api/workspaces/members?q=` — member-search (ILIKE name/email), viewer+, workspace-scoped, for mention autocomplete.
 - `@`-mention autocomplete in the editor and comment composer via `@tiptap/extension-mention` (suggestion-based, mirrors the slash menu). Mentions are stored as `@[Name](userId)` tokens.
