@@ -4,8 +4,17 @@ import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 
-export function PageMenu({ pageId }: { pageId: string }) {
+type PageMenuProps = {
+  pageId: string;
+  initialPublished?: boolean;
+  initialSlug?: string | null;
+};
+
+export function PageMenu({ pageId, initialPublished = false, initialSlug = null }: PageMenuProps) {
   const [open, setOpen] = useState(false);
+  const [published, setPublished] = useState(initialPublished);
+  const [slug, setSlug] = useState<string | null>(initialSlug);
+  const [copied, setCopied] = useState(false);
 
   function download(url: string) {
     const a = document.createElement('a');
@@ -31,6 +40,29 @@ export function PageMenu({ pageId }: { pageId: string }) {
     input.click();
   }
 
+  async function publish() {
+    const res = await fetch(`/api/pages/${pageId}/publish`, { method: 'POST' });
+    if (!res.ok) return;
+    const body = (await res.json()) as { slug: string };
+    setSlug(body.slug);
+    setPublished(true);
+  }
+
+  async function unpublish() {
+    const res = await fetch(`/api/pages/${pageId}/unpublish`, { method: 'POST' });
+    if (!res.ok) return;
+    setPublished(false);
+  }
+
+  function copyUrl() {
+    if (!slug) return;
+    const url = `${window.location.origin}/p/${slug}`;
+    void navigator.clipboard.writeText(url).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    });
+  }
+
   return (
     <div className="relative">
       <Button variant="ghost" size="icon" onClick={() => setOpen((v) => !v)}>
@@ -38,9 +70,39 @@ export function PageMenu({ pageId }: { pageId: string }) {
       </Button>
       {open && (
         <div
-          className="absolute right-0 z-10 mt-1 w-48 rounded-md border bg-popover py-1 shadow-md"
+          className="absolute right-0 z-10 mt-1 w-56 rounded-md border bg-popover py-1 shadow-md"
           onMouseLeave={() => setOpen(false)}
         >
+          {!published ? (
+            <button
+              type="button"
+              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+              onClick={() => void publish()}
+            >
+              Publish to web
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+                onClick={() => void unpublish()}
+              >
+                Unpublish
+              </button>
+              <div className="px-3 py-1.5">
+                <div className="text-muted-foreground mb-1 truncate text-xs">/p/{slug}</div>
+                <button
+                  type="button"
+                  className="text-xs underline hover:no-underline"
+                  onClick={copyUrl}
+                >
+                  {copied ? 'Copied!' : 'Copy public link'}
+                </button>
+              </div>
+            </>
+          )}
+          <div className="my-1 border-t" />
           <button
             type="button"
             className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"

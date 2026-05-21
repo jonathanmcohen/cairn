@@ -26,7 +26,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         <div className="flex-1">
           <PageTitleInput pageId={page.id} initial={page.title} />
         </div>
-        <PageMenu pageId={page.id} />
+        <PageMenu
+          pageId={page.id}
+          initialPublished={page.published}
+          initialSlug={page.publicSlug}
+        />
       </div>
       <Editor
         pageId={page.id}
