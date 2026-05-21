@@ -14,9 +14,10 @@ Cairn is a **self-hosted, Notion-style block-based notes app** for homelab deplo
 - Next.js 16 (App Router, React 19, TypeScript strict, Turbopack) — single full-stack process, `output: 'standalone'`. The auth gate lives in `src/proxy.ts` (Next 16 renamed `middleware` → `proxy`, nodejs runtime).
 - Postgres 16 + Drizzle ORM. Migrations in `drizzle/migrations/`, applied at container startup via `src/server/entrypoint.ts`.
 - Auth.js v5 (NextAuth), **credentials provider with `jwt` session strategy** (NOT database — Credentials requires jwt; see Gotchas).
-- Tailwind + shadcn/ui (new-york style), `next-themes`.
-- TipTap 2 editor (`src/components/editor/`), custom node extensions for callout, image, file, database.
-- Biome for lint+format (replaces ESLint+Prettier). Vitest + Testcontainers (real Postgres) for tests.
+- Tailwind CSS v4 (CSS-first: `@theme` in `src/app/globals.css`, no `tailwind.config.*`; PostCSS via `@tailwindcss/postcss`) + shadcn/ui (new-york style), `next-themes`. Animations via `tw-animate-css`.
+- TipTap 3 editor (`src/components/editor/`), custom node extensions for callout, image, file, database. Utility extensions come from the consolidated `@tiptap/extensions` (Placeholder, CharacterCount) + `@tiptap/extension-list` (TaskList/TaskItem).
+- Biome v2 for lint+format (replaces ESLint+Prettier). Vitest v4 (+ `vite` as an explicit dev dep, required by Vitest 4) + Testcontainers v12 (real Postgres) for tests.
+- Zod v4 for validation (top-level `z.email()`/`z.url()`/`z.uuid()`). TypeScript 6 strict.
 - pnpm only. `cmdk` for the ⌘K palette, `archiver` for zip export, `marked` for markdown import, `prosemirror`-style JSON walker for export.
 
 ## Architecture conventions
@@ -53,6 +54,8 @@ Plans are executed **subagent-driven**: one implementer subagent per plan task (
 - **`db:generate` doesn't emit extensions/triggers/self-FKs** — append those to the generated migration SQL by hand (see `pages` trigger, `pg_trgm`, self-FK).
 - **typedRoutes:** dynamic hrefs (`/pages/${id}`) need `as Route` (`import type { Route } from 'next'`).
 - **Node Readable → web Response** for file/zip streaming needs a `// @ts-expect-error` (type mismatch persists, but works at runtime in Next 16).
+- **`@types/node` is pinned to v22** to match the runtime (Node 22 in `engines`, Dockerfile `NODE_VERSION`, CI). Do NOT bump it to the latest major (25+) — keep it aligned with the deployed Node, or types will describe APIs the runtime doesn't have.
+- **Vitest test isolation MUST stay on (`isolate: true`).** `tests/helpers/db.ts` holds a module-level Testcontainers Postgres singleton with per-file `beforeAll(startPostgres)`/`afterAll(stopPostgres)`. With `isolate: false`, module state is shared across files, so the first file's `afterAll` tears down the container later files still expect → mass `ECONNREFUSED`. The pool is `forks` + `maxWorkers/minWorkers: 1` (serial) with isolation ON, which is the Vitest 4 equivalent of the old `singleFork: true`.
 
 ## Commands
 
