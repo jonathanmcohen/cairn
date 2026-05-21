@@ -43,6 +43,13 @@
       "when": 1779321089770,
       "tag": "0005_harsh_otto_octavius",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1779324622666,
+      "tag": "0006_early_toro",
+      "breakpoints": true
     }
   ]
 }
