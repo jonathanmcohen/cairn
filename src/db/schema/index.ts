@@ -3,6 +3,7 @@ export * from './comments';
 export * from './databases';
 export * from './files';
 export * from './invite-tokens';
+export * from './notifications';
 export * from './page-yjs';
 export * from './pages';
 export * from './system-meta';
