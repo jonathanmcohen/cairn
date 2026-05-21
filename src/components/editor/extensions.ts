@@ -12,6 +12,7 @@ import { Callout } from './callout-extension';
 import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
+import { MentionExtension } from './mention-extension';
 import { SlashCommand } from './slash-extension';
 
 const lowlight = createLowlight(common);
@@ -37,6 +38,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     FileAttachment,
     DatabaseNode,
     SlashCommand,
+    MentionExtension,
     Placeholder.configure({
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') return 'Heading';
@@ -67,6 +69,7 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     (DatabaseBlock) loads rows from Postgres tables keyed by
  *                     that id, never storing row data in the node. The node
  *                     itself carries no non-attr state.                      SAFE
+ *  - Mention        — inline atom, attrs `{ id (userId), label }` only.      SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

@@ -1,0 +1,12 @@
+.mention {
+  border-radius: 0.25rem;
+  padding: 0 0.15rem;
+  color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.1);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.mention:hover {
+  background-color: hsl(var(--primary) / 0.18);
+}
