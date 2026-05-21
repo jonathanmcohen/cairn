@@ -31,13 +31,13 @@ describe('listComments', () => {
   it('returns comments ordered by created_at, oldest first', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const a = await createComment(db, {
+    const { comment: a } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
       body: 'first',
     });
-    const b = await createComment(db, {
+    const { comment: b } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -50,7 +50,7 @@ describe('listComments', () => {
   it('includes resolved comments with resolvedAt populated', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,

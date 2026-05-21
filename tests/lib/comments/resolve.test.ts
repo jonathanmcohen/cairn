@@ -30,7 +30,7 @@ describe('resolveComment / reopenComment', () => {
   it('resolves then reopens', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -47,7 +47,7 @@ describe('resolveComment / reopenComment', () => {
   it('throws for a comment in another workspace', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,

@@ -26,24 +26,27 @@ beforeEach(async () => {
 });
 
 describe('createComment', () => {
-  it('creates a page-level comment', async () => {
+  it('creates a page-level comment and surfaces mentioned userIds', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const mentioned = '11111111-1111-4111-8111-111111111111';
+    const { comment: c, mentionedUserIds } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
-      body: 'hello',
+      body: `hello @[Alice](${mentioned})`,
     });
     expect(c.anchor).toBeNull();
-    expect(c.body).toBe('hello');
+    expect(c.body).toBe(`hello @[Alice](${mentioned})`);
     expect(c.resolvedAt).toBeNull();
+    // Plan 6 seam: createComment returns the parsed mention ids (no notifications here).
+    expect(mentionedUserIds).toEqual([mentioned]);
   });
 
   it('creates a block-anchored comment', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -56,7 +59,7 @@ describe('createComment', () => {
   it('creates a range-anchored comment', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,

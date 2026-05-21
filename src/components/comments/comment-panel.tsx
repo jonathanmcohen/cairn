@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import type { Comment } from '@/db/schema';
 import type { MemberRole } from '@/lib/auth/require-role';
 import type { CommentAnchor } from '@/lib/comments/anchor';
+import { CommentComposer } from './comment-composer';
 
 const ROLE_RANK: Record<MemberRole, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
 
@@ -230,13 +231,7 @@ export function CommentPanel({
 
       {canComment && (
         <div className="space-y-2 border-t p-3">
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            placeholder="Add a comment…"
-            rows={3}
-            className="border-input bg-background focus-visible:ring-ring w-full resize-none rounded-md border px-2 py-1.5 text-sm focus-visible:outline-hidden focus-visible:ring-1"
-          />
+          <CommentComposer value={draft} onChange={setDraft} onSubmit={() => void addComment()} />
           <Button
             size="sm"
             className="w-full"

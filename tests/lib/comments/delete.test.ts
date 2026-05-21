@@ -42,7 +42,7 @@ describe('deleteComment', () => {
   it('lets the author delete their own comment', async () => {
     const u = await createTestWorkspaceWithUser(db, { role: 'editor' });
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -61,7 +61,7 @@ describe('deleteComment', () => {
   it('rejects a non-author editor', async () => {
     const author = await createTestWorkspaceWithUser(db, { role: 'editor' });
     const p = await createPage(db, { workspaceId: author.workspaceId, createdBy: author.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: author.workspaceId,
       pageId: p.id,
       authorId: author.userId,
@@ -83,7 +83,7 @@ describe('deleteComment', () => {
   it('lets an admin delete someone else’s comment', async () => {
     const author = await createTestWorkspaceWithUser(db, { role: 'editor' });
     const p = await createPage(db, { workspaceId: author.workspaceId, createdBy: author.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: author.workspaceId,
       pageId: p.id,
       authorId: author.userId,
@@ -104,7 +104,7 @@ describe('deleteComment', () => {
     const u = await createTestWorkspaceWithUser(db, { role: 'owner' });
     const other = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: other.workspaceId, createdBy: other.userId });
-    const c = await createComment(db, {
+    const { comment: c } = await createComment(db, {
       workspaceId: other.workspaceId,
       pageId: p.id,
       authorId: other.userId,

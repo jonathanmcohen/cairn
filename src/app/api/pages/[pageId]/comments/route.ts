@@ -30,7 +30,9 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
     const { pageId } = await params;
     const { ctx } = await requirePageAccess(pageId, 'editor');
     const parsed = PostInput.parse(await req.json());
-    const comment = await createComment(getDb(), {
+    // `mentionedUserIds` is the seam Plan 6 consumes (notifyMentions); this
+    // plan only surfaces the parsed ids and does not create notifications.
+    const { comment } = await createComment(getDb(), {
       workspaceId: ctx.workspaceId,
       pageId,
       authorId: ctx.userId,

@@ -75,7 +75,7 @@ describe('/api/comments/[commentId]', () => {
   it('PATCH resolves then reopens as editor', async () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(getDb(), {
+    const { comment: c } = await createComment(getDb(), {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -94,7 +94,7 @@ describe('/api/comments/[commentId]', () => {
   it('PATCH 403 for viewer', async () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(getDb(), {
+    const { comment: c } = await createComment(getDb(), {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -109,7 +109,7 @@ describe('/api/comments/[commentId]', () => {
   it('DELETE lets the author delete their own comment', async () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    const c = await createComment(getDb(), {
+    const { comment: c } = await createComment(getDb(), {
       workspaceId: u.workspaceId,
       pageId: p.id,
       authorId: u.userId,
@@ -126,7 +126,7 @@ describe('/api/comments/[commentId]', () => {
       workspaceId: author.workspaceId,
       createdBy: author.userId,
     });
-    const c = await createComment(getDb(), {
+    const { comment: c } = await createComment(getDb(), {
       workspaceId: author.workspaceId,
       pageId: p.id,
       authorId: author.userId,
@@ -144,7 +144,7 @@ describe('/api/comments/[commentId]', () => {
       workspaceId: author.workspaceId,
       createdBy: author.userId,
     });
-    const c = await createComment(getDb(), {
+    const { comment: c } = await createComment(getDb(), {
       workspaceId: author.workspaceId,
       pageId: p.id,
       authorId: author.userId,
@@ -163,7 +163,7 @@ describe('/api/comments/[commentId]', () => {
       workspaceId: other.workspaceId,
       createdBy: other.userId,
     });
-    const c = await createComment(getDb(), {
+    const { comment: c } = await createComment(getDb(), {
       workspaceId: other.workspaceId,
       pageId: p.id,
       authorId: other.userId,

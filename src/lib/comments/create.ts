@@ -1,6 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { extractMentions } from '@/lib/mentions/parse';
 import { type CommentAnchor, CommentAnchorSchema } from './anchor';
 
 export type CreateCommentInput = {
@@ -11,15 +12,20 @@ export type CreateCommentInput = {
   anchor?: CommentAnchor | null;
 };
 
+export type CreateCommentResult = {
+  comment: schema.Comment;
+  mentionedUserIds: string[];
+};
+
 export async function createComment(
   db: PostgresJsDatabase<typeof schema>,
   input: CreateCommentInput,
-): Promise<schema.Comment> {
+): Promise<CreateCommentResult> {
   const body = input.body.trim();
   if (!body) throw new Error('comment body is required');
   const anchor = input.anchor == null ? null : CommentAnchorSchema.parse(input.anchor);
 
-  return db.transaction(async (tx) => {
+  const comment = await db.transaction(async (tx) => {
     const [page] = await tx
       .select({ id: schema.pages.id })
       .from(schema.pages)
@@ -33,7 +39,7 @@ export async function createComment(
       .limit(1);
     if (!page) throw new Error('page is missing or belongs to a different workspace');
 
-    const [comment] = await tx
+    const [inserted] = await tx
       .insert(schema.comments)
       .values({
         workspaceId: input.workspaceId,
@@ -43,7 +49,14 @@ export async function createComment(
         anchor,
       })
       .returning();
-    if (!comment) throw new Error('failed to insert comment');
-    return comment;
+    if (!inserted) throw new Error('failed to insert comment');
+    return inserted;
   });
+
+  // `extractMentions` is the authoritative source of mentioned ids — run it on
+  // the server against the stored body. NOTE: notifications for these userIds
+  // are created in v0.3.0 Plan 6 (notifyMentions); this plan only surfaces the
+  // ids — no notification rows are written here.
+  const mentionedUserIds = extractMentions(body);
+  return { comment, mentionedUserIds };
 }
