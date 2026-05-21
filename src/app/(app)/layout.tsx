@@ -8,6 +8,7 @@ import type { ReactNode } from 'react';
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const ctx = await getAuthContext();
   if (!ctx) redirect('/login');
+  if (!ctx.workspaceId) redirect('/login');
   return (
     <div className="flex min-h-screen">
       <KeyboardShortcuts />

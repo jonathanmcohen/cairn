@@ -6,7 +6,7 @@ import { redirect } from 'next/navigation';
 
 export default async function TrashPage() {
   const ctx = await getAuthContext();
-  if (!ctx) redirect('/login');
+  if (!ctx?.workspaceId) redirect('/login');
   const entries = await listTrash(getDb(), ctx.workspaceId);
   const initialItems: TrashItem[] = entries.map((e) => ({
     id: e.id,

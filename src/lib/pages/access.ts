@@ -1,22 +1,22 @@
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import {
-  type AuthContext,
   HttpError,
   type MemberRole,
+  type WorkspaceContext,
   getAuthContext,
   hasMinRole,
+  requireWorkspace,
 } from '@/lib/auth/require-role';
 import { and, eq, isNull } from 'drizzle-orm';
 
 export type PageAccess = {
   page: schema.Page;
-  ctx: AuthContext;
+  ctx: WorkspaceContext;
 };
 
 export async function requirePageAccess(pageId: string, required: MemberRole): Promise<PageAccess> {
-  const ctx = await getAuthContext();
-  if (!ctx) throw new HttpError(401, 'Not authenticated');
+  const ctx = requireWorkspace(await getAuthContext());
 
   const db = getDb();
   const [page] = await db

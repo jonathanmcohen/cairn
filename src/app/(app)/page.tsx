@@ -5,7 +5,7 @@ import { getPageTree } from '@/lib/pages/tree';
 
 export default async function DashboardPage() {
   const ctx = await getAuthContext();
-  if (!ctx) return null;
+  if (!ctx?.workspaceId) return null;
   const tree = await getPageTree(getDb(), ctx.workspaceId);
   if (tree.length > 0) {
     return (
