@@ -10,6 +10,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Collab server materializes the merged Yjs doc back into `pages.content` (debounced + flushed on last disconnect), so search/export/public-render keep reading `pages.content`; the existing FTS trigger refreshes `content_text`/`content_tsv`.
 - Read-only viewers connect with a viewer-role token and a non-editable editor that writes no awareness.
 
+### Added (v0.3.0 Plan 3 — Presence)
+- Live remote cursors with name labels and a deterministic per-user color (`userColor(userId)` → stable HSL) via TipTap `CollaborationCursor`, fed the signed-in user's identity from the session.
+- "Who's here" avatar stack in the page header showing connected collaborators (`PresenceAvatars`).
+- `useCollabPresence(provider)` hook deriving the live remote-user list from Yjs awareness, plus a unit-tested `awarenessToUsers` transform that dedupes a user across multiple tabs and excludes the local client.
+
 ### Changed
 - Retired the v0.1.0 debounced content PATCH and its 409 conflict path on the collaborative editing path (Yjs is conflict-free; the collab server is the writer). Title/icon/cover metadata PATCH is unchanged.
 
