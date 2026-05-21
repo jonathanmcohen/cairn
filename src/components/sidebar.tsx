@@ -5,6 +5,7 @@ import { getAuthContext } from '@/lib/auth/require-role';
 import { appVersion } from '@/lib/version';
 import { listUserWorkspaces } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
+import { NotificationBell } from './notifications/bell';
 import { SidebarTree } from './sidebar-tree';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
@@ -21,6 +22,7 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
         <div className="min-w-0 flex-1">
           <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
         </div>
+        <NotificationBell />
         <ThemeToggle />
       </div>
       <nav className="flex-1 overflow-y-auto p-3">
