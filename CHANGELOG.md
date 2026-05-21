@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.3.0 Plan 4 — Comments)
+- `0009` migration: `comments` table (workspace→cascade, page→cascade, author→restrict; `body`, nullable jsonb `anchor`, `resolved_at`, timestamps; indexed on page + workspace).
+- Comment anchor model: `null` = page-level, `{ blockId }` = block-anchored (scroll-to + highlight), `{ from, to }` = ProseMirror range (stored; visual range-highlight deferred to v0.3.x).
+- `src/lib/comments/*` helpers: `createComment` (page+workspace scoped, validated anchor), `listComments` (created_at order, includes resolved), `resolveComment`/`reopenComment`, `deleteComment` (author or admin+).
+- API: `POST`/`GET /api/pages/[pageId]/comments` (editor+ / viewer+), `PATCH`/`DELETE /api/comments/[commentId]` (resolve-reopen editor+, delete author-or-admin).
+- Comment sidebar panel with a page-header toggle: list/add page-level threads, resolve/reopen, delete; clicking a block-anchored comment scrolls to its block.
+
 ### Added (v0.3.0 Plan 2 — Collaborative editing)
 - Live multiplayer editing: the page editor binds a Yjs `Y.Doc` synced through `cairn-collab` (Hocuspocus) via `useCollabDoc`; `Collaboration` + `CollaborationCursor` replace local history when a doc is supplied.
 - Collab server materializes the merged Yjs doc back into `pages.content` (debounced + flushed on last disconnect), so search/export/public-render keep reading `pages.content`; the existing FTS trigger refreshes `content_text`/`content_tsv`.
