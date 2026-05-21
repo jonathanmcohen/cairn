@@ -114,6 +114,28 @@ const items: SlashItem[] = [
       input.click();
     },
   },
+  {
+    title: 'Database',
+    description: 'Inline database with table/kanban/gallery',
+    command: (editor) => {
+      void (async () => {
+        const pageId = (editor.storage as { cairn?: { pageId?: string } }).cairn?.pageId;
+        if (!pageId) return;
+        const res = await fetch('/api/databases', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ pageId }),
+        });
+        if (!res.ok) return;
+        const { id } = (await res.json()) as { id: string };
+        editor
+          .chain()
+          .focus()
+          .insertContent({ type: 'database', attrs: { databaseId: id } })
+          .run();
+      })();
+    },
+  },
 ];
 
 export const SlashCommand = Extension.create({

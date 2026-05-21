@@ -118,6 +118,12 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
     editorRef.current = editor;
   }, [editor]);
 
+  useEffect(() => {
+    if (editor) {
+      (editor.storage as { cairn?: { pageId: string } }).cairn = { pageId };
+    }
+  }, [editor, pageId]);
+
   useEffect(
     () => () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);

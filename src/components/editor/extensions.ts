@@ -10,6 +10,7 @@ import TaskList from '@tiptap/extension-task-list';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import { Callout } from './callout-extension';
+import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
 import { SlashCommand } from './slash-extension';
@@ -28,6 +29,7 @@ export function baseExtensions() {
     Callout,
     CairnImage,
     FileAttachment,
+    DatabaseNode,
     SlashCommand,
     Placeholder.configure({
       placeholder: ({ node }) => {
