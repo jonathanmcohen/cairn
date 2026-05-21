@@ -57,8 +57,8 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0
       bcryptjs:
-        specifier: ^2.4.3
-        version: 2.4.3
+        specifier: ^3.0.3
+        version: 3.0.3
       class-variance-authority:
         specifier: ^0.7.0
         version: 0.7.1
@@ -132,9 +132,6 @@ importers:
       '@types/archiver':
         specifier: ^7.0.0
         version: 7.0.0
-      '@types/bcryptjs':
-        specifier: ^2.4.6
-        version: 2.4.6
       '@types/node':
         specifier: ^22.0.0
         version: 22.19.19
@@ -1702,9 +1699,6 @@ packages:
   '@types/archiver@7.0.0':
     resolution: {integrity: sha512-/3vwGwx9n+mCQdYZ2IKGGHEFL30I96UgBlk8EtRDDFQ9uxM1l4O5Ci6r00EMAkiDaTqD9DQ6nVrWRICnBPtzzg==}
 
-  '@types/bcryptjs@2.4.6':
-    resolution: {integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==}
-
   '@types/docker-modem@3.0.6':
     resolution: {integrity: sha512-yKpAGEuKRSS8wwx0joknWxsmLha78wNMe9R2S3UNsVOkZded8UqOrV8KoeDXoXsjndxwyF3eIhyClGbO1SEhEg==}
 
@@ -1935,8 +1929,9 @@ packages:
   bcrypt-pbkdf@1.0.2:
     resolution: {integrity: sha512-qeFIXtP4MSoi6NLqO12WfqARWWuCKi2Rn/9hJLEmtB5yTNr9DqFWkJRCf2qShWzPeAMRnOgCrq0sg/KLv5ES9w==}
 
-  bcryptjs@2.4.3:
-    resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
+    hasBin: true
 
   binary-extensions@2.3.0:
     resolution: {integrity: sha512-Ceh+7ox5qe7LJuLHoY0feh3pHuUDHAcRUeyL2VYghZwfpkNIy/+8Ocg0a3UuSoYzavmylwuLWQOf3hl0jjMMIw==}
@@ -4399,8 +4394,6 @@ snapshots:
     dependencies:
       '@types/readdir-glob': 1.1.5
 
-  '@types/bcryptjs@2.4.6': {}
-
   '@types/docker-modem@3.0.6':
     dependencies:
       '@types/node': 22.19.19
@@ -4658,7 +4651,7 @@ snapshots:
     dependencies:
       tweetnacl: 0.14.5
 
-  bcryptjs@2.4.3: {}
+  bcryptjs@3.0.3: {}
 
   binary-extensions@2.3.0: {}
 
