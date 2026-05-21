@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { RelationCell } from './relation-cell';
 
 type Property = { id: string; name: string; type: string; config: unknown };
 
@@ -48,6 +49,22 @@ export function CellEditor({
             ? value.toISOString().slice(0, 10)
             : String(value);
       return <span className="text-sm text-muted-foreground">{display}</span>;
+    }
+    case 'relation': {
+      const targetDatabaseId = (property.config as { targetDatabaseId?: string })?.targetDatabaseId;
+      if (!targetDatabaseId) {
+        return <span className="text-xs text-destructive">no target db</span>;
+      }
+      return (
+        <RelationCell
+          databaseId={databaseId}
+          rowId={rowId}
+          propertyId={property.id}
+          targetDatabaseId={targetDatabaseId}
+          value={value as { ids: string[]; labels: string[] } | undefined}
+          onSaved={onSaved}
+        />
+      );
     }
     case 'checkbox':
       return (
