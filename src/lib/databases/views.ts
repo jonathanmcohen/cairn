@@ -22,10 +22,29 @@ const ViewConfigSchema = z.object({
     )
     .default([]),
   groupBy: z.uuid().nullable().default(null),
+  dateProperty: z.uuid().nullable().default(null),
+  startProperty: z.uuid().nullable().default(null),
+  endProperty: z.uuid().nullable().default(null),
   visibleProperties: z.array(z.uuid()).default([]),
 });
 
 export type ViewConfig = z.infer<typeof ViewConfigSchema>;
+
+function assertViewConfig(type: schema.ViewType, config: ViewConfig): void {
+  if (type === 'kanban' && !config.groupBy) {
+    throw new Error('kanban view requires groupBy');
+  }
+  if (type === 'calendar' && !config.dateProperty) {
+    throw new Error('calendar view requires a dateProperty');
+  }
+  if (
+    type === 'timeline' &&
+    !config.dateProperty &&
+    !(config.startProperty && config.endProperty)
+  ) {
+    throw new Error('timeline view requires a dateProperty or a startProperty+endProperty pair');
+  }
+}
 
 export type CreateViewInput = {
   databaseId: string;
@@ -49,9 +68,7 @@ export async function createView(
       throw new Error('database not found in workspace');
     }
     const config = ViewConfigSchema.parse(input.config ?? {});
-    if (input.type === 'kanban' && !config.groupBy) {
-      throw new Error('kanban view requires groupBy');
-    }
+    assertViewConfig(input.type, config);
     const existing = await tx
       .select({ pos: schema.dbViews.position })
       .from(schema.dbViews)
@@ -106,9 +123,7 @@ export async function updateView(
     if (input.patch.name !== undefined) values.name = input.patch.name;
     if (input.patch.config !== undefined) {
       const config = ViewConfigSchema.parse(input.patch.config);
-      if (view.type === 'kanban' && !config.groupBy) {
-        throw new Error('kanban view requires groupBy');
-      }
+      assertViewConfig(view.type, config);
       values.config = config;
     }
     const [updated] = await tx
