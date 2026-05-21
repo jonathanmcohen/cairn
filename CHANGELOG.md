@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-05-21
+
+### Added (v0.2.0 Plan 4 — Polish & release)
+- Cross-feature end-to-end smoke covering OAuth provider listing, multi-workspace create/switch/scoping, invite-accept as an existing user, leave-workspace (incl. sole-owner rejection), and publish → anonymous `/p/<slug>` (image + read-only database) → unpublish.
+- README: OAuth login, multiple workspaces, and public sharing features; OAuth setup (env vars + callback URLs); Sharing note.
+- Bumped version to 0.2.0; reused the existing private-repo-safe release workflow to publish `ghcr.io/jonathanmcohen/cairn:0.2.0`.
+
 ### Added (v0.2.0 Plan 1 — OAuth & user model)
 - `0007` migration: `users.email_verified` + `users.image`, `pages.published` + `pages.public_slug`.
 - Google + GitHub OAuth providers, enabled only when their env vars are set; "Continue with …" buttons appear conditionally on login/signup.
