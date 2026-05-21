@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.5.0 Plan 1 — Public API & keys)
+- `0012` migration adding five v0.5.0 tables (API keys, webhooks, webhook deliveries, and Plan 2–4 scaffolding) plus their indexes — a single shared migration the rest of v0.5.0 builds on.
+- `cairn_sk_` workspace API keys: minted server-side, sha256-hashed at rest (plaintext shown **once** and never recoverable), with an assigned role, optional expiry, and a stored display prefix.
+- `/api/v1` HTTP API for pages, databases, and database rows (full CRUD) authenticated via `Authorization: Bearer cairn_sk_…`, resolving to an `AuthContext` so existing role/workspace checks apply unchanged; cross-workspace ids return 404.
+- Cursor-paginated list endpoints (`?cursor=&limit=`, max 100, `{ data, nextCursor }` envelope) and a uniform `{ error: { code, message } }` error shape across all `/api/v1` responses.
+- Per-key in-memory token-bucket rate limiting (documented single-instance ceiling, returns `429 rate_limited`).
+- Admin-only API-key management settings UI (list by prefix/role/last-used/expiry, create with show-once token, revoke) plus a hand-written README API reference.
+
 ## [0.4.0] - 2026-05-21
 
 ### Added (v0.4.0 Plan 5 — Polish & release)

@@ -185,6 +185,80 @@ pnpm build             # Next.js standalone + entrypoint compile
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
+## HTTP API (v0)
+
+Cairn exposes a read/write JSON API under `/api/v1` for pages, databases, and
+database rows. Authenticate every request with a workspace API key.
+
+### Authentication
+
+Create keys under **Settings → API keys** (admin only). The full token
+(`cairn_sk_…`) is shown **once** at creation — only its prefix is stored, so
+copy it immediately. Send it as a bearer token:
+
+```
+Authorization: Bearer cairn_sk_<64-hex>
+```
+
+A key carries a workspace and a role (`admin`/`editor`/`viewer`) and acts on
+behalf of the user who created it. All existing role and workspace checks
+(`requireRole`, `requirePageAccess`) apply unchanged; ids from another
+workspace return `404` (never `403`, to avoid leaking existence). Optional
+expiry rejects the key after its `expires_at`.
+
+### Errors
+
+Every error shares a single shape:
+
+```json
+{ "error": { "code": "not_found", "message": "..." } }
+```
+
+Codes: `unauthorized` (401), `forbidden` (403), `not_found` (404),
+`validation` (400), `rate_limited` (429), `internal` (500).
+
+### Pagination
+
+List endpoints are cursor-paginated:
+
+```
+GET /api/v1/pages?limit=50&cursor=<opaque>
+```
+
+`limit` defaults to 25, max 100. The response envelope is
+`{ "data": [...], "nextCursor": "<opaque>|null" }`; pass `nextCursor` back as
+`cursor` to fetch the next page. Cursors are opaque keyset tokens over
+`(createdAt, id)`.
+
+### Rate limiting
+
+Requests are rate-limited **per key** via an in-memory token bucket (~60-request
+burst, ~1 req/s steady). The bucket lives in the process heap, so it is
+**single-instance only** — it is not shared across replicas and resets on
+restart. Exceeding it returns `429 rate_limited`.
+
+### Endpoints
+
+| Method   | Path                                            | Role   |
+| -------- | ----------------------------------------------- | ------ |
+| `GET`    | `/api/v1/pages`                                 | viewer |
+| `POST`   | `/api/v1/pages`                                 | editor |
+| `GET`    | `/api/v1/pages/{pageId}`                        | viewer |
+| `PATCH`  | `/api/v1/pages/{pageId}`                        | editor |
+| `DELETE` | `/api/v1/pages/{pageId}`                        | editor |
+| `GET`    | `/api/v1/databases`                             | viewer |
+| `POST`   | `/api/v1/databases`                             | editor |
+| `GET`    | `/api/v1/databases/{databaseId}`                | viewer |
+| `PATCH`  | `/api/v1/databases/{databaseId}`                | editor |
+| `DELETE` | `/api/v1/databases/{databaseId}`                | editor |
+| `GET`    | `/api/v1/databases/{databaseId}/rows`           | viewer |
+| `POST`   | `/api/v1/databases/{databaseId}/rows`           | editor |
+| `GET`    | `/api/v1/databases/{databaseId}/rows/{rowId}`   | viewer |
+| `PATCH`  | `/api/v1/databases/{databaseId}/rows/{rowId}`   | editor |
+| `DELETE` | `/api/v1/databases/{databaseId}/rows/{rowId}`   | editor |
+
+A generated OpenAPI document is out of scope for this release.
+
 ## Roadmap
 
 v0.1.0 is the initial release. Planned for later versions:
