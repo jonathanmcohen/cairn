@@ -1,4 +1,5 @@
 import { proseToMarkdown } from '@/lib/markdown/from-prose';
+import { markdownToProse } from '@/lib/markdown/to-prose';
 import { describe, expect, it } from 'vitest';
 
 describe('proseToMarkdown', () => {
@@ -79,5 +80,26 @@ describe('proseToMarkdown', () => {
       content: [{ type: 'cairnImage', attrs: { alt: 'cat', src: '/api/files/x' } }],
     });
     expect(out.trim()).toBe('![cat](/api/files/x)');
+  });
+});
+
+describe('markdownToProse', () => {
+  it('imports H1 + paragraph', () => {
+    const doc = markdownToProse('# Title\n\nSome text');
+    expect(doc.content?.[0]?.type).toBe('heading');
+    expect(doc.content?.[1]?.type).toBe('paragraph');
+  });
+
+  it('imports a code block with language', () => {
+    const doc = markdownToProse('```ts\nconst x = 1;\n```');
+    expect(doc.content?.[0]).toMatchObject({
+      type: 'codeBlock',
+      attrs: { language: 'ts' },
+    });
+  });
+
+  it('imports a bullet list', () => {
+    const doc = markdownToProse('- A\n- B');
+    expect(doc.content?.[0]?.type).toBe('bulletList');
   });
 });
