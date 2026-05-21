@@ -15,6 +15,7 @@ export type UpdatePageInput = {
   patch: Partial<{
     title: string;
     icon: string | null;
+    coverUrl: string | null;
     content: unknown;
   }>;
   expectedUpdatedAt?: Date;
@@ -47,6 +48,7 @@ export async function updatePage(
     const values: Partial<schema.NewPage> = {};
     if (input.patch.title !== undefined) values.title = input.patch.title;
     if (input.patch.icon !== undefined) values.icon = input.patch.icon;
+    if (input.patch.coverUrl !== undefined) values.coverUrl = input.patch.coverUrl;
     if (input.patch.content !== undefined) values.content = input.patch.content as never;
 
     const [updated] = await tx

@@ -21,6 +21,7 @@ export async function GET(_req: Request, { params }: RouteCtx): Promise<Response
 const PatchInput = z.object({
   title: z.string().min(1).max(200).optional(),
   icon: z.string().max(8).nullable().optional(),
+  coverUrl: z.string().nullable().optional(),
   content: z.unknown().optional(),
   expectedUpdatedAt: z.string().datetime().optional(),
 });
@@ -36,6 +37,7 @@ export async function PATCH(req: Request, { params }: RouteCtx): Promise<Respons
       patch: {
         title: parsed.title,
         icon: parsed.icon === undefined ? undefined : parsed.icon,
+        coverUrl: parsed.coverUrl === undefined ? undefined : parsed.coverUrl,
         content: parsed.content,
       },
       expectedUpdatedAt: parsed.expectedUpdatedAt ? new Date(parsed.expectedUpdatedAt) : undefined,

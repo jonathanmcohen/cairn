@@ -1,3 +1,4 @@
+import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageTitleInput } from '@/components/page-title-input';
@@ -18,6 +19,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   return (
     <div className="mx-auto max-w-3xl">
+      <CoverImage pageId={page.id} initial={page.coverUrl} />
       <div className="mb-6 flex items-center gap-3">
         <PageIconPicker pageId={page.id} initial={page.icon} />
         <PageTitleInput pageId={page.id} initial={page.title} />
