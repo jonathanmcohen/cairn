@@ -1,0 +1,28 @@
+# syntax=docker/dockerfile:1.7
+ARG NODE_VERSION=22-alpine
+
+FROM node:${NODE_VERSION} AS base
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY package.json pnpm-lock.yaml ./
+RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
+
+FROM base AS runner
+ENV NODE_ENV=production
+COPY --from=deps /app/node_modules ./node_modules
+COPY package.json tsconfig.json ./
+COPY collab ./collab
+COPY src/lib/collab ./src/lib/collab
+COPY src/lib/auth ./src/lib/auth
+
+RUN addgroup -g 1001 -S cairn && adduser -u 1001 -S cairn -G cairn
+USER cairn
+
+EXPOSE 1234
+ENV COLLAB_PORT=1234
+
+# tsx resolves the @/ alias via tsconfig paths; run the TS entrypoint directly.
+CMD ["pnpm", "exec", "tsx", "collab/server.ts"]
