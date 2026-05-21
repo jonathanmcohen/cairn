@@ -8,6 +8,12 @@ const PUBLIC_PATHS = [
   '/api/health',
   '/p/',
   '/api/public',
+  // Embedded images on public pages are loaded by anonymous visitors via
+  // HMAC-signed URLs. The /api/files handler verifies the signature itself
+  // (401 on a bad/missing sig), so it is its own access boundary and must not
+  // be gated behind a session cookie — otherwise anonymous public-page image
+  // requests get redirected to /login.
+  '/api/files',
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
