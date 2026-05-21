@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.3.0 Plan 1 — Collab infrastructure)
+- `0008` migration: `page_yjs` table (page_id PK → pages cascade, `state` bytea, `updated_at`) for Yjs document persistence.
+- Shared collab token lib (`src/lib/collab/token.ts`): HMAC-signed compact token (userId/pageId/role/exp ~5 min), mint + constant-time verify, reusing the `AUTH_SECRET` signing approach.
+- `GET /api/collab/token?pageId=`: `requirePageAccess`-gated, returns a page+role-scoped token and the browser `COLLAB_URL`.
+- `cairn-collab` service: a standalone Hocuspocus server (`collab/server.ts` + `Dockerfile.collab`) persisting Yjs docs to `page_yjs` and authorizing connections via the shared token (`authorizeCollab`).
+- docker-compose wiring for `cairn-collab` (shares DB + `AUTH_SECRET`, WS port published) and `COLLAB_URL` on the `cairn` service.
+- `yjsStateToProseDoc` materializer stub (wired to write `pages.content` in Plan 2).
+- Optional `COLLAB_URL` env (default `ws://localhost:1234`).
+
 ## [0.2.0] - 2026-05-21
 
 ### Added (v0.2.0 Plan 4 — Polish & release)

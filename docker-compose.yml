@@ -9,6 +9,7 @@ services:
       DATABASE_URL: postgres://cairn:${DB_PASSWORD}@db:5432/cairn
       AUTH_SECRET: ${AUTH_SECRET}
       NEXTAUTH_URL: ${PUBLIC_URL}
+      COLLAB_URL: ${COLLAB_URL:-ws://localhost:1234}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
       AUTH_GITHUB_ID: ${AUTH_GITHUB_ID:-}
@@ -18,6 +19,22 @@ services:
       CAIRN_LOG_LEVEL: info
     volumes:
       - cairn_uploads:/data/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+
+  cairn-collab:
+    build:
+      context: .
+      dockerfile: Dockerfile.collab
+    image: cairn-collab:dev
+    restart: unless-stopped
+    ports:
+      - "${COLLAB_PORT:-1234}:1234"
+    environment:
+      DATABASE_URL: postgres://cairn:${DB_PASSWORD}@db:5432/cairn
+      AUTH_SECRET: ${AUTH_SECRET}
+      COLLAB_PORT: 1234
     depends_on:
       db:
         condition: service_healthy
