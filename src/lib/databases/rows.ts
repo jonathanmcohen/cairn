@@ -3,7 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
-import { validateRelationCells } from './relations';
+import { resolveRelationCells, validateRelationCells } from './relations';
 import { compileSorts, type SortSpec } from './sort';
 
 export type { FilterCondition } from './filter';
@@ -224,6 +224,15 @@ export async function listRows(
     const map = cellsByRow.get(c.rowId);
     if (map) map[c.propertyId] = c.value;
   }
+  // Ensure every row has a cells map (so empty relation cells still resolve).
+  for (const r of rows) {
+    if (!cellsByRow.has(r.id)) cellsByRow.set(r.id, {});
+  }
+
+  // Resolve relation cells (to { ids, labels }) BEFORE formulas reference them.
+  const relationProps = props.filter((p) => p.type === 'relation');
+  await resolveRelationCells(db, relationProps, cellsByRow);
+
   // Build name -> id map (shared across rows) and the list of formula properties.
   const nameToId = new Map<string, string>(props.map((p) => [p.name, p.id]));
   const formulaProps = props.filter((p) => p.type === 'formula');

@@ -62,3 +62,108 @@ export async function validateRelationCells(
     }
   }
 }
+
+export type ResolvedRelation = { ids: string[]; labels: string[] };
+
+/**
+ * Resolve relation cells across many rows in ONE batched pass.
+ * - Collects every referenced related-row id from every relation cell.
+ * - One query for live (non-archived) target rows; one query for their label cells.
+ * - Filters out dangling ids (rows that no longer resolve).
+ * Returns a resolver to apply per-cell. Label = the related row's first text-ish
+ * property value (by property position), else "Untitled".
+ */
+export async function resolveRelationCells(
+  db: PostgresJsDatabase<typeof schema>,
+  relationProps: Pick<schema.DbProperty, 'id' | 'config'>[],
+  cellsByRow: Map<string, Record<string, unknown>>,
+): Promise<void> {
+  if (relationProps.length === 0) return;
+  const relPropIds = new Set(relationProps.map((p) => p.id));
+
+  // 1. Gather every referenced related-row id.
+  const allIds = new Set<string>();
+  for (const cells of cellsByRow.values()) {
+    for (const pid of relPropIds) {
+      const v = cells[pid];
+      if (Array.isArray(v)) for (const id of v as string[]) allIds.add(id);
+    }
+  }
+  if (allIds.size === 0) {
+    // Still normalize empty relation cells to the resolved shape.
+    for (const cells of cellsByRow.values()) {
+      for (const pid of relPropIds) {
+        if (Array.isArray(cells[pid])) cells[pid] = { ids: [], labels: [] };
+      }
+    }
+    return;
+  }
+
+  // 2. One query: which of those ids are live rows + their database.
+  const liveRows = await db
+    .select({ id: schema.dbRows.id, databaseId: schema.dbRows.databaseId })
+    .from(schema.dbRows)
+    .where(and(inArray(schema.dbRows.id, [...allIds]), isNull(schema.dbRows.archivedAt)));
+  const liveById = new Map(liveRows.map((r) => [r.id, r.databaseId]));
+
+  // 3. One query: label cells (text/title) for those rows. We pick, per target
+  //    database, the lowest-position text property as the label property.
+  const targetDbIds = [...new Set(liveRows.map((r) => r.databaseId))];
+  const labelProps =
+    targetDbIds.length === 0
+      ? []
+      : await db
+          .select({
+            id: schema.dbProperties.id,
+            databaseId: schema.dbProperties.databaseId,
+            type: schema.dbProperties.type,
+            position: schema.dbProperties.position,
+          })
+          .from(schema.dbProperties)
+          .where(inArray(schema.dbProperties.databaseId, targetDbIds));
+  const labelPropByDb = new Map<string, string>();
+  for (const p of labelProps.sort((a, b) => a.position - b.position)) {
+    if (p.type === 'text' && !labelPropByDb.has(p.databaseId)) {
+      labelPropByDb.set(p.databaseId, p.id);
+    }
+  }
+  const labelPropIds = [...labelPropByDb.values()];
+  const labelCells =
+    labelPropIds.length === 0
+      ? []
+      : await db
+          .select({
+            rowId: schema.dbCells.rowId,
+            propertyId: schema.dbCells.propertyId,
+            value: schema.dbCells.value,
+          })
+          .from(schema.dbCells)
+          .where(
+            and(
+              inArray(schema.dbCells.rowId, [...allIds]),
+              inArray(schema.dbCells.propertyId, labelPropIds),
+            ),
+          );
+  const labelByRow = new Map<string, string>();
+  for (const c of labelCells) {
+    if (typeof c.value === 'string' && c.value.trim() !== '') {
+      labelByRow.set(c.rowId, c.value);
+    }
+  }
+
+  // 4. Apply per cell: drop dangling ids, build labels.
+  for (const cells of cellsByRow.values()) {
+    for (const pid of relPropIds) {
+      const v = cells[pid];
+      if (!Array.isArray(v)) continue;
+      const ids: string[] = [];
+      const labels: string[] = [];
+      for (const id of v as string[]) {
+        if (!liveById.has(id)) continue; // dangling — drop
+        ids.push(id);
+        labels.push(labelByRow.get(id) ?? 'Untitled');
+      }
+      cells[pid] = { ids, labels } satisfies ResolvedRelation;
+    }
+  }
+}
