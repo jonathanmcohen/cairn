@@ -7,7 +7,7 @@ import { prosemirrorJSONToYDoc } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { DragHandle } from './drag-handle';
-import { type CollabUser, collabExtensions } from './extensions';
+import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { PresenceAvatars } from './presence-avatars';
 import { useCollabDoc } from './use-collab-doc';
 
@@ -61,10 +61,13 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
   }, []);
 
   // The editor is only built once the provider exists, so the Collaboration
-  // extension binds the live Y.Doc immediately. Before then we mount an empty
-  // placeholder (no extensions) to avoid flashing — and importantly we never
-  // pass `content:`, so the doc content always comes from Yjs sync, never from
-  // `initialContent` (which would fight the binding).
+  // extension binds the live Y.Doc immediately. Before then we mount a
+  // read-only placeholder that uses the SAME node schema (baseExtensions) but
+  // without the Collaboration binding — an empty `extensions: []` set has no
+  // top-level `doc` node and makes TipTap throw "Schema is missing its top node
+  // type ('doc')" on mount. We never pass `content:`, so the doc content always
+  // comes from Yjs sync, never from `initialContent` (which would fight the
+  // binding).
   const editor = useEditor(
     provider
       ? {
@@ -122,7 +125,7 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
           // server materializes to pages.content. Title/icon/cover still PATCH
           // from their sibling components.
         }
-      : { extensions: [], editable: false, immediatelyRender: false },
+      : { extensions: baseExtensions(), editable: false, immediatelyRender: false },
     [provider, editable],
   );
 
