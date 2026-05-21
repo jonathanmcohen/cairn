@@ -10,6 +10,10 @@ const Schema = z.object({
   CAIRN_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(25),
   CAIRN_TRASH_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
   CAIRN_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
+  AUTH_GOOGLE_ID: z.string().optional(),
+  AUTH_GOOGLE_SECRET: z.string().optional(),
+  AUTH_GITHUB_ID: z.string().optional(),
+  AUTH_GITHUB_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;
