@@ -7,6 +7,7 @@ import { GalleryView } from './gallery-view';
 import { KanbanView } from './kanban-view';
 import { PropertyPanel } from './property-panel';
 import { TableView } from './table-view';
+import { TimelineView } from './timeline-view';
 import { useDatabaseData } from './use-database-data';
 import { ViewSwitcher } from './view-switcher';
 
@@ -46,6 +47,7 @@ export function DatabaseBlock({ node }: NodeViewProps) {
       {activeView.type === 'table' && <TableView {...viewProps} />}
       {activeView.type === 'kanban' && <KanbanView {...viewProps} />}
       {activeView.type === 'calendar' && <CalendarView {...viewProps} />}
+      {activeView.type === 'timeline' && <TimelineView {...viewProps} />}
       {activeView.type === 'gallery' && <GalleryView {...viewProps} />}
       <PropertyPanel databaseId={databaseId} onChange={refresh} />
     </NodeViewWrapper>
