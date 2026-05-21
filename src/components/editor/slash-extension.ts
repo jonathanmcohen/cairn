@@ -82,6 +82,38 @@ const items: SlashItem[] = [
       input.click();
     },
   },
+  {
+    title: 'File',
+    description: 'Attach a file as a downloadable link',
+    command: (editor) => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.set('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) return;
+        const { signedUrl, file: meta } = (await res.json()) as {
+          signedUrl: string;
+          file: { id: string; name: string; mimeType: string; size: number };
+        };
+        editor
+          .chain()
+          .focus()
+          .insertFile({
+            href: signedUrl,
+            name: meta.name,
+            mimeType: meta.mimeType,
+            size: meta.size,
+            fileId: meta.id,
+          })
+          .run();
+      };
+      input.click();
+    },
+  },
 ];
 
 export const SlashCommand = Extension.create({

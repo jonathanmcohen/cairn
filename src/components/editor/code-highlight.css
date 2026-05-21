@@ -66,3 +66,19 @@ pre code.hljs {
 .dark .callout-amber {
   background: rgb(120 53 15 / 0.4);
 }
+
+.file-attachment {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  margin: 0.25rem 0;
+  font-size: 0.875rem;
+  text-decoration: none;
+  color: hsl(var(--foreground));
+}
+.file-attachment::before {
+  content: "📎";
+  margin-right: 0.5rem;
+}
