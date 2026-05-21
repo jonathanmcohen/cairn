@@ -2,10 +2,15 @@
 
 import { EditorContent, useEditor } from '@tiptap/react';
 import { baseExtensions } from './extensions';
+import { PublicDatabaseNode } from './public-database-extension';
+
+function publicExtensions() {
+  return [...baseExtensions().filter((e) => e.name !== 'database'), PublicDatabaseNode];
+}
 
 export function ReadOnlyView({ content }: { content: unknown }) {
   const editor = useEditor({
-    extensions: baseExtensions(),
+    extensions: publicExtensions(),
     content: content as never,
     editable: false,
     immediatelyRender: false,
