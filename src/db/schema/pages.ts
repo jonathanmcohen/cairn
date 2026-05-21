@@ -28,6 +28,8 @@ export const pages = pgTable(
     title: text('title').notNull().default('Untitled'),
     icon: text('icon'),
     coverUrl: text('cover_url'),
+    published: boolean('published').notNull().default(false),
+    publicSlug: text('public_slug').unique(),
     content: jsonb('content')
       .$type<unknown>()
       .notNull()
