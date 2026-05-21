@@ -1,7 +1,10 @@
 import { Database } from '@hocuspocus/extension-database';
 import { Server } from '@hocuspocus/server';
 import postgres from 'postgres';
+import * as Y from 'yjs';
 import { authorizeCollab } from '../src/lib/collab/authorize.js';
+import { yjsStateToProseDoc } from '../src/lib/collab/materialize.js';
+import { createMaterializeScheduler } from './materialize-scheduler.js';
 
 const DATABASE_URL = process.env.DATABASE_URL;
 const AUTH_SECRET = process.env.AUTH_SECRET;
@@ -12,6 +15,36 @@ if (!AUTH_SECRET) throw new Error('AUTH_SECRET is required');
 
 const sql = postgres(DATABASE_URL);
 const secret = AUTH_SECRET;
+
+// documentName (page id) -> live Y.Doc, kept current by the Hocuspocus hooks so
+// the disconnect-flush can materialize the final state without a live socket.
+const docs = new Map<string, Y.Doc>();
+
+/**
+ * Encode the live Y.Doc to ProseMirror JSON (fragment 'default', matching the
+ * client seed + materialize.ts) and write it to pages.content. The existing
+ * pages_sync_search_columns trigger refreshes content_text/content_tsv — we
+ * never touch those columns directly.
+ */
+async function materialize(pageId: string) {
+  const ydoc = docs.get(pageId);
+  if (!ydoc) return;
+  const state = Y.encodeStateAsUpdate(ydoc);
+  const prose = yjsStateToProseDoc(state);
+  await sql`
+    UPDATE pages
+    SET content = ${JSON.stringify(prose)}::jsonb, updated_at = now()
+    WHERE id = ${pageId}::uuid
+  `;
+}
+
+// Design (a) per the plan: Hocuspocus already debounces onStoreDocument, so we
+// materialize straight from that hook. The scheduler is used ONLY for the
+// last-disconnect flush, guaranteeing the final edits are never lost.
+const scheduler = createMaterializeScheduler({
+  debounceMs: 2000,
+  flush: materialize,
+});
 
 const server = new Server({
   port: PORT,
@@ -24,6 +57,17 @@ const server = new Server({
     }
     // Expose claims to later hooks (used in Plan 2 for materialize attribution).
     return { user: { id: result.userId, role: result.role } };
+  },
+  // Hocuspocus debounces this hook; materialize the merged doc to pages.content.
+  async onStoreDocument({ documentName, document }) {
+    docs.set(documentName, document);
+    await materialize(documentName);
+  },
+  // On the last client leaving, flush immediately so trailing edits aren't lost.
+  async onDisconnect({ documentName, clientsCount }) {
+    if (clientsCount === 0) {
+      scheduler.onLastDisconnect(documentName);
+    }
   },
   extensions: [
     new Database({
