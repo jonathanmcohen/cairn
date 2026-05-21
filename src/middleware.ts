@@ -1,6 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
 
-const PUBLIC_PATHS = ['/login', '/signup', '/invite', '/api/auth', '/api/health'];
+const PUBLIC_PATHS = [
+  '/login',
+  '/signup',
+  '/invite',
+  '/api/auth',
+  '/api/health',
+  '/p/',
+  '/api/public',
+];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
 // We do NOT validate the session in middleware (Edge runtime can't reach Postgres).
