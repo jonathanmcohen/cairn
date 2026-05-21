@@ -30,6 +30,25 @@ export function CellEditor({
   }
 
   switch (property.type) {
+    case 'formula': {
+      if (value && typeof value === 'object' && '__error' in value) {
+        return (
+          <span
+            className="text-xs text-destructive"
+            title={String((value as { __error: string }).__error)}
+          >
+            ⚠ error
+          </span>
+        );
+      }
+      const display =
+        value === null || value === undefined
+          ? ''
+          : value instanceof Date
+            ? value.toISOString().slice(0, 10)
+            : String(value);
+      return <span className="text-sm text-muted-foreground">{display}</span>;
+    }
     case 'checkbox':
       return (
         <input

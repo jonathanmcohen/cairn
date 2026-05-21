@@ -12,6 +12,7 @@ const NumberConfig = z
   .object({ format: z.enum(['plain', 'currency', 'percent']).default('plain') })
   .default({ format: 'plain' });
 const NoConfig = z.object({}).strict();
+const FormulaConfig = z.object({ expression: z.string().default('') }).default({ expression: '' });
 
 const ConfigByType: Record<schema.PropertyType, z.ZodTypeAny> = {
   text: NoConfig,
@@ -21,7 +22,7 @@ const ConfigByType: Record<schema.PropertyType, z.ZodTypeAny> = {
   date: NoConfig,
   checkbox: NoConfig,
   url: NoConfig,
-  formula: NoConfig,
+  formula: FormulaConfig,
   relation: NoConfig,
   rollup: NoConfig,
 };
