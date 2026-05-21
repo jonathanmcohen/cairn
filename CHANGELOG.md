@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.2.0 Plan 1 — OAuth & user model)
+- `0007` migration: `users.email_verified` + `users.image`, `pages.published` + `pages.public_slug`.
+- Google + GitHub OAuth providers, enabled only when their env vars are set; "Continue with …" buttons appear conditionally on login/signup.
+- Invite-gated OAuth sign-in: links to an existing account by verified email, consumes a matching invite for newcomers, otherwise denies (with an access-denied notice).
+- Dropped the v0.1.0 Drizzle-adapter `any` cast now that the users table carries the adapter's expected columns.
+- docker-compose passes through `AUTH_GOOGLE_*` / `AUTH_GITHUB_*`.
+
 ## [0.1.0] - 2026-05-20
 
 ### Added (Plan 6 — Release polish)
