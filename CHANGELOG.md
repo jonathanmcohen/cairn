@@ -5,6 +5,40 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-05-21
+
+### Added (v0.4.0 Plan 5 — Polish & release)
+- Cross-feature integration smoke (Testcontainers): one database exercising a formula property, a relation to a second database, a rollup over that relation, and a calendar view on a date property — asserting `listRows` returns correct computed formula + rollup values, resolved relation labels, dangling-id filtering, and that calendar/timeline view configs are accepted.
+- README: formula/relation/rollup property types and calendar/timeline views, with a prominent note that formula/rollup values cannot be filtered or sorted (computed post-SQL) and that reverse relations are not yet supported.
+- Bumped version to 0.4.0; reused the existing private-repo-safe release workflow to publish `ghcr.io/jonathanmcohen/cairn:0.4.0`.
+
+### Added (v0.4.0 Plan 4 — Calendar + timeline views)
+- `0011` migration: extended the `view_type` enum with `calendar` and `timeline`.
+- Pure calendar month-grid + day-bucketing helper; calendar view places rows by a date property, click a day to add a row prefilled with that date.
+- Read-only timeline view positioning rows by a single date or start/end pair via CSS (drag-to-reschedule deferred).
+- Calendar/timeline view config requires a date property (validated like kanban `groupBy`).
+- View switcher gains Calendar and Timeline entries with a required date-property picker.
+
+### Added (v0.4.0 Plan 3 — Rollups)
+- Pure rollup aggregation module (`count`/`sum`/`avg`/`min`/`max`/`earliest`/`latest`).
+- Rollup property config schema with relation + target-property validation.
+- `listRows` rollup pass aggregates target cells through a relation (batched, no N+1).
+- Property-panel rollup config UI (relation + target-property + fn selectors).
+
+### Added (v0.4.0 Plan 2 — Relations)
+- Relation property config schema with same-workspace target-database validation.
+- Relation cells coerced to a deduped `string[]` of related-row ids; ids validated against live target-db rows on write (batched).
+- `listRows` resolves relation cells to ids + labels and drops dangling ids (batched, no N+1).
+- Relation cell row-picker editor (add/remove related rows) and property-panel relation type with a same-workspace target-database picker.
+
+### Added (v0.4.0 Plan 1 — Formulas)
+- `0011` migration: extended the `property_type` enum with `formula`, `relation`, and `rollup`.
+- Formula tokenizer + recursive-descent parser → AST; function table (`if`/`concat`/`length`/`round`/`abs`/`min`/`max`/`sum`/`now`/`dateDiff`).
+- Formula evaluator + `computeFormula` entrypoint (errors surface as `{__error}`, never throw).
+- `listRows` formula post-fetch pass computes formula cells from sibling values (never stored).
+- Property-panel formula editor (live error hint) + read-only computed-cell display.
+- Allowed the new formula/relation/rollup property types in the create-property route schema.
+
 ## [0.3.0] - 2026-05-21
 
 ### Added (v0.3.0 Plan 6 — Notifications & release)
