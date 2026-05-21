@@ -84,6 +84,22 @@ export function collabExtensions(opts: {
       CollaborationCaret.configure({
         provider: opts.provider,
         user: opts.user,
+        // Custom caret: a colored vertical bar with a floating name label in
+        // the user's color. CSS lives in code-highlight.css (imported by the
+        // editor surface). `user` is the awareness payload we wrote above.
+        render: (user) => {
+          const color = typeof user.color === 'string' ? user.color : 'hsl(0, 0%, 50%)';
+          const name = typeof user.name === 'string' ? user.name : 'Anonymous';
+          const cursor = document.createElement('span');
+          cursor.classList.add('collab-caret');
+          cursor.setAttribute('style', `border-color: ${color}`);
+          const label = document.createElement('div');
+          label.classList.add('collab-caret-label');
+          label.setAttribute('style', `background-color: ${color}`);
+          label.textContent = name;
+          cursor.appendChild(label);
+          return cursor;
+        },
       }),
     );
   }
