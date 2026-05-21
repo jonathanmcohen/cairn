@@ -4,36 +4,22 @@ import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { eq } from 'drizzle-orm';
 import NextAuth, { type NextAuthConfig } from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
+import GitHub from 'next-auth/providers/github';
+import Google from 'next-auth/providers/google';
 import { z } from 'zod';
+import { applyOAuthGate } from './oauth-gate';
 import { verifyPassword } from './password';
-
-// Our users table is a variant of the adapter's default shape (no emailVerified/image,
-// added passwordHash/avatarUrl). The adapter works at runtime; we widen the types here.
-// biome-ignore lint/suspicious/noExplicitAny: bridging Drizzle adapter's strict default schema
-type AdapterTableMap = any;
 
 const CredentialsSchema = z.object({
   email: z.string().email(),
   password: z.string().min(1),
 });
 
-export const authConfig: NextAuthConfig = {
-  adapter: DrizzleAdapter(getDb(), {
-    usersTable: schema.users as AdapterTableMap,
-    accountsTable: schema.accounts,
-    sessionsTable: schema.sessions,
-    verificationTokensTable: schema.verificationTokens,
-  }),
-  session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 30 },
-  pages: { signIn: '/login' },
-  trustHost: true,
-  providers: [
+function buildProviders(): NextAuthConfig['providers'] {
+  const providers: NextAuthConfig['providers'] = [
     Credentials({
       name: 'credentials',
-      credentials: {
-        email: { type: 'email' },
-        password: { type: 'password' },
-      },
+      credentials: { email: { type: 'email' }, password: { type: 'password' } },
       async authorize(raw) {
         const parsed = CredentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
@@ -49,8 +35,46 @@ export const authConfig: NextAuthConfig = {
         return { id: user.id, email: user.email, name: user.name };
       },
     }),
-  ],
+  ];
+
+  if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
+    providers.push(
+      Google({
+        clientId: process.env.AUTH_GOOGLE_ID,
+        clientSecret: process.env.AUTH_GOOGLE_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      }),
+    );
+  }
+  if (process.env.AUTH_GITHUB_ID && process.env.AUTH_GITHUB_SECRET) {
+    providers.push(
+      GitHub({
+        clientId: process.env.AUTH_GITHUB_ID,
+        clientSecret: process.env.AUTH_GITHUB_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      }),
+    );
+  }
+  return providers;
+}
+
+export const authConfig: NextAuthConfig = {
+  adapter: DrizzleAdapter(getDb(), {
+    usersTable: schema.users,
+    accountsTable: schema.accounts,
+    sessionsTable: schema.sessions,
+    verificationTokensTable: schema.verificationTokens,
+  }),
+  session: { strategy: 'jwt', maxAge: 60 * 60 * 24 * 30 },
+  pages: { signIn: '/login' },
+  trustHost: true,
+  providers: buildProviders(),
   callbacks: {
+    async signIn({ user, account }) {
+      if (!account || account.provider === 'credentials') return true;
+      if (!user.email || !user.id) return false;
+      return applyOAuthGate(getDb(), { email: user.email, userId: user.id });
+    },
     async jwt({ token, user }) {
       if (user?.id) token.id = user.id;
       return token;
