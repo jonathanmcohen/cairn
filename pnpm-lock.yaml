@@ -159,6 +159,12 @@ importers:
       postcss:
         specifier: ^8.5.15
         version: 8.5.15
+      prosemirror-model:
+        specifier: 1.25.7
+        version: 1.25.7
+      prosemirror-schema-basic:
+        specifier: 1.2.4
+        version: 1.2.4
       tailwindcss:
         specifier: ^4.3.0
         version: 4.3.0
@@ -2571,6 +2577,9 @@ packages:
 
   prosemirror-model@1.25.7:
     resolution: {integrity: sha512-A79aN8QEFUwI6cax8Yq4Rpcx1TJZ3Kagn+ii7qLo4/V8H3mMiHrhFyhTyHHvpSnOgMPpWiDGSwM3etwrxE50ug==}
+
+  prosemirror-schema-basic@1.2.4:
+    resolution: {integrity: sha512-ELxP4TlX3yr2v5rM7Sb70SqStq5NvI15c0j9j/gjsrO5vaw+fnnpovCLEGIcpeGfifkuqJwl4fon6b+KdrODYQ==}
 
   prosemirror-schema-list@1.5.1:
     resolution: {integrity: sha512-927lFx/uwyQaGwJxLWCZRkjXG0p48KpMj6ueoYiu4JX05GGuGcgzAy62dfiV8eFZftgyBUvLx76RsMe20fJl+Q==}
@@ -5037,6 +5046,10 @@ snapshots:
   prosemirror-model@1.25.7:
     dependencies:
       orderedmap: 2.1.1
+
+  prosemirror-schema-basic@1.2.4:
+    dependencies:
+      prosemirror-model: 1.25.7
 
   prosemirror-schema-list@1.5.1:
     dependencies:
