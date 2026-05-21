@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { computeFormula } from '@/lib/databases/formula';
+import { ROLLUP_FNS } from '@/lib/databases/rollup/config';
 
 const TYPES = [
   'text',
@@ -14,7 +15,10 @@ const TYPES = [
   'url',
   'formula',
   'relation',
+  'rollup',
 ] as const;
+
+type DbProperty = { id: string; name: string; type: string; config?: unknown };
 
 export function PropertyPanel({
   databaseId,
@@ -29,6 +33,11 @@ export function PropertyPanel({
   const [expression, setExpression] = useState('');
   const [targetDatabaseId, setTargetDatabaseId] = useState('');
   const [databases, setDatabases] = useState<{ id: string; title: string }[]>([]);
+  const [relationPropertyId, setRelationPropertyId] = useState('');
+  const [targetPropertyId, setTargetPropertyId] = useState('');
+  const [rollupFn, setRollupFn] = useState<(typeof ROLLUP_FNS)[number]>('count');
+  const [properties, setProperties] = useState<DbProperty[]>([]);
+  const [targetProps, setTargetProps] = useState<{ id: string; name: string }[]>([]);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -44,16 +53,63 @@ export function PropertyPanel({
     };
   }, [type]);
 
+  // This database's own properties (for selector 1, the relation-property picker).
+  useEffect(() => {
+    if (type !== 'rollup') return;
+    let cancelled = false;
+    void fetch(`/api/databases/${databaseId}`)
+      .then((r) => r.json())
+      .then((data: { properties?: DbProperty[] }) => {
+        if (!cancelled) setProperties(data.properties ?? []);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [type, databaseId]);
+
+  // Relation properties on THIS database, for selector 1.
+  const relationProps = properties.filter((p) => p.type === 'relation');
+
+  // Selector 2 depends on selector 1: load the chosen relation's target-db properties.
+  useEffect(() => {
+    if (type !== 'rollup' || !relationPropertyId) {
+      setTargetProps([]);
+      return;
+    }
+    const rel = relationProps.find((p) => p.id === relationPropertyId);
+    const targetDbId = (rel?.config as { targetDatabaseId?: string })?.targetDatabaseId;
+    if (!targetDbId) {
+      setTargetProps([]);
+      return;
+    }
+    let cancelled = false;
+    void fetch(`/api/databases/${targetDbId}`)
+      .then((r) => r.json())
+      .then((data: { properties?: DbProperty[] }) => {
+        if (cancelled) return;
+        // Offer only stored (non-computed) properties as rollup targets.
+        const stored = (data.properties ?? []).filter(
+          (p) => p.type !== 'formula' && p.type !== 'rollup' && p.type !== 'relation',
+        );
+        setTargetProps(stored);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [type, relationPropertyId, relationProps]);
+
   function configForType() {
     if (type === 'select' || type === 'multi_select') return { options: [] };
     if (type === 'formula') return { expression };
     if (type === 'relation') return { targetDatabaseId };
+    if (type === 'rollup') return { relationPropertyId, targetPropertyId, fn: rollupFn };
     return {};
   }
 
   async function addProperty() {
     if (!name.trim()) return;
     if (type === 'relation' && !targetDatabaseId) return;
+    if (type === 'rollup' && (!relationPropertyId || !targetPropertyId)) return;
     setBusy(true);
     await fetch(`/api/databases/${databaseId}/properties`, {
       method: 'POST',
@@ -68,6 +124,9 @@ export function PropertyPanel({
     setName('');
     setExpression('');
     setTargetDatabaseId('');
+    setRelationPropertyId('');
+    setTargetPropertyId('');
+    setRollupFn('count');
     setOpen(false);
     onChange();
   }
@@ -162,6 +221,55 @@ export function PropertyPanel({
               </p>
             );
           })()}
+        </div>
+      )}
+      {type === 'rollup' && (
+        <div className="space-y-1">
+          <select
+            aria-label="Relation property"
+            value={relationPropertyId}
+            onChange={(e) => {
+              setRelationPropertyId(e.target.value);
+              setTargetPropertyId('');
+            }}
+            className="w-full rounded border bg-transparent px-2 py-1 text-sm outline-none"
+          >
+            <option value="">Relation property…</option>
+            {relationProps.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Target property"
+            value={targetPropertyId}
+            onChange={(e) => setTargetPropertyId(e.target.value)}
+            disabled={!relationPropertyId}
+            className="w-full rounded border bg-transparent px-2 py-1 text-sm outline-none disabled:opacity-50"
+          >
+            <option value="">Target property…</option>
+            {targetProps.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          <select
+            aria-label="Aggregation function"
+            value={rollupFn}
+            onChange={(e) => setRollupFn(e.target.value as (typeof ROLLUP_FNS)[number])}
+            className="w-full rounded border bg-transparent px-2 py-1 text-sm outline-none"
+          >
+            {ROLLUP_FNS.map((fn) => (
+              <option key={fn} value={fn}>
+                {fn}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-muted-foreground">
+            Computed at read time. Filtering/sorting on rollups is not supported in this version.
+          </p>
         </div>
       )}
     </div>
