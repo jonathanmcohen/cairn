@@ -11,7 +11,7 @@ you a familiar block-editor experience for nested notes, plus inline
 databases, full-text search, and file uploads — without sending your content
 to anyone else.
 
-## Features (v0.1.0)
+## Features
 
 - 🌳 **Nested pages** with sidebar tree, emoji icons, cover images
 - ✍️ **Block editor** (paragraph, headings, lists, todo lists, blockquote,
@@ -27,6 +27,13 @@ to anyone else.
 - ⬇️⬆️ **Markdown import/export** per page and per subtree (`.zip`)
 - 👥 **Multi-tenant workspaces** with email/password auth and invite-token
   onboarding; owner / admin / editor / viewer roles
+- 🔐 **OAuth login** (Google + GitHub) as an invite-gated alternate front door,
+  linked to existing accounts by verified email — enabled per provider via env
+- 🪟 **Multiple workspaces** — belong to and switch between workspaces on one
+  instance; create, switch, accept invites as a logged-in user, and leave
+- 🌐 **Public page sharing** — publish any page to an unlisted, read-only
+  `/p/<slug>` link (anonymous, `noindex`), including embedded images and
+  read-only databases
 - 🌓 Light / dark / system theme
 
 ## Quickstart (Docker)
@@ -67,6 +74,41 @@ services:
 | `CAIRN_TRASH_RETENTION_DAYS` | `30` | Days before trash auto-purges |
 | `CAIRN_LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
 
+### OAuth setup (optional)
+
+Cairn supports Google and GitHub sign-in as an **invite-gated** alternative to
+email/password — a user can only sign in via OAuth if their verified email
+already has a workspace membership or a matching unused invite. A provider's
+button appears only when both of its env vars are set:
+
+| Variable | Provider |
+|---|---|
+| `AUTH_GOOGLE_ID` / `AUTH_GOOGLE_SECRET` | Google |
+| `AUTH_GITHUB_ID` / `AUTH_GITHUB_SECRET` | GitHub |
+
+Register the OAuth app with these **callback (redirect) URLs**, where
+`<PUBLIC_URL>` is your instance's public base URL:
+
+```
+<PUBLIC_URL>/api/auth/callback/google
+<PUBLIC_URL>/api/auth/callback/github
+```
+
+- Google: https://console.cloud.google.com/apis/credentials
+- GitHub: https://github.com/settings/developers
+
+Set the matching env vars in `.env` (see `.env.example`). With neither pair
+set, Cairn shows only the email/password form — no dead buttons.
+
+### Sharing
+
+Any page can be **published to the web** from its overflow menu. Publishing
+mints a stable, unguessable `/p/<slug>` URL that renders the page **read-only**
+to anyone with the link — no login required. Published pages are **unlisted**
+(`<meta name="robots" content="noindex">`) and link-only; embedded images and
+inline databases render read-only. Unpublishing makes the link return 404
+(the slug is retained, so re-publishing reuses the same URL).
+
 ## Local development
 
 For `pnpm dev`, `pnpm build`, or `pnpm test` run outside the container, the
@@ -80,7 +122,7 @@ full `DATABASE_URL` and `NEXTAUTH_URL` directly.
 cp .env.example .env   # full set; both compose AND pnpm read from here
 pnpm install
 pnpm dev               # http://localhost:3000
-pnpm test              # 200+ tests, requires Docker for testcontainers
+pnpm test              # 260+ tests, requires Docker for testcontainers
 pnpm lint              # Biome
 pnpm typecheck         # tsc
 pnpm build             # Next.js standalone + entrypoint compile
@@ -92,8 +134,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 v0.1.0 is the initial release. Planned for later versions:
 
-- **v0.2.x:** real-time collaborative editing (Yjs), OAuth providers, public
-  read-only sharing, comments + mentions, multi-workspace switching
+- **v0.2.x:** real-time collaborative editing (Yjs), comments + mentions;
+  owner-transfer and workspace deletion carried forward from v0.2.0
 - **v0.3.x+:** native mobile apps, public API + webhooks, templates,
   page version history, S3/MinIO backend, backup/restore CLI
 
