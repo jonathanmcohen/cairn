@@ -3,6 +3,7 @@
 import { EditorContent, useEditor } from '@tiptap/react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { DragHandle } from './drag-handle';
 import { baseExtensions } from './extensions';
 
 export type EditorProps = {
@@ -141,7 +142,10 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
         )}
         {status === 'error' && <span className="text-destructive">Save failed.</span>}
       </div>
-      <EditorContent editor={editor} />
+      <div className="relative">
+        {editor && <DragHandle editor={editor} />}
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
