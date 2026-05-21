@@ -5,8 +5,10 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef } from 'react';
 import { prosemirrorJSONToYDoc } from 'y-prosemirror';
 import * as Y from 'yjs';
+import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { DragHandle } from './drag-handle';
 import { type CollabUser, collabExtensions } from './extensions';
+import { PresenceAvatars } from './presence-avatars';
 import { useCollabDoc } from './use-collab-doc';
 
 export type EditorProps = {
@@ -36,6 +38,7 @@ const STATUS_LABEL = {
 
 export function Editor({ pageId, initialContent, currentUser, editable }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(pageId);
+  const presentUsers = useCollabPresence(provider);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
 
@@ -163,7 +166,10 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
 
   return (
     <div className="relative">
-      <div className="text-muted-foreground mb-1 text-right text-xs">{STATUS_LABEL[status]}</div>
+      <div className="mb-1 flex items-center justify-end gap-3">
+        <PresenceAvatars users={presentUsers} />
+        <span className="text-muted-foreground text-xs">{STATUS_LABEL[status]}</span>
+      </div>
       <div className="relative">
         {editor && <DragHandle editor={editor} />}
         <EditorContent editor={editor} />
