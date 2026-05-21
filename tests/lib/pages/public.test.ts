@@ -1,6 +1,7 @@
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
-import { getPublishedPageBySlug } from '@/lib/pages/public';
+import { verifyFileUrl } from '@/lib/files/signing';
+import { getPublishedPageBySlug, resignDocumentImages } from '@/lib/pages/public';
 import { publishPage } from '@/lib/pages/publish';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -65,5 +66,84 @@ describe('getPublishedPageBySlug', () => {
 
   it('returns null for an unknown slug', async () => {
     expect(await getPublishedPageBySlug(db, 'does-not-exist-abc123')).toBeNull();
+  });
+});
+
+const SECRET = 'y'.repeat(32);
+
+function parseSignedUrl(url: string): { id: string; sig: string; exp: number } {
+  const m = url.match(/^\/api\/files\/([^?]+)\?sig=([^&]+)&exp=(\d+)$/);
+  if (!m) throw new Error(`not a signed file url: ${url}`);
+  return { id: m[1] as string, sig: m[2] as string, exp: Number(m[3]) };
+}
+
+describe('resignDocumentImages', () => {
+  it("re-signs a cairnImage node's src from its fileId", () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        {
+          type: 'cairnImage',
+          attrs: { src: '/api/files/abc?sig=stale&exp=1', alt: 'x', fileId: 'abc' },
+        },
+      ],
+    };
+    const out = resignDocumentImages(doc, SECRET) as typeof doc;
+    const src = out.content[0]?.attrs?.src as string;
+    const parsed = parseSignedUrl(src);
+    expect(parsed.id).toBe('abc');
+    expect(
+      verifyFileUrl({ fileId: 'abc', expiresAt: parsed.exp, sig: parsed.sig, secret: SECRET }),
+    ).toBe(true);
+    expect(parsed.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
+  });
+
+  it("re-signs a fileAttachment node's href from its fileId", () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        {
+          type: 'fileAttachment',
+          attrs: { href: '/api/files/def?sig=stale&exp=1', name: 'f.pdf', fileId: 'def' },
+        },
+      ],
+    };
+    const out = resignDocumentImages(doc, SECRET) as typeof doc;
+    const href = out.content[0]?.attrs?.href as string;
+    expect(parseSignedUrl(href).id).toBe('def');
+  });
+
+  it('leaves nodes without a fileId untouched and does not mutate the input', () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        { type: 'image', attrs: { src: 'https://external/x.png' } },
+        { type: 'paragraph', content: [{ type: 'text', text: 'hi' }] },
+      ],
+    };
+    const before = JSON.stringify(doc);
+    const out = resignDocumentImages(doc, SECRET) as typeof doc;
+    expect(out.content[0]?.attrs?.src).toBe('https://external/x.png');
+    expect(JSON.stringify(doc)).toBe(before); // input not mutated
+  });
+
+  it('walks nested content (e.g. inside a callout)', () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        {
+          type: 'callout',
+          content: [
+            {
+              type: 'cairnImage',
+              attrs: { src: '/api/files/nested?sig=stale&exp=1', fileId: 'nested' },
+            },
+          ],
+        },
+      ],
+    };
+    const out = resignDocumentImages(doc, SECRET) as typeof doc;
+    const inner = (out.content[0]?.content?.[0]?.attrs?.src ?? '') as string;
+    expect(parseSignedUrl(inner).id).toBe('nested');
   });
 });
