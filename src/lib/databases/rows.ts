@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { compileFilters, type FilterCondition } from './filter';
+import { computeFormula, type FormulaContext } from './formula';
 import { compileSorts, type SortSpec } from './sort';
 
 export type { FilterCondition } from './filter';
@@ -203,5 +204,26 @@ export async function listRows(
     const map = cellsByRow.get(c.rowId);
     if (map) map[c.propertyId] = c.value;
   }
-  return rows.map((r) => ({ row: r, cells: cellsByRow.get(r.id) ?? {} }));
+  // Build name -> id map (shared across rows) and the list of formula properties.
+  const nameToId = new Map<string, string>(props.map((p) => [p.name, p.id]));
+  const formulaProps = props.filter((p) => p.type === 'formula');
+
+  return rows.map((r) => {
+    const cells = cellsByRow.get(r.id) ?? {};
+    if (formulaProps.length > 0) {
+      for (const fp of formulaProps) {
+        const expression =
+          typeof fp.config === 'object' && fp.config !== null
+            ? (fp.config as { expression?: unknown }).expression
+            : undefined;
+        if (typeof expression !== 'string' || expression.trim() === '') {
+          cells[fp.id] = { __error: 'no formula expression' };
+          continue;
+        }
+        const ctx: FormulaContext = { nameToId, cells };
+        cells[fp.id] = computeFormula(expression, ctx);
+      }
+    }
+    return { row: r, cells };
+  });
 }
