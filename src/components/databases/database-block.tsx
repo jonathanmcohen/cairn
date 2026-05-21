@@ -4,6 +4,7 @@ import { type NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
 import { GalleryView } from './gallery-view';
 import { KanbanView } from './kanban-view';
+import { PropertyPanel } from './property-panel';
 import { TableView } from './table-view';
 import { useDatabaseData } from './use-database-data';
 import { ViewSwitcher } from './view-switcher';
@@ -34,10 +35,17 @@ export function DatabaseBlock({ node }: NodeViewProps) {
 
   return (
     <NodeViewWrapper className="my-4 rounded-md border" contentEditable={false}>
-      <ViewSwitcher views={meta.views} activeId={activeView.id} onChange={setViewId} />
+      <ViewSwitcher
+        databaseId={databaseId}
+        views={meta.views}
+        activeId={activeView.id}
+        onChange={setViewId}
+        onViewsChanged={refresh}
+      />
       {activeView.type === 'table' && <TableView {...viewProps} />}
       {activeView.type === 'kanban' && <KanbanView {...viewProps} />}
       {activeView.type === 'gallery' && <GalleryView {...viewProps} />}
+      <PropertyPanel databaseId={databaseId} onChange={refresh} />
     </NodeViewWrapper>
   );
 }
