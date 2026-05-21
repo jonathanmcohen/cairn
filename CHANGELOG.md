@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.3.0 Plan 5 — @mentions)
+- `GET /api/workspaces/members?q=` — member-search (ILIKE name/email), viewer+, workspace-scoped, for mention autocomplete.
+- `@`-mention autocomplete in the editor and comment composer via `@tiptap/extension-mention` (suggestion-based, mirrors the slash menu). Mentions are stored as `@[Name](userId)` tokens.
+- `extractMentions()` helper; comment creation parses out and returns the mentioned userIds.
+- Mention rendering: styled inert link in the editor; styled plain text on read-only/public pages (no profile page yet).
+- (Mention → notification creation is wired in Plan 6, which consumes the `mentionedUserIds` returned from comment creation.)
+
 ### Added (v0.3.0 Plan 4 — Comments)
 - `0009` migration: `comments` table (workspace→cascade, page→cascade, author→restrict; `body`, nullable jsonb `anchor`, `resolved_at`, timestamps; indexed on page + workspace).
 - Comment anchor model: `null` = page-level, `{ blockId }` = block-anchored (scroll-to + highlight), `{ from, to }` = ProseMirror range (stored; visual range-highlight deferred to v0.3.x).
