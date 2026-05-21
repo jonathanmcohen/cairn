@@ -1,9 +1,9 @@
 import { randomBytes } from 'node:crypto';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 const CreateInvite = z.object({
   email: z.string().email(),

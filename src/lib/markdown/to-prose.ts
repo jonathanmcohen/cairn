@@ -1,4 +1,4 @@
-import { type Token, type Tokens, marked } from 'marked';
+import { marked, type Token, type Tokens } from 'marked';
 
 type Doc = {
   type: string;

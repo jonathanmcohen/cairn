@@ -1,10 +1,10 @@
+import { eq } from 'drizzle-orm';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { getDatabaseWithMeta } from '@/lib/databases/get';
-import { eq } from 'drizzle-orm';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 type Ctx = { params: Promise<{ databaseId: string }> };
 

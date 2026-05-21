@@ -1,9 +1,9 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { createProperty } from '@/lib/databases/properties';
 import { errToResponse } from '@/lib/databases/route-errors';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 type Ctx = { params: Promise<{ databaseId: string }> };
 

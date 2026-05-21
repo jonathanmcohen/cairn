@@ -1,7 +1,7 @@
-import { getDb } from '@/db/client';
-import { type PageTreeNode, getPageTree } from '@/lib/pages/tree';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { getDb } from '@/db/client';
+import { getPageTree, type PageTreeNode } from '@/lib/pages/tree';
 
 export async function SidebarTree({ workspaceId }: { workspaceId: string }) {
   const tree = await getPageTree(getDb(), workspaceId);

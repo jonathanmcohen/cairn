@@ -1,5 +1,5 @@
-import { LocalDiskStorage } from './storage';
 import type { FileStorage } from './storage';
+import { LocalDiskStorage } from './storage';
 
 let cached: FileStorage | null = null;
 

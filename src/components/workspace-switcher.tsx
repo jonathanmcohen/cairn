@@ -1,9 +1,9 @@
 'use client';
-import { Button } from '@/components/ui/button';
-import type { MemberRole } from '@/lib/auth/require-role';
 import { Check, ChevronsUpDown, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import type { MemberRole } from '@/lib/auth/require-role';
 
 export type SwitcherWorkspace = { id: string; name: string; role: MemberRole };
 

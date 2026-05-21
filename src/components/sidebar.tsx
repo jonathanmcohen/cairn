@@ -1,9 +1,9 @@
+import { Trash } from 'lucide-react';
+import Link from 'next/link';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { appVersion } from '@/lib/version';
 import { listUserWorkspaces } from '@/lib/workspaces/list';
-import { Trash } from 'lucide-react';
-import Link from 'next/link';
 import { NewPageButton } from './new-page-button';
 import { SidebarTree } from './sidebar-tree';
 import { ThemeToggle } from './theme-toggle';

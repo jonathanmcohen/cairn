@@ -1,8 +1,8 @@
-import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
 import { asc, eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { cache } from 'react';
+import { getDb } from '@/db/client';
+import * as schema from '@/db/schema';
 
 export type MemberRole = schema.MemberRole;
 

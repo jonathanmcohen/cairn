@@ -1,7 +1,7 @@
-import * as schema from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
+import * as schema from '@/db/schema';
 
 const ViewConfigSchema = z.object({
   sorts: z

@@ -1,7 +1,7 @@
-import { getDb } from '@/db/client';
-import { runMigrations } from '@/db/migrate';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { getDb } from '@/db/client';
+import { runMigrations } from '@/db/migrate';
 import { startPostgres, stopPostgres } from '../helpers/db';
 import { createTestWorkspaceWithUser } from '../helpers/fixtures';
 

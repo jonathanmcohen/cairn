@@ -1,9 +1,9 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { HttpError } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 import { movePage } from '@/lib/pages/move';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 const MoveInput = z.object({
   newParentId: z.string().uuid().nullable(),

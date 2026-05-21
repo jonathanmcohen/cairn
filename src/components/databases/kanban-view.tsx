@@ -49,6 +49,7 @@ export function KanbanView({ databaseId, meta, rows, view, onChange }: ViewProps
           return (col.id === '' && (v === null || v === undefined || v === '')) || v === col.id;
         });
         return (
+          // biome-ignore lint/a11y/noStaticElementInteractions: kanban drop target; native HTML5 drag-and-drop has no equivalent interactive element/role
           <div
             key={col.id || 'uncategorized'}
             className="flex w-60 shrink-0 flex-col rounded-md bg-muted/40 p-2"
@@ -63,6 +64,7 @@ export function KanbanView({ databaseId, meta, rows, view, onChange }: ViewProps
             </div>
             <div className="flex flex-col gap-2">
               {colRows.map((r) => (
+                // biome-ignore lint/a11y/noStaticElementInteractions: draggable kanban card; native HTML5 drag-and-drop has no equivalent interactive element/role
                 <div
                   key={r.row.id}
                   draggable

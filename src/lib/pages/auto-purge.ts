@@ -1,6 +1,6 @@
-import type * as schema from '@/db/schema';
 import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type * as schema from '@/db/schema';
 
 const ADVISORY_LOCK_KEY = 712491;
 const THROTTLE_SECONDS = 60 * 60; // 1 hour

@@ -1,3 +1,4 @@
+import { notFound } from 'next/navigation';
 import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
@@ -6,7 +7,6 @@ import { PageTitleInput } from '@/components/page-title-input';
 import type * as schema from '@/db/schema';
 import { HttpError } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
-import { notFound } from 'next/navigation';
 
 export default async function PageView({ params }: { params: Promise<{ pageId: string }> }) {
   const { pageId } = await params;

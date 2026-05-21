@@ -1,8 +1,14 @@
 {
-  "$schema": "https://biomejs.dev/schemas/1.9.0/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.15/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "ignore": [".next", "node_modules", "drizzle/migrations", "src/components/ui/**"]
+    "includes": [
+      "**",
+      "!**/.next",
+      "!**/node_modules",
+      "!**/drizzle/migrations",
+      "!**/src/components/ui"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -22,7 +28,24 @@
       },
       "suspicious": {
         "noExplicitAny": "error",
-        "noConsoleLog": "warn"
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": [
+              "assert",
+              "error",
+              "info",
+              "warn",
+              "debug",
+              "table",
+              "dir",
+              "group",
+              "groupEnd",
+              "trace"
+            ]
+          }
+        },
+        "noUnknownAtRules": "off"
       },
       "correctness": { "noUnusedVariables": "error" }
     }
@@ -34,6 +57,11 @@
       "semicolons": "always",
       "trailingCommas": "all",
       "arrowParentheses": "always"
+    }
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
     }
   }
 }

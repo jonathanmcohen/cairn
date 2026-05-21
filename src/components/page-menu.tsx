@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 type PageMenuProps = {
   pageId: string;
@@ -69,6 +69,7 @@ export function PageMenu({ pageId, initialPublished = false, initialSlug = null 
         <MoreHorizontal className="h-4 w-4" />
       </Button>
       {open && (
+        // biome-ignore lint/a11y/noStaticElementInteractions: presentational dropdown container; onMouseLeave is a close-on-exit convenience, the menu items below are real <button>s
         <div
           className="absolute right-0 z-10 mt-1 w-56 rounded-md border bg-popover py-1 shadow-md"
           onMouseLeave={() => setOpen(false)}

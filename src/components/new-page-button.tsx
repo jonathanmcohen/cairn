@@ -1,9 +1,9 @@
 'use client';
-import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export function NewPageButton({ parentId }: { parentId?: string }) {
   const router = useRouter();

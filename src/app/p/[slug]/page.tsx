@@ -1,8 +1,8 @@
+import { notFound } from 'next/navigation';
 import { ReadOnlyView } from '@/components/editor/read-only-view';
 import { getDb } from '@/db/client';
 import { env } from '@/lib/env';
 import { getPublishedPageBySlug, resignDocumentImages } from '@/lib/pages/public';
-import { notFound } from 'next/navigation';
 
 export const metadata = {
   robots: { index: false, follow: false },

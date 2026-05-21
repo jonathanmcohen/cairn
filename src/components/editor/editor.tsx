@@ -1,7 +1,7 @@
 'use client';
 
-import { EditorContent, useEditor } from '@tiptap/react';
 import type { Editor as TiptapEditor } from '@tiptap/react';
+import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { DragHandle } from './drag-handle';
 import { baseExtensions } from './extensions';

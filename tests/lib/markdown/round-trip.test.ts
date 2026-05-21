@@ -1,6 +1,6 @@
+import { describe, expect, it } from 'vitest';
 import { proseToMarkdown } from '@/lib/markdown/from-prose';
 import { markdownToProse } from '@/lib/markdown/to-prose';
-import { describe, expect, it } from 'vitest';
 
 describe('proseToMarkdown', () => {
   it('renders a paragraph', () => {

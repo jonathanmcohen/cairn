@@ -1,6 +1,6 @@
-import * as schema from '@/db/schema';
 import { and, eq, gt, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
 
 /**
  * Outcome of evaluating whether an OAuth sign-in should be permitted.

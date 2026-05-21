@@ -1,8 +1,8 @@
-import { getDb } from '@/db/client';
-import { HttpError, getAuthContext } from '@/lib/auth/require-role';
-import { LeaveError, leaveWorkspace } from '@/lib/workspaces/leave';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getDb } from '@/db/client';
+import { getAuthContext, HttpError } from '@/lib/auth/require-role';
+import { LeaveError, leaveWorkspace } from '@/lib/workspaces/leave';
 
 const IdSchema = z.string().uuid();
 

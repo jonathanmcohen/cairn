@@ -1,6 +1,6 @@
-import type * as schema from '@/db/schema';
 import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type * as schema from '@/db/schema';
 
 export type SoftDeleteInput = {
   pageId: string;

@@ -1,8 +1,8 @@
+import { redirect } from 'next/navigation';
 import { type TrashItem, TrashList } from '@/components/trash-list';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { listTrash } from '@/lib/pages/trash';
-import { redirect } from 'next/navigation';
 
 export default async function TrashPage() {
   const ctx = await getAuthContext();

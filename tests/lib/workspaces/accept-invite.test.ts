@@ -1,10 +1,10 @@
-import { runMigrations } from '@/db/migrate';
-import * as schema from '@/db/schema';
-import { AcceptInviteError, acceptInvite } from '@/lib/workspaces/accept-invite';
 import { and, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { runMigrations } from '@/db/migrate';
+import * as schema from '@/db/schema';
+import { acceptInvite } from '@/lib/workspaces/accept-invite';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
 

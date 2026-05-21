@@ -1,6 +1,6 @@
-import * as schema from '@/db/schema';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
 
 export class PageConflictError extends Error {
   constructor(message = 'Page has been modified since you last read it') {

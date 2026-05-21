@@ -1,10 +1,10 @@
-import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
-import { ACTIVE_WORKSPACE_COOKIE, HttpError, getAuthContext } from '@/lib/auth/require-role';
 import { and, eq } from 'drizzle-orm';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getDb } from '@/db/client';
+import * as schema from '@/db/schema';
+import { ACTIVE_WORKSPACE_COOKIE, getAuthContext, HttpError } from '@/lib/auth/require-role';
 
 const SwitchInput = z.object({ workspaceId: z.string().uuid() });
 

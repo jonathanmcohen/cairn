@@ -1,5 +1,5 @@
-import { signFileUrl, verifyFileUrl } from '@/lib/files/signing';
 import { describe, expect, it } from 'vitest';
+import { signFileUrl, verifyFileUrl } from '@/lib/files/signing';
 
 const SECRET = 'x'.repeat(32);
 

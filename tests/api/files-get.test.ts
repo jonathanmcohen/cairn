@@ -1,12 +1,12 @@
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import postgres from 'postgres';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { getDb } from '@/db/client';
 import { runMigrations } from '@/db/migrate';
 import { LocalDiskStorage } from '@/lib/files/storage';
 import { storeUpload } from '@/lib/files/upload';
-import postgres from 'postgres';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { startPostgres, stopPostgres } from '../helpers/db';
 import { createTestWorkspaceWithUser } from '../helpers/fixtures';
 

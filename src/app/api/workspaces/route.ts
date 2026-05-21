@@ -1,9 +1,9 @@
-import { getDb } from '@/db/client';
-import { ACTIVE_WORKSPACE_COOKIE, HttpError, getAuthContext } from '@/lib/auth/require-role';
-import { createWorkspace } from '@/lib/workspaces/create';
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { getDb } from '@/db/client';
+import { ACTIVE_WORKSPACE_COOKIE, getAuthContext, HttpError } from '@/lib/auth/require-role';
+import { createWorkspace } from '@/lib/workspaces/create';
 
 const CreateInput = z.object({ name: z.string().min(1).max(120) });
 

@@ -1,7 +1,7 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 export function CoverImage({ pageId, initial }: { pageId: string; initial: string | null }) {
   const [src, setSrc] = useState<string | null>(initial);
@@ -48,6 +48,7 @@ export function CoverImage({ pageId, initial }: { pageId: string; initial: strin
   }
   return (
     <div className="group relative mb-6 h-48 overflow-hidden rounded-lg">
+      {/* biome-ignore lint/performance/noImgElement: cover URLs are HMAC-signed, short-lived /api/files routes that next/image cannot optimize (would need remotePatterns and defeats the signed-URL cache) */}
       <img src={src} alt="" className="h-full w-full object-cover" />
       <div className="absolute top-2 right-2 flex gap-2 opacity-0 transition group-hover:opacity-100">
         <Button variant="secondary" size="sm" onClick={upload}>

@@ -1,7 +1,7 @@
-import { getDb } from '@/db/client';
-import { appVersion } from '@/lib/version';
 import { sql } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { getDb } from '@/db/client';
+import { appVersion } from '@/lib/version';
 
 export async function GET(): Promise<Response> {
   let dbStatus: 'ok' | 'down' = 'down';

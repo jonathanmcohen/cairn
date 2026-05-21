@@ -1,7 +1,7 @@
-import { getDb } from '@/db/client';
-import { SignupInput, signup } from '@/lib/auth/signup';
 import { NextResponse } from 'next/server';
 import { ZodError } from 'zod';
+import { getDb } from '@/db/client';
+import { SignupInput, signup } from '@/lib/auth/signup';
 
 export async function POST(req: Request): Promise<Response> {
   let payload: unknown;

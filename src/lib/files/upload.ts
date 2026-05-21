@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
-import * as schema from '@/db/schema';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
 import { signFileUrl } from './signing';
 import type { FileStorage } from './storage';
 

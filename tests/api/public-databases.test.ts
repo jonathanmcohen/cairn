@@ -1,11 +1,11 @@
+import postgres from 'postgres';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { getDb } from '@/db/client';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { createDatabase } from '@/lib/databases/create';
 import { createRow } from '@/lib/databases/rows';
 import { publishPage } from '@/lib/pages/publish';
-import postgres from 'postgres';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { startPostgres, stopPostgres } from '../helpers/db';
 import { createTestWorkspaceWithUser } from '../helpers/fixtures';
 

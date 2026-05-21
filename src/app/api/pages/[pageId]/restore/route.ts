@@ -1,7 +1,7 @@
+import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { restorePage } from '@/lib/pages/trash';
-import { NextResponse } from 'next/server';
 
 export async function POST(
   _req: Request,

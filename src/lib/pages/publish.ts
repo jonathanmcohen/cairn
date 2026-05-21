@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
-import * as schema from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
 
 /** Lowercase, replace non-alphanumerics with single hyphens, trim, fall back to "page". */
 export function slugify(title: string): string {

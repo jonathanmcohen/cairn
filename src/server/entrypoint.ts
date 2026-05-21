@@ -6,10 +6,10 @@ async function main() {
     console.error('DATABASE_URL is required');
     process.exit(1);
   }
-  // biome-ignore lint/suspicious/noConsoleLog: cli startup
+  // biome-ignore lint/suspicious/noConsole: cli startup
   console.log('Running migrations...');
   await runMigrations(url);
-  // biome-ignore lint/suspicious/noConsoleLog: cli startup
+  // biome-ignore lint/suspicious/noConsole: cli startup
   console.log('Migrations complete.');
 
   // Hand off to the standalone Next.js server (lives at /app/server.js in the runner image).

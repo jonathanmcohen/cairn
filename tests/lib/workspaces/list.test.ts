@@ -1,9 +1,9 @@
-import { runMigrations } from '@/db/migrate';
-import * as schema from '@/db/schema';
-import { listUserWorkspaces } from '@/lib/workspaces/list';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { runMigrations } from '@/db/migrate';
+import * as schema from '@/db/schema';
+import { listUserWorkspaces } from '@/lib/workspaces/list';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 
 let sql: ReturnType<typeof postgres>;

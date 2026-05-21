@@ -1,5 +1,5 @@
-import { parseEnv } from '@/lib/env';
 import { describe, expect, it } from 'vitest';
+import { parseEnv } from '@/lib/env';
 
 const base = {
   DATABASE_URL: 'postgres://u:p@h:5432/d',

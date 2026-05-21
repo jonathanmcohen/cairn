@@ -1,4 +1,4 @@
-import { Node, mergeAttributes } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 
 export const FileAttachment = Node.create({
   name: 'fileAttachment',

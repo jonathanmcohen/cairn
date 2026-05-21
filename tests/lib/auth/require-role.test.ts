@@ -1,5 +1,5 @@
-import { type MemberRole, hasMinRole } from '@/lib/auth/require-role';
 import { describe, expect, it } from 'vitest';
+import { hasMinRole, type MemberRole } from '@/lib/auth/require-role';
 
 describe('hasMinRole', () => {
   const cases: [MemberRole, MemberRole, boolean][] = [

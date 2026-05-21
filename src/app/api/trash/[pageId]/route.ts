@@ -1,7 +1,7 @@
+import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { hardDeletePage } from '@/lib/pages/trash';
-import { NextResponse } from 'next/server';
 
 export async function DELETE(
   _req: Request,

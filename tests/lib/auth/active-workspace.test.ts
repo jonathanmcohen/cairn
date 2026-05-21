@@ -1,8 +1,8 @@
-import { runMigrations } from '@/db/migrate';
-import * as schema from '@/db/schema';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { runMigrations } from '@/db/migrate';
+import * as schema from '@/db/schema';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 
 let sql: ReturnType<typeof postgres>;

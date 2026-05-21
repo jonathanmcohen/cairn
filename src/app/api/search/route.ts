@@ -1,8 +1,8 @@
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { searchPages } from '@/lib/pages/search';
-import { NextResponse } from 'next/server';
-import { z } from 'zod';
 
 const Query = z.object({
   q: z.string().max(200),

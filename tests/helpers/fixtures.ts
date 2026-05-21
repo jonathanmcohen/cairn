@@ -1,6 +1,6 @@
 import { randomBytes } from 'node:crypto';
-import * as schema from '@/db/schema';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
 
 let counter = 0;
 

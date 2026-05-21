@@ -1,5 +1,5 @@
+import { sql as rawSql, type SQL } from 'drizzle-orm';
 import type * as schema from '@/db/schema';
-import { type SQL, sql as rawSql } from 'drizzle-orm';
 
 export type SortSpec = { propertyId: string; direction: 'asc' | 'desc' };
 

@@ -1,6 +1,6 @@
-import { runMigrations } from '@/db/migrate';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { runMigrations } from '@/db/migrate';
 import { startPostgres, stopPostgres } from '../helpers/db';
 
 let uri = '';

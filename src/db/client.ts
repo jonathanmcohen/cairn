@@ -1,6 +1,6 @@
-import { env } from '@/lib/env';
-import { type PostgresJsDatabase, drizzle } from 'drizzle-orm/postgres-js';
+import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { env } from '@/lib/env';
 import * as schema from './schema';
 
 let _client: ReturnType<typeof postgres> | null = null;

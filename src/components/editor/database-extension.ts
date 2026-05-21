@@ -1,6 +1,6 @@
-import { DatabaseBlock } from '@/components/databases/database-block';
-import { Node, mergeAttributes } from '@tiptap/core';
+import { mergeAttributes, Node } from '@tiptap/core';
 import { ReactNodeViewRenderer } from '@tiptap/react';
+import { DatabaseBlock } from '@/components/databases/database-block';
 
 export const DatabaseNode = Node.create({
   name: 'database',

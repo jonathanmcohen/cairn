@@ -1,8 +1,8 @@
+import { eq } from 'drizzle-orm';
+import { redirect } from 'next/navigation';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext } from '@/lib/auth/require-role';
-import { eq } from 'drizzle-orm';
-import { redirect } from 'next/navigation';
 import { AcceptInviteButton } from './accept-button';
 
 export default async function InviteLandingPage({

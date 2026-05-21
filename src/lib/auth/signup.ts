@@ -1,7 +1,7 @@
-import * as schema from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
+import * as schema from '@/db/schema';
 import { hashPassword } from './password';
 
 export const SignupInput = z.object({

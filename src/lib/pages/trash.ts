@@ -1,6 +1,6 @@
-import * as schema from '@/db/schema';
 import { and, desc, eq, isNotNull, sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
 
 export type TrashEntry = {
   id: string;

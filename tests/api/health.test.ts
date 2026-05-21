@@ -1,5 +1,5 @@
-import { runMigrations } from '@/db/migrate';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { runMigrations } from '@/db/migrate';
 import { startPostgres, stopPostgres } from '../helpers/db';
 
 beforeAll(async () => {

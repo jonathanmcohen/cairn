@@ -1,14 +1,17 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
 
 const TYPES = ['text', 'number', 'select', 'multi_select', 'date', 'checkbox', 'url'] as const;
 
 export function PropertyPanel({
   databaseId,
   onChange,
-}: { databaseId: string; onChange: () => void }) {
+}: {
+  databaseId: string;
+  onChange: () => void;
+}) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<(typeof TYPES)[number]>('text');

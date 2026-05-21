@@ -25,7 +25,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   }
   runMigrations(url)
     .then(() => {
-      // biome-ignore lint/suspicious/noConsoleLog: CLI status output
+      // biome-ignore lint/suspicious/noConsole: CLI status output
       console.log('Migrations applied.');
       process.exit(0);
     })

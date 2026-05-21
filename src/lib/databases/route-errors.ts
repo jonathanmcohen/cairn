@@ -1,6 +1,6 @@
-import { HttpError } from '@/lib/auth/require-role';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { HttpError } from '@/lib/auth/require-role';
 
 export function errToResponse(err: unknown): Response {
   if (err instanceof HttpError)

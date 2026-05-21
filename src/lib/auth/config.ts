@@ -1,5 +1,3 @@
-import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
 import { DrizzleAdapter } from '@auth/drizzle-adapter';
 import { eq } from 'drizzle-orm';
 import NextAuth, { type NextAuthConfig } from 'next-auth';
@@ -7,6 +5,8 @@ import Credentials from 'next-auth/providers/credentials';
 import GitHub from 'next-auth/providers/github';
 import Google from 'next-auth/providers/google';
 import { z } from 'zod';
+import { getDb } from '@/db/client';
+import * as schema from '@/db/schema';
 import { applyOAuthGate } from './oauth-gate';
 import { verifyPassword } from './password';
 

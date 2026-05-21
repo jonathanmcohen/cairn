@@ -1,8 +1,8 @@
 import { PassThrough, type Readable } from 'node:stream';
-import type * as schema from '@/db/schema';
 import { ZipArchive } from 'archiver';
 import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import type * as schema from '@/db/schema';
 import { proseToMarkdown } from './from-prose';
 
 // archiver v8 is pure ESM and exposes format classes (e.g. `ZipArchive`) instead of the

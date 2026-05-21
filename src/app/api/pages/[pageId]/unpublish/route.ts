@@ -1,8 +1,8 @@
+import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 import { unpublishPage } from '@/lib/pages/publish';
-import { NextResponse } from 'next/server';
 
 type RouteCtx = { params: Promise<{ pageId: string }> };
 

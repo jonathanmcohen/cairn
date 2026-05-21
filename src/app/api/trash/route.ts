@@ -1,8 +1,8 @@
+import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { maybePurge } from '@/lib/pages/maybe-purge';
 import { listTrash } from '@/lib/pages/trash';
-import { NextResponse } from 'next/server';
 
 export async function GET(): Promise<Response> {
   try {
