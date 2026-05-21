@@ -1,6 +1,7 @@
 'use client';
 
 import { EditorContent, useEditor } from '@tiptap/react';
+import type { Editor as TiptapEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { baseExtensions } from './extensions';
 
@@ -16,6 +17,25 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'conflict' | 'error'>('idle');
   const updatedAtRef = useRef(initialUpdatedAt);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editorRef = useRef<TiptapEditor | null>(null);
+
+  const uploadAndInsert = useCallback(async (files: File[]) => {
+    for (const file of files) {
+      const fd = new FormData();
+      fd.set('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) continue;
+      const body = (await res.json()) as {
+        signedUrl: string;
+        file: { id: string; name: string };
+      };
+      editorRef.current
+        ?.chain()
+        .focus()
+        .insertCairnImage({ src: body.signedUrl, alt: body.file.name, fileId: body.file.id })
+        .run();
+    }
+  }, []);
 
   const save = useCallback(
     async (content: unknown) => {
@@ -48,6 +68,27 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
       attributes: {
         class: 'prose dark:prose-invert max-w-none focus:outline-none min-h-[50vh]',
       },
+      handleDrop(_view, event, _slice, moved) {
+        if (moved) return false;
+        const dataTransfer = (event as DragEvent).dataTransfer;
+        const droppedFiles = Array.from(dataTransfer?.files ?? []).filter((f) =>
+          f.type.startsWith('image/'),
+        );
+        if (droppedFiles.length === 0) return false;
+        event.preventDefault();
+        void uploadAndInsert(droppedFiles);
+        return true;
+      },
+      handlePaste(_view, event) {
+        const clipboardData = (event as ClipboardEvent).clipboardData;
+        const pastedFiles = Array.from(clipboardData?.files ?? []).filter((f) =>
+          f.type.startsWith('image/'),
+        );
+        if (pastedFiles.length === 0) return false;
+        event.preventDefault();
+        void uploadAndInsert(pastedFiles);
+        return true;
+      },
     },
     onUpdate({ editor }) {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
@@ -57,6 +98,10 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
       }, AUTOSAVE_MS);
     },
   });
+
+  useEffect(() => {
+    editorRef.current = editor;
+  }, [editor]);
 
   useEffect(
     () => () => {
