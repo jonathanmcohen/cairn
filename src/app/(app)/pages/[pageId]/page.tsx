@@ -6,7 +6,7 @@ import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
-import { HttpError, type WorkspaceContext } from '@/lib/auth/require-role';
+import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 
 // Deterministic caret color per user, so collaborators are visually stable.
@@ -65,6 +65,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         initialContent={page.content}
         initialUpdatedAt={page.updatedAt.toISOString()}
         currentUser={currentUser}
+        editable={hasMinRole(ctx.role, 'editor')}
       />
     </div>
   );

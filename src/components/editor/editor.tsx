@@ -19,6 +19,12 @@ export type EditorProps = {
    */
   initialUpdatedAt: string;
   currentUser: CollabUser;
+  /**
+   * Drives read-only mode for `viewer`-role users: when false the editor is
+   * non-editable AND the collab extensions omit the cursor (no awareness writes,
+   * so viewers broadcast no caret). Derived from the caller's page role.
+   */
+  editable: boolean;
 };
 
 const STATUS_LABEL = {
@@ -28,7 +34,7 @@ const STATUS_LABEL = {
   error: 'Offline',
 } as const;
 
-export function Editor({ pageId, initialContent, currentUser }: EditorProps) {
+export function Editor({ pageId, initialContent, currentUser, editable }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(pageId);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
@@ -59,7 +65,14 @@ export function Editor({ pageId, initialContent, currentUser }: EditorProps) {
   const editor = useEditor(
     provider
       ? {
-          extensions: collabExtensions({ ydoc, provider, user: currentUser, withCursor: true }),
+          editable,
+          extensions: collabExtensions({
+            ydoc,
+            provider,
+            user: currentUser,
+            // viewers: no CollaborationCursor → no awareness writes
+            withCursor: editable,
+          }),
           immediatelyRender: false,
           editorProps: {
             attributes: {
@@ -106,8 +119,8 @@ export function Editor({ pageId, initialContent, currentUser }: EditorProps) {
           // server materializes to pages.content. Title/icon/cover still PATCH
           // from their sibling components.
         }
-      : { extensions: [], immediatelyRender: false },
-    [provider],
+      : { extensions: [], editable: false, immediatelyRender: false },
+    [provider, editable],
   );
 
   useEffect(() => {
