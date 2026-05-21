@@ -92,3 +92,16 @@
       "calt" 1;
   }
 }
+
+@keyframes comment-anchor-flash {
+  0% {
+    background-color: hsl(var(--accent));
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.comment-anchor-flash {
+  animation: comment-anchor-flash 1.5s ease-out;
+}

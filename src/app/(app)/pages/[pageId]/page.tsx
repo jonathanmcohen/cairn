@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import { CommentsToggle } from '@/components/comments/comments-toggle';
 import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
@@ -37,6 +38,12 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         <div className="flex-1">
           <PageTitleInput pageId={page.id} initial={page.title} />
         </div>
+        <CommentsToggle
+          pageId={page.id}
+          canComment={hasMinRole(ctx.role, 'editor')}
+          currentUserId={ctx.userId}
+          currentRole={ctx.role}
+        />
         <PageMenu
           pageId={page.id}
           initialPublished={page.published}
