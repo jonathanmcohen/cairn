@@ -9,7 +9,18 @@ type Ctx = { params: Promise<{ databaseId: string }> };
 
 const CreateInput = z.object({
   name: z.string().min(1).max(100),
-  type: z.enum(['text', 'number', 'select', 'multi_select', 'date', 'checkbox', 'url']),
+  type: z.enum([
+    'text',
+    'number',
+    'select',
+    'multi_select',
+    'date',
+    'checkbox',
+    'url',
+    'formula',
+    'relation',
+    'rollup',
+  ]),
   config: z.unknown().optional(),
 });
 
