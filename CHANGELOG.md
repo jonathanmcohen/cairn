@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (Plan 4 — Files & markdown)
+- `files` table, `pages.cover_url` column, signed file URL helpers.
+- `POST /api/upload` (role+size+mime gated) and `GET /api/files/[id]?sig=&exp=` (HMAC-streamed).
+- Image and file attachment blocks in the editor; drag/drop + paste image support.
+- Cover image picker on the page route.
+- Markdown export per page (`.md`) and per subtree (`.zip`).
+- Markdown import via overflow menu and via pasting raw markdown into the editor.
+
 ### Added (Plan 3 — Search & trash)
 - Postgres full-text search with `pg_trgm` trigram fallback for typo-tolerant title matching.
 - `searchPages` helper returning snippets (`ts_headline`) and breadcrumbs.
