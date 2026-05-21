@@ -1,4 +1,5 @@
 export * from './auth';
+export * from './comments';
 export * from './databases';
 export * from './files';
 export * from './invite-tokens';
