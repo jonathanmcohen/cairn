@@ -1,9 +1,19 @@
 import { PassThrough, type Readable } from 'node:stream';
 import type * as schema from '@/db/schema';
-import archiver from 'archiver';
+import { ZipArchive } from 'archiver';
 import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { proseToMarkdown } from './from-prose';
+
+// archiver v8 is pure ESM and exposes format classes (e.g. `ZipArchive`) instead of the
+// old `archiver('zip', opts)` factory. @types/archiver still ships the v7 shape, so declare
+// the v8 export here against the existing `Archiver` instance interface.
+declare module 'archiver' {
+  export class ZipArchive {
+    constructor(options?: ArchiverOptions);
+  }
+  export interface ZipArchive extends Archiver {}
+}
 
 export async function streamSubtreeZip(
   db: PostgresJsDatabase<typeof schema>,
@@ -25,7 +35,7 @@ export async function streamSubtreeZip(
   `)) as unknown as { id: string; title: string; content: unknown }[];
 
   const pass = new PassThrough();
-  const archive = archiver('zip', { zlib: { level: 9 } });
+  const archive = new ZipArchive({ zlib: { level: 9 } });
   archive.pipe(pass);
   for (const p of rows) {
     const md = proseToMarkdown(p.content);

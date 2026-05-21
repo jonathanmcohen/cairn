@@ -1,5 +1,9 @@
-import 'dotenv/config';
+import { config as loadEnv } from 'dotenv';
 import { drizzle } from 'drizzle-orm/postgres-js';
+
+// dotenv v17 logs an injection tip to the console by default; quiet keeps CLI output clean.
+loadEnv({ quiet: true });
+
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 
