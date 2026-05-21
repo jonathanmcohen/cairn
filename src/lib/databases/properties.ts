@@ -2,7 +2,8 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import * as schema from '@/db/schema';
-import { RelationConfig } from './relations';
+import { RelationConfig, relationTargetId } from './relations';
+import { RollupConfig } from './rollup/config';
 
 const SelectConfig = z.object({
   options: z
@@ -25,8 +26,41 @@ const ConfigByType: Record<schema.PropertyType, z.ZodTypeAny> = {
   url: NoConfig,
   formula: FormulaConfig,
   relation: RelationConfig,
-  rollup: NoConfig,
+  rollup: RollupConfig,
 };
+
+async function validateRollupConfig(
+  tx: PostgresJsDatabase<typeof schema>,
+  databaseId: string,
+  config: RollupConfig,
+): Promise<void> {
+  // 1. relationPropertyId must be a `relation` property on THIS database.
+  const [rel] = await tx
+    .select({
+      type: schema.dbProperties.type,
+      databaseId: schema.dbProperties.databaseId,
+      config: schema.dbProperties.config,
+    })
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.id, config.relationPropertyId))
+    .limit(1);
+  if (!rel || rel.databaseId !== databaseId || rel.type !== 'relation') {
+    throw new Error('rollup relationPropertyId must be a relation property on this database');
+  }
+  // 2. targetPropertyId must be a property on the relation's TARGET database.
+  const targetDatabaseId = relationTargetId(rel.config);
+  if (!targetDatabaseId) {
+    throw new Error('rollup relation has no target database');
+  }
+  const [target] = await tx
+    .select({ databaseId: schema.dbProperties.databaseId })
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.id, config.targetPropertyId))
+    .limit(1);
+  if (!target || target.databaseId !== targetDatabaseId) {
+    throw new Error('rollup targetPropertyId must be a property on the relation target database');
+  }
+}
 
 export async function createProperty(
   db: PostgresJsDatabase<typeof schema>,
@@ -58,6 +92,9 @@ export async function createProperty(
       if (!target || target.workspaceId !== input.workspaceId) {
         throw new Error('relation target database not found in same workspace');
       }
+    }
+    if (input.type === 'rollup') {
+      await validateRollupConfig(tx, input.databaseId, config as RollupConfig);
     }
     const existing = await tx
       .select({ pos: schema.dbProperties.position })
@@ -127,6 +164,9 @@ export async function updateProperty(
         if (!target || target.workspaceId !== input.workspaceId) {
           throw new Error('relation target database not found in same workspace');
         }
+      }
+      if (prop.type === 'rollup') {
+        await validateRollupConfig(tx, prop.databaseId, values.config as RollupConfig);
       }
     }
     const [updated] = await tx
