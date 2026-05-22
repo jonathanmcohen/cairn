@@ -30,6 +30,7 @@
     "@hocuspocus/provider": "^4.1.0",
     "@hocuspocus/server": "^4.1.0",
     "@hookform/resolvers": "^5.2.2",
+    "@node-rs/argon2": "^2.0.2",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
     "@tiptap/core": "^3.23.5",
