@@ -164,6 +164,48 @@ ghcr.io/jonathanmcohen/cairn-collab:0.3.0   # the collab (Hocuspocus) server
 Public/read-only `/p/<slug>` pages do not use the collab socket and have no
 presence or comments.
 
+## Operations
+
+### Backup & restore
+
+Cairn ships a backup CLI built into the same image as the server. It dumps the
+Postgres database (custom format) and, on the local file backend, archives the
+uploads tree into a timestamped bundle.
+
+```sh
+# Back up the database + uploads into a directory:
+docker compose exec cairn node dist/server/cli.js backup --out /data/backups
+
+# Restore from a bundle (DESTRUCTIVE — overwrites the current DB + uploads):
+docker compose exec cairn node dist/server/cli.js restore --in /data/backups/cairn-backup-<ts>.dump
+```
+
+`backup` writes three files per run: `cairn-backup-<ts>.dump` (the database),
+`cairn-uploads-<ts>.tar.gz` (the local uploads tree), and
+`cairn-backup-<ts>.manifest.json`. Mount a host volume at the `--out` path and
+copy the bundle off-host on a schedule (cron the `backup` command); Cairn does
+not ship an off-host scheduler.
+
+`restore` is **destructive** — it drops and recreates objects before importing.
+It refuses to run unless you either pass `--force` or type the database name at
+the interactive confirmation prompt. Never wire `restore --force` into an
+unattended path you don't fully trust.
+
+**Postgres client version:** the CLI shells out to `pg_dump`/`pg_restore` from
+the `postgresql-client-16` package baked into the image. These must match the
+server's **major** version (Postgres 16); a client older than the server cannot
+restore a custom-format dump. If you upgrade Postgres, upgrade the client pin in
+the Dockerfile in lockstep.
+
+**S3/MinIO file backend:** when `FILE_BACKEND=s3`, files live in the bucket, so
+`backup` dumps the **database only** and prints a reminder — back up your S3/MinIO
+bucket out-of-band (bucket versioning or your provider's snapshot/replication).
+
+> **Warning — bundles are sensitive.** A backup bundle contains the full database,
+> including bcrypt **password hashes** and SHA-256 **API-key hashes**, plus every
+> uploaded file. Treat bundles as secrets: encrypt them at rest and restrict who
+> can read the backup directory. The CLI never transmits bundles anywhere.
+
 ## Local development
 
 For `pnpm dev`, `pnpm build`, or `pnpm test` run outside the container, the
