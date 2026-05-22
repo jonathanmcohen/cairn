@@ -1,75 +1,30 @@
 # Cairn Roadmap: v0.6.0 → v1.0.0
 
-> Status: **proposal**. This maps the path from the current **v0.5.1** state (security-hardened platform) to a **stable, feature-complete, documented 1.0.0**. Each release becomes its own spec + sequence of bite-sized plans (same workflow as v0.1.0–v0.5.1). A companion detailed design exists at `docs/superpowers/specs/2026-05-22-cairn-v1.0.0-design.md`. Nothing here is committed until brainstormed/approved.
+> Status: **proposal**. Path from the current **v0.5.1** state (security-hardened platform) to a **stable, feature-complete, documented 1.0.0**. Per the user's direction, the formerly-separate themed minors (v0.6 content/db, v0.7 sharing/collab, v0.8 mobile/a11y/i18n, v0.9 admin/ops/import) are **consolidated into a single large v0.6.0 release**, followed by the v1.0.0 stabilization milestone. Detailed designs: `specs/2026-05-22-cairn-v0.6.0-design.md` (combined) + `specs/2026-05-22-cairn-v1.0.0-design.md`. Each release becomes spec → numbered plans → subagent-driven execution (same workflow as v0.1.0–v0.5.1).
 
-Shipped through **v0.5.1**: workspaces/auth/OAuth/RBAC, multi-workspace, pages + block editor, search, trash, files (local + S3/MinIO) + markdown, inline databases (table/kanban/gallery + formulas/relations/rollups/calendar/timeline), public sharing, realtime collab + presence + comments + @mentions + notifications, public REST API + API keys + webhooks + templates + page version history + backup CLI, and a security suite (isolation/RBAC/boundary/injection tests) + CSP/nonce + auth rate-limiting + `SECURITY.md`. Multi-arch (amd64+arm64) images published on `v*.*.*` tags via native per-arch runners.
+Shipped through **v0.5.1**: workspaces/auth/OAuth/RBAC, multi-workspace, pages + block editor, search, trash, files (local + S3/MinIO) + markdown, inline databases (table/kanban/gallery + formulas/relations/rollups/calendar/timeline), public sharing, realtime collab + presence + comments + @mentions + notifications, public REST API + API keys + webhooks + templates + page version history + backup CLI, and a security suite + CSP/nonce + auth rate-limiting + `SECURITY.md`. Multi-arch (amd64+arm64) images published on `v*.*.*` tags via native per-arch runners.
 
-The five releases below each carry a single theme so they ship as coherent units. Ordering reflects rising cross-cuttingness and the goal of declaring stability last.
-
----
-
-## v0.6.0 — Content & database completeness
-
-**Theme:** close the editor + database gaps that still separate Cairn from Notion parity. Self-contained in the editor/database subsystems; low infra risk.
-
-| Feature | Notes / risk |
-|---|---|
-| **Reverse/bidirectional relations** | The most-requested item deferred from v0.4.0: a relation auto-maintains a mirror property on the target database. **Medium** — write-time sync both directions + avoiding loops. |
-| **Database list view + table grouping + richer filters/sort** | A 4th view type (list), group-by inside table (like kanban), per-type filter operators (contains/before-after/is-empty), multi-sort UI. **Low-medium** — view/filter infra exists. |
-| **Sub-items / row hierarchy** | Parent-row self-relation with expand/collapse in views. **Medium.** |
-| **New block types** | Toggle/collapsible, multi-column layout, simple (non-database) table, embed (allowlist-only iframes), bookmark/URL-unfurl, math/LaTeX (KaTeX), **synced blocks** (one source, many mirrors). **Medium-high** — each must stay Yjs-serializable (the v0.3.0 collab constraint); synced blocks are the trickiest. |
-| **Table of contents + outline** | Auto-TOC block from headings + a page outline sidebar. **Low.** |
-
-**Rough size:** ~6 plans. (reverse relations; list/grouping/filters; sub-items; blocks pt.1; blocks pt.2 + synced; TOC/outline + release.)
+Two releases remain to 1.0.
 
 ---
 
-## v0.7.0 — Sharing & collaboration depth
+## v0.6.0 — Content, Sharing, Collaboration, Mobile & Operations (combined)
 
-**Theme:** richer sharing surfaces + deeper multiplayer, on the stable collab layer.
+**Theme:** one large consolidated release closing the remaining Notion-parity gaps and making Cairn deep, shareable, usable everywhere, and operable. Five bands of work (see the combined spec for full detail + decisions):
 
-| Feature | Notes / risk |
+| Band | Headline features |
 |---|---|
-| **Per-page share settings** | Password-protected public links, link expiry, "allow duplication" toggle. (Chosen over true per-block ACLs for 1.0 — see non-goals.) **Medium.** |
-| **Published multi-page public site** | A workspace's published pages as a navigable mini-site at `/s/<workspace-slug>`. **Medium** — extends the existing `/p/<slug>` anon path. |
-| **Comments on databases + files** | Deferred from v0.3.0; anchor threads to a row or a file. **Medium.** |
-| **Suggestion / track-changes mode** | Propose edits, accept/reject — built on Yjs. **High** — hardest collab surface. |
-| **Email notifications** | BYO-SMTP (opt-in), digest + per-event, + a notification-preferences UI. **Medium** — no third-party email SaaS dependency (self-hostable). |
+| **Content & database** | Reverse (bidirectional) relations · list view + table grouping + richer filters/multi-sort · row hierarchy (sub-items) · new blocks (toggle, columns, simple table, allowlist embed, bookmark/unfurl, math/KaTeX, same-page synced block) · full-page databases · per-column calc footer · table of contents + outline. |
+| **Sharing & collaboration** | Per-page share settings (password / expiry / allow-duplication) · published multi-page public site `/s/<workspace-slug>` · comments on databases + files · Yjs-native suggestion/track-changes mode · BYO-SMTP email notifications + prefs · page links + **backlinks** + unlinked mentions + page mentions/embeds · per-database row templates. |
+| **Mobile, a11y & i18n** | Responsive/mobile UI · PWA + bounded offline (y-indexeddb) · WCAG 2.1 AA + axe CI gate · keyboard-shortcut registry + ⌘/ sheet · command-palette actions · block conversion + multi-select · hand-rolled i18n (en + RTL proof locale). |
+| **Admin, observability & ops** | Workspace admin console (members/roles/invites/settings, transfer-ownership, delete-workspace) · append-only audit log + per-page activity feed · TOTP 2FA + recovery codes · `prom-client` `/metrics` + `pino` JSON logging · per-workspace quotas · scheduled backups + retention + optional S3 · due-date reminders · favorites/recents · column ergonomics · search filters + saved searches · bulk operations · workspace-home setting. |
+| **Import / export** | Best-effort Notion + Markdown-folder import · re-importable workspace export · PDF / per-page / per-database export. |
 
-**Rough size:** ~5 plans.
+**Migrations:** `0013`–`0022` (contiguous; `ALTER TYPE ADD VALUE` for view_type `+list` runs outside a transaction per the `0011` precedent). **Constraints:** every new editor node/mark stays Yjs-serializable (v0.3.0 collab); every new public/anon/secret/metrics surface continues the v0.5.1 security posture with tests extending that suite; sharing is per-page, never per-block.
 
----
+**Rough size:** ~23 plans (P1–P23), executed area-by-area in build order: database/editor → sharing/collab → mobile/a11y/i18n → admin/ops/import → combined-smoke + release.
 
-## v0.8.0 — Mobile, accessibility & i18n
-
-**Theme:** usable everywhere, by everyone. Cross-cutting polish — do it once the feature surface is mostly complete to avoid churn.
-
-| Feature | Notes / risk |
-|---|---|
-| **Responsive / mobile-optimized UI** | Editor, sidebar drawer, database views adapt to small screens. **Medium.** |
-| **PWA + offline** | Installable (manifest), service worker for offline READ of recent pages + queued edits synced on reconnect (Yjs helps). **High** — offline+sync is the riskiest correctness surface; scope to read-offline + simple queued edits, not full offline-first. Covers "mobile" for 1.0 (native apps deferred). |
-| **Accessibility (WCAG 2.1 AA)** | Keyboard nav, focus management, ARIA, contrast, screen-reader testing; automated `axe` checks in CI. **Medium.** |
-| **Keyboard-shortcut system** | Discoverable shortcut sheet (⌘/). **Low.** |
-| **i18n scaffolding** | Externalize strings, locale switch, ship en + one more locale; RTL-ready CSS. **Medium.** |
-
-**Rough size:** ~5 plans.
-
----
-
-## v0.9.0 — Admin, observability, ops & import
-
-**Theme:** operate it at scale; get data in and out. Operational maturity before declaring stable.
-
-| Feature | Notes / risk |
-|---|---|
-| **Workspace admin console** | Member/role/invite management UI, workspace settings, **transfer ownership**, **delete workspace** (the v0.2.0 sole-owner follow-ups). **Medium.** |
-| **Audit log** | Workspace-scoped record of sensitive actions (role changes, publishes, key/webhook CRUD, deletes) + viewer. **Medium.** |
-| **2FA (TOTP) + recovery codes** | Optional per-user; admin can require it per workspace. (Passkeys/WebAuthn deferred.) **Medium.** |
-| **Observability** | Structured JSON logging + a Prometheus `/metrics` endpoint (request/db/collab/webhook metrics). **Low-medium.** |
-| **Quotas / limits** | Per-workspace storage + rate limits, surfaced in admin. **Low-medium.** |
-| **Scheduled backups + import/export** | Cron-able backup + retention + optional S3 target (extends the v0.5.0 CLI); Notion (ZIP/HTML/MD) + Markdown-folder import (best-effort, documented gaps); full re-importable workspace export. **Medium-high** — Notion import fidelity is the risk. |
-
-**Rough size:** ~6 plans.
+**Risk:** this is a very large single release — execute area-by-area, keep each plan shippable + reviewable, and budget for the raised integration + review burden. (The combined spec's risk section covers the per-feature risks: Yjs-safety of new nodes, reverse-relation write sync, synced blocks, embed/unfurl SSRF/XSS, PWA offline+Yjs, suggestion-mode conflicts, 2FA secret handling, Notion-import fidelity.)
 
 ---
 
@@ -79,13 +34,14 @@ The five releases below each carry a single theme so they ship as coherent units
 
 | Feature | Notes / risk |
 |---|---|
-| **API stability + OpenAPI** | Freeze `/api/v1`, publish an OpenAPI 3.1 spec + a generated typed client, document the compatibility guarantee (breaking changes → `/api/v2` post-1.0). **Medium** — audit the surface before freezing. |
+| **API stability + OpenAPI** | Freeze `/api/v1`; publish an OpenAPI 3.1 spec + a generated typed client; document the compatibility guarantee (breaking changes → `/api/v2` post-1.0). **First expand the surface** — comments/search/file-upload/notifications endpoints + more webhook events (`comment.created`, `member.*`, `page.published/*`) — *before* freezing. **Medium.** |
 | **Performance pass** | Virtualized long pages + large database views, lazy heavy blocks, query/index audit, large-doc Yjs tuning, a Lighthouse budget in CI. **Medium.** |
-| **Optional AI assist (BYO LLM)** | Summarize / continue-writing / ask-this-page via a bring-your-own OpenAI-compatible endpoint, **opt-in, off by default, self-hostable** (point at local Ollama/vLLM or any compatible URL); no content leaves the instance unless the operator configures an endpoint. **Medium** — the off-by-default + no-leak guarantee must be asserted in tests. |
+| **Optional AI assist (BYO LLM)** | Summarize / continue-writing / ask-this-page via a bring-your-own OpenAI-compatible endpoint, **opt-in, off by default, self-hostable** (local Ollama/vLLM or any compatible URL); no content leaves the instance unless the operator configures an endpoint (asserted in tests + `SECURITY.md`). **Medium.** |
 | **Docs site** | Real documentation: install, configure, API, admin, security. **Low-medium.** |
 | **Upgrade/migration guarantees** | Documented + tested migration path; optional checkpoint migration squash. **Low-medium.** |
+| **Conditional formatting** | Color database rows/cells by rule (folded here from the former "additional features" set). **Low-medium.** |
 | **Final security + dependency review** | Fresh pass over the v0.5.1 suite + a manual external-tool sweep; dependency refresh. **Low.** |
-| **Polish + branding** | Onboarding, empty states, error pages, theming (custom logo/accent), command-palette completeness. **Low.** |
+| **Polish + branding** | Onboarding tour + seeded sample content, configurable workspace home, empty states, error pages, theming (custom logo/accent), command-palette completeness. **Low.** |
 
 **Rough size:** ~6 plans.
 
@@ -93,32 +49,27 @@ The five releases below each carry a single theme so they ship as coherent units
 
 ## Out of this roadmap (deferred to post-1.0 / a 2.0 track)
 
-- **Native mobile apps** (iOS/Android) — the PWA covers mobile for 1.0; native is a separate track with its own lifecycle.
-- **End-to-end encryption** — out of the 0.x/1.0 scope; revisit for a 2.0 "private" track.
+- **Native mobile apps** (iOS/Android) — the PWA covers mobile for 1.0.
+- **Cross-page synced blocks** — same-page only in v0.6.0; cross-page needs a shared sub-document model.
+- **End-to-end encryption** — revisit for a 2.0 "private" track.
 - **Desktop Electron app** — the installable PWA covers desktop.
 - **SSO/SAML/SCIM, enterprise directory sync** — OAuth covers 1.0; enterprise auth is a post-1.0 track.
 - **WebAuthn / passkeys** — TOTP 2FA covers 1.0.
 - **True per-block ACLs** — per-page sharing covers 1.0.
+- **Graph view, recurring tasks, comment reactions, guest access** — post-1.0.
 - **Semantic / embeddings search** — opt-in generative assist only for 1.0.
-- **Horizontal scaling** of the collab service (multi-replica + Redis pub/sub) — single-instance documented ceiling stays for homelab scale.
+- **Horizontal scaling** of the collab service (multi-replica + Redis) — single-instance ceiling stays for homelab scale.
 - **Plugin / marketplace system** — post-1.0.
 
 ---
 
 ## Suggested sequence & rationale
 
-1. **v0.6.0 (content/db)** first — highest user-visible value, self-contained, low infra risk; gets Cairn to true editor/database parity.
-2. **v0.7.0 (sharing/collab)** — builds on the stable collab layer; ships the sharing surfaces users ask for.
-3. **v0.8.0 (mobile/a11y/i18n)** — cross-cutting; do it once the feature surface is mostly complete so there's less rework (note: implementers of 0.6/0.7 should not regress a11y/string-externalization to keep this cheap).
-4. **v0.9.0 (admin/ops/import)** — operational maturity + data portability before stable.
-5. **v1.0.0 (stabilize)** — freeze the API, performance, docs, opt-in AI, final review; declare SemVer.
-
-**This ordering is a recommendation, not fixed.** If priorities shift (e.g. mobile sooner, or admin/ops earlier for a multi-user homelab), the themes are independent enough to reorder — except that **1.0.0 must come last** (it freezes everything before it).
-
-≈ 28 plans across the five releases.
+1. **v0.6.0 (combined)** — one large release; execute its ~23 plans **area-by-area** (database/editor first → sharing/collab → mobile/a11y/i18n → admin/ops/import → smoke+release) so each plan stays shippable and reviewable despite the release's size.
+2. **v1.0.0 (stabilize)** — freeze the API (after expanding it), performance, docs, opt-in AI, final review; declare SemVer. **Must come last** — it freezes everything before it.
 
 ---
 
 ## Next step
 
-Pick the first release to brainstorm in depth. The normal flow is: brainstorm → write spec → write numbered plans → execute subagent-driven (exactly as v0.1.0–v0.5.1). Recommend starting with **v0.6.0 (content & database completeness)**.
+Brainstorm/confirm the combined v0.6.0 spec, then write its numbered plans and execute subagent-driven (exactly as v0.1.0–v0.5.1), area-by-area.
