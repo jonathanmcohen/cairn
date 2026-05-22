@@ -99,6 +99,24 @@ export async function updateCells(
       .where(eq(schema.dbProperties.databaseId, input.databaseId));
     const propsById = new Map(props.map((p) => [p.id, p]));
 
+    // Capture prior relation cell values BEFORE writing, so the reverse-sync diff is correct.
+    const relationPropIdsInWrite = Object.keys(input.cells).filter(
+      (propId) => propsById.get(propId)?.type === 'relation',
+    );
+    const before: Record<string, unknown> = {};
+    if (relationPropIdsInWrite.length > 0) {
+      const prior = await tx
+        .select({ propertyId: schema.dbCells.propertyId, value: schema.dbCells.value })
+        .from(schema.dbCells)
+        .where(
+          and(
+            eq(schema.dbCells.rowId, input.rowId),
+            inArray(schema.dbCells.propertyId, relationPropIdsInWrite),
+          ),
+        );
+      for (const c of prior) before[c.propertyId] = c.value;
+    }
+
     const coercedByProp: Record<string, unknown> = {};
     for (const [propId, raw] of Object.entries(input.cells)) {
       const prop = propsById.get(propId);
@@ -114,6 +132,8 @@ export async function updateCells(
         });
     }
     await validateRelationCells(tx, props, coercedByProp);
+    // Mirror paired (reverse) relations: diff before -> after for relation props in this write.
+    await syncRelationCells(tx, { rowId: input.rowId, props, before, after: coercedByProp });
     await tx
       .update(schema.dbRows)
       .set({ updatedAt: new Date() })
