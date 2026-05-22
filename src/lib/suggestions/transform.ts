@@ -1,7 +1,7 @@
 import { getSchema } from '@tiptap/core';
 import type { Node as PMNode } from '@tiptap/pm/model';
 import { liftTarget, Transform } from '@tiptap/pm/transform';
-import { baseExtensions } from '@/components/editor/extensions';
+import { schemaExtensions } from '@/components/editor/schema';
 
 /**
  * Pure, deterministic accept/reject/preview transforms for suggestion mode.
@@ -36,8 +36,9 @@ export type Json = {
   [k: string]: unknown;
 };
 
-// Build the schema once; the suggestion extensions are part of baseExtensions().
-const schema = getSchema(baseExtensions());
+// Build the schema once from the server-safe extension set (same node/mark
+// types as the editor, minus the client-only React node views).
+const schema = getSchema(schemaExtensions());
 
 type Range = { from: number; to: number };
 

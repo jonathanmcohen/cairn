@@ -12,6 +12,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - API: `POST`/`GET /api/databases/[databaseId]/rows/[rowId]/comments` and `POST`/`GET /api/files/[fileId]/comments` (editor+ / viewer+). PATCH/DELETE reuse `/api/comments/[commentId]`.
 - Target-generic `TargetCommentPanel` + `RowComments`/`FileComments` wrappers (mounting awaits a row-expand / file-viewer surface).
 
+### Added (v0.6.0 P9 — Suggestion / track-changes mode)
+- Yjs-native suggestion mode: `suggestion-insert`/`suggestion-delete` marks + a `suggestion-block` node carrying author + suggestion id ride the live collab doc; a `suggestions` index table (migration 0017, `suggestion_status` enum) lists open suggestions without parsing the doc.
+- Propose / accept / reject: a pure ProseMirror transform resolves a suggestion to clean text, applied both to the live Y.Doc (idempotent) and to `pages.content` server-side under a status-guarded conditional update, so the index never drifts from the marks and concurrent resolves can't flip-flop.
+- A suggestion-mode toolbar toggle + accept/reject UI (editor+ only); public `/p/` + `/s/` pages render the clean accepted text (no suggestion chrome).
+- Role-gated: proposing and accepting/rejecting require `editor`+; viewers see no suggestion controls and the API fails closed.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)

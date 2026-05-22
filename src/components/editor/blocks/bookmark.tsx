@@ -1,15 +1,7 @@
-import { mergeAttributes, Node } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useState } from 'react';
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    bookmark: {
-      setBookmark: (url: string) => ReturnType;
-    };
-  }
-}
+import { BookmarkNode } from './bookmark-node';
 
 type Unfurl = {
   title: string | null;
@@ -101,43 +93,9 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
   );
 }
 
-export const Bookmark = Node.create({
-  name: 'bookmark',
-  group: 'block',
-  atom: true,
-  selectable: true,
-  draggable: true,
-
-  addAttributes() {
-    return {
-      url: { default: null },
-      title: { default: null },
-      description: { default: null },
-      image: { default: null },
-      favicon: { default: null },
-    };
-  },
-
-  parseHTML() {
-    return [{ tag: 'div[data-bookmark-url]' }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['div', mergeAttributes(HTMLAttributes, { 'data-bookmark-url': HTMLAttributes.url })];
-  },
-
+/** Client extension: the schema-only node + its React node view. */
+export const Bookmark = BookmarkNode.extend({
   addNodeView() {
     return ReactNodeViewRenderer(BookmarkView);
-  },
-
-  addCommands() {
-    return {
-      setBookmark:
-        () =>
-        ({ commands }) =>
-          // Insert empty; the node-view immediately unfurls once the user confirms.
-          // (The URL is unfurled client-side so the cached metadata lands in attrs.)
-          commands.insertContent({ type: this.name, attrs: { url: null } }),
-    };
   },
 });

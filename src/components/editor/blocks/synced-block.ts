@@ -1,21 +1,8 @@
-import { Node } from '@tiptap/core';
 import { DOMSerializer, type Node as PMNode } from '@tiptap/pm/model';
 import type { Editor, NodeViewProps } from '@tiptap/react';
 import { NodeViewContent, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { createElement } from 'react';
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    syncedBlock: {
-      /** Insert a fresh synced block (mints a new syncedBlockId). */
-      setSyncedBlock: () => ReturnType;
-    };
-  }
-}
-
-function newId(): string {
-  return globalThis.crypto?.randomUUID?.() ?? `sb_${Math.random().toString(36).slice(2)}`;
-}
+import { SyncedBlockNode } from './synced-block-node';
 
 /**
  * Serialize the source node's child content to HTML for a live read-only
@@ -95,40 +82,9 @@ function SyncedBlockView({ node, editor, getPos }: NodeViewProps) {
   );
 }
 
-export const SyncedBlock = Node.create({
-  name: 'syncedBlock',
-  group: 'block',
-  content: 'block+',
-  defining: true,
-
-  addAttributes() {
-    return {
-      syncedBlockId: { default: null },
-    };
-  },
-
-  parseHTML() {
-    return [{ tag: 'div[data-synced-block-id]' }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return ['div', { ...HTMLAttributes, 'data-synced-block-id': HTMLAttributes.syncedBlockId }, 0];
-  },
-
+/** Client extension: the schema-only node + its React node view. */
+export const SyncedBlock = SyncedBlockNode.extend({
   addNodeView() {
     return ReactNodeViewRenderer(SyncedBlockView);
-  },
-
-  addCommands() {
-    return {
-      setSyncedBlock:
-        () =>
-        ({ commands }) =>
-          commands.insertContent({
-            type: this.name,
-            attrs: { syncedBlockId: newId() },
-            content: [{ type: 'paragraph' }],
-          }),
-    };
   },
 });

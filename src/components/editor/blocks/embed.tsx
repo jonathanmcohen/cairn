@@ -1,17 +1,8 @@
-import { mergeAttributes, Node } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useState } from 'react';
 import { resolveEmbed } from '@/lib/editor/embed-allowlist';
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    embed: {
-      /** Insert an embed from a pasted URL; no-op if the URL is not allowlisted. */
-      setEmbed: (rawUrl: string) => ReturnType;
-    };
-  }
-}
+import { EmbedNode } from './embed-node';
 
 function EmbedView({ node, editor, updateAttributes }: NodeViewProps) {
   const provider = node.attrs.provider as string | null;
@@ -74,47 +65,9 @@ function EmbedView({ node, editor, updateAttributes }: NodeViewProps) {
   );
 }
 
-export const Embed = Node.create({
-  name: 'embed',
-  group: 'block',
-  atom: true,
-  selectable: true,
-  draggable: true,
-
-  addAttributes() {
-    return {
-      provider: { default: null },
-      src: { default: null },
-    };
-  },
-
-  parseHTML() {
-    return [{ tag: 'div[data-embed-provider]' }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    return [
-      'div',
-      mergeAttributes(HTMLAttributes, { 'data-embed-provider': HTMLAttributes.provider }),
-    ];
-  },
-
+/** Client extension: the schema-only node + its React node view. */
+export const Embed = EmbedNode.extend({
   addNodeView() {
     return ReactNodeViewRenderer(EmbedView);
-  },
-
-  addCommands() {
-    return {
-      setEmbed:
-        (rawUrl) =>
-        ({ commands }) => {
-          const resolved = resolveEmbed(rawUrl);
-          if (!resolved) return false;
-          return commands.insertContent({
-            type: this.name,
-            attrs: { provider: resolved.provider, src: resolved.src },
-          });
-        },
-    };
   },
 });

@@ -1,17 +1,9 @@
-import { InputRule, mergeAttributes, Node } from '@tiptap/core';
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import 'katex/dist/katex.min.css';
 import { useMemo, useState } from 'react';
 import { renderMath } from '@/lib/editor/math-render';
-
-declare module '@tiptap/core' {
-  interface Commands<ReturnType> {
-    math: {
-      setMath: (attrs: { latex: string; display?: boolean }) => ReturnType;
-    };
-  }
-}
+import { MathBlockNode } from './math-node';
 
 function MathView({ node, editor, updateAttributes }: NodeViewProps) {
   const latex = (node.attrs.latex as string) ?? '';
@@ -54,68 +46,9 @@ function MathView({ node, editor, updateAttributes }: NodeViewProps) {
   );
 }
 
-// Named `MathBlock` (not `Math`) to avoid shadowing the JS global `Math`
-// (Biome `noShadowRestrictedNames`). The TipTap node `name` is still `math`.
-export const MathBlock = Node.create({
-  name: 'math',
-  inline: true, // a single node serves inline; block uses display:true + group below
-  group: 'inline',
-  atom: true,
-  selectable: true,
-
-  addAttributes() {
-    return {
-      latex: { default: '' },
-      display: { default: false },
-    };
-  },
-
-  parseHTML() {
-    return [{ tag: 'span[data-math]' }, { tag: 'div[data-math]' }];
-  },
-
-  renderHTML({ HTMLAttributes }) {
-    const tag = HTMLAttributes.display ? 'div' : 'span';
-    return [tag, mergeAttributes(HTMLAttributes, { 'data-math': '' })];
-  },
-
+/** Client extension: the schema-only node + its React node view + KaTeX CSS. */
+export const MathBlock = MathBlockNode.extend({
   addNodeView() {
     return ReactNodeViewRenderer(MathView);
-  },
-
-  addInputRules() {
-    const name = this.name;
-    return [
-      new InputRule({
-        find: /\$\$([^$]+)\$\$$/,
-        handler: ({ range, match, commands }) => {
-          commands.insertContentAt(range, {
-            type: name,
-            attrs: { latex: match[1] ?? '', display: true },
-          });
-        },
-      }),
-      new InputRule({
-        find: /\$([^$]+)\$$/,
-        handler: ({ range, match, commands }) => {
-          commands.insertContentAt(range, {
-            type: name,
-            attrs: { latex: match[1] ?? '', display: false },
-          });
-        },
-      }),
-    ];
-  },
-
-  addCommands() {
-    return {
-      setMath:
-        (attrs) =>
-        ({ commands }) =>
-          commands.insertContent({
-            type: this.name,
-            attrs: { latex: attrs.latex, display: attrs.display ?? false },
-          }),
-    };
   },
 });
