@@ -1,7 +1,9 @@
-import { test as base, type Page } from '@playwright/test';
+import { test as base, type Cookie, type Page } from '@playwright/test';
 import { type SeededA11y, seedA11yFixtures } from './seed';
 
-export type A11yFixtures = { seeded: SeededA11y };
+type AuthCookies = Cookie[];
+
+export type A11yFixtures = { seeded: SeededA11y; authCookies: AuthCookies };
 
 export const test = base.extend<A11yFixtures, { seededWorker: SeededA11y }>({
   // One seed per worker; tests share it (read-only screens).
@@ -18,22 +20,56 @@ export const test = base.extend<A11yFixtures, { seededWorker: SeededA11y }>({
   seeded: async ({ seededWorker }, use) => {
     await use(seededWorker);
   },
+  // Per-test fixture (not auto): the spec opts in by destructuring `authCookies`
+  // or, more commonly, by calling `signIn(page, seeded)` which reads the
+  // cookies through the test fixture context. Sign-in happens once per worker
+  // via a module-level lazy promise; subsequent tests reuse the cached cookie
+  // jar so we don't trip the auth rate-limit (5/min/ip+email).
+  authCookies: async ({ browser, seeded }, use) => {
+    const cookies = await getOrCreateAuthCookies(browser, seeded);
+    await use(cookies);
+  },
 });
 
-/**
- * Sign in through the real credentials form so the session cookie is authentic.
- *
- * The login route is `/login` and the inputs carry `name="email"` / `name="password"`
- * (id-matched <Label htmlFor>). We target by `name` so the helper survives the
- * labelling work in later tasks; the post-login landing page is `/` (the app shell).
- */
-export async function signIn(page: Page, seeded: SeededA11y): Promise<void> {
+let cachedCookies: Promise<AuthCookies> | null = null;
+async function getOrCreateAuthCookies(
+  browser: import('@playwright/test').Browser,
+  seeded: SeededA11y,
+): Promise<AuthCookies> {
+  cachedCookies ??= (async () => {
+    const ctx = await browser.newContext();
+    try {
+      const page = await ctx.newPage();
+      await doCredentialsSignIn(page, seeded);
+      return await ctx.cookies();
+    } finally {
+      await ctx.close();
+    }
+  })();
+  return cachedCookies;
+}
+
+/** Drive the real credentials form (used once per worker via the cache above). */
+async function doCredentialsSignIn(page: Page, seeded: SeededA11y): Promise<void> {
   await page.goto('/login');
   await page.locator('input[name="email"]').fill(seeded.userEmail);
   await page.locator('input[name="password"]').fill(seeded.userPassword);
   await page.getByRole('button', { name: /sign in/i }).click();
-  // The form does router.push('/') on success.
   await page.waitForURL('**/', { timeout: 30_000 });
+}
+
+/**
+ * Inject the worker's cached auth cookies into the current page's context so
+ * subsequent navigations are authenticated, without re-driving the
+ * (rate-limited) credentials form. Idempotent: callers continue to pass
+ * `(page, seeded)`. We read the cached cookies through the worker-level cache
+ * directly so callers don't have to thread `authCookies` everywhere.
+ */
+export async function signIn(page: Page, seeded: SeededA11y): Promise<void> {
+  const browser = page.context().browser();
+  if (!browser) throw new Error('a11y harness: page.context().browser() returned null');
+  const cookies = await getOrCreateAuthCookies(browser, seeded);
+  await page.context().addCookies(cookies);
 }
 
 export { expect } from '@playwright/test';

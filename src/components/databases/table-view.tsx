@@ -188,7 +188,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         <thead>
           <tr className="border-b">
             {meta.properties.map((p) => (
-              <th key={p.id} className="px-3 py-2 text-left font-medium">
+              <th key={p.id} scope="col" className="px-3 py-2 text-left font-medium">
                 {p.name}
               </th>
             ))}

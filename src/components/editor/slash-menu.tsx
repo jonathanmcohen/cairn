@@ -1,7 +1,7 @@
 'use client';
 
 import type { Editor } from '@tiptap/react';
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
 
 export type SlashItem = {
   title: string;
@@ -13,11 +13,20 @@ export type SlashMenuRef = {
   onKeyDown: (event: KeyboardEvent) => boolean;
 };
 
+/**
+ * Bespoke ProseMirror-anchored popup for `/` slash commands. ARIA-wise we
+ * expose this as a `listbox` so screen readers announce the selectable items
+ * — but DOM focus stays in the editor (TipTap's keymap forwards ArrowUp/Down/
+ * Enter/Esc here via the parent extension's `onKeyDown`). The container
+ * carries `aria-activedescendant` pointing at the currently-highlighted
+ * option's id so SR users perceive the active item while typing.
+ */
 export const SlashMenu = forwardRef<
   SlashMenuRef,
   { items: SlashItem[]; command: (item: SlashItem) => void }
 >(function SlashMenu({ items, command }, ref) {
   const [index, setIndex] = useState(0);
+  const listId = useId();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset selection when filtered items change
   useEffect(() => {
@@ -51,13 +60,34 @@ export const SlashMenu = forwardRef<
     );
   }
 
+  const activeId = `${listId}-${index}`;
   return (
     <div className="w-64 rounded-md border bg-popover shadow-md">
-      <ul className="py-1">
+      {/*
+        ARIA listbox built from div + role rather than ul/li: Biome's a11y rules
+        forbid putting `role="listbox"`/`role="option"` on `<ul>`/`<li>`, and
+        the listbox needs `tabIndex={0}` so `aria-activedescendant` is reachable
+        even though we never DOM-focus it (TipTap's keymap forwards keys here
+        while focus stays in the editor surface).
+      */}
+      <div
+        role="listbox"
+        aria-label="Slash commands"
+        aria-activedescendant={activeId}
+        tabIndex={0}
+        className="py-1"
+      >
         {items.map((item, i) => (
-          <li key={item.title}>
+          <div
+            key={item.title}
+            role="option"
+            id={`${listId}-${i}`}
+            aria-selected={i === index}
+            tabIndex={-1}
+          >
             <button
               type="button"
+              tabIndex={-1}
               onClick={() => command(item)}
               className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-accent ${
                 i === index ? 'bg-accent' : ''
@@ -66,9 +96,9 @@ export const SlashMenu = forwardRef<
               <div className="font-medium">{item.title}</div>
               <div className="text-xs text-muted-foreground">{item.description}</div>
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 });

@@ -1,16 +1,24 @@
 'use client';
 
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react';
+import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
 
 export type PageItem = { id: string; title: string; icon: string | null };
 
 export type PageLinkListRef = { onKeyDown: (event: KeyboardEvent) => boolean };
 
+/**
+ * `[[`/`@@` page-link autocomplete popup. Exposed as a `listbox`; DOM focus
+ * stays in the editor so typing keeps working. The popup is driven by
+ * `aria-activedescendant` pointing at the highlighted option's id — SR users
+ * perceive the active item while ArrowUp/Down/Enter are handled by TipTap's
+ * keymap (forwarded here through the parent suggestion plugin).
+ */
 export const PageLinkList = forwardRef<
   PageLinkListRef,
   { items: PageItem[]; command: (item: PageItem) => void }
 >(function PageLinkList({ items, command }, ref) {
   const [index, setIndex] = useState(0);
+  const listId = useId();
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: reset selection when filtered items change
   useEffect(() => {
@@ -45,13 +53,31 @@ export const PageLinkList = forwardRef<
     );
   }
 
+  const activeId = `${listId}-${index}`;
   return (
     <div className="w-64 rounded-md border bg-popover shadow-md">
-      <ul className="py-1">
+      {/*
+        See slash-menu.tsx for the rationale on div+role over ul/li and on the
+        listbox being tabbable but not actually DOM-focused.
+      */}
+      <div
+        role="listbox"
+        aria-label="Pages"
+        aria-activedescendant={activeId}
+        tabIndex={0}
+        className="py-1"
+      >
         {items.map((item, i) => (
-          <li key={item.id}>
+          <div
+            key={item.id}
+            role="option"
+            id={`${listId}-${i}`}
+            aria-selected={i === index}
+            tabIndex={-1}
+          >
             <button
               type="button"
+              tabIndex={-1}
               onClick={() => command(item)}
               className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-accent ${
                 i === index ? 'bg-accent' : ''
@@ -60,9 +86,9 @@ export const PageLinkList = forwardRef<
               <span className="mr-1.5">{item.icon ?? '\u{1F4C4}'}</span>
               <span className="font-medium">{item.title || 'Untitled'}</span>
             </button>
-          </li>
+          </div>
         ))}
-      </ul>
+      </div>
     </div>
   );
 });
