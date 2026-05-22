@@ -1,4 +1,4 @@
-import { Trash } from 'lucide-react';
+import { LayoutTemplate, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
@@ -33,6 +33,13 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
         <SidebarTree workspaceId={workspaceId} />
       </nav>
       <div className="border-t p-3 text-xs text-muted-foreground">
+        <Link
+          href="/templates"
+          className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+        >
+          <LayoutTemplate className="h-3 w-3" />
+          Templates
+        </Link>
         <Link
           href="/trash"
           className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"

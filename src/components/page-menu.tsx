@@ -8,13 +8,20 @@ type PageMenuProps = {
   pageId: string;
   initialPublished?: boolean;
   initialSlug?: string | null;
+  pageTitle?: string;
 };
 
-export function PageMenu({ pageId, initialPublished = false, initialSlug = null }: PageMenuProps) {
+export function PageMenu({
+  pageId,
+  initialPublished = false,
+  initialSlug = null,
+  pageTitle = '',
+}: PageMenuProps) {
   const [open, setOpen] = useState(false);
   const [published, setPublished] = useState(initialPublished);
   const [slug, setSlug] = useState<string | null>(initialSlug);
   const [copied, setCopied] = useState(false);
+  const [savedAsTemplate, setSavedAsTemplate] = useState(false);
 
   function download(url: string) {
     const a = document.createElement('a');
@@ -52,6 +59,19 @@ export function PageMenu({ pageId, initialPublished = false, initialSlug = null 
     const res = await fetch(`/api/pages/${pageId}/unpublish`, { method: 'POST' });
     if (!res.ok) return;
     setPublished(false);
+  }
+
+  async function saveAsTemplate() {
+    const name = window.prompt('Template name', pageTitle || 'Untitled')?.trim();
+    if (!name) return;
+    const res = await fetch('/api/templates', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ kind: 'page', name, pageId }),
+    });
+    if (!res.ok) return;
+    setSavedAsTemplate(true);
+    setTimeout(() => setSavedAsTemplate(false), 2000);
   }
 
   function copyUrl() {
@@ -133,6 +153,14 @@ export function PageMenu({ pageId, initialPublished = false, initialSlug = null 
             }}
           >
             Import markdown…
+          </button>
+          <div className="my-1 border-t" />
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            onClick={() => void saveAsTemplate()}
+          >
+            {savedAsTemplate ? 'Saved to templates' : 'Save as template…'}
           </button>
         </div>
       )}

@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.5.0 Plan 3 — Templates)
+- Capture a page subtree (its content, every descendant page, and every embedded inline database) or a standalone database (properties + views, sample rows opt-in) as a portable, workspace-free JSON template.
+- Instantiate any template into any workspace: mints a fresh uuid for every captured page/database/property/view/row and rewrites every internal reference — page parent links, embedded `database`-node `databaseId`s (deep content walk), and property-id references inside view configs and relation/rollup property configs — inserting the whole graph in one transaction with no source id surviving.
+- Seeded global built-in templates (Meeting notes, Weekly planner, Project tracker), re-seeded idempotently at startup and visible to every workspace.
+- Save-as-template actions on pages (and databases) that capture the entity into a workspace template via the session-gated `POST /api/templates` route.
+- A Templates gallery (`/templates`) listing built-in + workspace templates with a "Use template" button that instantiates into the current workspace and opens the new copy, plus delete for workspace templates.
+
 ### Added (v0.5.0 Plan 2 — Webhooks)
 - HMAC-SHA256-signed outbound webhooks: every delivery carries an `X-Cairn-Signature: sha256=<hmac>` header keyed by the per-hook secret so receivers can verify authenticity.
 - `page.*`/`row.*` events emitted fire-and-forget from the mutation helpers — the mutation returns without awaiting delivery, so request latency is unaffected.

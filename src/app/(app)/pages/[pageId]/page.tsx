@@ -48,6 +48,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           pageId={page.id}
           initialPublished={page.published}
           initialSlug={page.publicSlug}
+          pageTitle={page.title}
         />
       </div>
       <Editor
