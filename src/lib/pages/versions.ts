@@ -83,14 +83,55 @@ export async function snapshotIfChanged(
   });
 }
 
-/** Versions for a page, newest-first. (Author join added in Task 3.) */
+export type VersionListItem = schema.PageVersion & { authorName: string | null };
+
+/** Versions for a page, newest-first, with the author's display name. */
 export async function listVersions(
   db: PostgresJsDatabase<typeof schema>,
   pageId: string,
-): Promise<schema.PageVersion[]> {
-  return db
-    .select()
+): Promise<VersionListItem[]> {
+  const rows = await db
+    .select({
+      version: schema.pageVersions,
+      authorName: schema.users.name,
+    })
     .from(schema.pageVersions)
+    .leftJoin(schema.users, eq(schema.users.id, schema.pageVersions.authorId))
     .where(eq(schema.pageVersions.pageId, pageId))
     .orderBy(desc(schema.pageVersions.createdAt));
+  return rows.map((r) => ({ ...r.version, authorName: r.authorName ?? null }));
+}
+
+/**
+ * Non-destructive restore: copy the chosen version's content onto the live
+ * page AND record it as a brand-new version. History is append-only.
+ */
+export async function restoreVersion(
+  db: PostgresJsDatabase<typeof schema>,
+  versionId: string,
+): Promise<schema.PageVersion> {
+  return db.transaction(async (tx) => {
+    const [chosen] = await tx
+      .select()
+      .from(schema.pageVersions)
+      .where(eq(schema.pageVersions.id, versionId))
+      .limit(1);
+    if (!chosen) throw new Error('Version not found');
+
+    await tx
+      .update(schema.pages)
+      .set({ content: chosen.content as never })
+      .where(eq(schema.pages.id, chosen.pageId));
+
+    const [newVersion] = await tx
+      .insert(schema.pageVersions)
+      .values({
+        pageId: chosen.pageId,
+        content: chosen.content as never,
+        authorId: chosen.authorId,
+      })
+      .returning();
+    if (!newVersion) throw new Error('Restore insert returned no row');
+    return newVersion;
+  });
 }

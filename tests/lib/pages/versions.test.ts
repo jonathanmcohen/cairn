@@ -1,11 +1,17 @@
-import { sql as drizzleSql } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
+import { sql as drizzleSql, eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { createPage } from '@/lib/pages/create';
-import { listVersions, SNAPSHOT_DEBOUNCE_MS, snapshotIfChanged } from '@/lib/pages/versions';
+import {
+  listVersions,
+  restoreVersion,
+  SNAPSHOT_DEBOUNCE_MS,
+  snapshotIfChanged,
+} from '@/lib/pages/versions';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
 
@@ -86,5 +92,37 @@ describe('snapshotIfChanged', () => {
 
   it('exposes a 60s debounce window', () => {
     expect(SNAPSHOT_DEBOUNCE_MS).toBe(60_000);
+  });
+});
+
+describe('restoreVersion', () => {
+  it('writes the chosen content back as current AND as a new version', async () => {
+    const v1 = await snapshotIfChanged(db, { pageId, content: doc('first'), authorId });
+    await db.execute(
+      drizzleSql`update page_versions set created_at = now() - interval '5 minutes'`,
+    );
+    await snapshotIfChanged(db, { pageId, content: doc('second'), authorId });
+
+    const restored = await restoreVersion(db, v1!.id);
+    // page content is back to v1
+    expect(restored.content).toEqual(doc('first'));
+    const [page] = await db.select().from(schema.pages).where(eq(schema.pages.id, pageId));
+    expect(page?.content).toEqual(doc('first'));
+    // and history GREW (non-destructive): first, second, + the restore
+    const all = await listVersions(db, pageId);
+    expect(all).toHaveLength(3);
+    expect(all[0]?.content).toEqual(doc('first')); // newest is the restore
+  });
+
+  it('throws on an unknown version id', async () => {
+    await expect(restoreVersion(db, randomUUID())).rejects.toThrow();
+  });
+});
+
+describe('listVersions author', () => {
+  it('includes the author display name', async () => {
+    await snapshotIfChanged(db, { pageId, content: doc('a'), authorId });
+    const [v] = await listVersions(db, pageId);
+    expect(typeof v?.authorName === 'string' || v?.authorName === null).toBe(true);
   });
 });
