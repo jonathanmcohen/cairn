@@ -1,0 +1,96 @@
+import { and, desc, eq, notInArray } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import * as schema from '@/db/schema';
+
+/** Skip a snapshot if the latest version is younger than this (keystroke debounce). */
+export const SNAPSHOT_DEBOUNCE_MS = 60_000;
+/** Retain at most this many versions per page; older ones are pruned. */
+export const MAX_VERSIONS_PER_PAGE = 50;
+
+export type SnapshotInput = {
+  pageId: string;
+  content: unknown;
+  authorId: string | null;
+};
+
+/**
+ * Stable JSON string with object keys sorted recursively. Postgres `jsonb`
+ * does NOT preserve object key insertion order, so a naive `JSON.stringify`
+ * of the stored content can differ from the incoming content even when they
+ * are logically equal. Canonicalizing makes the dedupe order-independent.
+ */
+function canonicalJson(value: unknown): string {
+  const seen = (v: unknown): unknown => {
+    if (Array.isArray(v)) return v.map(seen);
+    if (v && typeof v === 'object') {
+      const obj = v as Record<string, unknown>;
+      const out: Record<string, unknown> = {};
+      for (const k of Object.keys(obj).sort()) out[k] = seen(obj[k]);
+      return out;
+    }
+    return v;
+  };
+  return JSON.stringify(seen(value));
+}
+
+/**
+ * Insert a new page_versions row IFF either no version exists yet, or the
+ * latest is older than SNAPSHOT_DEBOUNCE_MS AND its content differs from the
+ * incoming content. After inserting, prune beyond MAX_VERSIONS_PER_PAGE.
+ * Returns the inserted row, or null when skipped. Never throws on a no-op.
+ */
+export async function snapshotIfChanged(
+  db: PostgresJsDatabase<typeof schema>,
+  input: SnapshotInput,
+): Promise<schema.PageVersion | null> {
+  return db.transaction(async (tx) => {
+    const [latest] = await tx
+      .select()
+      .from(schema.pageVersions)
+      .where(eq(schema.pageVersions.pageId, input.pageId))
+      .orderBy(desc(schema.pageVersions.createdAt))
+      .limit(1);
+
+    if (latest) {
+      const age = Date.now() - latest.createdAt.getTime();
+      if (age < SNAPSHOT_DEBOUNCE_MS) return null; // too soon
+      if (canonicalJson(latest.content) === canonicalJson(input.content)) return null; // unchanged
+    }
+
+    const [inserted] = await tx
+      .insert(schema.pageVersions)
+      .values({
+        pageId: input.pageId,
+        content: input.content as never,
+        authorId: input.authorId,
+      })
+      .returning();
+
+    // Prune: delete rows for this page NOT among the newest MAX_VERSIONS_PER_PAGE ids.
+    const keep = tx
+      .select({ id: schema.pageVersions.id })
+      .from(schema.pageVersions)
+      .where(eq(schema.pageVersions.pageId, input.pageId))
+      .orderBy(desc(schema.pageVersions.createdAt))
+      .limit(MAX_VERSIONS_PER_PAGE);
+    await tx
+      .delete(schema.pageVersions)
+      .where(
+        and(eq(schema.pageVersions.pageId, input.pageId), notInArray(schema.pageVersions.id, keep)),
+      );
+
+    return inserted ?? null;
+  });
+}
+
+/** Versions for a page, newest-first. (Author join added in Task 3.) */
+export async function listVersions(
+  db: PostgresJsDatabase<typeof schema>,
+  pageId: string,
+): Promise<schema.PageVersion[]> {
+  return db
+    .select()
+    .from(schema.pageVersions)
+    .where(eq(schema.pageVersions.pageId, pageId))
+    .orderBy(desc(schema.pageVersions.createdAt));
+}
