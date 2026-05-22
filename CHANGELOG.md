@@ -18,6 +18,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - A suggestion-mode toolbar toggle + accept/reject UI (editor+ only); public `/p/` + `/s/` pages render the clean accepted text (no suggestion chrome).
 - Role-gated: proposing and accepting/rejecting require `editor`+; viewers see no suggestion controls and the API fails closed.
 
+### Added (v0.6.0 P10 — page links + backlinks + page mentions/embeds + row templates)
+- Page links: `[[` autocomplete inserts a `pageLink` to another workspace page; `@@` inserts a `pageMention` (member `@`-mentions unchanged); a "Page embed" slash entry inserts a `pageEmbed` snapshot card.
+- Write-time `page_links` index (`reindexPageLinks` on save) powering a "Linked references" backlinks panel; read-time "Unlinked mentions" FTS search for the page title.
+- Per-database row templates (`rowTemplates` in `databases.config`, migration 0019) + a "new row from template" picker on the table view.
+- `GET /api/workspaces/pages?q=` — workspace page search (viewer+) for the page picker; `GET /api/pages/[pageId]/backlinks`.
+- Migration `0018`: `page_links` index table + `notification_email_prefs` (the email-prefs store consumed by P11).
+- New editor nodes (`pageLink`/`pageMention`/`pageEmbed`) verified Yjs round-trip safe.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
