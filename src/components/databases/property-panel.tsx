@@ -32,6 +32,8 @@ export function PropertyPanel({
   const [type, setType] = useState<(typeof TYPES)[number]>('text');
   const [expression, setExpression] = useState('');
   const [targetDatabaseId, setTargetDatabaseId] = useState('');
+  const [createReverse, setCreateReverse] = useState(false);
+  const [reverseName, setReverseName] = useState('');
   const [databases, setDatabases] = useState<{ id: string; title: string }[]>([]);
   const [relationPropertyId, setRelationPropertyId] = useState('');
   const [targetPropertyId, setTargetPropertyId] = useState('');
@@ -118,12 +120,17 @@ export function PropertyPanel({
         name: name.trim(),
         type,
         config: configForType(),
+        ...(type === 'relation' && createReverse
+          ? { createReverse: true, reverseName: reverseName.trim() || name.trim() }
+          : {}),
       }),
     });
     setBusy(false);
     setName('');
     setExpression('');
     setTargetDatabaseId('');
+    setCreateReverse(false);
+    setReverseName('');
     setRelationPropertyId('');
     setTargetPropertyId('');
     setRollupFn('count');
@@ -188,6 +195,43 @@ export function PropertyPanel({
           Cancel
         </Button>
       </div>
+      {type === 'relation' && targetDatabaseId !== '' && (
+        <div className="space-y-1">
+          <div className="flex items-center gap-2">
+            <input
+              id="relation-create-reverse"
+              type="checkbox"
+              checked={createReverse}
+              onChange={(e) => setCreateReverse(e.target.checked)}
+              className="size-3.5"
+            />
+            <label
+              className="text-xs font-medium text-muted-foreground"
+              htmlFor="relation-create-reverse"
+            >
+              Create a reverse property on the target database
+            </label>
+          </div>
+          {createReverse && (
+            <div className="space-y-1">
+              <label
+                className="text-xs font-medium text-muted-foreground"
+                htmlFor="relation-reverse-name"
+              >
+                Reverse property name
+              </label>
+              <input
+                id="relation-reverse-name"
+                type="text"
+                value={reverseName}
+                placeholder={name.trim() || 'Reverse property name'}
+                onChange={(e) => setReverseName(e.target.value)}
+                className="w-full rounded-md border bg-background px-2 py-1 text-sm"
+              />
+            </div>
+          )}
+        </div>
+      )}
       {type === 'formula' && (
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground" htmlFor="formula-expr">

@@ -22,6 +22,9 @@ const CreateInput = z.object({
     'rollup',
   ]),
   config: z.unknown().optional(),
+  // For relation properties: also create the mirrored relation on the target database.
+  createReverse: z.boolean().optional(),
+  reverseName: z.string().min(1).max(100).optional(),
 });
 
 export async function POST(req: Request, { params }: Ctx): Promise<Response> {
@@ -35,6 +38,8 @@ export async function POST(req: Request, { params }: Ctx): Promise<Response> {
       name: parsed.name,
       type: parsed.type,
       config: parsed.config,
+      createReverse: parsed.createReverse,
+      reverseName: parsed.reverseName,
     });
     return NextResponse.json(prop, { status: 201 });
   } catch (err) {

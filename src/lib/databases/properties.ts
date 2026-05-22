@@ -2,7 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import * as schema from '@/db/schema';
-import { RelationConfig, relationTargetId } from './relations';
+import { createReverseRelationProperty, RelationConfig, relationTargetId } from './relations';
 import { RollupConfig } from './rollup/config';
 
 const SelectConfig = z.object({
@@ -70,6 +70,10 @@ export async function createProperty(
     name: string;
     type: schema.PropertyType;
     config?: unknown;
+    /** For relation properties: also create the mirrored relation on the target database. */
+    createReverse?: boolean;
+    /** Name for the mirror created when `createReverse` is set (defaults to this property's name). */
+    reverseName?: string;
   },
 ): Promise<schema.DbProperty> {
   return db.transaction(async (tx) => {
@@ -114,6 +118,21 @@ export async function createProperty(
       })
       .returning();
     if (!row) throw new Error('insert failed');
+
+    // Optionally materialize the mirrored relation on the target database (spec decision #1).
+    if (input.type === 'relation' && input.createReverse) {
+      await createReverseRelationProperty(tx, {
+        sourcePropertyId: row.id,
+        reverseName: input.reverseName?.trim() || input.name,
+      });
+      // Re-read so the returned property carries the reversePropertyId link.
+      const [linked] = await tx
+        .select()
+        .from(schema.dbProperties)
+        .where(eq(schema.dbProperties.id, row.id))
+        .limit(1);
+      if (linked) return linked;
+    }
     return row;
   });
 }
