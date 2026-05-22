@@ -1,8 +1,16 @@
 import { Extension } from '@tiptap/core';
+import { PluginKey } from '@tiptap/pm/state';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
+
+// Each Suggestion plugin MUST have a distinct PluginKey — `@tiptap/suggestion`
+// defaults to `PluginKey('suggestion')`, so two instances with that default key
+// crash at editor-mount time ("Adding different instances of a keyed plugin").
+// Member-mentions use 'mention$' (configured in mention-extension.ts).
+const PAGE_LINK_PLUGIN_KEY = new PluginKey('pageLinkSuggestion$');
+const PAGE_MENTION_PLUGIN_KEY = new PluginKey('pageMentionSuggestion$');
 
 export async function fetchPages(query: string): Promise<PageItem[]> {
   try {
@@ -93,8 +101,16 @@ export const PageLinkSuggestion = Extension.create({
   name: 'pageLinkSuggestion',
   addProseMirrorPlugins() {
     return [
-      Suggestion({ editor: this.editor, ...suggestionFor('[[', 'pageLink') }),
-      Suggestion({ editor: this.editor, ...suggestionFor('@@', 'pageMention') }),
+      Suggestion({
+        editor: this.editor,
+        pluginKey: PAGE_LINK_PLUGIN_KEY,
+        ...suggestionFor('[[', 'pageLink'),
+      }),
+      Suggestion({
+        editor: this.editor,
+        pluginKey: PAGE_MENTION_PLUGIN_KEY,
+        ...suggestionFor('@@', 'pageMention'),
+      }),
     ];
   },
 });
