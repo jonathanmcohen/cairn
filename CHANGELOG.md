@@ -18,6 +18,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - A suggestion-mode toolbar toggle + accept/reject UI (editor+ only); public `/p/` + `/s/` pages render the clean accepted text (no suggestion chrome).
 - Role-gated: proposing and accepting/rejecting require `editor`+; viewers see no suggestion controls and the API fails closed.
 
+### Added (v0.6.0 P11 — BYO-SMTP email notifications + preferences)
+- Opt-in email notifications via a bring-your-own SMTP server (`SMTP_HOST`/`PORT`/`USER`/`PASS`/`FROM`/`SECURE` env, `nodemailer`); fully disabled — a clean no-op — when `SMTP_HOST` is unset (the transport factory returns null, the single chokepoint every send path checks).
+- Per-event email fired fire-and-forget from the notify path (`setImmediate`, never awaited, errors swallowed — mirroring the webhook `emit` pattern), gated by each user's `notification_email_prefs`; the SSRF guard runs on every rendered deep link.
+- Digest mode: `scanDigests` batches a user's unread digest-only notifications into one email, idempotent via a per-user `system_meta` watermark; runnable via `pnpm email:digest` (tsx) or an opt-in single-instance `CAIRN_DIGEST_INTERVAL` ticker in instrumentation (external-cron recommended).
+- Email templates (plain text + minimal inline-styled HTML).
+- Notification-preferences API (`GET`/`PUT /api/notifications/prefs`) + a settings panel (`/settings/notifications`) with a per-type email / in-app-only / daily-digest choice, surfacing the SMTP-unset state. Backed by the `notification_email_prefs` table (created in migration 0018).
+
 ### Added (v0.6.0 P10 — page links + backlinks + page mentions/embeds + row templates)
 - Page links: `[[` autocomplete inserts a `pageLink` to another workspace page; `@@` inserts a `pageMention` (member `@`-mentions unchanged); a "Page embed" slash entry inserts a `pageEmbed` snapshot card.
 - Write-time `page_links` index (`reindexPageLinks` on save) powering a "Linked references" backlinks panel; read-time "Unlinked mentions" FTS search for the page title.
