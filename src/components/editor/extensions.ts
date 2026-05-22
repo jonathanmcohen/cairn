@@ -9,6 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
 import { Column, ColumnList } from './blocks/columns';
+import { Embed } from './blocks/embed';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { Callout } from './callout-extension';
@@ -44,6 +45,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     CairnImage,
     FileAttachment,
     DatabaseNode,
+    Embed,
     SlashCommand,
     MentionExtension,
     Placeholder.configure({
@@ -85,6 +87,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *  - Column         — content `block+`, structural only.                   SAFE
  *  - SimpleTable    — official table family; cell content + colspan/rowspan/
  *                     colwidth attrs only, no node-view-local state.        SAFE
+ *  - Embed          — atom/leaf, attrs `{ provider, src }` only; the sandboxed
+ *                     iframe is rendered from attrs, no node-local state.    SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

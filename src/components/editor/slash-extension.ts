@@ -131,6 +131,16 @@ const items: SlashItem[] = [
     },
   },
   {
+    title: 'Embed',
+    description: 'Embed a YouTube, Vimeo, Figma, gist, or CodeSandbox URL',
+    command: (editor) =>
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: 'embed', attrs: { provider: null, src: null } })
+        .run(),
+  },
+  {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
     command: (editor) => {
