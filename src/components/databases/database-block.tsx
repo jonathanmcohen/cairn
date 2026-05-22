@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { CalendarView } from './calendar-view';
 import { GalleryView } from './gallery-view';
 import { KanbanView } from './kanban-view';
+import { ListView } from './list-view';
 import { PropertyPanel } from './property-panel';
 import { TableView } from './table-view';
 import { TimelineView } from './timeline-view';
@@ -52,6 +53,7 @@ export function DatabaseBlock({ node }: NodeViewProps) {
       {activeView.type === 'calendar' && <CalendarView {...viewProps} />}
       {activeView.type === 'timeline' && <TimelineView {...viewProps} />}
       {activeView.type === 'gallery' && <GalleryView {...viewProps} />}
+      {activeView.type === 'list' && <ListView {...viewProps} />}
       <PropertyPanel databaseId={databaseId} onChange={refresh} />
     </NodeViewWrapper>
   );

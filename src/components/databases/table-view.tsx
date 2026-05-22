@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { groupRows } from '@/lib/databases/group';
 import { CellEditor } from './cell-editor';
 import type { DatabaseMeta, RowData } from './use-database-data';
 
@@ -12,8 +13,12 @@ export type ViewProps = {
   onChange: () => void;
 };
 
-export function TableView({ databaseId, meta, rows, onChange }: ViewProps) {
+export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const [adding, setAdding] = useState(false);
+
+  const config = (view.config ?? {}) as { groupBy?: string | null };
+  const groupByProp = meta.properties.find((p) => p.id === config.groupBy);
+  const grouped = groupByProp?.type === 'select';
 
   async function addRow() {
     setAdding(true);
@@ -24,6 +29,60 @@ export function TableView({ databaseId, meta, rows, onChange }: ViewProps) {
     });
     setAdding(false);
     onChange();
+  }
+
+  function rowTr(r: RowData) {
+    return (
+      <tr key={r.row.id} className="border-b hover:bg-accent/40">
+        {meta.properties.map((p) => (
+          <td key={p.id} className="px-3 py-1.5">
+            <CellEditor
+              databaseId={databaseId}
+              rowId={r.row.id}
+              property={p}
+              value={r.cells[p.id]}
+              onSaved={onChange}
+            />
+          </td>
+        ))}
+      </tr>
+    );
+  }
+
+  let body: React.ReactNode;
+  if (grouped && groupByProp) {
+    const options =
+      (groupByProp.config as { options?: { id: string; name: string }[] })?.options ?? [];
+    const groups = groupRows(rows, groupByProp.id, options);
+    body = groups.map((g) => (
+      <tbody key={g.id || 'uncategorized'}>
+        <tr className="border-b bg-muted/40">
+          <td
+            colSpan={meta.properties.length}
+            className="px-3 py-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground"
+          >
+            {g.name} · {g.rows.length}
+          </td>
+        </tr>
+        {g.rows.map((r) => rowTr(r))}
+      </tbody>
+    ));
+  } else {
+    body = (
+      <tbody>
+        {rows.map((r) => rowTr(r))}
+        {rows.length === 0 && (
+          <tr>
+            <td
+              colSpan={meta.properties.length}
+              className="px-3 py-4 text-center text-muted-foreground"
+            >
+              No rows yet.
+            </td>
+          </tr>
+        )}
+      </tbody>
+    );
   }
 
   return (
@@ -38,33 +97,7 @@ export function TableView({ databaseId, meta, rows, onChange }: ViewProps) {
             ))}
           </tr>
         </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.row.id} className="border-b hover:bg-accent/40">
-              {meta.properties.map((p) => (
-                <td key={p.id} className="px-3 py-1.5">
-                  <CellEditor
-                    databaseId={databaseId}
-                    rowId={r.row.id}
-                    property={p}
-                    value={r.cells[p.id]}
-                    onSaved={onChange}
-                  />
-                </td>
-              ))}
-            </tr>
-          ))}
-          {rows.length === 0 && (
-            <tr>
-              <td
-                colSpan={meta.properties.length}
-                className="px-3 py-4 text-center text-muted-foreground"
-              >
-                No rows yet.
-              </td>
-            </tr>
-          )}
-        </tbody>
+        {body}
       </table>
       <button
         type="button"
