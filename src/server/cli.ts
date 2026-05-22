@@ -3,8 +3,9 @@
 // a client older than the server cannot restore a 16 custom-format dump. Pin the apt
 // package in the Dockerfile runner stage and keep it in lockstep with the Postgres image.
 import { spawn } from 'node:child_process';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { basename, dirname, join } from 'node:path';
+import { createInterface } from 'node:readline/promises';
 import { type CliArgs, type DbConnection, parseArgs, parseDbUrl } from './cli-internal.js';
 
 const VERSION = process.env.npm_package_version ?? 'unknown';
@@ -79,8 +80,75 @@ async function backup(conn: DbConnection, outDir: string): Promise<void> {
   );
 }
 
-async function restore(_conn: DbConnection, _bundle: string, _force: boolean): Promise<void> {
-  throw new Error('not implemented');
+async function confirmDestructive(database: string): Promise<boolean> {
+  const rl = createInterface({ input: process.stdin, output: process.stdout });
+  const answer = await rl.question(
+    `\nThis will OVERWRITE the database "${database}" and its uploads. This cannot be undone.\nType the database name to confirm: `,
+  );
+  rl.close();
+  return answer.trim() === database;
+}
+
+async function restore(conn: DbConnection, bundle: string, force: boolean): Promise<void> {
+  if (!force) {
+    // Never proceed implicitly: a non-interactive stdin (e.g. piped/cron) cannot answer
+    // the confirmation prompt, so refuse outright rather than hang or silently no-op.
+    if (!process.stdin.isTTY) {
+      console.error(
+        'Refusing to run a destructive restore non-interactively without --force. ' +
+          'Re-run with --force, or attach an interactive terminal to confirm.',
+      );
+      process.exit(3);
+    }
+    const ok = await confirmDestructive(conn.database);
+    if (!ok) {
+      console.error(
+        'Confirmation did not match. Aborting (no changes made). Use --force to skip this prompt.',
+      );
+      process.exit(3);
+    }
+  }
+
+  console.log(`Restoring database ${conn.database} from ${bundle}`);
+  await run(
+    'pg_restore',
+    [
+      '--clean',
+      '--if-exists',
+      '--no-owner',
+      '-h',
+      conn.host,
+      '-p',
+      String(conn.port),
+      '-U',
+      conn.user,
+      '-d',
+      conn.database,
+      bundle,
+    ],
+    { PGPASSWORD: conn.password },
+  );
+
+  if (FILE_BACKEND === 's3') {
+    console.log('FILE_BACKEND=s3: uploads live in the bucket; restore them out-of-band.');
+  } else {
+    // Bundle name: cairn-backup-<ts>.dump → matching cairn-uploads-<ts>.tar.gz in the same dir.
+    const ts = basename(bundle)
+      .replace(/^cairn-backup-/, '')
+      .replace(/\.dump$/, '');
+    const dir = dirname(bundle);
+    const tar = (await readdir(dir)).find((f) => f === `cairn-uploads-${ts}.tar.gz`);
+    if (tar) {
+      console.log(`Restoring uploads from ${tar} → ${UPLOAD_DIR}`);
+      await mkdir(UPLOAD_DIR, { recursive: true });
+      await run('tar', ['-xzf', join(dir, tar), '-C', UPLOAD_DIR]);
+    } else {
+      console.warn(
+        `No matching uploads archive (cairn-uploads-${ts}.tar.gz) found; restored DB only.`,
+      );
+    }
+  }
+  console.log('Restore complete.');
 }
 
 async function main(): Promise<void> {
