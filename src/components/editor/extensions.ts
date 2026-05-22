@@ -11,6 +11,7 @@ import type * as Y from 'yjs';
 import { Bookmark } from './blocks/bookmark';
 import { Column, ColumnList } from './blocks/columns';
 import { Embed } from './blocks/embed';
+import { MathBlock } from './blocks/math';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { Callout } from './callout-extension';
@@ -48,6 +49,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     DatabaseNode,
     Embed,
     Bookmark,
+    MathBlock,
     SlashCommand,
     MentionExtension,
     Placeholder.configure({
@@ -93,6 +95,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     iframe is rendered from attrs, no node-local state.    SAFE
  *  - Bookmark       — atom/leaf, attrs `{ url, title, description, image,
  *                     favicon }`; the unfurl cache lives entirely in attrs.  SAFE
+ *  - Math           — inline atom, attrs `{ latex, display }`; KaTeX renders
+ *                     from `latex`, no node-local state.                      SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

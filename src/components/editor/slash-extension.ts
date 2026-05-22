@@ -146,6 +146,11 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setBookmark('').run(),
   },
   {
+    title: 'Equation',
+    description: 'Block math rendered with KaTeX',
+    command: (editor) => editor.chain().focus().setMath({ latex: '', display: true }).run(),
+  },
+  {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
     command: (editor) => {
