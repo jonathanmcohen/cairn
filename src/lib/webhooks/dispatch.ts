@@ -10,7 +10,8 @@ export type WebhookEvent =
   | 'page.deleted'
   | 'row.created'
   | 'row.updated'
-  | 'row.deleted';
+  | 'row.deleted'
+  | 'comment.created';
 
 const MAX_ATTEMPTS = 3;
 

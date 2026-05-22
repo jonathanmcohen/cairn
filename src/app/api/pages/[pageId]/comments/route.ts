@@ -34,10 +34,10 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
     // plan only surfaces the parsed ids and does not create notifications.
     const { comment } = await createComment(getDb(), {
       workspaceId: ctx.workspaceId,
-      pageId,
       authorId: ctx.userId,
       body: parsed.body,
       anchor: parsed.anchor ?? null,
+      target: { type: 'page', id: pageId },
     });
     return NextResponse.json(comment, { status: 201 });
   } catch (err) {

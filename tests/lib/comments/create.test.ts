@@ -41,7 +41,7 @@ describe('createComment', () => {
     const mentioned = mentionedUser.id;
     const { comment: c, mentionedUserIds } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: `hello @[Alice](${mentioned})`,
     });
@@ -57,7 +57,7 @@ describe('createComment', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'anchored',
       anchor: { blockId: 'blk-7' },
@@ -70,7 +70,7 @@ describe('createComment', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'ranged',
       anchor: { from: 2, to: 5 },
@@ -85,7 +85,7 @@ describe('createComment', () => {
     await expect(
       createComment(db, {
         workspaceId: u.workspaceId,
-        pageId: p.id,
+        target: { type: 'page', id: p.id },
         authorId: u.userId,
         body: 'x',
       }),
@@ -98,7 +98,7 @@ describe('createComment', () => {
     await expect(
       createComment(db, {
         workspaceId: u.workspaceId,
-        pageId: p.id,
+        target: { type: 'page', id: p.id },
         authorId: u.userId,
         body: 'x',
         anchor: { blockId: 'b', from: 1 } as never,

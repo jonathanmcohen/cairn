@@ -33,13 +33,13 @@ describe('listComments', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: a } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'first',
     });
     const { comment: b } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'second',
     });
@@ -52,7 +52,7 @@ describe('listComments', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'done',
     });
@@ -70,7 +70,7 @@ describe('listComments', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'mine',
     });

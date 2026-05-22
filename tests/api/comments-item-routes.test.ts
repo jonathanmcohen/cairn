@@ -77,7 +77,7 @@ describe('/api/comments/[commentId]', () => {
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(getDb(), {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'x',
     });
@@ -96,7 +96,7 @@ describe('/api/comments/[commentId]', () => {
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(getDb(), {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'x',
     });
@@ -111,7 +111,7 @@ describe('/api/comments/[commentId]', () => {
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(getDb(), {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'x',
     });
@@ -128,7 +128,7 @@ describe('/api/comments/[commentId]', () => {
     });
     const { comment: c } = await createComment(getDb(), {
       workspaceId: author.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: author.userId,
       body: 'x',
     });
@@ -146,7 +146,7 @@ describe('/api/comments/[commentId]', () => {
     });
     const { comment: c } = await createComment(getDb(), {
       workspaceId: author.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: author.userId,
       body: 'x',
     });
@@ -165,7 +165,7 @@ describe('/api/comments/[commentId]', () => {
     });
     const { comment: c } = await createComment(getDb(), {
       workspaceId: other.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: other.userId,
       body: 'x',
     });

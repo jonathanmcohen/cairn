@@ -51,7 +51,7 @@ describe('createComment notification triggers', () => {
 
     const { comment } = await createComment(db, {
       workspaceId: actor.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: actor.userId,
       body: `hi @[B](${b})`,
     });
@@ -76,7 +76,7 @@ describe('createComment notification triggers', () => {
 
     const { comment } = await createComment(db, {
       workspaceId: actor.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: actor.userId,
       body: 'reply',
     });
@@ -103,7 +103,7 @@ describe('createComment notification triggers', () => {
 
     await createComment(db, {
       workspaceId: actor.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: actor.userId,
       body: `hey @[B](${b})`,
     });
@@ -122,7 +122,7 @@ describe('createComment notification triggers', () => {
 
     await createComment(db, {
       workspaceId: actor.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: actor.userId,
       body: 'first comment',
     });
@@ -144,7 +144,7 @@ describe('createComment notification triggers', () => {
 
     await createComment(db, {
       workspaceId: actor.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: actor.userId,
       body: `talking to myself @[Me](${actor.userId})`,
     });
