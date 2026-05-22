@@ -4,6 +4,7 @@ import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
+import { validateParent } from './hierarchy';
 import { resolveRelationCells, syncRelationCells, validateRelationCells } from './relations';
 import { resolveRollupCells } from './rollup/resolve';
 import { compileSorts, type SortSpec } from './sort';
@@ -20,6 +21,7 @@ export async function createRow(
     workspaceId: string;
     createdBy: string;
     cells?: Record<string, unknown>;
+    parentRowId?: string | null;
   },
 ): Promise<schema.DbRow> {
   const row = await db.transaction(async (tx) => {
@@ -64,6 +66,20 @@ export async function createRow(
         after: coercedByProp,
       });
     }
+
+    if (input.parentRowId !== undefined && input.parentRowId !== null) {
+      await validateParent(tx, {
+        rowId: row.id,
+        databaseId: input.databaseId,
+        parentId: input.parentRowId,
+      });
+      const [updated] = await tx
+        .update(schema.dbRows)
+        .set({ parentRowId: input.parentRowId })
+        .where(eq(schema.dbRows.id, row.id))
+        .returning();
+      return updated ?? row;
+    }
     return row;
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
@@ -78,6 +94,7 @@ export async function updateCells(
     databaseId: string;
     workspaceId: string;
     cells: Record<string, unknown>;
+    parentRowId?: string | null;
   },
 ): Promise<void> {
   await db.transaction(async (tx) => {
@@ -134,6 +151,17 @@ export async function updateCells(
     await validateRelationCells(tx, props, coercedByProp);
     // Mirror paired (reverse) relations: diff before -> after for relation props in this write.
     await syncRelationCells(tx, { rowId: input.rowId, props, before, after: coercedByProp });
+    if (input.parentRowId !== undefined) {
+      await validateParent(tx, {
+        rowId: input.rowId,
+        databaseId: input.databaseId,
+        parentId: input.parentRowId,
+      });
+      await tx
+        .update(schema.dbRows)
+        .set({ parentRowId: input.parentRowId })
+        .where(eq(schema.dbRows.id, input.rowId));
+    }
     await tx
       .update(schema.dbRows)
       .set({ updatedAt: new Date() })
