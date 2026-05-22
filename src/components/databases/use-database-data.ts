@@ -2,7 +2,7 @@
 import { useCallback, useEffect, useState } from 'react';
 
 export type DatabaseMeta = {
-  database: { id: string; name: string };
+  database: { id: string; name: string; config?: unknown };
   properties: { id: string; name: string; type: string; config: unknown; position: number }[];
   views: { id: string; type: string; name: string; config: unknown; position: number }[];
 };

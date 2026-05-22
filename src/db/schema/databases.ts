@@ -43,6 +43,7 @@ export const databases = pgTable('databases', {
     .notNull()
     .references(() => pages.id, { onDelete: 'cascade' }),
   name: text('name').notNull().default('Untitled database'),
+  config: jsonb('config').notNull().default({}),
   createdBy: uuid('created_by')
     .notNull()
     .references(() => users.id, { onDelete: 'restrict' }),

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
+import { applyRowTemplate, listRowTemplates } from '@/lib/databases/row-templates';
 import { CalcFooterRow } from './calc-footer-row';
 import { CellEditor } from './cell-editor';
 import { buildRowForest, flattenVisible } from './row-tree';
@@ -35,12 +36,30 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
   const groupByProp = meta.properties.find((p) => p.id === config.groupBy);
   const grouped = groupByProp?.type === 'select';
 
+  const templates = listRowTemplates(meta.database.config);
+
   async function addRow(parentRowId?: string) {
     setAdding(true);
     await fetch(`/api/databases/${databaseId}/rows`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(parentRowId ? { parentRowId } : {}),
+    });
+    setAdding(false);
+    onChange();
+  }
+
+  async function addRowFromTemplate(templateId: string) {
+    const template = templates.find((t) => t.id === templateId);
+    if (!template) return;
+    // applyRowTemplate also returns a `content` seed, but createRow only accepts
+    // `cells` today — so only the cell defaults are wired.
+    const { cells } = applyRowTemplate(template);
+    setAdding(true);
+    await fetch(`/api/databases/${databaseId}/rows`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ cells }),
     });
     setAdding(false);
     onChange();
@@ -184,14 +203,35 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           onChange={onChange}
         />
       </table>
-      <button
-        type="button"
-        onClick={() => void addRow()}
-        disabled={adding}
-        className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
-      >
-        + New row
-      </button>
+      <div className="flex items-center">
+        <button
+          type="button"
+          onClick={() => void addRow()}
+          disabled={adding}
+          className="flex-1 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
+        >
+          + New row
+        </button>
+        {templates.length > 0 && (
+          <select
+            aria-label="New row from template"
+            value=""
+            disabled={adding}
+            onChange={(e) => {
+              const id = e.target.value;
+              if (id) void addRowFromTemplate(id);
+            }}
+            className="px-2 py-2 text-sm text-muted-foreground hover:bg-accent"
+          >
+            <option value="">Templates…</option>
+            {templates.map((t) => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
     </div>
   );
 }

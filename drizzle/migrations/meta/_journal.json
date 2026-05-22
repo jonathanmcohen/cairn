@@ -134,6 +134,13 @@
       "when": 1779481653836,
       "tag": "0018_wide_black_panther",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1779483577219,
+      "tag": "0019_rainy_praxagora",
+      "breakpoints": true
     }
   ]
 }
