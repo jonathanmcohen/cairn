@@ -6,6 +6,7 @@ import { env } from '@/lib/env';
 import { resignDocumentImages } from '@/lib/pages/public';
 import { requirePublicPageAccess } from '@/lib/pages/share';
 import { cookieNameFor, verifyAccessCookieValue } from '@/lib/pages/share-cookie';
+import { previewAccepted } from '@/lib/suggestions/transform';
 import { GateForm } from './gate-form';
 
 export const metadata = {
@@ -37,7 +38,11 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
   }
 
   const { page } = access;
-  const content = resignDocumentImages(page.content, env().AUTH_SECRET);
+  // Resolve every suggestion to its accepted state BEFORE rendering: published
+  // pages show inserts as plain accepted text and never expose delete-marked
+  // text or suggestion chrome. Then re-sign image URLs (disjoint concerns).
+  const clean = previewAccepted(page.content as Parameters<typeof previewAccepted>[0]);
+  const content = resignDocumentImages(clean, env().AUTH_SECRET);
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
