@@ -5,6 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.5.0 Plan 2 — Webhooks)
+- HMAC-SHA256-signed outbound webhooks: every delivery carries an `X-Cairn-Signature: sha256=<hmac>` header keyed by the per-hook secret so receivers can verify authenticity.
+- `page.*`/`row.*` events emitted fire-and-forget from the mutation helpers — the mutation returns without awaiting delivery, so request latency is unaffected.
+- Bounded retries with exponential backoff and a visible `webhook_deliveries` log recording `event`/`status`/`last_status`/`attempts`/`delivered_at`.
+- SSRF guard on outbound URLs: blocks loopback/link-local/private/reserved targets (IPv4 + IPv6, including DNS rebinding and IPv4-mapped IPv6) before any POST, with a `WEBHOOK_ALLOW_PRIVATE` escape hatch for intentional internal targets.
+- Startup sweep that recovers in-flight work by re-attempting every `pending`/`failed` delivery (documented in-process ceiling — no distributed queue).
+- Admin-only webhook-management settings UI: create a hook (URL + event-subscription checkboxes + show-once signing secret), toggle `active`, delete, and read a recent-delivery log.
+
 ### Added (v0.5.0 Plan 1 — Public API & keys)
 - `0012` migration adding five v0.5.0 tables (API keys, webhooks, webhook deliveries, and Plan 2–4 scaffolding) plus their indexes — a single shared migration the rest of v0.5.0 builds on.
 - `cairn_sk_` workspace API keys: minted server-side, sha256-hashed at rest (plaintext shown **once** and never recoverable), with an assigned role, optional expiry, and a stored display prefix.
