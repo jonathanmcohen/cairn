@@ -1,6 +1,7 @@
 import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/db/schema';
+import { emit } from '@/lib/webhooks/dispatch';
 
 export type SoftDeleteInput = {
   pageId: string;
@@ -37,4 +38,6 @@ export async function softDeletePage(
       WHERE id IN (SELECT id FROM descendants)
     `);
   });
+  // Fire-and-forget webhook (self-guarding; never throws into the caller).
+  void emit('page.deleted', input.workspaceId, { id: input.pageId });
 }

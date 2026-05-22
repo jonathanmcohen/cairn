@@ -1,6 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { emit } from '@/lib/webhooks/dispatch';
 
 export class PageConflictError extends Error {
   constructor(message = 'Page has been modified since you last read it') {
@@ -25,7 +26,7 @@ export async function updatePage(
   db: PostgresJsDatabase<typeof schema>,
   input: UpdatePageInput,
 ): Promise<schema.Page> {
-  return db.transaction(async (tx) => {
+  const updated = await db.transaction(async (tx) => {
     const [current] = await tx
       .select()
       .from(schema.pages)
@@ -59,4 +60,7 @@ export async function updatePage(
     if (!updated) throw new Error('Update returned no row');
     return updated;
   });
+  // Fire-and-forget webhook (self-guarding; never throws into the caller).
+  void emit('page.updated', updated.workspaceId, { id: updated.id, title: updated.title });
+  return updated;
 }

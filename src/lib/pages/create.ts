@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { emit } from '@/lib/webhooks/dispatch';
 import { emptyDocument } from './empty-document';
 
 export type CreatePageInput = {
@@ -15,7 +16,7 @@ export async function createPage(
   db: PostgresJsDatabase<typeof schema>,
   input: CreatePageInput,
 ): Promise<schema.Page> {
-  return db.transaction(async (tx) => {
+  const page = await db.transaction(async (tx) => {
     if (input.parentId) {
       const [parent] = await tx
         .select({ workspaceId: schema.pages.workspaceId })
@@ -42,4 +43,7 @@ export async function createPage(
     if (!page) throw new Error('failed to insert page');
     return page;
   });
+  // Fire-and-forget webhook (self-guarding; never throws into the caller).
+  void emit('page.created', page.workspaceId, { id: page.id, title: page.title });
+  return page;
 }

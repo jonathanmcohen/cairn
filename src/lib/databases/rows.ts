@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { emit } from '@/lib/webhooks/dispatch';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
 import { resolveRelationCells, validateRelationCells } from './relations';
@@ -21,7 +22,7 @@ export async function createRow(
     cells?: Record<string, unknown>;
   },
 ): Promise<schema.DbRow> {
-  return db.transaction(async (tx) => {
+  const row = await db.transaction(async (tx) => {
     const [database] = await tx
       .select({ workspaceId: schema.databases.workspaceId })
       .from(schema.databases)
@@ -58,6 +59,9 @@ export async function createRow(
     }
     return row;
   });
+  // Fire-and-forget webhook (self-guarding; never throws into the caller).
+  void emit('row.created', input.workspaceId, { id: row.id, databaseId: input.databaseId });
+  return row;
 }
 
 export async function updateCells(
@@ -108,6 +112,8 @@ export async function updateCells(
       .set({ updatedAt: new Date() })
       .where(eq(schema.dbRows.id, input.rowId));
   });
+  // Fire-and-forget webhook (self-guarding; never throws into the caller).
+  void emit('row.updated', input.workspaceId, { id: input.rowId, databaseId: input.databaseId });
 }
 
 export function coerce(type: schema.PropertyType, value: unknown): unknown {
@@ -170,6 +176,8 @@ export async function archiveRow(
       .set({ archivedAt: new Date() })
       .where(eq(schema.dbRows.id, input.rowId));
   });
+  // Fire-and-forget webhook (self-guarding; never throws into the caller).
+  void emit('row.deleted', input.workspaceId, { id: input.rowId, databaseId: input.databaseId });
 }
 
 export async function listRows(
