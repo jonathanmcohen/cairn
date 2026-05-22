@@ -30,6 +30,9 @@ export const pages = pgTable(
     coverUrl: text('cover_url'),
     published: boolean('published').notNull().default(false),
     publicSlug: text('public_slug').unique(),
+    linkPasswordHash: text('link_password_hash'),
+    expiresAt: timestamp('expires_at', { withTimezone: true }),
+    allowDuplication: boolean('allow_duplication').notNull().default(false),
     content: jsonb('content')
       .$type<unknown>()
       .notNull()
