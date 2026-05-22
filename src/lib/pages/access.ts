@@ -15,8 +15,20 @@ export type PageAccess = {
   ctx: WorkspaceContext;
 };
 
+/**
+ * Postgres `uuid` columns reject non-UUID input with a cast error. Validate the
+ * id shape up front so a malformed `pageId` resolves to a clean 404 (matching
+ * the cross-workspace convention) instead of surfacing a 500 / raw DB error.
+ */
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export async function requirePageAccess(pageId: string, required: MemberRole): Promise<PageAccess> {
   const ctx = requireWorkspace(await getAuthContext());
+
+  if (!UUID_RE.test(pageId)) {
+    // Not a valid id → treat as not-found; never let it reach the uuid column.
+    throw new HttpError(404, 'Page not found');
+  }
 
   const db = getDb();
   const [page] = await db
