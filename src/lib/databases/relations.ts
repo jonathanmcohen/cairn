@@ -1,11 +1,16 @@
-import { and, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import * as schema from '@/db/schema';
 
-/** A relation property points at exactly one target database (same workspace, validated separately). */
+/**
+ * A relation property points at exactly one target database (same workspace, validated separately).
+ * `reversePropertyId`, when present, links this relation to its mirror on the target database
+ * (spec decision #1). Both halves of a pair carry it, pointing at each other.
+ */
 export const RelationConfig = z.object({
   targetDatabaseId: z.uuid(),
+  reversePropertyId: z.uuid().optional(),
 });
 
 export type RelationConfig = z.infer<typeof RelationConfig>;
@@ -17,6 +22,88 @@ export const RelationCellValue = z.array(z.uuid());
 export function relationTargetId(config: unknown): string | undefined {
   const parsed = RelationConfig.safeParse(config);
   return parsed.success ? parsed.data.targetDatabaseId : undefined;
+}
+
+/** Read a relation property's reversePropertyId, or undefined if unset/malformed. */
+export function relationReverseId(config: unknown): string | undefined {
+  const parsed = RelationConfig.safeParse(config);
+  return parsed.success ? parsed.data.reversePropertyId : undefined;
+}
+
+/**
+ * Create the mirrored relation for `sourcePropertyId` on its target database and link
+ * both configs by `reversePropertyId`. Runs inside the caller's transaction.
+ * Throws if the source is not a relation or already has a reverse.
+ * Returns the newly-created reverse property.
+ */
+export async function createReverseRelationProperty(
+  tx: PostgresJsDatabase<typeof schema>,
+  input: { sourcePropertyId: string; reverseName: string },
+): Promise<schema.DbProperty> {
+  const [source] = await tx
+    .select()
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.id, input.sourcePropertyId))
+    .limit(1);
+  if (!source) throw new Error('source property not found');
+  if (source.type !== 'relation') throw new Error('source property is not a relation');
+
+  const sourceCfg = RelationConfig.safeParse(source.config);
+  if (!sourceCfg.success) throw new Error('source relation has no valid config');
+  if (sourceCfg.data.reversePropertyId) throw new Error('source already has a reverse property');
+
+  const targetDatabaseId = sourceCfg.data.targetDatabaseId;
+
+  // Position the mirror at the end of the target database's property list.
+  const existing = await tx
+    .select({ position: schema.dbProperties.position })
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.databaseId, targetDatabaseId));
+  const nextPosition = existing.reduce((m, p) => Math.max(m, p.position + 1), 0);
+
+  const [reverse] = await tx
+    .insert(schema.dbProperties)
+    .values({
+      databaseId: targetDatabaseId,
+      name: input.reverseName,
+      type: 'relation',
+      position: nextPosition,
+      // reverse points back at the source's database, and links to the source property
+      config: { targetDatabaseId: source.databaseId, reversePropertyId: source.id },
+    })
+    .returning();
+  if (!reverse) throw new Error('reverse property insert failed');
+
+  // Link the source to the new reverse.
+  await tx
+    .update(schema.dbProperties)
+    .set({ config: { targetDatabaseId, reversePropertyId: reverse.id } })
+    .where(eq(schema.dbProperties.id, source.id));
+
+  return reverse;
+}
+
+/**
+ * Drop the `reversePropertyId` link on `propertyId`, degrading it to a plain relation.
+ * Called on the surviving partner when the other side of a pair is deleted (spec decision #1:
+ * deleting one side clears the other's link; it is NOT auto-deleted). No-op if it has no reverse.
+ */
+export async function clearReverseLink(
+  tx: PostgresJsDatabase<typeof schema>,
+  propertyId: string,
+): Promise<void> {
+  const [prop] = await tx
+    .select()
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.id, propertyId))
+    .limit(1);
+  if (!prop) return;
+  const cfg = RelationConfig.safeParse(prop.config);
+  if (!cfg.success || !cfg.data.reversePropertyId) return;
+  await tx
+    .update(schema.dbProperties)
+    .set({ config: { targetDatabaseId: cfg.data.targetDatabaseId } })
+    .where(eq(schema.dbProperties.id, propertyId));
 }
 
 /**
