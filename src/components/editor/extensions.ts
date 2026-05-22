@@ -19,8 +19,11 @@ import { Callout } from './callout-extension';
 import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
+import { SuggestionDelete } from './marks/suggestion-delete';
+import { SuggestionInsert } from './marks/suggestion-insert';
 import { MentionExtension } from './mention-extension';
 import { SlashCommand } from './slash-extension';
+import { SuggestionBlock } from './suggestion-block';
 import { TableOfContents } from './toc-extension';
 
 const lowlight = createLowlight(common);
@@ -54,6 +57,9 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     Bookmark,
     MathBlock,
     SyncedBlock,
+    SuggestionInsert,
+    SuggestionDelete,
+    SuggestionBlock,
     SlashCommand,
     MentionExtension,
     Placeholder.configure({
@@ -107,6 +113,15 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     reach); the node carries no non-attr state.             SAFE
  *  - TableOfContents — block atom, NO attrs + NO node-local state; its node-view
  *                     derives the heading list from the shared doc at render.   SAFE
+ *  - SuggestionInsert — mark (track-changes insert), attrs `{ suggestionId,
+ *                     authorId, createdAt }` only; renders as <ins>, no
+ *                     node-local/mark-local state.                              SAFE
+ *  - SuggestionDelete — mark (track-changes delete), attrs `{ suggestionId,
+ *                     authorId, createdAt }` only; renders as <del>, no
+ *                     node-local/mark-local state.                              SAFE
+ *  - SuggestionBlock — block, content `block+`, attrs `{ suggestionId, authorId,
+ *                     createdAt, kind }` only; renders as <div>, no node-local
+ *                     state.                                                     SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {
