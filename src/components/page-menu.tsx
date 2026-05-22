@@ -3,6 +3,7 @@
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
 import { SharePanel } from '@/components/pages/share-panel';
+import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
 
 type PageMenuProps = {
@@ -25,6 +26,7 @@ export function PageMenu({
   initialExpiresAt = null,
 }: PageMenuProps) {
   const [open, setOpen] = useState(false);
+  const shareAllowed = useActionAllowed('share');
   const [published, setPublished] = useState(initialPublished);
   const [slug, setSlug] = useState<string | null>(initialSlug);
   const [copied, setCopied] = useState(false);
@@ -104,8 +106,10 @@ export function PageMenu({
           {!published ? (
             <button
               type="button"
-              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50"
               onClick={() => void publish()}
+              disabled={!shareAllowed}
+              title={shareAllowed ? undefined : 'Unavailable offline'}
             >
               Publish to web
             </button>
@@ -113,8 +117,10 @@ export function PageMenu({
             <>
               <button
                 type="button"
-                className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+                className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50"
                 onClick={() => void unpublish()}
+                disabled={!shareAllowed}
+                title={shareAllowed ? undefined : 'Unavailable offline'}
               >
                 Unpublish
               </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useActionAllowed } from '@/components/pwa/offline-context';
 import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
 import { applyRowTemplate, listRowTemplates } from '@/lib/databases/row-templates';
@@ -19,6 +20,7 @@ export type ViewProps = {
 
 export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const [adding, setAdding] = useState(false);
+  const rowMutateAllowed = useActionAllowed('db-row-mutate');
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const toggle = (id: string) =>
     setCollapsed((prev) => {
@@ -207,7 +209,8 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         <button
           type="button"
           onClick={() => void addRow()}
-          disabled={adding}
+          disabled={adding || !rowMutateAllowed}
+          title={rowMutateAllowed ? undefined : 'Unavailable offline'}
           className="flex-1 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
         >
           + New row
@@ -216,7 +219,8 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           <select
             aria-label="New row from template"
             value=""
-            disabled={adding}
+            disabled={adding || !rowMutateAllowed}
+            title={rowMutateAllowed ? undefined : 'Unavailable offline'}
             onChange={(e) => {
               const id = e.target.value;
               if (id) void addRowFromTemplate(id);

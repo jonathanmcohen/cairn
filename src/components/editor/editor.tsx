@@ -5,6 +5,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
+import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { DragHandle } from './drag-handle';
@@ -53,7 +54,16 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
   const [resolvable, setResolvable] = useState<string | null>(null);
   const activeSuggestionRef = useRef<string | null>(null);
 
+  // Uploads hit the server, so they are blocked offline (bounded-offline gate).
+  // Yjs node inserts (callout/toggle/heading) and typing/formatting stay enabled.
+  const uploadAllowed = useActionAllowed('file-upload');
+  const uploadAllowedRef = useRef(uploadAllowed);
+  useEffect(() => {
+    uploadAllowedRef.current = uploadAllowed;
+  }, [uploadAllowed]);
+
   const uploadAndInsert = useCallback(async (files: File[]) => {
+    if (!uploadAllowedRef.current) return;
     for (const file of files) {
       const fd = new FormData();
       fd.set('file', file);

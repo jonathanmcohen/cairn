@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
 import { NoWorkspace } from '@/components/no-workspace';
+import { OfflineProvider } from '@/components/pwa/offline-context';
+import { OfflineIndicator } from '@/components/pwa/offline-indicator';
 import { RegisterSw } from '@/components/pwa/register-sw';
 import { SearchPalette } from '@/components/search-palette';
 import { Sidebar } from '@/components/sidebar';
@@ -20,16 +22,23 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
   const workspaces = await listUserWorkspaces(getDb(), ctx.userId);
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <RegisterSw />
-      <KeyboardShortcuts />
-      <SearchPalette />
-      <Sidebar workspaceId={ctx.workspaceId} />
-      <SidebarDrawer>
-        <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
-      </SidebarDrawer>
-      <main className="flex-1 p-8">{children}</main>
-      <Toaster />
-    </div>
+    <OfflineProvider>
+      <div className="flex min-h-screen flex-col md:flex-row">
+        <RegisterSw />
+        <KeyboardShortcuts />
+        <SearchPalette />
+        <Sidebar workspaceId={ctx.workspaceId} />
+        <SidebarDrawer>
+          <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
+        </SidebarDrawer>
+        <main className="flex-1 p-8">
+          <div className="mb-2 flex justify-end">
+            <OfflineIndicator />
+          </div>
+          {children}
+        </main>
+        <Toaster />
+      </div>
+    </OfflineProvider>
   );
 }
