@@ -8,7 +8,7 @@ import { createView } from '@/lib/databases/views';
 type Ctx = { params: Promise<{ databaseId: string }> };
 
 const CreateInput = z.object({
-  type: z.enum(['table', 'kanban', 'gallery', 'calendar', 'timeline']),
+  type: z.enum(['table', 'kanban', 'gallery', 'calendar', 'timeline', 'list']),
   name: z.string().min(1).max(100),
   config: z.unknown().optional(),
 });

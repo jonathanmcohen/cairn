@@ -44,6 +44,8 @@ function assertViewConfig(type: schema.ViewType, config: ViewConfig): void {
   ) {
     throw new Error('timeline view requires a dateProperty or a startProperty+endProperty pair');
   }
+  // 'list' has no required config — grouping (groupBy) and multi-sort (sorts) are optional.
+  if (type === 'list') return;
 }
 
 export type CreateViewInput = {
