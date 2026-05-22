@@ -1,8 +1,24 @@
 import { and, eq, ne } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { sendNotificationEmail } from '@/lib/email/notify-email';
 
 type Db = PostgresJsDatabase<typeof schema>;
+
+/**
+ * Fire-and-forget per-event email for freshly inserted notification rows.
+ * Uses getDb() (a fresh, post-commit connection) — NOT the caller's tx — so we
+ * only email for rows that actually persisted. Mirrors webhooks/dispatch#emit:
+ * scheduled off the request path via setImmediate, rejections swallowed.
+ */
+function scheduleEmails(rows: schema.Notification[]): void {
+  for (const n of rows) {
+    setImmediate(() => {
+      void sendNotificationEmail(getDb(), n).catch(() => {});
+    });
+  }
+}
 
 export async function notifyMentions(
   db: Db,
@@ -16,7 +32,7 @@ export async function notifyMentions(
 ): Promise<schema.Notification[]> {
   const targets = [...new Set(input.mentionedUserIds ?? [])].filter((id) => id !== input.actorId);
   if (targets.length === 0) return [];
-  return db
+  const rows = await db
     .insert(schema.notifications)
     .values(
       targets.map((userId) => ({
@@ -27,6 +43,8 @@ export async function notifyMentions(
       })),
     )
     .returning();
+  scheduleEmails(rows);
+  return rows;
 }
 
 export async function notifyCommentReply(
@@ -42,7 +60,7 @@ export async function notifyCommentReply(
     );
   const targets = [...new Set(rows.map((r) => r.authorId))];
   if (targets.length === 0) return [];
-  return db
+  const inserted = await db
     .insert(schema.notifications)
     .values(
       targets.map((userId) => ({
@@ -53,4 +71,6 @@ export async function notifyCommentReply(
       })),
     )
     .returning();
+  scheduleEmails(inserted);
+  return inserted;
 }
