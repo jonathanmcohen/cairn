@@ -1,4 +1,3 @@
-import { sweepPendingDeliveries } from '@/lib/webhooks/sweep';
 import { runMigrations } from '../db/migrate.js';
 
 async function main() {
@@ -13,13 +12,11 @@ async function main() {
   // biome-ignore lint/suspicious/noConsole: cli startup
   console.log('Migrations complete.');
 
-  // Non-blocking: recover deliveries left pending/failed by a previous process
-  // (in-process dispatch loses setImmediate-scheduled work on restart — §8).
-  // Do NOT await — startup must not block on webhook recovery.
-  sweepPendingDeliveries()
-    // biome-ignore lint/suspicious/noConsole: cli startup
-    .then((n) => n > 0 && console.log(`[webhooks] re-scheduled ${n} pending/failed deliveries`))
-    .catch((err) => console.error('[webhooks] startup sweep failed', err));
+  // NOTE: the webhook startup sweep (recovering pending/failed deliveries left
+  // by a previous process) runs from `src/instrumentation.ts#register()` inside
+  // the Next app, NOT here. The entrypoint stays a minimal ESM orchestrator with
+  // only relative imports — pulling the `@/`-aliased webhook/db graph in here
+  // breaks `node dist/server/entrypoint.js` at runtime (no path-map resolution).
 
   // Hand off to the standalone Next.js server (lives at /app/server.js in the runner image).
   // Path is resolved at runtime from /app/dist/server/entrypoint.js → /app/server.js.
