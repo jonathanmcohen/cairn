@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.6.0 P8 — Comments on databases + files)
+- `0016` migration: `comment_target` enum (`page`/`db_row`/`file`) + `target_type`/`target_id` columns on `comments`, a `(target_type, target_id)` index, existing rows back-filled to their page (`target_id = page_id`); `page_id` is now nullable to permit page-less file comments.
+- Polymorphic comment threads: comments anchor to a page, a database row, or a file via `(target_type, target_id)`, workspace-scoped, cross-workspace → 404. `page_id` is denormalized (owning page of the row's database / the file's page) so the @mention + comment-reply notification fan-out stays page-anchored.
+- `src/lib/comments/target.ts`: `CommentTarget` schema + `resolveTarget` (validate target in workspace, denormalize page id). `createComment` now takes a `target` and fires the `comment.created` webhook for every target type; `listCommentsByTarget` lists by target; `resolve`/`delete` are target-agnostic.
+- API: `POST`/`GET /api/databases/[databaseId]/rows/[rowId]/comments` and `POST`/`GET /api/files/[fileId]/comments` (editor+ / viewer+). PATCH/DELETE reuse `/api/comments/[commentId]`.
+- Target-generic `TargetCommentPanel` + `RowComments`/`FileComments` wrappers (mounting awaits a row-expand / file-viewer surface).
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
