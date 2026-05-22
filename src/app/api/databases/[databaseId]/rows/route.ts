@@ -9,6 +9,7 @@ type Ctx = { params: Promise<{ databaseId: string }> };
 
 const CreateInput = z.object({
   cells: z.record(z.string(), z.unknown()).optional(),
+  parentRowId: z.uuid().nullable().optional(),
 });
 
 const FilterArray = z
@@ -28,6 +29,7 @@ export async function POST(req: Request, { params }: Ctx): Promise<Response> {
       workspaceId: ctx.workspaceId,
       createdBy: ctx.userId,
       cells: parsed.cells,
+      parentRowId: parsed.parentRowId,
     });
     return NextResponse.json(row, { status: 201 });
   } catch (err) {

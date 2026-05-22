@@ -6,7 +6,10 @@ export type DatabaseMeta = {
   properties: { id: string; name: string; type: string; config: unknown; position: number }[];
   views: { id: string; type: string; name: string; config: unknown; position: number }[];
 };
-export type RowData = { row: { id: string; createdAt: string }; cells: Record<string, unknown> };
+export type RowData = {
+  row: { id: string; createdAt: string; parentRowId: string | null };
+  cells: Record<string, unknown>;
+};
 
 export function useDatabaseData(databaseId: string, viewId: string | null) {
   const [meta, setMeta] = useState<DatabaseMeta | null>(null);

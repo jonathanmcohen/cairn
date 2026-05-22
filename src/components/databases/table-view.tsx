@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { groupRows } from '@/lib/databases/group';
 import { CellEditor } from './cell-editor';
+import { buildRowForest, flattenVisible } from './row-tree';
 import type { DatabaseMeta, RowData } from './use-database-data';
 
 export type ViewProps = {
@@ -15,17 +16,25 @@ export type ViewProps = {
 
 export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const [adding, setAdding] = useState(false);
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  const toggle = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
 
   const config = (view.config ?? {}) as { groupBy?: string | null };
   const groupByProp = meta.properties.find((p) => p.id === config.groupBy);
   const grouped = groupByProp?.type === 'select';
 
-  async function addRow() {
+  async function addRow(parentRowId?: string) {
     setAdding(true);
     await fetch(`/api/databases/${databaseId}/rows`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({}),
+      body: JSON.stringify(parentRowId ? { parentRowId } : {}),
     });
     setAdding(false);
     onChange();
@@ -68,9 +77,70 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
       </tbody>
     ));
   } else {
+    const rowById = new Map(rows.map((r) => [r.row.id, r]));
+    const forest = buildRowForest(
+      rows.map((r) => ({ id: r.row.id, parentRowId: r.row.parentRowId })),
+    );
+    const visible = flattenVisible(forest, collapsed);
     body = (
       <tbody>
-        {rows.map((r) => rowTr(r))}
+        {visible.map((node) => {
+          const item = rowById.get(node.row.id);
+          if (!item) return null;
+          const isCollapsed = collapsed.has(node.row.id);
+          return (
+            <tr key={node.row.id} className="border-b hover:bg-accent/40">
+              {meta.properties.map((p, i) => (
+                <td key={p.id} className="px-3 py-1.5">
+                  {i === 0 ? (
+                    <span
+                      style={{ paddingInlineStart: `${node.depth * 1.25}rem` }}
+                      className="inline-flex items-center gap-1"
+                    >
+                      {node.hasChildren ? (
+                        <button
+                          type="button"
+                          aria-label={isCollapsed ? 'Expand row' : 'Collapse row'}
+                          aria-expanded={!isCollapsed}
+                          onClick={() => toggle(node.row.id)}
+                          className="size-4 shrink-0 text-muted-foreground"
+                        >
+                          {isCollapsed ? '▸' : '▾'}
+                        </button>
+                      ) : (
+                        <span className="size-4 shrink-0" aria-hidden="true" />
+                      )}
+                      <CellEditor
+                        databaseId={databaseId}
+                        rowId={item.row.id}
+                        property={p}
+                        value={item.cells[p.id]}
+                        onSaved={onChange}
+                      />
+                      <button
+                        type="button"
+                        aria-label="Add sub-item"
+                        disabled={adding}
+                        onClick={() => void addRow(node.row.id)}
+                        className="ml-1 shrink-0 text-xs text-muted-foreground opacity-0 hover:bg-accent focus:opacity-100 group-hover:opacity-100"
+                      >
+                        +
+                      </button>
+                    </span>
+                  ) : (
+                    <CellEditor
+                      databaseId={databaseId}
+                      rowId={item.row.id}
+                      property={p}
+                      value={item.cells[p.id]}
+                      onSaved={onChange}
+                    />
+                  )}
+                </td>
+              ))}
+            </tr>
+          );
+        })}
         {rows.length === 0 && (
           <tr>
             <td
@@ -101,7 +171,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
       </table>
       <button
         type="button"
-        onClick={addRow}
+        onClick={() => void addRow()}
         disabled={adding}
         className="w-full px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
       >
