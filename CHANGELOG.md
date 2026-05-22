@@ -61,6 +61,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 ### Added (v0.6.0 P12 — Responsive / mobile UI)
 - A shared `useFocusTrap` a11y primitive (unit-tested); below the `md` breakpoint the desktop sidebar is replaced by a hamburger + an off-canvas, `aria-modal`, focus-trapped, Escape/backdrop-dismissable drawer rendering the same nav; the page header wraps and tightens gutters and the editor prose relaxes width on small screens; database views adapt for touch (table horizontal-scroll + taller rows, narrower kanban columns, single-column gallery under `sm`).
 
+### Added (v0.6.0 P13 — PWA + bounded offline)
+- Cairn is now an installable PWA: a web app manifest, maskable + any-purpose icons, an apple-touch icon, and a service worker built with `@serwist/next` (configurator mode — `serwist build` post-step, Turbopack-compatible). SW registration is CSP-nonce-clean (a bundled module, not an inline script; auto-registration disabled).
+- The service worker precaches the app shell, stale-while-revalidates idempotent page/search reads, network-firsts navigations with an `/offline` fallback, and is **network-only (never caches)** for auth, mutations, signed `/api/files` URLs, and the collab WebSocket. The strategy allow-list is unit-tested (network-only checked first).
+- Bounded offline editing: opened pages persist to IndexedDB (`y-indexeddb`) on the existing Yjs/Hocuspocus doc, so recently-viewed pages READ offline and offline edits CRDT-merge on reconnect — no new queue. An `aria-live` offline indicator shows connection state.
+- Offline scope is deliberately bounded (NOT offline-first): only Yjs edits to already-opened pages work offline; creating/moving/deleting pages, database mutations, file uploads, comments, and sharing are disabled offline (not silently queued), enforced by a unit-tested `isActionAllowedOffline` gate.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
