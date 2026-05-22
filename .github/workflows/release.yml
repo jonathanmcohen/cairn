@@ -13,8 +13,10 @@ permissions:
 
 # Multi-arch (linux/amd64 + linux/arm64) built on NATIVE runners — no QEMU
 # emulation (which deadlocked on the heavier image). Each arch builds on its own
-# native runner and pushes BY DIGEST; a per-image merge job then assembles the
-# multi-arch manifest list and tags it. A final job cuts the GitHub Release once.
+# native runner and pushes an arch-specific tag; a per-image merge job then
+# assembles the multi-arch manifest list under the real tags. A final job cuts
+# the GitHub Release once. (Arch-specific tags push reliably on GHCR, unlike
+# push-by-digest, which isn't addressable before a tagged manifest exists.)
 
 jobs:
   build:
@@ -48,6 +50,10 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Extract version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -58,32 +64,18 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push by digest
-        id: build
+      - name: Build and push (arch-specific tag)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ${{ matrix.dockerfile }}
           platforms: ${{ matrix.platform }}
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ steps.ver.outputs.version }}-${{ matrix.arch }}
           provenance: ${{ github.event.repository.visibility == 'public' }}
           sbom: ${{ github.event.repository.visibility == 'public' }}
           cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.arch }}
-          outputs: type=image,name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true,push=true
-
-      - name: Export digest
-        run: |
-          mkdir -p /tmp/digests
-          digest="${{ steps.build.outputs.digest }}"
-          touch "/tmp/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digests-${{ matrix.image }}-${{ matrix.arch }}
-          path: /tmp/digests/*
-          if-no-files-found: error
-          retention-days: 1
 
   merge:
     needs: build
@@ -102,13 +94,6 @@ jobs:
           minor="${rest%%.*}"
           echo "major=${major}" >> "$GITHUB_OUTPUT"
           echo "majorminor=${major}.${minor}" >> "$GITHUB_OUTPUT"
-
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          path: /tmp/digests
-          pattern: digests-${{ matrix.image }}-*
-          merge-multiple: true
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
@@ -132,18 +117,21 @@ jobs:
             type=raw,value=latest,enable=${{ !contains(steps.ver.outputs.version, '-') }}
 
       - name: Create multi-arch manifest list and push
-        working-directory: /tmp/digests
+        env:
+          IMG: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          VER: ${{ steps.ver.outputs.version }}
         run: |
           docker buildx imagetools create \
             $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf 'ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}@sha256:%s ' *)
+            "${IMG}:${VER}-amd64" "${IMG}:${VER}-arm64"
 
       - name: Resolve pushed manifest digest
         id: digest
+        env:
+          IMG: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
+          VER: ${{ steps.ver.outputs.version }}
         run: |
-          d=$(docker buildx imagetools inspect \
-            "ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ steps.ver.outputs.version }}" \
-            --format '{{json .Manifest}}' | jq -r '.digest')
+          d=$(docker buildx imagetools inspect "${IMG}:${VER}" --format '{{json .Manifest}}' | jq -r '.digest')
           echo "digest=${d}" >> "$GITHUB_OUTPUT"
 
       # SLSA provenance attestation requires the GitHub attestations API, which is
@@ -163,9 +151,7 @@ jobs:
     steps:
       - name: Extract version from tag
         id: ver
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
