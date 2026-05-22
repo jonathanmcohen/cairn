@@ -32,11 +32,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl px-1 sm:px-0">
       <CoverImage pageId={page.id} initial={page.coverUrl} />
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
         <PageIconPicker pageId={page.id} initial={page.icon} />
-        <div className="flex-1">
+        <div className="min-w-0 flex-1 basis-full sm:basis-auto">
           <PageTitleInput pageId={page.id} initial={page.title} />
         </div>
         <CommentsToggle

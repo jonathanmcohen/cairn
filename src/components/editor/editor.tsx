@@ -93,7 +93,8 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
           immediatelyRender: false,
           editorProps: {
             attributes: {
-              class: 'prose dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
+              class:
+                'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
             },
             handleDrop(_view, event, _slice, moved) {
               if (moved) return false;
@@ -284,7 +285,7 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
 
   return (
     <div className="relative">
-      <div className="mb-1 flex items-center justify-end gap-3">
+      <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {editable && (
           <SuggestionToolbar
             editor={editor}
