@@ -36,7 +36,7 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
     .limit(1);
 
   // Identical 401 for unknown page / no password set / wrong password — no leak.
-  if (!page || !page.linkPasswordHash || !(await verifyShareAccess(page, password))) {
+  if (!page?.linkPasswordHash || !(await verifyShareAccess(page, password))) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
   }
   if (page.expiresAt && page.expiresAt.getTime() <= Date.now()) {

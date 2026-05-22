@@ -77,15 +77,16 @@ describe('resolveTarget', () => {
     const u = await createTestWorkspaceWithUser(db);
     const other = await createTestWorkspaceWithUser(db);
     const { rowId } = await seedRow(other.workspaceId, other.userId);
-    await expect(
-      resolveTarget(db, u.workspaceId, { type: 'db_row', id: rowId }),
-    ).rejects.toThrow();
+    await expect(resolveTarget(db, u.workspaceId, { type: 'db_row', id: rowId })).rejects.toThrow();
   });
 
   it('throws 404 for a missing file id', async () => {
     const u = await createTestWorkspaceWithUser(db);
     await expect(
-      resolveTarget(db, u.workspaceId, { type: 'file', id: '00000000-0000-4000-8000-000000000000' }),
+      resolveTarget(db, u.workspaceId, {
+        type: 'file',
+        id: '00000000-0000-4000-8000-000000000000',
+      }),
     ).rejects.toThrow();
   });
 });
