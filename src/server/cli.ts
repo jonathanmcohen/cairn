@@ -12,7 +12,11 @@ const VERSION = process.env.npm_package_version ?? 'unknown';
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? '/data/uploads';
 const FILE_BACKEND = process.env.FILE_BACKEND ?? 'local';
 
-function run(cmd: string, args: string[], env?: NodeJS.ProcessEnv): Promise<void> {
+// `env` is extra vars merged onto process.env (see spawn below). Typed as a plain
+// string map rather than NodeJS.ProcessEnv: under the entrypoint tsconfig, Next's
+// ambient augmentation makes ProcessEnv require NODE_ENV, which would reject a bare
+// `{ PGPASSWORD }` literal here.
+function run(cmd: string, args: string[], env?: Record<string, string>): Promise<void> {
   return new Promise((resolve, reject) => {
     const child = spawn(cmd, args, { stdio: 'inherit', env: { ...process.env, ...env } });
     child.on('error', reject);
