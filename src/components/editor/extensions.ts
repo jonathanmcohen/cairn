@@ -12,6 +12,7 @@ import { Bookmark } from './blocks/bookmark';
 import { Column, ColumnList } from './blocks/columns';
 import { Embed } from './blocks/embed';
 import { MathBlock } from './blocks/math';
+import { SyncedBlock } from './blocks/synced-block';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { Callout } from './callout-extension';
@@ -50,6 +51,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     Embed,
     Bookmark,
     MathBlock,
+    SyncedBlock,
     SlashCommand,
     MentionExtension,
     Placeholder.configure({
@@ -97,6 +99,10 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     favicon }`; the unfurl cache lives entirely in attrs.  SAFE
  *  - Math           — inline atom, attrs `{ latex, display }`; KaTeX renders
  *                     from `latex`, no node-local state.                      SAFE
+ *  - SyncedBlock    — block, content `block+`, attr `syncedBlockId` only.
+ *                     Same-page mirrors read the source node's content from the
+ *                     SAME doc at render time (no stored copy, no cross-page
+ *                     reach); the node carries no non-attr state.             SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

@@ -151,6 +151,11 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setMath({ latex: '', display: true }).run(),
   },
   {
+    title: 'Synced block',
+    description: 'Reusable block mirrored elsewhere on this page',
+    command: (editor) => editor.chain().focus().setSyncedBlock().run(),
+  },
+  {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
     command: (editor) => {
