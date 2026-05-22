@@ -26,6 +26,9 @@ const ViewConfigSchema = z.object({
   startProperty: z.uuid().nullable().default(null),
   endProperty: z.uuid().nullable().default(null),
   visibleProperties: z.array(z.uuid()).default([]),
+  calcFooter: z
+    .record(z.uuid(), z.enum(['count', 'sum', 'avg', 'min', 'max', 'empty', 'filled']))
+    .default({}),
 });
 
 export type ViewConfig = z.infer<typeof ViewConfigSchema>;
