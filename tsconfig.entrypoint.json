@@ -9,5 +9,5 @@
     "rootDir": "src"
   },
   "include": ["src/server/**/*", "src/db/**/*", "src/lib/env.ts"],
-  "exclude": ["node_modules", ".next", "tests"]
+  "exclude": ["node_modules", ".next", "tests", "src/**/__tests__/**"]
 }
