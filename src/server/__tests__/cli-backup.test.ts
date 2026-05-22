@@ -1,15 +1,21 @@
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readdirSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-const hasPgDump = (() => {
+// The backup CLI shells out to pg_dump/pg_restore, which ABORT on a server/
+// client major-version mismatch. Only run the live round-trip when a pg_dump
+// whose major matches the test container (Postgres 16) is on PATH — otherwise
+// skip (a dev box without pg_dump, or CI whose client major differs). The
+// arg/URL-parsing + --force-gate tests below run everywhere.
+const hasPgDump16 = (() => {
   try {
-    execFileSync('pg_dump', ['--version'], { stdio: 'ignore' });
-    return true;
+    const out = execFileSync('pg_dump', ['--version'], { encoding: 'utf8' });
+    const m = out.match(/(\d+)\.\d+/);
+    return m ? Number(m[1]) === 16 : false;
   } catch {
     return false;
   }
@@ -17,12 +23,18 @@ const hasPgDump = (() => {
 
 const cliPath = join(process.cwd(), 'dist/server/cli.js');
 
-describe.skipIf(!hasPgDump)('backup/restore round-trip', () => {
+describe.skipIf(!hasPgDump16)('backup/restore round-trip', () => {
   let pg: StartedPostgreSqlContainer;
   let url: string;
   let outDir: string;
 
   beforeAll(async () => {
+    // The round-trip spawns the COMPILED CLI (dist/server/cli.js). CI runs
+    // `pnpm test` before the build step, so build the entrypoint+CLI here if
+    // dist is absent (idempotent + fast — it's just `tsc` over src/server).
+    if (!existsSync(cliPath)) {
+      execFileSync('pnpm', ['build:entrypoint'], { stdio: 'inherit' });
+    }
     pg = await new PostgreSqlContainer('postgres:16').start();
     url = pg.getConnectionUri();
     outDir = mkdtempSync(join(tmpdir(), 'cairn-bak-'));
@@ -30,7 +42,7 @@ describe.skipIf(!hasPgDump)('backup/restore round-trip', () => {
     await sql`CREATE TABLE keepme (id int primary key, note text)`;
     await sql`INSERT INTO keepme (id, note) VALUES (1, 'survive-me')`;
     await sql.end();
-  }, 120_000);
+  }, 180_000);
 
   afterAll(async () => {
     await pg?.stop();
