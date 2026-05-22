@@ -150,6 +150,98 @@ export async function validateRelationCells(
   }
 }
 
+/**
+ * Mirror relation cell changes onto the paired (reverse) relation, inside the caller's
+ * transaction (spec decision #1). For each paired relation property in `props`, diff the
+ * before/after id lists for `rowId` and apply the deltas to the reverse property's cells on
+ * each affected target row: an ADD of target T means T.reverse += rowId; a REMOVE means
+ * T.reverse -= rowId.
+ *
+ * Re-entrancy: each `rowId:propertyId` pair touched is recorded in `guard`; a cell already in
+ * the guard is skipped, so the mirror's own write cannot re-trigger sync within this
+ * transaction. The caller passes a shared `guard` Set (defaulting to a fresh one) and should
+ * seed it with the originating `rowId:propertyId` before the first call when chaining.
+ *
+ * Plain (unpaired) relations are ignored.
+ */
+export async function syncRelationCells(
+  tx: PostgresJsDatabase<typeof schema>,
+  input: {
+    rowId: string;
+    props: Pick<schema.DbProperty, 'id' | 'type' | 'config'>[];
+    before: Record<string, unknown>;
+    after: Record<string, unknown>;
+    guard?: Set<string>;
+  },
+): Promise<void> {
+  const guard = input.guard ?? new Set<string>();
+  // The originating cell is the source of truth this pass; never let a nested write touch it.
+  for (const p of input.props) {
+    if (p.type === 'relation') guard.add(`${input.rowId}:${p.id}`);
+  }
+
+  for (const p of input.props) {
+    if (p.type !== 'relation') continue;
+    const reverseId = relationReverseId(p.config);
+    if (!reverseId) continue; // plain relation — nothing to mirror
+
+    const before = toIdArray(input.before[p.id]);
+    const after = toIdArray(input.after[p.id]);
+    const beforeSet = new Set(before);
+    const afterSet = new Set(after);
+    const added = after.filter((id) => !beforeSet.has(id));
+    const removed = before.filter((id) => !afterSet.has(id));
+    if (added.length === 0 && removed.length === 0) continue;
+
+    for (const targetRowId of added) {
+      await mirrorEdit(tx, targetRowId, reverseId, input.rowId, 'add', guard);
+    }
+    for (const targetRowId of removed) {
+      await mirrorEdit(tx, targetRowId, reverseId, input.rowId, 'remove', guard);
+    }
+  }
+}
+
+function toIdArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === 'string');
+}
+
+/** Apply one add/remove of `linkedRowId` to (targetRowId, reversePropertyId), guard-checked. */
+async function mirrorEdit(
+  tx: PostgresJsDatabase<typeof schema>,
+  targetRowId: string,
+  reversePropertyId: string,
+  linkedRowId: string,
+  op: 'add' | 'remove',
+  guard: Set<string>,
+): Promise<void> {
+  const key = `${targetRowId}:${reversePropertyId}`;
+  if (guard.has(key)) return; // already authoritative this transaction — do not re-touch
+  guard.add(key);
+
+  const [cell] = await tx
+    .select({ value: schema.dbCells.value })
+    .from(schema.dbCells)
+    .where(
+      and(eq(schema.dbCells.rowId, targetRowId), eq(schema.dbCells.propertyId, reversePropertyId)),
+    )
+    .limit(1);
+  const current = toIdArray(cell?.value);
+  const set = new Set(current);
+  if (op === 'add') set.add(linkedRowId);
+  else set.delete(linkedRowId);
+  const next = [...set];
+
+  await tx
+    .insert(schema.dbCells)
+    .values({ rowId: targetRowId, propertyId: reversePropertyId, value: next })
+    .onConflictDoUpdate({
+      target: [schema.dbCells.rowId, schema.dbCells.propertyId],
+      set: { value: next },
+    });
+}
+
 export type ResolvedRelation = { ids: string[]; labels: string[] };
 
 /**
