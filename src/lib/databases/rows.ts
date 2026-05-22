@@ -4,7 +4,7 @@ import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
-import { resolveRelationCells, validateRelationCells } from './relations';
+import { resolveRelationCells, syncRelationCells, validateRelationCells } from './relations';
 import { resolveRollupCells } from './rollup/resolve';
 import { compileSorts, type SortSpec } from './sort';
 
@@ -56,6 +56,13 @@ export async function createRow(
       if (cellValues.length > 0) {
         await tx.insert(schema.dbCells).values(cellValues);
       }
+      // Mirror paired (reverse) relations: a new row has no prior cells, so before = {}.
+      await syncRelationCells(tx, {
+        rowId: row.id,
+        props,
+        before: {},
+        after: coercedByProp,
+      });
     }
     return row;
   });
