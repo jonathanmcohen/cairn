@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { LiveRegionProvider } from '@/components/a11y/live-region';
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
 import { NoWorkspace } from '@/components/no-workspace';
 import { OfflineProvider } from '@/components/pwa/offline-context';
@@ -9,6 +10,7 @@ import { SearchPalette } from '@/components/search-palette';
 import { Sidebar } from '@/components/sidebar';
 import { SidebarContent } from '@/components/sidebar-content';
 import { SidebarDrawer } from '@/components/sidebar-drawer';
+import { SkipLink } from '@/components/skip-link';
 import { Toaster } from '@/components/ui/sonner';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
@@ -23,22 +25,25 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const workspaces = await listUserWorkspaces(getDb(), ctx.userId);
   return (
     <OfflineProvider>
-      <div className="flex min-h-screen flex-col md:flex-row">
-        <RegisterSw />
-        <KeyboardShortcuts />
-        <SearchPalette />
-        <Sidebar workspaceId={ctx.workspaceId} />
-        <SidebarDrawer>
-          <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
-        </SidebarDrawer>
-        <main className="flex-1 p-8">
-          <div className="mb-2 flex justify-end">
-            <OfflineIndicator />
-          </div>
-          {children}
-        </main>
-        <Toaster />
-      </div>
+      <LiveRegionProvider>
+        <SkipLink />
+        <div className="flex min-h-screen flex-col md:flex-row">
+          <RegisterSw />
+          <KeyboardShortcuts />
+          <SearchPalette />
+          <Sidebar workspaceId={ctx.workspaceId} />
+          <SidebarDrawer>
+            <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
+          </SidebarDrawer>
+          <main id="main-content" className="flex-1 p-8">
+            <div className="mb-2 flex justify-end">
+              <OfflineIndicator />
+            </div>
+            {children}
+          </main>
+          <Toaster />
+        </div>
+      </LiveRegionProvider>
     </OfflineProvider>
   );
 }

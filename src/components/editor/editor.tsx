@@ -5,6 +5,7 @@ import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
+import { useAnnounce } from '@/components/a11y/live-region';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
@@ -43,6 +44,16 @@ const STATUS_LABEL = {
 export function Editor({ pageId, initialContent, currentUser, editable }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(pageId);
   const presentUsers = useCollabPresence(provider);
+  const announce = useAnnounce();
+
+  // Announce collab connection-status transitions through the shell's polite
+  // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
+  // "Offline" even when the visible status pill is off-focus. Errors go
+  // assertive; routine connecting/connected/disconnected stay polite.
+  useEffect(() => {
+    const label = STATUS_LABEL[status];
+    announce(label, status === 'error' ? 'assertive' : 'polite');
+  }, [status, announce]);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);

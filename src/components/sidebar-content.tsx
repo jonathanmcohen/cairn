@@ -30,9 +30,14 @@ export function SidebarContent({
         <NotificationBell />
         <ThemeToggle />
       </div>
-      <nav className="flex-1 overflow-y-auto p-3">
+      <nav aria-labelledby="sidebar-pages-heading" className="flex-1 overflow-y-auto p-3">
         <div className="mb-2 flex items-center justify-between px-2">
-          <p className="text-xs uppercase tracking-wide text-muted-foreground">Pages</p>
+          <p
+            id="sidebar-pages-heading"
+            className="text-xs uppercase tracking-wide text-muted-foreground"
+          >
+            Pages
+          </p>
           <NewPageButton />
         </div>
         <SidebarTree workspaceId={workspaceId} />
@@ -42,14 +47,14 @@ export function SidebarContent({
           href="/templates"
           className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
         >
-          <LayoutTemplate className="h-3 w-3" />
+          <LayoutTemplate aria-hidden="true" className="h-3 w-3" />
           Templates
         </Link>
         <Link
           href="/trash"
           className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
         >
-          <Trash className="h-3 w-3" />
+          <Trash aria-hidden="true" className="h-3 w-3" />
           Trash
         </Link>
         <form action="/api/auth/signout" method="post">

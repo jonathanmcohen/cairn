@@ -26,11 +26,11 @@ export function CommentsToggle({
       <Button
         variant="ghost"
         size="icon"
-        title="Comments"
+        aria-label="Comments"
         aria-pressed={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <MessageSquare className="h-4 w-4" />
+        <MessageSquare aria-hidden="true" className="h-4 w-4" />
       </Button>
       {open && (
         <div className="fixed inset-y-0 right-0 z-30 shadow-lg">

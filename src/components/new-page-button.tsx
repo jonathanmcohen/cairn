@@ -38,7 +38,7 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
       title={allowed ? 'New page' : 'Unavailable offline'}
       className="h-6 w-6"
     >
-      <Plus className="h-4 w-4" />
+      <Plus aria-hidden="true" className="h-4 w-4" />
     </Button>
   );
 }

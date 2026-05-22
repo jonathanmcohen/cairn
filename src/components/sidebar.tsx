@@ -9,7 +9,10 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
   const workspaces = ctx ? await listUserWorkspaces(db, ctx.userId) : [];
 
   return (
-    <aside className="hidden h-screen w-64 shrink-0 flex-col border-r bg-card text-card-foreground md:flex">
+    <aside
+      aria-label="Workspace sidebar"
+      className="hidden h-screen w-64 shrink-0 flex-col border-r bg-card text-card-foreground md:flex"
+    >
       <SidebarContent workspaceId={workspaceId} workspaces={workspaces} />
     </aside>
   );

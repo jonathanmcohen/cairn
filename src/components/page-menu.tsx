@@ -94,8 +94,15 @@ export function PageMenu({
 
   return (
     <div className="relative">
-      <Button variant="ghost" size="icon" onClick={() => setOpen((v) => !v)}>
-        <MoreHorizontal className="h-4 w-4" />
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="Page menu"
+        aria-expanded={open}
+        aria-haspopup="menu"
+        onClick={() => setOpen((v) => !v)}
+      >
+        <MoreHorizontal aria-hidden="true" className="h-4 w-4" />
       </Button>
       {open && (
         // biome-ignore lint/a11y/noStaticElementInteractions: presentational dropdown container; onMouseLeave is a close-on-exit convenience, the menu items below are real <button>s
