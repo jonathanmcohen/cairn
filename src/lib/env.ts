@@ -12,6 +12,12 @@ const Schema = z.object({
   AUTH_GOOGLE_SECRET: z.string().optional(),
   AUTH_GITHUB_ID: z.string().optional(),
   AUTH_GITHUB_SECRET: z.string().optional(),
+  FILE_BACKEND: z.enum(['local', 's3']).default('local'),
+  S3_ENDPOINT: z.string().optional(),
+  S3_BUCKET: z.string().optional(),
+  S3_ACCESS_KEY: z.string().optional(),
+  S3_SECRET_KEY: z.string().optional(),
+  S3_REGION: z.string().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;

@@ -5,6 +5,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Added (v0.5.0 Plan 4 — Version history + S3 backend)
+- Debounced, deduped page version snapshots on save: a `PATCH /api/pages/[pageId]` with `content` snapshots into `page_versions` only when the latest version is missing or is ≥ ~60s old AND differs, so keystroke spam is debounced and identical re-saves are deduped; history is pruned to the newest 50 per page. Snapshots are best-effort and never break a save.
+- Non-destructive restore: `restoreVersion` writes the chosen content back as the live page content **and** appends a new version row — history is append-only and the restore shows up as the newest entry. Restore is editor-gated (route + UI).
+- A version-history panel that lists versions and diffs any two entirely client-side (JSON diff).
+- An `S3Storage`/MinIO backend behind the existing `FileStorage` seam, selected by `FILE_BACKEND=local|s3` in `getStorage()`, with an optional `minio` compose profile for local/dev. The HMAC signed-URL handler is unchanged (no presigned URLs).
+
 ### Added (v0.5.0 Plan 3 — Templates)
 - Capture a page subtree (its content, every descendant page, and every embedded inline database) or a standalone database (properties + views, sample rows opt-in) as a portable, workspace-free JSON template.
 - Instantiate any template into any workspace: mints a fresh uuid for every captured page/database/property/view/row and rewrites every internal reference — page parent links, embedded `database`-node `databaseId`s (deep content walk), and property-id references inside view configs and relation/rollup property configs — inserting the whole graph in one transaction with no source id surviving.
