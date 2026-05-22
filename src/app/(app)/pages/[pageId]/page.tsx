@@ -5,6 +5,7 @@ import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
+import { VersionHistory } from '@/components/pages/version-history';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
 import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
@@ -44,6 +45,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           currentUserId={ctx.userId}
           currentRole={ctx.role}
         />
+        <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
         <PageMenu
           pageId={page.id}
           initialPublished={page.published}

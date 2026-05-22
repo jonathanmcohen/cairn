@@ -4,6 +4,7 @@ import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
 import { NoWorkspace } from '@/components/no-workspace';
 import { SearchPalette } from '@/components/search-palette';
 import { Sidebar } from '@/components/sidebar';
+import { Toaster } from '@/components/ui/sonner';
 import { getAuthContext } from '@/lib/auth/require-role';
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -18,6 +19,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <SearchPalette />
       <Sidebar workspaceId={ctx.workspaceId} />
       <main className="flex-1 p-8">{children}</main>
+      <Toaster />
     </div>
   );
 }
