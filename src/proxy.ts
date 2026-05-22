@@ -8,6 +8,7 @@ const PUBLIC_PATHS = [
   '/api/auth',
   '/api/health',
   '/p/',
+  '/s/',
   '/api/public',
   // Embedded images on public pages are loaded by anonymous visitors via
   // HMAC-signed URLs. The /api/files handler verifies the signature itself
