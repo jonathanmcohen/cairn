@@ -2,6 +2,7 @@
 
 import { MoreHorizontal } from 'lucide-react';
 import { useState } from 'react';
+import { SharePanel } from '@/components/pages/share-panel';
 import { Button } from '@/components/ui/button';
 
 type PageMenuProps = {
@@ -9,6 +10,9 @@ type PageMenuProps = {
   initialPublished?: boolean;
   initialSlug?: string | null;
   pageTitle?: string;
+  initialAllowDuplication?: boolean;
+  initialHasPassword?: boolean;
+  initialExpiresAt?: string | null;
 };
 
 export function PageMenu({
@@ -16,6 +20,9 @@ export function PageMenu({
   initialPublished = false,
   initialSlug = null,
   pageTitle = '',
+  initialAllowDuplication = false,
+  initialHasPassword = false,
+  initialExpiresAt = null,
 }: PageMenuProps) {
   const [open, setOpen] = useState(false);
   const [published, setPublished] = useState(initialPublished);
@@ -121,6 +128,13 @@ export function PageMenu({
                   {copied ? 'Copied!' : 'Copy public link'}
                 </button>
               </div>
+              <div className="my-1 border-t" />
+              <SharePanel
+                pageId={pageId}
+                initialAllowDuplication={initialAllowDuplication}
+                initialHasPassword={initialHasPassword}
+                initialExpiresAt={initialExpiresAt}
+              />
             </>
           )}
           <div className="my-1 border-t" />

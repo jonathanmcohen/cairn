@@ -51,6 +51,9 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           initialPublished={page.published}
           initialSlug={page.publicSlug}
           pageTitle={page.title}
+          initialAllowDuplication={page.allowDuplication}
+          initialHasPassword={!!page.linkPasswordHash}
+          initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
         />
       </div>
       <Editor
