@@ -127,6 +127,13 @@
       "when": 1779478848111,
       "tag": "0017_productive_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1779481653836,
+      "tag": "0018_wide_black_panther",
+      "breakpoints": true
     }
   ]
 }

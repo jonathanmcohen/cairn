@@ -5,6 +5,7 @@ export * from './databases';
 export * from './files';
 export * from './invite-tokens';
 export * from './notifications';
+export * from './page-links';
 export * from './page-versions';
 export * from './page-yjs';
 export * from './pages';
