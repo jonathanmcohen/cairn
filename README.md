@@ -315,7 +315,19 @@ See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
 ## Security
 
-See [SECURITY.md](SECURITY.md) for the vulnerability disclosure process.
+Cairn ships secure-by-default: hardening response headers (a strict CSP plus
+`nosniff`/frame-DENY/referrer/permissions-policy/HSTS, with a locked-down policy
+for the public `/p/` path), in-process rate limiting on login/signup/collab-token
+endpoints, and an adversarial security-regression suite (`tests/security/`) that
+fails loudly on tenant-isolation, RBAC, file-URL, public-sharing, collab-token,
+injection, XSS, or secret-leakage regressions. Supply-chain advisories
+(`pnpm audit --audit-level=high`) and committed secrets (`gitleaks`) are gated in
+CI. The `tests/security` suite runs in CI, and `scripts/smoke-security.sh` checks
+the live docker stack (headers, CSP-renders-the-app, anon denial, forged tokens).
+
+See [SECURITY.md](SECURITY.md) for the STRIDE-lite threat model, the
+trust-boundary→control table, residual risks, and the vulnerability-reporting
+process.
 
 ## License
 

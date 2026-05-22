@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildCsp, cspOrigin, headersFor, securityHeaders } from '@/lib/security/headers';
+import { buildCsp, cspNonce, cspOrigin, headersFor, securityHeaders } from '@/lib/security/headers';
 
 describe('cspOrigin', () => {
   it('normalizes a ws url to scheme//host', () => {
@@ -37,6 +37,28 @@ describe('buildCsp', () => {
     const csp = buildCsp({ collabUrl: 'http://collab.local:1234', publicPath: true });
     expect(csp).toContain("connect-src 'self'");
     expect(csp).not.toContain('collab.local');
+  });
+  it('adds a script-src nonce (not unsafe-inline) when one is supplied', () => {
+    // Next/React stream hydration via inline scripts; a nonce lets them run
+    // under `script-src 'self'` WITHOUT opening the gate to all inline scripts.
+    const csp = buildCsp({ nonce: 'abc123' });
+    expect(csp).toContain("script-src 'self' 'nonce-abc123'");
+    // scripts never get unsafe-inline (styles do — that's a separate directive)
+    expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
+    // the public-path policy carries the nonce too (it's still a Next/React render)
+    const pub = buildCsp({ nonce: 'abc123', publicPath: true });
+    expect(pub).toContain("script-src 'self' 'nonce-abc123'");
+  });
+});
+
+describe('cspNonce', () => {
+  it('extracts the nonce from a CSP string', () => {
+    expect(cspNonce("script-src 'self' 'nonce-abc123'; object-src 'none'")).toBe('abc123');
+  });
+  it('returns undefined when no nonce / no CSP', () => {
+    expect(cspNonce("script-src 'self'")).toBeUndefined();
+    expect(cspNonce(null)).toBeUndefined();
+    expect(cspNonce(undefined)).toBeUndefined();
   });
 });
 

@@ -11,6 +11,15 @@ export type CspOptions = {
   publicPath?: boolean;
   /** true → omit HSTS (dev). HSTS only makes sense over https in prod. */
   isProd?: boolean;
+  /**
+   * Per-request nonce for inline scripts. When set, `script-src` becomes
+   * `'self' 'nonce-<nonce>'` so Next/React's inline hydration bootstrap (and the
+   * next-themes inline script) execute under the policy WITHOUT opening the gate
+   * to arbitrary inline scripts (no 'unsafe-inline'). The nonce MUST be unique
+   * per response and is generated in the proxy; the static next.config.mjs
+   * headers() can't mint one, so the CSP is applied there with the nonce instead.
+   */
+  nonce?: string;
 };
 
 /** Normalize a ws(s)/http(s) URL to a CSP source token (scheme + host[:port]). */
@@ -24,6 +33,17 @@ export function cspOrigin(raw: string | undefined): string | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Extract the script-src nonce from a CSP string (e.g. the one the proxy puts on
+ * the request header). Returns undefined if none — callers pass it to next-themes
+ * so its inline bootstrap script carries the matching nonce.
+ */
+export function cspNonce(csp: string | null | undefined): string | undefined {
+  if (!csp) return undefined;
+  const m = csp.match(/'nonce-([^']+)'/);
+  return m ? m[1] : undefined;
 }
 
 export function buildCsp(opts: CspOptions = {}): string {
@@ -45,12 +65,17 @@ export function buildCsp(opts: CspOptions = {}): string {
     }
   }
 
+  // Next 16 + React 19 stream hydration via INLINE <script> blocks (the RSC
+  // payload pushes and the next-themes bootstrap). Under a bare `script-src
+  // 'self'` (no 'unsafe-inline', no nonce) the browser blocks them and the app
+  // never hydrates — a green build but a broken runtime. We allow them via a
+  // per-request nonce (preferred — no 'unsafe-inline' gate) when one is provided.
+  const scriptSrc = ["'self'"];
+  if (opts.nonce) scriptSrc.push(`'nonce-${opts.nonce}'`);
+
   const directives: Record<string, string[]> = {
     'default-src': ["'self'"],
-    // Next 16 + React 19 inline runtime bootstrap needs 'self'; we avoid
-    // 'unsafe-inline' for scripts. 'strict-dynamic' is intentionally omitted to
-    // keep the policy simple for a self-hosted single-origin app.
-    'script-src': ["'self'"],
+    'script-src': scriptSrc,
     // TipTap/ProseMirror and Tailwind set inline styles at runtime → allow
     // 'unsafe-inline' for styles only (not scripts). Documented tradeoff.
     'style-src': ["'self'", "'unsafe-inline'"],
@@ -67,9 +92,10 @@ export function buildCsp(opts: CspOptions = {}): string {
 
   if (opts.publicPath) {
     // Public read-only render: even tighter. No connect (no collab on /p/),
-    // styles still inline for the rendered content.
+    // styles still inline for the rendered content. The public render is still a
+    // Next/React page, so it carries the same inline bootstrap — keep the nonce.
     directives['connect-src'] = ["'self'"];
-    directives['script-src'] = ["'self'"];
+    directives['script-src'] = scriptSrc;
   }
 
   return Object.entries(directives)
@@ -107,6 +133,7 @@ export function headersFor(opts: {
   collabUrl?: string;
   isProd?: boolean;
   publicPath?: boolean;
+  nonce?: string;
 }): Array<{
   key: string;
   value: string;
@@ -119,6 +146,7 @@ export function headersFor(opts: {
         collabUrl: opts.collabUrl,
         isProd: opts.isProd,
         publicPath: opts.publicPath,
+        nonce: opts.nonce,
       }),
     },
   ];

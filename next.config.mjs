@@ -1,8 +1,7 @@
 /** @type {import('next').NextConfig} */
-import { headersFor } from './src/lib/security/headers.ts';
+import { securityHeaders } from './src/lib/security/headers.ts';
 
 const isProd = process.env.NODE_ENV === 'production';
-const collabUrl = process.env.COLLAB_URL;
 
 const nextConfig = {
   output: 'standalone',
@@ -10,16 +9,22 @@ const nextConfig = {
   reactStrictMode: true,
   typedRoutes: true,
   async headers() {
+    // Static, request-independent hardening headers (nosniff, frame-DENY,
+    // referrer, permissions-policy, HSTS, X-Robots-Tag). The Content-Security-
+    // Policy is NOT set here: it carries a per-request nonce so Next/React's
+    // inline hydration scripts execute without 'unsafe-inline'. A nonce can only
+    // be minted per request, which next.config.mjs headers() cannot do — so the
+    // CSP is applied in src/proxy.ts instead. See src/lib/security/headers.ts.
     return [
       {
-        // Public read-only render: stricter policy + noindex.
+        // Public read-only render: noindex + the public hardening set.
         source: '/p/:path*',
-        headers: headersFor({ collabUrl, isProd, publicPath: true }),
+        headers: securityHeaders({ isProd, publicPath: true }),
       },
       {
         // Everything else (app shell, editor, API).
         source: '/:path*',
-        headers: headersFor({ collabUrl, isProd, publicPath: false }),
+        headers: securityHeaders({ isProd, publicPath: false }),
       },
     ];
   },

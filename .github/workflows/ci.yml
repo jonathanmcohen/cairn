@@ -56,3 +56,34 @@ jobs:
 
       - name: Build smoke
         run: pnpm build
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # gitleaks scans history
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Supply-chain: fail on high/critical. The time-boxed ignore list is
+      # honored by a small wrapper so un-fixable upstream advisories don't block
+      # indefinitely (and expired ignores re-block).
+      - name: pnpm audit (high+)
+        run: |
+          set -euo pipefail
+          pnpm audit --audit-level=high --json > audit.json || true
+          node scripts/check-audit.mjs audit.json audit-ci-ignore.json
+
+      - name: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITLEAKS_CONFIG: .gitleaks.toml
+
+      # Run the adversarial security suite explicitly (also runs in `pnpm test`).
+      - name: security tests
+        run: pnpm test tests/security

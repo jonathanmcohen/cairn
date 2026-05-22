@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { buildCsp } from '@/lib/security/headers';
 
 const PUBLIC_PATHS = [
   '/login',
@@ -30,18 +31,42 @@ export function proxy(req: NextRequest) {
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const hasSession = hasSessionCookie(req);
 
+  // Per-request CSP nonce. Next/React's inline hydration scripts (the RSC
+  // payload pushes + the next-themes bootstrap) would be blocked by a bare
+  // `script-src 'self'`; minting a fresh nonce here and putting it on the CSP
+  // lets them run WITHOUT 'unsafe-inline'. Next reads the nonce from the CSP on
+  // the *request* headers and stamps it onto every framework-injected <script>.
+  const nonce = btoa(crypto.randomUUID());
+  const csp = buildCsp({
+    nonce,
+    collabUrl: process.env.COLLAB_URL,
+    isProd: process.env.NODE_ENV === 'production',
+    publicPath: pathname.startsWith('/p/'),
+  });
+
   if (!hasSession && !isPublic) {
     const url = req.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('next', pathname);
-    return NextResponse.redirect(url);
+    const res = NextResponse.redirect(url);
+    res.headers.set('Content-Security-Policy', csp);
+    return res;
   }
   if (hasSession && (pathname === '/login' || pathname === '/signup')) {
     const url = req.nextUrl.clone();
     url.pathname = '/';
-    return NextResponse.redirect(url);
+    const res = NextResponse.redirect(url);
+    res.headers.set('Content-Security-Policy', csp);
+    return res;
   }
-  return NextResponse.next();
+
+  // Forward the nonce'd CSP on the request so the renderer can read it and apply
+  // the nonce to its inline scripts, and set it on the response for the browser.
+  const requestHeaders = new Headers(req.headers);
+  requestHeaders.set('Content-Security-Policy', csp);
+  const res = NextResponse.next({ request: { headers: requestHeaders } });
+  res.headers.set('Content-Security-Policy', csp);
+  return res;
 }
 
 export const config = {

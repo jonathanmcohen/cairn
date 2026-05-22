@@ -1,0 +1,4 @@
+{
+  "$comment": "Reviewed, time-boxed advisory ignores for `pnpm audit --audit-level=high`. Each entry MUST have a reason and an expiry; CI fails any entry past expiry so ignores can't rot. Empty by default — add only un-fixable transitive advisories.",
+  "ignores": []
+}

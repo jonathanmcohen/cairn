@@ -1,0 +1,15 @@
+title = "Cairn gitleaks config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Test fixtures and example env use obviously-fake secrets."
+paths = [
+  '''\.env\.example$''',
+  '''tests/.*''',
+]
+regexes = [
+  # 32-char repeated-char fake secrets used in tests ('x'.repeat(32) etc.)
+  '''(?i)(x|y|z){16,}''',
+]

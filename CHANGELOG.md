@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-05-21
+
+### Security (v0.5.1)
+- Adversarial security-regression suite (`tests/security/`): table-driven cross-workspace isolation (→404), RBAC ceilings, file-URL HMAC forge/expiry, public-sharing leakage, collab-token forgery, API-key scope/expiry/revoke (v0.5.0-gated), SQL-injection inertness, public-render XSS safety, secret non-leakage.
+- Secure-by-default response headers (CSP + nosniff/frame-DENY/referrer/permissions-policy/HSTS), with a locked-down policy for the public `/p/` path.
+- In-process token-bucket rate limiting on login, signup, and `/api/collab/token` (keyed by ip + identifier, trust-proxy-aware).
+- CI `security` job: `pnpm audit --audit-level=high` (time-boxed ignore list), `gitleaks` secret scan, and the `tests/security` suite; `scripts/smoke-security.sh` live-stack smoke.
+- `SECURITY.md` (STRIDE-lite threat model, controls table, residual risks, vuln-reporting) + README security section.
+
 ## [0.5.0] - 2026-05-21
 
 ### Added (v0.5.0 Plan 5 — Backup CLI & release)
