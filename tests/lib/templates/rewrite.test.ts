@@ -53,16 +53,17 @@ function fixture(): TemplatePayload {
             id: 'prop-rel',
             name: 'Project',
             type: 'relation',
-            config: { relationDatabaseId: 'db-b' },
+            config: { targetDatabaseId: 'db-b' },
             position: 1,
           },
           {
             id: 'prop-roll',
             name: 'Sum',
             type: 'rollup',
-            config: { relationPropertyId: 'prop-rel', rollupPropertyId: 'prop-b-num' },
+            config: { relationPropertyId: 'prop-rel', targetPropertyId: 'prop-b-num' },
             position: 2,
           },
+          { id: 'prop-due', name: 'Due', type: 'date', config: {}, position: 3 },
         ],
         views: [
           {
@@ -76,6 +77,13 @@ function fixture(): TemplatePayload {
               groupBy: 'prop-status',
             },
             position: 0,
+          },
+          {
+            id: 'view-cal',
+            type: 'calendar',
+            name: 'Calendar',
+            config: { dateProperty: 'prop-due' },
+            position: 1,
           },
         ],
         rows: [{ id: 'row-1', cells: [{ propertyId: 'prop-status', value: 'o1' }] }],
@@ -103,8 +111,10 @@ describe('buildRemap', () => {
       'prop-rel',
       'prop-roll',
       'view-table',
+      'view-cal',
       'row-1',
       'prop-b-num',
+      'prop-due',
     ];
     for (const s of sources) {
       expect(remap.get(s)).toMatch(UUID);
@@ -155,9 +165,9 @@ describe('rewriteRefs', () => {
     expect(dbA.rows[0]!.cells[0]!.value).toBe('o1'); // cell value untouched (option id, not an entity id)
 
     // 5a. relation/rollup config refs
-    expect((rel.config as Any).relationDatabaseId).toBe(m('db-b'));
+    expect((rel.config as Any).targetDatabaseId).toBe(m('db-b'));
     expect((roll.config as Any).relationPropertyId).toBe(m('prop-rel'));
-    expect((roll.config as Any).rollupPropertyId).toBe(m('prop-b-num'));
+    expect((roll.config as Any).targetPropertyId).toBe(m('prop-b-num'));
     // select option ids are NOT entity ids → left alone
     expect((status.config as Any).options[0].id).toBe('o1');
 
@@ -167,6 +177,9 @@ describe('rewriteRefs', () => {
     expect(vc.sorts[0].propertyId).toBe(m('prop-status'));
     expect(vc.filters[0].propertyId).toBe(m('prop-rel'));
     expect(vc.groupBy).toBe(m('prop-status'));
+    // calendar view dateProperty ref
+    const cal = dbA.views.find((v) => v.name === 'Calendar')!;
+    expect((cal.config as Any).dateProperty).toBe(m('prop-due'));
 
     // NO source id survives anywhere in the output (the dangling-ref guarantee)
     const serialized = JSON.stringify(out);
@@ -179,8 +192,10 @@ describe('rewriteRefs', () => {
       'prop-rel',
       'prop-roll',
       'view-table',
+      'view-cal',
       'row-1',
       'prop-b-num',
+      'prop-due',
     ]) {
       expect(serialized).not.toContain(src);
     }
@@ -193,13 +208,13 @@ describe('rewriteRefs', () => {
       id: 'prop-ext',
       name: 'External',
       type: 'relation',
-      config: { relationDatabaseId: 'db-external-not-captured' },
+      config: { targetDatabaseId: 'db-external-not-captured' },
       position: 9,
     });
     const remap = buildRemap(payload);
     const out = rewriteRefs(payload, remap);
     const ext = out.databases[0]!.properties.find((p) => p.name === 'External')!;
-    expect((ext.config as Any).relationDatabaseId).toBe('db-external-not-captured'); // unchanged
+    expect((ext.config as Any).targetDatabaseId).toBe('db-external-not-captured'); // unchanged
     expect(ext.id).toBe(remap.get('prop-ext')); // its own id still remapped
   });
 

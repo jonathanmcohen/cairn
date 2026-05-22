@@ -33,12 +33,19 @@ function remapId(id: string | null, remap: IdRemap): string | null {
  * number format, filter operators/values) is never touched.
  */
 const ID_FIELDS = new Set([
+  // filter/sort entries inside a view config
   'propertyId',
-  'databaseId',
-  'relationDatabaseId',
+  // relation property config
+  'targetDatabaseId',
+  // rollup property config
   'relationPropertyId',
-  'rollupPropertyId',
+  'targetPropertyId',
+  // kanban view config
   'groupBy',
+  // calendar / timeline view config
+  'dateProperty',
+  'startProperty',
+  'endProperty',
 ]);
 const ID_ARRAY_FIELDS = new Set(['visibleProperties']);
 
