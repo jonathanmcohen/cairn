@@ -36,6 +36,8 @@ Thumbs.db
 # tests / coverage
 coverage/
 .vitest/
+playwright-report/
+test-results/
 
 # drizzle local
 drizzle/.snapshot

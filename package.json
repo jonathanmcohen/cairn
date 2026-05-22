@@ -19,6 +19,7 @@
     "format": "biome format --write .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
+    "test:a11y": "playwright test --config=playwright.config.ts",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",
@@ -80,7 +81,9 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@biomejs/biome": "^2.4.15",
+    "@playwright/test": "^1.60.0",
     "@serwist/cli": "^9.5.11",
     "@serwist/next": "^9.5.11",
     "@tailwindcss/postcss": "^4.3.0",
