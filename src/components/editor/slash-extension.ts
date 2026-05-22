@@ -156,6 +156,11 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setSyncedBlock().run(),
   },
   {
+    title: 'Table of contents',
+    description: "Linked outline of this page's headings",
+    command: (editor) => editor.chain().focus().insertTableOfContents().run(),
+  },
+  {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
     command: (editor) => {

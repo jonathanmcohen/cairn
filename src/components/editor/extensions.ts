@@ -21,6 +21,7 @@ import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
 import { MentionExtension } from './mention-extension';
 import { SlashCommand } from './slash-extension';
+import { TableOfContents } from './toc-extension';
 
 const lowlight = createLowlight(common);
 
@@ -48,6 +49,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     CairnImage,
     FileAttachment,
     DatabaseNode,
+    TableOfContents,
     Embed,
     Bookmark,
     MathBlock,
@@ -103,6 +105,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     Same-page mirrors read the source node's content from the
  *                     SAME doc at render time (no stored copy, no cross-page
  *                     reach); the node carries no non-attr state.             SAFE
+ *  - TableOfContents — block atom, NO attrs + NO node-local state; its node-view
+ *                     derives the heading list from the shared doc at render.   SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {
