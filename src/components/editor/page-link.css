@@ -1,0 +1,26 @@
+.page-link,
+.page-mention {
+  border-radius: 0.25rem;
+  padding: 0 0.15rem;
+  color: hsl(var(--primary));
+  background-color: hsl(var(--primary) / 0.08);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.page-link:hover,
+.page-mention:hover {
+  background-color: hsl(var(--primary) / 0.16);
+}
+.page-embed {
+  display: block;
+  border: 1px solid hsl(var(--border));
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-block: 0.5rem;
+}
+.page-embed-title {
+  font-weight: 600;
+  color: hsl(var(--foreground));
+  text-decoration: none;
+}

@@ -16,6 +16,7 @@ import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
 import { SuggestionDelete } from './marks/suggestion-delete';
 import { SuggestionInsert } from './marks/suggestion-insert';
+import { PageEmbed, PageLink, PageMention } from './page-link-extension';
 import { SuggestionBlock } from './suggestion-block';
 import { TableOfContentsNode } from './toc-node';
 
@@ -61,5 +62,10 @@ export function schemaExtensions() {
     // The `mention` node, schema-only: keep its HTML/text serialization but drop
     // the `suggestion` popup (which would pull the React mention list).
     Mention.configure({ HTMLAttributes: { class: 'mention' } }),
+    // Page-link nodes are schema-pure (static renderHTML, no React view), so the
+    // server-side `getSchema` for previewAccepted recognizes stored content.
+    PageLink,
+    PageMention,
+    PageEmbed,
   ];
 }

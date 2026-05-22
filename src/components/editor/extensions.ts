@@ -22,6 +22,8 @@ import { CairnImage } from './image-extension';
 import { SuggestionDelete } from './marks/suggestion-delete';
 import { SuggestionInsert } from './marks/suggestion-insert';
 import { MentionExtension } from './mention-extension';
+import { PageEmbed, PageLink, PageMention } from './page-link-extension';
+import { PageLinkSuggestion } from './page-link-suggestion';
 import { SlashCommand } from './slash-extension';
 import { SuggestionBlock } from './suggestion-block';
 import { TableOfContents } from './toc-extension';
@@ -62,6 +64,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     SuggestionBlock,
     SlashCommand,
     MentionExtension,
+    PageLink,
+    PageMention,
+    PageEmbed,
+    PageLinkSuggestion,
     Placeholder.configure({
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') return 'Heading';
@@ -122,6 +128,12 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *  - SuggestionBlock — block, content `block+`, attrs `{ suggestionId, authorId,
  *                     createdAt, kind }` only; renders as <div>, no node-local
  *                     state.                                                     SAFE
+ *  - PageLink       — inline atom, attrs `{ targetPageId, label }` only; static
+ *                     renderHTML, no node-view/node-local state.                 SAFE
+ *  - PageMention    — inline atom, attrs `{ targetPageId, label }` only; static
+ *                     renderHTML, no node-view/node-local state.                 SAFE
+ *  - PageEmbed      — block atom, attrs `{ targetPageId, label }` only; static
+ *                     renderHTML, no node-view/node-local state.                 SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {
