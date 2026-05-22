@@ -69,7 +69,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
     return (
       <tr key={r.row.id} className="border-b hover:bg-accent/40">
         {meta.properties.map((p) => (
-          <td key={p.id} className="px-3 py-1.5">
+          <td key={p.id} className="px-3 py-2.5">
             <CellEditor
               databaseId={databaseId}
               rowId={r.row.id}
@@ -116,7 +116,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           return (
             <tr key={node.row.id} className="border-b hover:bg-accent/40">
               {meta.properties.map((p, i) => (
-                <td key={p.id} className="px-3 py-1.5">
+                <td key={p.id} className="px-3 py-2.5">
                   {i === 0 ? (
                     <span
                       style={{ paddingInlineStart: `${node.depth * 1.25}rem` }}
@@ -181,8 +181,8 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
   }
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full border-collapse text-sm">
+    <div className="-mx-1 overflow-x-auto sm:mx-0">
+      <table className="w-full min-w-[640px] border-collapse text-sm">
         <thead>
           <tr className="border-b">
             {meta.properties.map((p) => (
