@@ -28,6 +28,9 @@ import { baseExtensions } from '@/components/editor/extensions';
 const DOC = {
   type: 'doc',
   content: [
+    // P6: the tableOfContents node is a block atom with NO attrs + NO node-local
+    // state — it is Yjs-safe by construction and must survive the round-trip as-is.
+    { type: 'tableOfContents' },
     {
       type: 'embed',
       attrs: { provider: 'youtube', src: 'https://www.youtube.com/embed/dQw4w9WgXcQ' },
@@ -100,7 +103,8 @@ describe('v0.6.0 P5 blocks survive a schema + Yjs round-trip', () => {
     expect(str).toContain('sb-1'); // shared syncedBlockId
     // the display-math latex contains backslashes; assert on the parsed value
     // rather than the JSON-escaped string to avoid double-escaping confusion.
-    const displayMath = mathNodeAt(json, 3);
+    expect(str).toContain('"tableOfContents"');
+    const displayMath = mathNodeAt(json, 4);
     expect(displayMath?.latex).toBe('\\int_0^1 x\\,dx');
     expect(displayMath?.display).toBe(true);
   });
@@ -124,7 +128,7 @@ describe('v0.6.0 P5 blocks survive a schema + Yjs round-trip', () => {
     // the decoded node still resolves `image` to null — not a desync. Every
     // non-default attr survives byte-for-byte.
     const EXPECTED = structuredClone(DOC) as typeof DOC;
-    const bookmark = EXPECTED.content[1] as { attrs: Record<string, unknown> };
+    const bookmark = EXPECTED.content[2] as { attrs: Record<string, unknown> };
     delete bookmark.attrs.image;
     expect(out).toEqual(EXPECTED);
 
@@ -137,7 +141,7 @@ describe('v0.6.0 P5 blocks survive a schema + Yjs round-trip', () => {
     expect(str).toContain('a^2+b^2=c^2');
     expect(str).toContain('"syncedBlockId":"sb-1"');
     // backslash-bearing latex: assert on the parsed value, not the escaped string.
-    expect(mathNodeAt(out, 3)?.latex).toBe('\\int_0^1 x\\,dx');
+    expect(mathNodeAt(out, 4)?.latex).toBe('\\int_0^1 x\\,dx');
     // bookmark.image's schema default is null, which is why a null image is not
     // re-emitted above — confirm that is the reason, not an accidental drop.
     expect(schema.nodes.bookmark?.spec.attrs?.image?.default ?? null).toBeNull();
