@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
 import { NoWorkspace } from '@/components/no-workspace';
+import { RegisterSw } from '@/components/pwa/register-sw';
 import { SearchPalette } from '@/components/search-palette';
 import { Sidebar } from '@/components/sidebar';
 import { SidebarContent } from '@/components/sidebar-content';
@@ -20,6 +21,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const workspaces = await listUserWorkspaces(getDb(), ctx.userId);
   return (
     <div className="flex min-h-screen flex-col md:flex-row">
+      <RegisterSw />
       <KeyboardShortcuts />
       <SearchPalette />
       <Sidebar workspaceId={ctx.workspaceId} />

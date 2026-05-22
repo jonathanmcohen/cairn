@@ -9,6 +9,9 @@ import './globals.css';
 export const metadata = {
   title: 'Cairn',
   description: 'Self-hosted block-based notes',
+  manifest: '/manifest.webmanifest',
+  icons: { apple: '/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: 'Cairn', statusBarStyle: 'black-translucent' },
 };
 
 export default async function RootLayout({ children }: { children: ReactNode }) {
