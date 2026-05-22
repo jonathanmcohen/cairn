@@ -5,6 +5,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.6.0] - Unreleased
+
+> Large consolidated release closing Notion-parity gaps across content/databases, sharing/collaboration, and mobile/accessibility. Migrations `0013`–`0019`. Built area-by-area (plans P1–P23); entries below are grouped by plan.
+
+### Added (v0.6.0 P1 — Reverse (bidirectional) relations)
+- Relation properties can mint a mirrored relation on the target database (`reversePropertyId` in the relation config); writing a relation cell syncs the paired cell on the linked rows, with a re-entrancy guard so the two sides never loop.
+
+### Added (v0.6.0 P2 — List view + filters + grouping + multi-sort)
+- New `list` view type (migration `0013`, `ALTER TYPE view_type ADD VALUE 'list'`); per-type filter operators (text contains/starts/ends/is/is-not/is-any-of, number/date between/≠, checkbox is); client-side grouping (`groupRows`) with a leading "Uncategorized" group; multi-column sort config.
+
+### Added (v0.6.0 P3 — Row hierarchy / sub-items)
+- `db_rows.parent_row_id` self-FK (migration `0013`, on-delete set null); same-database + no-cycle validation; rows render as an expand/collapse forest.
+
+### Added (v0.6.0 P4 — Blocks pt.1: toggle / columns / table)
+- Toggle (collapsible) block, multi-column layout block, and a simple table block (`@tiptap` TableKit) — all Yjs round-trip safe.
+
+### Added (v0.6.0 P5 — Blocks pt.2: embed / bookmark / math / synced)
+- Allowlist-only `embed` (YouTube/Vimeo/Figma/gist/CodeSandbox, https-only, sandboxed iframe); `bookmark` unfurl card via an SSRF-guarded `/api/unfurl`; KaTeX `math` (inline + block); same-page `syncedBlock` (live read-only mirror of a source block). Yjs round-trip audited.
+
+### Added (v0.6.0 P6 — Table of contents + outline + full-page DB + calc footer)
+- `tableOfContents` node (live heading links, no stored state) + a header-toggled outline panel; full-page-database render mode over the existing views; per-column calc footer (count/sum/avg/min/max/empty/filled) stored in the view config jsonb.
+
+### Added (v0.6.0 P7 — Per-page share settings + public site)
+- Per-page link password (Argon2id via `@node-rs/argon2`), expiry, and allow-duplication (migration `0014`); an HMAC-signed per-page access cookie reusing the v0.5.0 file-URL signer (no new secret); a workspace public site at `/s/<slug>` (migration `0015`) listing published pages and linking through to each page's own `/p/` gate. Expired/unpublished/unknown → 404, never 403. CSP `frame-src` now allowlists exactly the embed providers (unblocks P5 embeds, drift-guarded against the embed allowlist).
+
 ### Added (v0.6.0 P8 — Comments on databases + files)
 - `0016` migration: `comment_target` enum (`page`/`db_row`/`file`) + `target_type`/`target_id` columns on `comments`, a `(target_type, target_id)` index, existing rows back-filled to their page (`target_id = page_id`); `page_id` is now nullable to permit page-less file comments.
 - Polymorphic comment threads: comments anchor to a page, a database row, or a file via `(target_type, target_id)`, workspace-scoped, cross-workspace → 404. `page_id` is denormalized (owning page of the row's database / the file's page) so the @mention + comment-reply notification fan-out stays page-anchored.
@@ -32,6 +57,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - `GET /api/workspaces/pages?q=` — workspace page search (viewer+) for the page picker; `GET /api/pages/[pageId]/backlinks`.
 - Migration `0018`: `page_links` index table + `notification_email_prefs` (the email-prefs store consumed by P11).
 - New editor nodes (`pageLink`/`pageMention`/`pageEmbed`) verified Yjs round-trip safe.
+
+### Added (v0.6.0 P12 — Responsive / mobile UI)
+- A shared `useFocusTrap` a11y primitive (unit-tested); below the `md` breakpoint the desktop sidebar is replaced by a hamburger + an off-canvas, `aria-modal`, focus-trapped, Escape/backdrop-dismissable drawer rendering the same nav; the page header wraps and tightens gutters and the editor prose relaxes width on small screens; database views adapt for touch (table horizontal-scroll + taller rows, narrower kanban columns, single-column gallery under `sm`).
 
 ## [0.5.1] - 2026-05-21
 
