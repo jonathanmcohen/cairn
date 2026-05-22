@@ -1,6 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { reindexPageLinks } from '@/lib/pages/page-links';
 import { emit } from '@/lib/webhooks/dispatch';
 
 export class PageConflictError extends Error {
@@ -58,6 +59,12 @@ export async function updatePage(
       .where(eq(schema.pages.id, current.id))
       .returning();
     if (!updated) throw new Error('Update returned no row');
+    // Keep the page_links index in lockstep with the saved doc. Inside the same
+    // transaction so a failed reindex rolls back the content write (index must
+    // never drift from `pages.content`).
+    if (input.patch.content !== undefined) {
+      await reindexPageLinks(tx, current.id, input.patch.content);
+    }
     return updated;
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).

@@ -1,4 +1,4 @@
-import { eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne, notInArray, sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 
@@ -58,4 +58,42 @@ export async function getBacklinks(
     .select({ sourcePageId: schema.pageLinks.sourcePageId, kind: schema.pageLinks.kind })
     .from(schema.pageLinks)
     .where(eq(schema.pageLinks.targetPageId, targetPageId));
+}
+
+/**
+ * Read-time "unlinked mentions": pages in the same workspace whose text contains
+ * the target page's `title` but which are NOT already in page_links pointing at
+ * `pageId`. Reuses the existing FTS column (`content_tsv`, kept in sync by the
+ * pages trigger from `content` + `title`); excludes the target itself and
+ * soft-deleted pages. No dedicated index — bounded by the workspace's page
+ * count, run on panel open. Returns `{id, title}[]`, capped at 50.
+ */
+export async function findUnlinkedMentions(
+  db: PostgresJsDatabase<typeof schema>,
+  input: { workspaceId: string; pageId: string; title: string },
+): Promise<{ id: string; title: string }[]> {
+  const title = input.title.trim();
+  if (title.length === 0) return [];
+
+  // Sources already linking to this page — excluded from "unlinked".
+  const linked = await db
+    .select({ sourcePageId: schema.pageLinks.sourcePageId })
+    .from(schema.pageLinks)
+    .where(eq(schema.pageLinks.targetPageId, input.pageId));
+  const linkedIds = [...new Set(linked.map((l) => l.sourcePageId))];
+
+  const where = and(
+    eq(schema.pages.workspaceId, input.workspaceId),
+    isNull(schema.pages.deletedAt),
+    ne(schema.pages.id, input.pageId),
+    // FTS match on the title's words; plainto_tsquery handles multi-word titles.
+    rawSql`${schema.pages.contentTsv} @@ plainto_tsquery('english', ${title})`,
+    linkedIds.length > 0 ? notInArray(schema.pages.id, linkedIds) : undefined,
+  );
+
+  return db
+    .select({ id: schema.pages.id, title: schema.pages.title })
+    .from(schema.pages)
+    .where(where)
+    .limit(50);
 }
