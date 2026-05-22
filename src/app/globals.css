@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "../components/editor/code-highlight.css";
 @import "../components/editor/mention.css";
+@import "../components/editor/blocks.css";
 
 @plugin "@tailwindcss/typography";
 

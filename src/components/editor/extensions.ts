@@ -8,6 +8,9 @@ import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
+import { Column, ColumnList } from './blocks/columns';
+import { SimpleTable } from './blocks/table';
+import { Toggle } from './blocks/toggle';
 import { Callout } from './callout-extension';
 import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
@@ -34,6 +37,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     TaskList,
     TaskItem.configure({ nested: true }),
     Callout,
+    Toggle,
+    ColumnList,
+    Column,
+    SimpleTable,
     CairnImage,
     FileAttachment,
     DatabaseNode,
@@ -70,6 +77,14 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     that id, never storing row data in the node. The node
  *                     itself carries no non-attr state.                      SAFE
  *  - Mention        — inline atom, attrs `{ id (userId), label }` only.      SAFE
+ *  - Toggle         — block, content `block+`, attr `open` only; its node-view
+ *                     stores open/closed in the `open` attr (never local
+ *                     React state), so collaborators stay in sync.        SAFE
+ *  - ColumnList     — block, content `column{2,}`; `data-columns` is derived
+ *                     from childCount at render — no stored non-attr state. SAFE
+ *  - Column         — content `block+`, structural only.                   SAFE
+ *  - SimpleTable    — official table family; cell content + colspan/rowspan/
+ *                     colwidth attrs only, no node-view-local state.        SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

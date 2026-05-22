@@ -56,6 +56,22 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setCallout('default').run(),
   },
   {
+    title: 'Toggle',
+    description: 'Collapsible block',
+    command: (editor) => editor.chain().focus().setToggle().run(),
+  },
+  {
+    title: 'Columns',
+    description: 'Two side-by-side columns',
+    command: (editor) => editor.chain().focus().setColumns(2).run(),
+  },
+  {
+    title: 'Table',
+    description: 'Simple table',
+    command: (editor) =>
+      editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+  },
+  {
     title: 'Image',
     description: 'Upload and embed an image',
     command: (editor) => {
