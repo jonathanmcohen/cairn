@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-05-21
+
+### Added (v0.5.0 Plan 5 — Backup CLI & release)
+- Backup/restore CLI built into the server image (`node dist/server/cli.js backup|restore`): `pg_dump`/`pg_restore` (custom format) of the database plus a tar of the local uploads tree, written as a timestamped bundle + manifest. The `restore` command is destructive and gated behind an interactive confirmation prompt and a `--force` flag; passwords are passed via `PGPASSWORD`, never on the argv.
+- S3 backend awareness: with `FILE_BACKEND=s3` the CLI backs up the database only and notes that buckets are backed up out-of-band.
+- README "Operations" section documenting backup/restore usage, the `pg_dump`/`pg_restore` version-match requirement, the S3 caveat, and the sensitive-data warning (bundles contain password & API-key hashes and files).
+- Cross-feature integration smoke: mint an API key → API-create a page → assert a webhook delivery row is enqueued → snapshot a version → save and instantiate a template.
+- Bumped version to 0.5.0; reused the existing private-repo-safe release workflow to publish `ghcr.io/jonathanmcohen/cairn:0.5.0`.
+
 ### Added (v0.5.0 Plan 4 — Version history + S3 backend)
 - Debounced, deduped page version snapshots on save: a `PATCH /api/pages/[pageId]` with `content` snapshots into `page_versions` only when the latest version is missing or is ≥ ~60s old AND differs, so keystroke spam is debounced and identical re-saves are deduped; history is pruned to the newest 50 per page. Snapshots are best-effort and never break a save.
 - Non-destructive restore: `restoreVersion` writes the chosen content back as the live page content **and** appends a new version row — history is append-only and the restore shows up as the newest entry. Restore is editor-gated (route + UI).
