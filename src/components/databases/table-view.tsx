@@ -1,7 +1,9 @@
 'use client';
 
 import { useState } from 'react';
+import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
+import { CalcFooterRow } from './calc-footer-row';
 import { CellEditor } from './cell-editor';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { DatabaseMeta, RowData } from './use-database-data';
@@ -25,7 +27,11 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
       return next;
     });
 
-  const config = (view.config ?? {}) as { groupBy?: string | null };
+  const config = (view.config ?? {}) as {
+    groupBy?: string | null;
+    calcFooter?: Record<string, CalcFn>;
+  };
+  const calcFooter = config.calcFooter ?? {};
   const groupByProp = meta.properties.find((p) => p.id === config.groupBy);
   const grouped = groupByProp?.type === 'select';
 
@@ -168,6 +174,15 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           </tr>
         </thead>
         {body}
+        <CalcFooterRow
+          databaseId={databaseId}
+          viewId={view.id}
+          viewConfig={view.config}
+          meta={meta}
+          rows={rows}
+          calcFooter={calcFooter}
+          onChange={onChange}
+        />
       </table>
       <button
         type="button"

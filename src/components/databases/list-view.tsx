@@ -1,9 +1,37 @@
 'use client';
 
 import { useState } from 'react';
+import { type CalcFn, type CalcResult, computeCalcFooter } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
+import { patchCalcFooter } from './calc-footer-row';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { ViewProps } from './table-view';
+
+const LIST_FN_LABELS: Record<CalcFn | 'none', string> = {
+  none: '—',
+  count: 'Count',
+  filled: 'Filled',
+  empty: 'Empty',
+  sum: 'Sum',
+  avg: 'Avg',
+  min: 'Min',
+  max: 'Max',
+};
+const LIST_ALL_FNS: (CalcFn | 'none')[] = [
+  'none',
+  'count',
+  'filled',
+  'empty',
+  'sum',
+  'avg',
+  'min',
+  'max',
+];
+
+function listFormatValue(r: CalcResult): string {
+  if (r.value === null) return '—';
+  return String(Math.round(r.value * 100) / 100);
+}
 
 export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const [adding, setAdding] = useState(false);
@@ -110,6 +138,45 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
     );
   }
 
+  const calcFooter =
+    ((view.config ?? {}) as { calcFooter?: Record<string, CalcFn> }).calcFooter ?? {};
+
+  function ListCalcFooter() {
+    const results = computeCalcFooter(rows, meta.properties, calcFooter);
+    async function setFn(propertyId: string, fn: CalcFn | 'none') {
+      await patchCalcFooter(databaseId, view.id, view.config, calcFooter, propertyId, fn);
+      onChange();
+    }
+    return (
+      <div className="flex flex-wrap items-center gap-3 border-t px-1 pt-2 text-xs">
+        {meta.properties.map((p) => {
+          const current = calcFooter[p.id] ?? 'none';
+          const result = results[p.id];
+          return (
+            <span key={p.id} className="inline-flex items-center gap-1 text-muted-foreground">
+              <span className="font-medium">{p.name}:</span>
+              {result ? (
+                <span className="tabular-nums text-foreground">{listFormatValue(result)}</span>
+              ) : null}
+              <select
+                aria-label={`Calc for ${p.name}`}
+                value={current}
+                onChange={(e) => void setFn(p.id, e.target.value as CalcFn | 'none')}
+                className="rounded border-0 bg-transparent text-[10px] text-muted-foreground hover:bg-accent"
+              >
+                {LIST_ALL_FNS.map((fn) => (
+                  <option key={fn} value={fn}>
+                    {LIST_FN_LABELS[fn]}
+                  </option>
+                ))}
+              </select>
+            </span>
+          );
+        })}
+      </div>
+    );
+  }
+
   if (groupByProp && groupByProp.type === 'select') {
     const options =
       (groupByProp.config as { options?: { id: string; name: string }[] })?.options ?? [];
@@ -136,6 +203,7 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
             </button>
           </div>
         ))}
+        <ListCalcFooter />
       </div>
     );
   }
@@ -175,6 +243,7 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
       >
         + Add
       </button>
+      <ListCalcFooter />
     </div>
   );
 }
