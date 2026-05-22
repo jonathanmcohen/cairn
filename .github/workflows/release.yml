@@ -19,9 +19,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -62,7 +59,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
@@ -96,7 +93,7 @@ jobs:
         with:
           context: .
           file: Dockerfile.collab
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           push: true
           tags: ${{ steps.meta_collab.outputs.tags }}
           labels: ${{ steps.meta_collab.outputs.labels }}
