@@ -1,0 +1,72 @@
+import { describe, expect, it } from 'vitest';
+import { buildCsp, cspOrigin, headersFor, securityHeaders } from '@/lib/security/headers';
+
+describe('cspOrigin', () => {
+  it('normalizes a ws url to scheme//host', () => {
+    expect(cspOrigin('ws://collab.local:1234')).toBe('ws://collab.local:1234');
+    expect(cspOrigin('https://collab.example.com')).toBe('https://collab.example.com');
+  });
+  it('returns null for junk', () => {
+    expect(cspOrigin('not a url')).toBeNull();
+    expect(cspOrigin(undefined)).toBeNull();
+  });
+});
+
+describe('buildCsp', () => {
+  it('default policy is self-scoped with no unsafe-inline scripts', () => {
+    const csp = buildCsp();
+    expect(csp).toContain("default-src 'self'");
+    expect(csp).toContain("script-src 'self'");
+    expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
+    expect(csp).toContain("object-src 'none'");
+    expect(csp).toContain("frame-ancestors 'none'");
+  });
+  it('allows inline styles (TipTap/Tailwind) but not inline scripts', () => {
+    const csp = buildCsp();
+    expect(csp).toMatch(/style-src 'self' 'unsafe-inline'/);
+  });
+  it('allows self + data + blob images (signed file images served same-origin)', () => {
+    expect(buildCsp()).toMatch(/img-src 'self' data: blob:/);
+  });
+  it('adds the collab WS origin to connect-src (both http and ws scheme)', () => {
+    const csp = buildCsp({ collabUrl: 'http://collab.local:1234' });
+    expect(csp).toContain('http://collab.local:1234');
+    expect(csp).toContain('ws://collab.local:1234');
+  });
+  it('public-path policy drops collab from connect-src', () => {
+    const csp = buildCsp({ collabUrl: 'http://collab.local:1234', publicPath: true });
+    expect(csp).toContain("connect-src 'self'");
+    expect(csp).not.toContain('collab.local');
+  });
+});
+
+describe('securityHeaders', () => {
+  it('always sets nosniff, DENY, referrer, permissions-policy', () => {
+    const h = securityHeaders();
+    const map = Object.fromEntries(h.map((x) => [x.key, x.value]));
+    expect(map['X-Content-Type-Options']).toBe('nosniff');
+    expect(map['X-Frame-Options']).toBe('DENY');
+    expect(map['Referrer-Policy']).toBe('strict-origin-when-cross-origin');
+    expect(map['Permissions-Policy']).toContain('camera=()');
+  });
+  it('emits HSTS only in prod', () => {
+    expect(
+      securityHeaders({ isProd: false }).some((h) => h.key === 'Strict-Transport-Security'),
+    ).toBe(false);
+    expect(
+      securityHeaders({ isProd: true }).some((h) => h.key === 'Strict-Transport-Security'),
+    ).toBe(true);
+  });
+  it('adds X-Robots-Tag noindex on the public path', () => {
+    expect(securityHeaders({ publicPath: true }).some((h) => h.key === 'X-Robots-Tag')).toBe(true);
+  });
+});
+
+describe('headersFor', () => {
+  it('bundles the hardening headers + CSP', () => {
+    const h = headersFor({ collabUrl: 'http://c.local:1', isProd: true });
+    const keys = h.map((x) => x.key);
+    expect(keys).toContain('Content-Security-Policy');
+    expect(keys).toContain('Strict-Transport-Security');
+  });
+});
