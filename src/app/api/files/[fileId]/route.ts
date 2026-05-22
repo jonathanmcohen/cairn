@@ -1,10 +1,13 @@
 import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { env } from '@/lib/env';
 import { getStorage } from '@/lib/files/get-storage';
 import { verifyFileUrl } from '@/lib/files/signing';
+
+const FileId = z.uuid();
 
 export async function GET(
   req: Request,
@@ -18,6 +21,13 @@ export async function GET(
 
   const ok = verifyFileUrl({ fileId, expiresAt: exp, sig, secret: env().AUTH_SECRET });
   if (!ok) return NextResponse.json({ error: 'invalid signature' }, { status: 401 });
+
+  // Reject ids that are not well-formed UUIDs before they reach the DB: a
+  // non-UUID id (e.g. a path-traversal payload) would otherwise throw an
+  // uncaught query error. Treat as not-found to avoid leaking existence/shape.
+  if (!FileId.safeParse(fileId).success) {
+    return NextResponse.json({ error: 'not found' }, { status: 404 });
+  }
 
   const [f] = await getDb().select().from(schema.files).where(eq(schema.files.id, fileId)).limit(1);
   if (!f) return NextResponse.json({ error: 'not found' }, { status: 404 });
