@@ -168,9 +168,11 @@ async function main(): Promise<void> {
   }
   const conn = parseDbUrl(url);
   if (args.command === 'backup') {
-    await backup(conn, args.out!);
+    if (!args.out) throw new Error('--out is required for backup');
+    await backup(conn, args.out);
   } else {
-    await restore(conn, args.in!, args.force);
+    if (!args.in) throw new Error('--in is required for restore');
+    await restore(conn, args.in, args.force);
   }
 }
 

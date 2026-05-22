@@ -3,6 +3,7 @@ import { HttpError } from '@/lib/auth/require-role';
 import { mintCollabToken } from '@/lib/collab/token';
 import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
+import { collabTokenLimiter, ipKey } from '@/lib/security/rate-limit';
 
 export async function GET(req: Request): Promise<Response> {
   const url = new URL(req.url);
@@ -14,6 +15,16 @@ export async function GET(req: Request): Promise<Response> {
   try {
     // 'viewer' is the floor; the resolved ctx.role is the caller's actual page role.
     const { ctx } = await requirePageAccess(pageId, 'viewer');
+    const rl = collabTokenLimiter.check(ipKey(req, ctx.userId));
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: 'rate limited' }), {
+        status: 429,
+        headers: {
+          'content-type': 'application/json',
+          'retry-after': String(Math.ceil(rl.retryAfterMs / 1000)),
+        },
+      });
+    }
     const token = mintCollabToken({
       userId: ctx.userId,
       pageId,

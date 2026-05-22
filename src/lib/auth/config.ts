@@ -7,6 +7,7 @@ import Google from 'next-auth/providers/google';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { ipKey, loginLimiter } from '@/lib/security/rate-limit';
 import { applyOAuthGate } from './oauth-gate';
 import { verifyPassword } from './password';
 
@@ -20,9 +21,17 @@ function buildProviders(): NextAuthConfig['providers'] {
     Credentials({
       name: 'credentials',
       credentials: { email: { type: 'email' }, password: { type: 'password' } },
-      async authorize(raw) {
+      async authorize(raw, req) {
         const parsed = CredentialsSchema.safeParse(raw);
         if (!parsed.success) return null;
+        // Brute-force throttle: 5/min per ip+email. Tripping returns null (Auth.js
+        // surfaces a generic CredentialsSignin error — no account enumeration).
+        const headers =
+          req?.headers instanceof Headers ? req.headers : new Headers(req?.headers as HeadersInit);
+        const rl = loginLimiter.check(
+          ipKey(new Request('http://local', { headers }), parsed.data.email.toLowerCase()),
+        );
+        if (!rl.allowed) return null;
         const db = getDb();
         const [user] = await db
           .select()
