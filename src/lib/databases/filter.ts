@@ -4,9 +4,23 @@ import type * as schema from '@/db/schema';
 export type FilterCondition = { propertyId: string; op: string; value: unknown };
 
 /**
+ * "Absence-inclusive" ops must match rows that have NO cell for the property at
+ * all (e.g. `is_empty`, or checkbox `is false` where a missing cell counts as
+ * false). For these, `predicateFor` returns the *presence* predicate (the
+ * condition for a row that should be EXCLUDED), which `compileFilters` wraps in
+ * `NOT EXISTS`. All other ops keep the plain `EXISTS` behavior.
+ */
+function isAbsenceInclusive(type: schema.PropertyType, op: string, value: unknown): boolean {
+  if (op === 'is_empty') return true;
+  if (type === 'checkbox' && op === 'is' && value === false) return true;
+  return false;
+}
+
+/**
  * Compile a list of conditions to a SQL fragment that filters db_rows.
  * Each condition becomes: EXISTS (SELECT 1 FROM db_cells WHERE row_id = db_rows.id AND property_id = '...' AND <predicate>)
- * Conditions are AND-ed.
+ * Absence-inclusive ops use NOT EXISTS (... AND <presence-predicate>) instead, so
+ * rows with no cell for the property are matched. Conditions are AND-ed.
  */
 export function compileFilters(
   conditions: FilterCondition[],
@@ -19,7 +33,10 @@ export function compileFilters(
     if (!prop) continue;
     const inner = predicateFor(prop.type, c.op, c.value);
     if (!inner) continue;
-    fragments.push(rawSql`EXISTS (
+    const keyword = isAbsenceInclusive(prop.type, c.op, c.value)
+      ? rawSql`NOT EXISTS`
+      : rawSql`EXISTS`;
+    fragments.push(rawSql`${keyword} (
       SELECT 1 FROM db_cells dc
       WHERE dc.row_id = db_rows.id
         AND dc.property_id = ${c.propertyId}::uuid
@@ -48,8 +65,21 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
           return rawSql`dc.value::text ILIKE ${`"${String(value)}%"`}`;
         case 'ends_with':
           return rawSql`dc.value::text ILIKE ${`"%${String(value)}"`}`;
+        case 'is':
+          return rawSql`dc.value::text = ${JSON.stringify(value)}::jsonb::text`;
+        case 'is_not':
+          return rawSql`dc.value::text <> ${JSON.stringify(value)}::jsonb::text`;
+        case 'is_any_of': {
+          const arr = Array.isArray(value) ? value.map((v) => String(v)) : [String(value)];
+          if (arr.length === 0) return rawSql`false`;
+          // Membership test via a single jsonb array param (keeps it parameterized
+          // — drizzle's `sql` does not bind a JS array as a PG array literal).
+          return rawSql`${JSON.stringify(arr)}::jsonb @> jsonb_build_array(dc.value #>> '{}')`;
+        }
         case 'is_empty':
-          return rawSql`(dc.value IS NULL OR dc.value::text = '""')`;
+          // Presence predicate (wrapped in NOT EXISTS by compileFilters): a row
+          // matches `is_empty` iff it has NO cell with a non-empty value.
+          return rawSql`(dc.value IS NOT NULL AND dc.value::text <> '""')`;
         case 'is_not_empty':
           return rawSql`dc.value IS NOT NULL AND dc.value::text <> '""'`;
         default:
@@ -69,8 +99,13 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
           return rawSql`(dc.value)::numeric < ${Number(value)}`;
         case 'lte':
           return rawSql`(dc.value)::numeric <= ${Number(value)}`;
+        case 'between': {
+          const [lo, hi] = Array.isArray(value) ? value : [value, value];
+          return rawSql`(dc.value)::numeric BETWEEN ${Number(lo)} AND ${Number(hi)}`;
+        }
         case 'is_empty':
-          return rawSql`dc.value IS NULL`;
+          // Presence predicate (wrapped in NOT EXISTS): matches when no cell has a value.
+          return rawSql`dc.value IS NOT NULL`;
         default:
           return null;
       }
@@ -80,6 +115,10 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
           return rawSql`dc.value::text = 'true'`;
         case 'is_false':
           return rawSql`(dc.value IS NULL OR dc.value::text = 'false')`;
+        case 'is':
+          // Presence predicate = "cell is true". `is true` -> EXISTS (a true cell);
+          // `is false` -> NOT EXISTS (a true cell), so missing/false cells match.
+          return rawSql`dc.value::text = 'true'`;
         default:
           return null;
       }
@@ -95,8 +134,15 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
           return rawSql`(dc.value #>> '{}')::date < ${String(value)}::date`;
         case 'lte':
           return rawSql`(dc.value #>> '{}')::date <= ${String(value)}::date`;
+        case 'neq':
+          return rawSql`(dc.value #>> '{}')::date <> ${String(value)}::date`;
+        case 'between': {
+          const [lo, hi] = Array.isArray(value) ? value : [value, value];
+          return rawSql`(dc.value #>> '{}')::date BETWEEN ${String(lo)}::date AND ${String(hi)}::date`;
+        }
         case 'is_empty':
-          return rawSql`dc.value IS NULL`;
+          // Presence predicate (wrapped in NOT EXISTS): matches when no cell has a value.
+          return rawSql`dc.value IS NOT NULL`;
         default:
           return null;
       }
@@ -107,7 +153,8 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
         case 'not_contains':
           return rawSql`NOT (dc.value @> ${JSON.stringify([String(value)])}::jsonb)`;
         case 'is_empty':
-          return rawSql`(dc.value IS NULL OR jsonb_array_length(dc.value) = 0)`;
+          // Presence predicate (wrapped in NOT EXISTS): matches when no cell holds a non-empty array.
+          return rawSql`(dc.value IS NOT NULL AND jsonb_array_length(dc.value) > 0)`;
         default:
           return null;
       }
