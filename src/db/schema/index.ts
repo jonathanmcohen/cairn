@@ -8,6 +8,7 @@ export * from './notifications';
 export * from './page-versions';
 export * from './page-yjs';
 export * from './pages';
+export * from './suggestions';
 export * from './system-meta';
 export * from './templates';
 export * from './users';
