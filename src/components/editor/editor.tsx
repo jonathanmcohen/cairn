@@ -2,12 +2,13 @@
 
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { EditorContent, useEditor } from '@tiptap/react';
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { prosemirrorJSONToYDoc } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { DragHandle } from './drag-handle';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
+import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { useCollabDoc } from './use-collab-doc';
 
@@ -41,6 +42,7 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
   const presentUsers = useCollabPresence(provider);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
 
   const uploadAndInsert = useCallback(async (files: File[]) => {
     for (const file of files) {
@@ -172,10 +174,23 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
       <div className="mb-1 flex items-center justify-end gap-3">
         <PresenceAvatars users={presentUsers} />
         <span className="text-muted-foreground text-xs">{STATUS_LABEL[status]}</span>
+        <button
+          type="button"
+          onClick={() => setOutlineOpen((v) => !v)}
+          aria-pressed={outlineOpen}
+          className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+        >
+          Outline
+        </button>
       </div>
-      <div className="relative">
-        {editor && <DragHandle editor={editor} />}
-        <EditorContent editor={editor} />
+      <div className="flex gap-4">
+        <div className="relative min-w-0 flex-1">
+          {editor && <DragHandle editor={editor} />}
+          <EditorContent editor={editor} />
+        </div>
+        {editor && outlineOpen && (
+          <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
+        )}
       </div>
     </div>
   );
