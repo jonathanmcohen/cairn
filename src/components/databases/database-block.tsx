@@ -7,6 +7,7 @@ import { GalleryView } from './gallery-view';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { PropertyPanel } from './property-panel';
+import { SortConfig } from './sort-config';
 import { TableView } from './table-view';
 import { TimelineView } from './timeline-view';
 import { useDatabaseData } from './use-database-data';
@@ -38,16 +39,19 @@ export function DatabaseBlock({ node }: NodeViewProps) {
 
   return (
     <NodeViewWrapper className="my-4 rounded-md border" contentEditable={false}>
-      <ViewSwitcher
-        databaseId={databaseId}
-        views={meta.views}
-        activeId={activeView.id}
-        dateProperties={meta.properties
-          .filter((p) => p.type === 'date')
-          .map((p) => ({ id: p.id, name: p.name }))}
-        onChange={setViewId}
-        onViewsChanged={refresh}
-      />
+      <div className="flex items-start justify-between gap-2">
+        <ViewSwitcher
+          databaseId={databaseId}
+          views={meta.views}
+          activeId={activeView.id}
+          dateProperties={meta.properties
+            .filter((p) => p.type === 'date')
+            .map((p) => ({ id: p.id, name: p.name }))}
+          onChange={setViewId}
+          onViewsChanged={refresh}
+        />
+        <SortConfig {...viewProps} />
+      </div>
       {activeView.type === 'table' && <TableView {...viewProps} />}
       {activeView.type === 'kanban' && <KanbanView {...viewProps} />}
       {activeView.type === 'calendar' && <CalendarView {...viewProps} />}
