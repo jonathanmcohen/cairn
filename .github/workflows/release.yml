@@ -29,7 +29,7 @@ jobs:
             dockerfile: Dockerfile
             platform: linux/amd64
             arch: amd64
-            runner: ubuntu-latest
+            runner: [self-hosted, X64]
           - image: cairn
             dockerfile: Dockerfile
             platform: linux/arm64
@@ -39,7 +39,7 @@ jobs:
             dockerfile: Dockerfile.collab
             platform: linux/amd64
             arch: amd64
-            runner: ubuntu-latest
+            runner: [self-hosted, X64]
           - image: cairn-collab
             dockerfile: Dockerfile.collab
             platform: linux/arm64
