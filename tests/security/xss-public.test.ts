@@ -7,7 +7,9 @@ import { Node as PMNode } from 'prosemirror-model';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
+import { resolveEmbed } from '@/lib/editor/embed-allowlist';
 import { getPublishedPageBySlug } from '@/lib/pages/public';
+import { assertPublicUrl } from '@/lib/webhooks/ssrf';
 import { startPostgres, stopPostgres } from '../helpers/db';
 import { createTestWorkspaceWithUser } from '../helpers/fixtures';
 
@@ -126,5 +128,43 @@ describe('public render XSS safety', () => {
       .where(eq(schema.pages.publicSlug, 'xss-2'));
     expect(other?.published).toBe(true);
     expect(await getPublishedPageBySlug(db, 'nope')).toBeNull();
+  });
+});
+
+// v0.6.0 added an `embed` block (allowlist-only iframe) and a `bookmark` block
+// whose metadata is unfurled server-side via /api/unfurl. Both are attack
+// surfaces: the embed src is rendered into an iframe (XSS/SSRF if arbitrary),
+// and the unfurl fetch is a classic SSRF sink (it dereferences a user URL on the
+// server). These cases pin the security CONTRACT for those surfaces. They are
+// pure (no DB), so they run regardless of the integration fixtures above.
+describe('v0.6.0 embed + unfurl surface (SSRF/allowlist)', () => {
+  it('the embed allowlist refuses arbitrary origins (no SSRF/XSS via iframe src)', () => {
+    expect(resolveEmbed('https://attacker.example/iframe')).toBeNull();
+    expect(resolveEmbed('https://127.0.0.1/internal')).toBeNull();
+    expect(resolveEmbed('javascript:alert(1)')).toBeNull();
+    expect(resolveEmbed('data:text/html,<script>1</script>')).toBeNull();
+  });
+
+  it('every allowlisted embed src is https and on a known frame host', () => {
+    const ok = [
+      'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+      'https://vimeo.com/76979871',
+      'https://www.figma.com/file/abc/x',
+      'https://gist.github.com/u/abc',
+      'https://codesandbox.io/s/abc12',
+    ];
+    for (const u of ok) {
+      const r = resolveEmbed(u);
+      expect(r, u).not.toBeNull();
+      expect(r?.src.startsWith('https://'), u).toBe(true);
+    }
+  });
+
+  it('the unfurl SSRF guard rejects internal/metadata/loopback targets', async () => {
+    await expect(assertPublicUrl('http://127.0.0.1/')).rejects.toThrow();
+    await expect(assertPublicUrl('http://169.254.169.254/latest/meta-data/')).rejects.toThrow();
+    await expect(assertPublicUrl('http://10.0.0.5/')).rejects.toThrow();
+    await expect(assertPublicUrl('http://192.168.1.1/')).rejects.toThrow();
+    await expect(assertPublicUrl('ftp://example.com/')).rejects.toThrow();
   });
 });
