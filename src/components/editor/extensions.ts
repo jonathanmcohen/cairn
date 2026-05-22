@@ -8,6 +8,7 @@ import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
+import { Bookmark } from './blocks/bookmark';
 import { Column, ColumnList } from './blocks/columns';
 import { Embed } from './blocks/embed';
 import { SimpleTable } from './blocks/table';
@@ -46,6 +47,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     FileAttachment,
     DatabaseNode,
     Embed,
+    Bookmark,
     SlashCommand,
     MentionExtension,
     Placeholder.configure({
@@ -89,6 +91,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     colwidth attrs only, no node-view-local state.        SAFE
  *  - Embed          — atom/leaf, attrs `{ provider, src }` only; the sandboxed
  *                     iframe is rendered from attrs, no node-local state.    SAFE
+ *  - Bookmark       — atom/leaf, attrs `{ url, title, description, image,
+ *                     favicon }`; the unfurl cache lives entirely in attrs.  SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

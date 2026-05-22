@@ -141,6 +141,11 @@ const items: SlashItem[] = [
         .run(),
   },
   {
+    title: 'Bookmark',
+    description: 'Save a link as a rich preview card',
+    command: (editor) => editor.chain().focus().setBookmark('').run(),
+  },
+  {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
     command: (editor) => {
