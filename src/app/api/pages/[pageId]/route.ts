@@ -5,6 +5,7 @@ import { HttpError } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 import { softDeletePage } from '@/lib/pages/delete';
 import { PageConflictError, updatePage } from '@/lib/pages/update';
+import { snapshotIfChanged } from '@/lib/pages/versions';
 
 type RouteCtx = { params: Promise<{ pageId: string }> };
 
@@ -42,6 +43,17 @@ export async function PATCH(req: Request, { params }: RouteCtx): Promise<Respons
       },
       expectedUpdatedAt: parsed.expectedUpdatedAt ? new Date(parsed.expectedUpdatedAt) : undefined,
     });
+    if (parsed.content !== undefined) {
+      try {
+        await snapshotIfChanged(getDb(), {
+          pageId,
+          content: parsed.content,
+          authorId: ctx.userId,
+        });
+      } catch {
+        // best-effort: never let a snapshot failure break the save
+      }
+    }
     return NextResponse.json(updated);
   } catch (err) {
     if (err instanceof PageConflictError) {
