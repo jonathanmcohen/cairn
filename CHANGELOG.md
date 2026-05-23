@@ -93,6 +93,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Owner-only lifecycle: `transferOwnership` (promote target, demote actor to admin, audited `workspace.ownership_transferred`) + `deleteWorkspace` (cascade-deletes; audited `workspace.deleted`) + `POST /api/workspaces/[id]/transfer` + `DELETE /api/workspaces/[id]` + a danger-zone UI requiring typed-name confirmation.
 - `recordAudit(tx, …)` helper introduced as a stub; P18 fully wires it into every sensitive helper + ships the audit-log viewer + per-page activity feed.
 
+### Added (v0.6.0 P18 — Audit log + per-page activity feed)
+- Real append-only `recordAudit(db|tx, …)` helper returning the inserted row, called INSIDE each sensitive action's transaction so the log can never drift; strict `AuditAction` literal union (one documented vocabulary) + `assertAuditMetadataClean` defense-in-depth redaction guard rejecting any forbidden substring (AUTH_SECRET / `cairn_whsec_` / `cairn_sk_` / `token_hash` / `password_hash` / `secret_encrypted`) or secret-ish key with a long base64 value.
+- Wired `recordAudit` into 16 sensitive sites: `publishPage` / `unpublishPage`, `setShareSettings` (P7), `mintKey` + `revokeKey`, `createWebhook` + `deleteWebhook`, `softDeletePage`, `archiveDatabase`, `setMemberRole` + `removeMember` (P17), `createInvite` + `revokeInvite`, `savePageAsTemplate` + `saveDatabaseAsTemplate`, `restoreVersion`. Metadata is ids/names/roles/booleans only — never secrets.
+- Paginated/filterable audit query layer (`listAuditLog` + `listPageActivity`, keyset cursor) + `GET /api/admin/audit` (admin-gated, workspace-scoped, filters: action / actorId / targetType / targetId / from / to) + `GET /api/pages/[pageId]/activity` (gated `viewer+` via `requirePageAccess`).
+- Admin audit viewer at `/settings/admin/audit` (filter bar + paginated table with expandable metadata) and a per-page activity feed (mounted in the page menu) that links `page.version_restored` entries to version history for content diffs.
+- The v0.5.1 secret-leak suite is extended with cross-cutting assertions: no `audit_log` row's metadata and no admin viewer response leaks an API token, webhook signing secret, invite token, share password, TOTP `secret_encrypted`, recovery codes, password/token hash, or the metrics token.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
