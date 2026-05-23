@@ -78,6 +78,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Global entries seeded: ⌘N New page, ⌘⇧L Toggle theme, ⌘⇧O Switch workspace, ⌘⇧F Open favorites, ⌘/ Show shortcuts.
 - Dependency-light i18n: pure `t()` (flat-key + `{name}` interpolation + `Intl.PluralRules` plural + missing-key→key fallback, unit-tested), pure `resolveLocale(cookie, acceptLanguage)` (unit-tested, cookie → Accept-Language → en), an `I18nProvider`/`useT()`/`useLocale()`, flat-key JSON catalogs for `en` + `ar` (the RTL proof), a `<LocaleSwitcher>` writing the `cairn_locale` cookie, and root-layout `<html lang dir>` wiring with RTL logical-property CSS (`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`) on the always-rendered app chrome.
 
+### Added (v0.6.0 P16 — Favorites/recents + column ergonomics + block convert + multi-select)
+- Migration `0020` adds a `user_page_prefs` table (`{user_id, workspace_id, page_id, favorite, favorite_order, last_visited_at}`, unique `(user_id, page_id)`, favorites + recents read indexes).
+- Favorites + Recents helpers (`toggleFavorite`/`reorderFavorites`/`recordVisit`/`listFavorites`/`listRecents`, recents capped at 20, favorites never pruned) + `GET`/`POST /api/prefs/favorites`, `POST /api/prefs/favorites/reorder`, `GET /api/prefs/recents`. Favorites + Recents sidebar sections render above the page tree (in both desktop aside and mobile drawer); favorites support star toggle + native drag-and-drop reorder.
+- Column ergonomics in `db_views` config jsonb (no schema): `columnWidths` / `frozenColumnIds` / `hiddenColumnIds` validated by `ViewConfigSchema`. The table view renders a `<colgroup>` for stable widths, drops hidden columns, and emits sticky `inset-inline-start` offsets (RTL-safe) for frozen columns.
+- Editor `turnInto(name)` block-conversion command over a typed CONVERTIBLE map (paragraph ↔ heading/lists/blockquote/codeBlock), declines incompatible targets without mutating. Multi-block selection helpers (`blockRange`/`selectBlockRange`/`deleteBlocks`/`convertBlocks`) enabling bulk delete + bulk convert as ordinary ProseMirror transactions — a Yjs round-trip audit proves identical JSON across two Yjs-bound editors after conversion.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
