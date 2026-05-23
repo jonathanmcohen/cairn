@@ -169,6 +169,13 @@
       "when": 1779522116303,
       "tag": "0023_melted_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1779538298522,
+      "tag": "0024_misty_alice",
+      "breakpoints": true
     }
   ]
 }
