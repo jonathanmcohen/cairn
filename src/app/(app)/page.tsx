@@ -1,13 +1,30 @@
+import type { Route } from 'next';
+import { redirect } from 'next/navigation';
 import { NewPageButton } from '@/components/new-page-button';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { getPageTree } from '@/lib/pages/tree';
+import { resolveLandingPage } from '@/lib/workspaces/home';
 
 export default async function DashboardPage() {
   const ctx = await getAuthContext();
   if (!ctx?.workspaceId) return null;
-  const tree = await getPageTree(getDb(), ctx.workspaceId);
+  const db = getDb();
+
+  // Workspace-home: redirect to the configured/first landing page when one exists.
+  const landingId = await resolveLandingPage(db, {
+    workspaceId: ctx.workspaceId,
+    userId: ctx.userId,
+  });
+  if (landingId) {
+    redirect(`/pages/${landingId}` as Route);
+  }
+
+  // Otherwise the empty-state CTA.
+  const tree = await getPageTree(db, ctx.workspaceId);
   if (tree.length > 0) {
+    // (Shouldn't reach here in practice — resolveLandingPage returns the first
+    // page when home_page_id is null. Keep as a defensive branch.)
     return (
       <div className="max-w-2xl">
         <h1 className="text-3xl font-semibold">Welcome back</h1>
