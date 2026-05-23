@@ -11,27 +11,27 @@ permissions:
   id-token: write
   attestations: write
 
-# Multi-arch (linux/amd64 + linux/arm64) built on NATIVE runners — no QEMU
-# emulation (which deadlocked on the heavier image). Each arch builds on its own
-# native runner and pushes an arch-specific tag; a per-image merge job then
-# assembles the multi-arch manifest list under the real tags. A final job cuts
-# the GitHub Release once.
+# Multi-arch (linux/amd64 + linux/arm64) built on GitHub-hosted NATIVE runners
+# — no QEMU emulation (which deadlocked on the heavier image). amd64 builds on
+# `ubuntu-latest`; arm64 builds on `ubuntu-24.04-arm`. Each arch builds on its
+# own runner and pushes an arch-specific tag; a per-image merge job assembles
+# the multi-arch manifest list under the real tags. A final job cuts the
+# GitHub Release once.
 #
 # Runner targets — flip via repository variables (Settings → Variables):
-#   RELEASE_RUNNER_LABELS_LINUX → defaults to `["self-hosted","Linux","X64"]`
+#   RELEASE_RUNNER_LABELS_LINUX → defaults to `["ubuntu-latest"]`
 #                                  (amd64 build + manifest merge + release)
 #   RELEASE_RUNNER_LABELS_ARM   → defaults to `["ubuntu-24.04-arm"]`
-#                                  (arm64 build — GitHub-hosted native ARM64
-#                                  Linux runner. Replaces the previous Mac mini
-#                                  self-hosted target, which OOM-killed the
-#                                  heavier `cairn` Next-build during v0.6.0.)
-# Set either var to `["ubuntu-latest"]` / `["macos-14"]` to point at a different
-# runner. See docs/operations.md "Self-hosted CI / Release runners" for the
-# self-hosted Linux runner's Docker-socket-mount requirement.
+#                                  (arm64 build)
+# Set either var to a `[self-hosted, ...]` JSON array to route back to a
+# self-hosted runner. The previous self-hosted defaults were Mac mini (Apple
+# Silicon Docker Desktop) for arm64 — OOM-killed cairn's Next build — and a
+# containerized Linux x64 runner for amd64 (git-credential issues at the
+# checkout step).
 
 jobs:
   build:
-    runs-on: ${{ matrix.arch == 'amd64' && fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') || fromJSON(vars.RELEASE_RUNNER_LABELS_ARM || '["ubuntu-24.04-arm"]') }}
+    runs-on: ${{ matrix.arch == 'amd64' && fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["ubuntu-latest"]') || fromJSON(vars.RELEASE_RUNNER_LABELS_ARM || '["ubuntu-24.04-arm"]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -86,7 +86,7 @@ jobs:
 
   merge:
     needs: build
-    runs-on: ${{ fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') }}
+    runs-on: ${{ fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["ubuntu-latest"]') }}
     strategy:
       matrix:
         image: [cairn, cairn-collab]
@@ -154,7 +154,7 @@ jobs:
 
   release:
     needs: merge
-    runs-on: ${{ fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') }}
+    runs-on: ${{ fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["ubuntu-latest"]') }}
     steps:
       - name: Extract version from tag
         id: ver
