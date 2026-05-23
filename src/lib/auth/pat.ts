@@ -2,6 +2,7 @@ import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 
 const TOKEN_PREFIX = 'cairn_pat_';
 const SECRET_BYTES = 32; // 32 random bytes → 43-char base64url → ample entropy
@@ -35,9 +36,11 @@ export type MintPatInput = {
  * the SHA-256 hash + a 4-char display prefix + scopes + MCP-tool allowlist, and
  * returns the plaintext ONCE (never recoverable after).
  *
- * NOTE: this lib does NOT call `recordAudit` — the audit hook is added by P5
- * inside the same transaction, keeping P2 free of the audit-action enum which
- * doesn't yet include `pat.created` until P5 ships.
+ * The insert + `recordAudit('pat.created')` happen inside one transaction
+ * (v0.7.0 G1 P5) so the audit can never drift from the action. Audit metadata
+ * records `{name, scopes, mcpTools, expiresAt}` only — never the plaintext
+ * token, tokenHash, or tokenPrefix (the prefix's `cairn_pat_` substring is in
+ * FORBIDDEN_SUBSTRINGS and would trip `assertAuditMetadataClean`).
  */
 export async function mintPat(
   db: PostgresJsDatabase<typeof schema>,
@@ -48,21 +51,38 @@ export async function mintPat(
   const tokenHash = hashPat(token);
   const tokenPrefix = token.slice(0, DISPLAY_PREFIX_LEN);
 
-  const [row] = await db
-    .insert(schema.personalAccessTokens)
-    .values({
-      userId: input.userId,
+  return db.transaction(async (tx) => {
+    const [row] = await tx
+      .insert(schema.personalAccessTokens)
+      .values({
+        userId: input.userId,
+        workspaceId: input.workspaceId,
+        name: input.name,
+        tokenHash,
+        tokenPrefix,
+        scopes: input.scopes,
+        mcpTools: input.mcpTools,
+        expiresAt: input.expiresAt,
+      })
+      .returning();
+    if (!row) throw new Error('mintPat: insert returned no row');
+
+    await recordAudit(tx, {
       workspaceId: input.workspaceId,
-      name: input.name,
-      tokenHash,
-      tokenPrefix,
-      scopes: input.scopes,
-      mcpTools: input.mcpTools,
-      expiresAt: input.expiresAt,
-    })
-    .returning();
-  if (!row) throw new Error('mintPat: insert returned no row');
-  return { token, row };
+      actorUserId: input.userId,
+      action: 'pat.created',
+      targetType: 'personal_access_token',
+      targetId: row.id,
+      metadata: {
+        name: input.name,
+        scopes: input.scopes,
+        mcpTools: input.mcpTools,
+        expiresAt: input.expiresAt ? input.expiresAt.toISOString() : null,
+      },
+    });
+
+    return { token, row };
+  });
 }
 
 /** Shape returned by `verifyPatToken` — superset of the v0.5 AuthContext. */

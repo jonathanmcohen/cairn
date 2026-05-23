@@ -24,7 +24,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`TRUNCATE personal_access_tokens, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE personal_access_tokens, audit_log, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
 });
 
 describe('mintPat', () => {
@@ -68,6 +68,34 @@ describe('mintPat', () => {
     });
     expect(a.token).not.toBe(b.token);
     expect(a.row.tokenHash).not.toBe(b.row.tokenHash);
+  });
+});
+
+describe('mintPat — audit trail', () => {
+  it('writes a pat.created audit row in the same transaction', async () => {
+    const u = await createTestWorkspaceWithUser(db, { role: 'editor' });
+    const { row } = await mintPat(db, {
+      userId: u.userId,
+      workspaceId: u.workspaceId,
+      name: 'CI bot',
+      scopes: ['pages:read'],
+      mcpTools: ['pages.read'],
+      expiresAt: null,
+    });
+    const [audit] = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.targetId, row.id))
+      .limit(1);
+    expect(audit?.action).toBe('pat.created');
+    expect(audit?.targetType).toBe('personal_access_token');
+    expect(audit?.actorUserId).toBe(u.userId);
+    const meta = audit?.metadata as Record<string, unknown>;
+    expect(meta.name).toBe('CI bot');
+    expect(meta.scopes).toEqual(['pages:read']);
+    // PAT secrets MUST NOT appear in audit metadata (defense-in-depth — Task 1
+    // would have thrown anyway, but assert it didn't sneak through).
+    expect(JSON.stringify(meta)).not.toContain('cairn_pat_');
   });
 });
 
