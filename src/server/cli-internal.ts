@@ -23,7 +23,7 @@ export function parseDbUrl(raw: string): DbConnection {
 }
 
 export interface CliArgs {
-  command: 'backup' | 'restore' | 'export' | 'import' | 'reconcile';
+  command: 'backup' | 'restore' | 'export' | 'import' | 'reconcile' | 'reminders:scan';
   out?: string;
   in?: string;
   force: boolean;
@@ -34,7 +34,14 @@ export interface CliArgs {
   file?: string;
 }
 
-const KNOWN_COMMANDS = ['backup', 'restore', 'export', 'import', 'reconcile'] as const;
+const KNOWN_COMMANDS = [
+  'backup',
+  'restore',
+  'export',
+  'import',
+  'reconcile',
+  'reminders:scan',
+] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 
 export function parseArgs(argv: string[]): CliArgs {

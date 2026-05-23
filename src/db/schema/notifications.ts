@@ -21,7 +21,7 @@ export const notifications = pgTable(
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
-    type: text('type').notNull(), // 'mention' | 'comment_reply'
+    type: text('type').notNull(), // 'mention' | 'comment_reply' | 'reminder'
     payload: jsonb('payload').$type<NotificationPayload>().notNull(),
     readAt: timestamp('read_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -31,12 +31,20 @@ export const notifications = pgTable(
   }),
 );
 
-export type NotificationType = 'mention' | 'comment_reply';
-export type NotificationPayload = {
+export type NotificationType = 'mention' | 'comment_reply' | 'reminder';
+export type CommentNotificationPayload = {
   pageId: string;
   commentId: string;
   actorId: string;
 };
+export type ReminderNotificationPayload = {
+  reminderId: string;
+  databaseId: string;
+  rowId: string;
+  propertyId: string;
+  remindAt: string;
+};
+export type NotificationPayload = CommentNotificationPayload | ReminderNotificationPayload;
 
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;

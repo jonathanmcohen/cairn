@@ -42,4 +42,7 @@ describe('parseArgs (P21 additions)', () => {
       workspace: 'w1',
     });
   });
+  it('parses reminders:scan with no flags', () => {
+    expect(parseArgs(['reminders:scan'])).toMatchObject({ command: 'reminders:scan' });
+  });
 });

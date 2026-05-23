@@ -17,7 +17,8 @@
     "src/lib/export/**/*.ts",
     "src/lib/import/**/*.ts",
     "src/lib/markdown/**/*.ts",
-    "src/lib/templates/**/*.ts"
+    "src/lib/templates/**/*.ts",
+    "src/lib/reminders/**/*.ts"
   ],
   "exclude": ["node_modules", ".next", "tests", "src/**/__tests__/**"]
 }

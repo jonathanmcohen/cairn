@@ -217,7 +217,8 @@ async function main(): Promise<void> {
         `  cli restore --in <bundle> [--force]\n` +
         `  cli export --workspace <id> --out <dir>\n` +
         `  cli import --source notion|markdown-folder|workspace-archive --file <path> --workspace <id>\n` +
-        `  cli reconcile [--workspace <id>]`,
+        `  cli reconcile [--workspace <id>]\n` +
+        `  cli reminders:scan`,
     );
     process.exit(2);
   }
@@ -263,6 +264,10 @@ async function main(): Promise<void> {
     const { reconcileAll } = await import('../lib/quotas/reconcile-cli.js');
     const results = await reconcileAll(args.workspace);
     console.log(`Reconciled ${results.length} workspace(s).`);
+  } else if (args.command === 'reminders:scan') {
+    const { runRemindersScan } = await import('../lib/reminders/reminders-cli.js');
+    const { fired } = await runRemindersScan();
+    console.log(`reminders:scan fired ${fired} reminder(s)`);
   }
 }
 
