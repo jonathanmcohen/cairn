@@ -12,6 +12,7 @@ export * from './pages';
 export * from './suggestions';
 export * from './system-meta';
 export * from './templates';
+export * from './user-page-prefs';
 export * from './users';
 export * from './webhooks';
 export * from './workspace-members';
