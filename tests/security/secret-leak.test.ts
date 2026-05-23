@@ -1,10 +1,15 @@
 import { randomBytes } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
+import { mintPat } from '@/lib/auth/pat';
+import { runWorkspaceExport } from '@/lib/export/workspace-archive';
 import { startPostgres, stopPostgres } from '../helpers/db';
 import { createTestWorkspaceWithUser } from '../helpers/fixtures';
 
@@ -50,7 +55,8 @@ afterAll(async () => {
   await stopPostgres();
 });
 beforeEach(async () => {
-  await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks, audit_log, user_totp
+  await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks, audit_log, user_totp,
+    personal_access_tokens, token_usage_log, page_acls
     RESTART IDENTITY CASCADE`;
 });
 
@@ -79,7 +85,7 @@ const FORBIDDEN_KEYS = [
 // admin audit viewer response (a full minted token would start with one of
 // these). They're separated from `FORBIDDEN_KEYS` because the api-key listing
 // legitimately surfaces a 4-char display prefix that starts with `cairn_sk_`.
-const FORBIDDEN_SECRET_PREFIXES = ['cairn_whsec_', 'cairn_sk_'];
+const FORBIDDEN_SECRET_PREFIXES = ['cairn_whsec_', 'cairn_sk_', 'cairn_pat_'];
 
 function assertNoSecrets(body: string) {
   for (const k of FORBIDDEN_KEYS) {
@@ -403,5 +409,89 @@ describe('secret-leak: TOTP secrets + recovery codes', () => {
     } finally {
       for (const s of spies) s.mockRestore();
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.7.0 G1 P5: Personal access tokens. The plaintext `cairn_pat_<secret>` is
+// returned ONCE at mint time and is never recoverable. The stored `tokenHash`
+// (sha256 of the plaintext) is just as sensitive: if it leaks, an attacker can
+// brute-force/rainbow-table back to plaintext. Neither value may surface in
+// (a) audit-log rows, (b) the /api/dev/tokens list response, (c) token_usage
+// log rows, or (d) the workspace-archive export ZIP.
+// ---------------------------------------------------------------------------
+
+describe('secret-leak: PAT secrets', () => {
+  it('plaintext PAT + tokenHash never appear in audit-log rows, list, usage, or export', async () => {
+    const u = await createTestWorkspaceWithUser(db, { role: 'editor' });
+    await actAs(u.userId);
+    activeCookie = { name: 'cairn_ws', value: u.workspaceId };
+
+    const { token, row } = await mintPat(db, {
+      userId: u.userId,
+      workspaceId: u.workspaceId,
+      name: 'leak-test',
+      scopes: ['pages:read'],
+      mcpTools: ['pages.read'],
+      expiresAt: null,
+    });
+
+    // (a) audit log: the mint emits pat.created with safe metadata. Scan all
+    // audit rows for the plaintext + the hash + any forbidden secret prefix.
+    const audits = await db.select().from(schema.auditLog);
+    const auditJson = JSON.stringify(audits);
+    expect(auditJson).not.toContain(token);
+    expect(auditJson).not.toContain(row.tokenHash);
+    assertNoSecretPrefixes(auditJson);
+
+    // (b) /api/dev/tokens list response: GET the list, scan body.
+    const { GET } = await import('@/app/api/dev/tokens/route');
+    const listRes = await GET();
+    const listBody = JSON.stringify(await listRes.json());
+    expect(listBody).not.toContain(token);
+    expect(listBody).not.toContain(row.tokenHash);
+
+    // (c) token_usage_log rows: insert a usage event then scan all rows. The
+    // log records tokenId (opaque UUID) and the route, never the hash/plaintext.
+    await sql`
+      INSERT INTO token_usage_log (workspace_id, token_kind, token_id, user_id, route, status)
+      VALUES (${u.workspaceId}, 'pat', ${row.id}, ${u.userId}, '/api/v1/pages', 200)
+    `;
+    const usageRows = await db.select().from(schema.tokenUsageLog);
+    const usageJson = JSON.stringify(usageRows);
+    expect(usageJson).not.toContain(token);
+    expect(usageJson).not.toContain(row.tokenHash);
+
+    // (d) workspace export ZIP: run the v0.6 P21 export, read the produced
+    // archive bytes, assert the plaintext + the hash never appear anywhere.
+    // The export by design only walks non-secret tables (pages, databases,
+    // files) — personal_access_tokens, api_keys, webhooks, user_totp, and
+    // password hashes are excluded.
+    const outDir = join(tmpdir(), `cairn-export-test-${randomBytes(8).toString('hex')}`);
+    const zipPath = await runWorkspaceExport({ workspaceId: u.workspaceId, outDir });
+    const archiveBytes = await readFile(zipPath);
+    const archiveLatin1 = archiveBytes.toString('latin1');
+    expect(archiveLatin1).not.toContain(token);
+    expect(archiveLatin1).not.toContain(row.tokenHash);
+  });
+
+  it('mint response shape never includes tokenHash (only plaintext + prefix)', async () => {
+    const u = await createTestWorkspaceWithUser(db, { role: 'editor' });
+    await actAs(u.userId);
+    activeCookie = { name: 'cairn_ws', value: u.workspaceId };
+
+    const { POST } = await import('@/app/api/dev/tokens/route');
+    const res = await POST(
+      new Request('http://localhost/api/dev/tokens', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'x', scopes: ['pages:read'], mcpTools: [] }),
+      }),
+    );
+    const body = JSON.stringify(await res.json());
+    expect(body).not.toContain('tokenHash');
+    expect(body).not.toContain('token_hash');
+    // The plaintext IS in the body (this is the one place it appears), but
+    // the response shape never re-exposes the hash.
   });
 });
