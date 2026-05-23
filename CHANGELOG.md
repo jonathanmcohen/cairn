@@ -5,9 +5,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-## [0.6.0] - Unreleased
+## [0.6.0] - 2026-05-23
 
-> Large consolidated release closing Notion-parity gaps across content/databases, sharing/collaboration, and mobile/accessibility. Migrations `0013`–`0019`. Built area-by-area (plans P1–P23); entries below are grouped by plan.
+> Large consolidated release closing Notion-parity gaps across content/databases, sharing/collaboration, mobile/a11y/i18n, admin/observability/ops, and import/export. Migrations `0013`–`0023`. Built area-by-area (plans P1–P23); entries below are grouped by plan.
+
+### Added (v0.6.0 P23 — Combined smoke & release)
+- Combined cross-feature docker-compose smoke (`scripts/smoke-v0.6.0.sh`) exercising all five bands against a live boot: content/database (reverse relations, list view, row hierarchy, calc footer, new blocks), sharing (password + expiry publish, public site `/s/<slug>`, duplicate), collaboration (row comment, suggestion accept), mobile/observability (PWA manifest, token-gated `/metrics`), admin/ops (audit log, 2FA enroll, quota enforcement), and import/export (workspace archive round-trip).
+- README "v0.6.0 features" overview + "Security & operations caveats"; SECURITY.md updated with the new secret classes, anonymous surfaces, observability gating, and the single-instance scheduling ceiling.
+- Bumped version to 0.6.0; reused the existing private-repo-safe multi-arch native-runner release workflow to publish `ghcr.io/jonathanmcohen/cairn:0.6.0`.
 
 ### Added (v0.6.0 P1 — Reverse (bidirectional) relations)
 - Relation properties can mint a mirrored relation on the target database (`reversePropertyId` in the relation config); writing a relation cell syncs the paired cell on the linked rows, with a re-entrancy guard so the two sides never loop.
