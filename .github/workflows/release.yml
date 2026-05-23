@@ -20,18 +20,18 @@ permissions:
 # Runner targets — flip via repository variables (Settings → Variables):
 #   RELEASE_RUNNER_LABELS_LINUX → defaults to `["self-hosted","Linux","X64"]`
 #                                  (amd64 build + manifest merge + release)
-#   RELEASE_RUNNER_LABELS_MAC   → defaults to `["self-hosted","macOS","ARM64"]`
-#                                  (arm64 build — Docker Desktop on Apple Silicon
-#                                  runs an arm64 Linux VM, so this is a native
-#                                  build with no QEMU; the Linux x64 runner CAN'T
-#                                  build arm64 natively, hence the split.)
-# Set either var to `["ubuntu-latest"]` / `["macos-14"]` to revert to GitHub-hosted.
-# See docs/operations.md "Self-hosted CI / Release runners" for the runner-host
-# requirements (Docker socket mount on Linux; Docker Desktop running on macOS).
+#   RELEASE_RUNNER_LABELS_ARM   → defaults to `["ubuntu-24.04-arm"]`
+#                                  (arm64 build — GitHub-hosted native ARM64
+#                                  Linux runner. Replaces the previous Mac mini
+#                                  self-hosted target, which OOM-killed the
+#                                  heavier `cairn` Next-build during v0.6.0.)
+# Set either var to `["ubuntu-latest"]` / `["macos-14"]` to point at a different
+# runner. See docs/operations.md "Self-hosted CI / Release runners" for the
+# self-hosted Linux runner's Docker-socket-mount requirement.
 
 jobs:
   build:
-    runs-on: ${{ matrix.arch == 'amd64' && fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') || fromJSON(vars.RELEASE_RUNNER_LABELS_MAC || '["self-hosted","macOS","ARM64"]') }}
+    runs-on: ${{ matrix.arch == 'amd64' && fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') || fromJSON(vars.RELEASE_RUNNER_LABELS_ARM || '["ubuntu-24.04-arm"]') }}
     strategy:
       fail-fast: false
       matrix:
