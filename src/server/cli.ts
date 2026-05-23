@@ -3,7 +3,7 @@
 // a client older than the server cannot restore a 16 custom-format dump. Pin the apt
 // package in the Dockerfile runner stage and keep it in lockstep with the Postgres image.
 import { spawn } from 'node:child_process';
-import { mkdir, readdir, writeFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
 import { type CliArgs, type DbConnection, parseArgs, parseDbUrl } from './cli-internal.js';
@@ -30,7 +30,7 @@ function stamp(): string {
   return new Date().toISOString().replace(/[:.]/g, '-');
 }
 
-async function backup(conn: DbConnection, outDir: string): Promise<void> {
+async function backup(conn: DbConnection, outDir: string): Promise<string> {
   await mkdir(outDir, { recursive: true });
   const ts = stamp();
   const dumpPath = join(outDir, `cairn-backup-${ts}.dump`);
@@ -82,6 +82,52 @@ async function backup(conn: DbConnection, outDir: string): Promise<void> {
   console.warn(
     'WARNING: this bundle contains the full database (password & API-key hashes) and all files. Store it securely.',
   );
+  return ts;
+}
+
+/** Delete cairn-backup-* / cairn-uploads-* / manifest bundles older than N days in outDir. */
+async function pruneBundles(outDir: string, retentionDays: number): Promise<void> {
+  const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
+  for (const name of await readdir(outDir)) {
+    if (!/^cairn-(backup|uploads)-/.test(name)) continue;
+    const full = join(outDir, name);
+    const st = await stat(full);
+    if (st.mtimeMs < cutoff) {
+      console.log(`Pruning expired bundle ${name}`);
+      await rm(full, { force: true });
+    }
+  }
+}
+
+/** Push every file produced by this backup run into the configured FileStorage. */
+async function pushToTarget(outDir: string, ts: string): Promise<void> {
+  // Dynamic import — bundled into the entrypoint output, NOT a top-level @/ alias.
+  const { getStorage } = await import('../lib/files/get-storage.js');
+  const storage = getStorage();
+  for (const name of await readdir(outDir)) {
+    if (!name.includes(ts)) continue;
+    const body = await readFile(join(outDir, name));
+    await storage.put(`backups/${name}`, body, 'application/octet-stream');
+    console.log(`Uploaded ${name} → FileStorage backups/${name}`);
+  }
+}
+
+/**
+ * Best-effort CLI audit. The backup/export/import path MUST NOT fail because
+ * audit write failed — wrap and log only. The full DB-backed audit-row insert
+ * lands when the entrypoint exposes the audit helper via the dynamic-import
+ * seam; for now this is a structured stdout entry that ops can grep.
+ */
+async function recordCliAudit(
+  _conn: DbConnection,
+  action: string,
+  metadata: Record<string, unknown>,
+): Promise<void> {
+  try {
+    console.log(`[audit] ${action} ${JSON.stringify(metadata)}`);
+  } catch (err) {
+    console.error('[audit] failed to record cli audit', err);
+  }
 }
 
 async function confirmDestructive(database: string): Promise<boolean> {
@@ -166,17 +212,65 @@ async function main(): Promise<void> {
     args = parseArgs(process.argv.slice(2));
   } catch (err) {
     console.error(
-      `${(err as Error).message}\n\nUsage:\n  cli backup --out <dir>\n  cli restore --in <bundle> [--force]`,
+      `${(err as Error).message}\n\nUsage:\n` +
+        `  cli backup --out <dir> [--retention-days N] [--target local|s3]\n` +
+        `  cli restore --in <bundle> [--force]\n` +
+        `  cli export --workspace <id> --out <dir>\n` +
+        `  cli import --source notion|markdown-folder|workspace-archive --file <path> --workspace <id>\n` +
+        `  cli reconcile [--workspace <id>]`,
     );
     process.exit(2);
   }
   const conn = parseDbUrl(url);
+
   if (args.command === 'backup') {
     if (!args.out) throw new Error('--out is required for backup');
-    await backup(conn, args.out);
-  } else {
+    const ts = await backup(conn, args.out);
+    if (args.target === 's3') await pushToTarget(args.out, ts);
+    if (args.retentionDays !== undefined) await pruneBundles(args.out, args.retentionDays);
+    await recordCliAudit(conn, 'backup.created', {
+      target: args.target,
+      retentionDays: args.retentionDays,
+    });
+  } else if (args.command === 'restore') {
     if (!args.in) throw new Error('--in is required for restore');
     await restore(conn, args.in, args.force);
+  } else if (args.command === 'export') {
+    if (!args.workspace || !args.out) throw new Error('--workspace + --out required');
+    // Variable-path dynamic import: T3 ships the dispatch wiring; the actual
+    // export lib lands in T4 (./lib/export/workspace-archive.ts). The string
+    // is computed so tsc doesn't resolve it at compile time.
+    const exportModulePath = '../lib/export/workspace-archive.js';
+    const exportMod = (await import(exportModulePath)) as {
+      runWorkspaceExport: (args: { workspaceId: string; outDir: string }) => Promise<void>;
+    };
+    await exportMod.runWorkspaceExport({ workspaceId: args.workspace, outDir: args.out });
+    await recordCliAudit(conn, 'export.created', { workspaceId: args.workspace });
+  } else if (args.command === 'import') {
+    if (!args.source || !args.file || !args.workspace) {
+      throw new Error('--source + --file + --workspace required');
+    }
+    // Variable-path dynamic import: T3 ships the dispatch wiring; the actual
+    // import lib lands in T5 (./lib/import/run.ts).
+    const importModulePath = '../lib/import/run.js';
+    const importMod = (await import(importModulePath)) as {
+      runImport: (args: {
+        source: 'notion' | 'markdown-folder' | 'workspace-archive';
+        file: string;
+        workspaceId: string;
+      }) => Promise<{ counts: Record<string, number> }>;
+    };
+    const report = await importMod.runImport({
+      source: args.source,
+      file: args.file,
+      workspaceId: args.workspace,
+    });
+    console.log(JSON.stringify(report, null, 2));
+    await recordCliAudit(conn, 'import.completed', { source: args.source, ...report.counts });
+  } else if (args.command === 'reconcile') {
+    const { reconcileAll } = await import('../lib/quotas/reconcile-cli.js');
+    const results = await reconcileAll(args.workspace);
+    console.log(`Reconciled ${results.length} workspace(s).`);
   }
 }
 

@@ -23,28 +23,81 @@ export function parseDbUrl(raw: string): DbConnection {
 }
 
 export interface CliArgs {
-  command: 'backup' | 'restore';
+  command: 'backup' | 'restore' | 'export' | 'import' | 'reconcile';
   out?: string;
   in?: string;
   force: boolean;
+  retentionDays?: number;
+  target?: 'local' | 's3';
+  workspace?: string;
+  source?: 'notion' | 'markdown-folder' | 'workspace-archive';
+  file?: string;
 }
 
+const KNOWN_COMMANDS = ['backup', 'restore', 'export', 'import', 'reconcile'] as const;
+type Command = (typeof KNOWN_COMMANDS)[number];
+
 export function parseArgs(argv: string[]): CliArgs {
-  const [command, ...rest] = argv;
-  if (command !== 'backup' && command !== 'restore') {
-    throw new Error(`Unknown command: ${command ?? '(none)'} (expected backup|restore)`);
+  const command = argv[0];
+  const rest = argv.slice(1);
+  if (!command || !KNOWN_COMMANDS.includes(command as Command)) {
+    throw new Error(
+      `Unknown command: ${command ?? '(none)'} (expected ${KNOWN_COMMANDS.join('|')})`,
+    );
   }
+  const cmd = command as Command;
   let out: string | undefined;
   let inBundle: string | undefined;
   let force = false;
+  let retentionDays: number | undefined;
+  let target: 'local' | 's3' | undefined;
+  let workspace: string | undefined;
+  let source: CliArgs['source'];
+  let file: string | undefined;
+
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
     if (a === '--out') out = rest[++i];
     else if (a === '--in') inBundle = rest[++i];
     else if (a === '--force') force = true;
+    else if (a === '--retention-days') {
+      const raw = rest[++i];
+      const n = Number(raw);
+      if (raw === undefined || !Number.isInteger(n) || n < 0) {
+        throw new Error('--retention-days requires a non-negative integer');
+      }
+      retentionDays = n;
+    } else if (a === '--target') {
+      const t = rest[++i];
+      if (t !== 'local' && t !== 's3') throw new Error("--target must be 'local' or 's3'");
+      target = t;
+    } else if (a === '--workspace') workspace = rest[++i];
+    else if (a === '--source') {
+      const s = rest[++i];
+      if (s !== 'notion' && s !== 'markdown-folder' && s !== 'workspace-archive') {
+        throw new Error("--source must be 'notion' | 'markdown-folder' | 'workspace-archive'");
+      }
+      source = s;
+    } else if (a === '--file') file = rest[++i];
     else throw new Error(`Unknown flag: ${a}`);
   }
-  if (command === 'backup' && !out) throw new Error('backup requires --out <dir>');
-  if (command === 'restore' && !inBundle) throw new Error('restore requires --in <bundle>');
-  return command === 'backup' ? { command, out, force } : { command, in: inBundle, force };
+  if (cmd === 'backup' && !out) throw new Error('backup requires --out <dir>');
+  if (cmd === 'restore' && !inBundle) throw new Error('restore requires --in <bundle>');
+  if (cmd === 'export' && (!workspace || !out)) {
+    throw new Error('export requires --workspace <id> --out <dir>');
+  }
+  if (cmd === 'import' && (!source || !file || !workspace)) {
+    throw new Error('import requires --source <kind> --file <path> --workspace <id>');
+  }
+  return {
+    command: cmd,
+    out,
+    in: inBundle,
+    force,
+    retentionDays,
+    target: cmd === 'backup' ? (target ?? 'local') : target,
+    workspace,
+    source,
+    file,
+  };
 }
