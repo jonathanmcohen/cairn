@@ -28,6 +28,10 @@ const Schema = z.object({
     .default('false')
     .transform((v) => v === 'true'),
   CAIRN_DIGEST_INTERVAL: z.coerce.number().int().nonnegative().default(0),
+  CAIRN_METRICS_TOKEN: z
+    .string()
+    .min(16, 'CAIRN_METRICS_TOKEN must be at least 16 chars')
+    .optional(),
 });
 
 export type Env = z.infer<typeof Schema>;
