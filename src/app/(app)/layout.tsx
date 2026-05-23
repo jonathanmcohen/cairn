@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { LiveRegionProvider } from '@/components/a11y/live-region';
+import { LocaleSwitcher } from '@/components/locale-switcher';
 import { NoWorkspace } from '@/components/no-workspace';
 import { OfflineProvider } from '@/components/pwa/offline-context';
 import { OfflineIndicator } from '@/components/pwa/offline-indicator';
@@ -38,7 +39,8 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
             </SidebarDrawer>
             <main id="main-content" className="flex-1 p-8">
-              <div className="mb-2 flex justify-end">
+              <div className="mb-2 flex items-center justify-end gap-4">
+                <LocaleSwitcher />
                 <OfflineIndicator />
               </div>
               {children}
