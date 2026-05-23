@@ -15,12 +15,23 @@ permissions:
 # emulation (which deadlocked on the heavier image). Each arch builds on its own
 # native runner and pushes an arch-specific tag; a per-image merge job then
 # assembles the multi-arch manifest list under the real tags. A final job cuts
-# the GitHub Release once. (Arch-specific tags push reliably on GHCR, unlike
-# push-by-digest, which isn't addressable before a tagged manifest exists.)
+# the GitHub Release once.
+#
+# Runner targets — flip via repository variables (Settings → Variables):
+#   RELEASE_RUNNER_LABELS_LINUX → defaults to `["self-hosted","Linux","X64"]`
+#                                  (amd64 build + manifest merge + release)
+#   RELEASE_RUNNER_LABELS_MAC   → defaults to `["self-hosted","macOS","ARM64"]`
+#                                  (arm64 build — Docker Desktop on Apple Silicon
+#                                  runs an arm64 Linux VM, so this is a native
+#                                  build with no QEMU; the Linux x64 runner CAN'T
+#                                  build arm64 natively, hence the split.)
+# Set either var to `["ubuntu-latest"]` / `["macos-14"]` to revert to GitHub-hosted.
+# See docs/operations.md "Self-hosted CI / Release runners" for the runner-host
+# requirements (Docker socket mount on Linux; Docker Desktop running on macOS).
 
 jobs:
   build:
-    runs-on: ${{ matrix.runner }}
+    runs-on: ${{ matrix.arch == 'amd64' && fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') || fromJSON(vars.RELEASE_RUNNER_LABELS_MAC || '["self-hosted","macOS","ARM64"]') }}
     strategy:
       fail-fast: false
       matrix:
@@ -29,22 +40,18 @@ jobs:
             dockerfile: Dockerfile
             platform: linux/amd64
             arch: amd64
-            runner: [self-hosted, X64]
           - image: cairn
             dockerfile: Dockerfile
             platform: linux/arm64
             arch: arm64
-            runner: [self-hosted, ARM64]
           - image: cairn-collab
             dockerfile: Dockerfile.collab
             platform: linux/amd64
             arch: amd64
-            runner: [self-hosted, X64]
           - image: cairn-collab
             dockerfile: Dockerfile.collab
             platform: linux/arm64
             arch: arm64
-            runner: [self-hosted, ARM64]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -79,7 +86,7 @@ jobs:
 
   merge:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') }}
     strategy:
       matrix:
         image: [cairn, cairn-collab]
@@ -147,7 +154,7 @@ jobs:
 
   release:
     needs: merge
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.RELEASE_RUNNER_LABELS_LINUX || '["self-hosted","Linux","X64"]') }}
     steps:
       - name: Extract version from tag
         id: ver
