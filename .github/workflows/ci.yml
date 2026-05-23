@@ -93,3 +93,65 @@ jobs:
       # Run the adversarial security suite explicitly (also runs in `pnpm test`).
       - name: security tests
         run: pnpm test tests/security
+
+  a11y:
+    runs-on: [self-hosted, X64]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cairn
+          POSTGRES_PASSWORD: cairn
+          POSTGRES_DB: cairn_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
+      AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
+      NEXTAUTH_URL: http://localhost:3100
+      A11Y_PORT: '3100'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate test DB
+        run: pnpm db:migrate
+
+      # Chromium-only; the audit doesn't need the full browser matrix. The
+      # self-hosted runner already has the system libs Chromium needs, so we
+      # skip `--with-deps` (which would otherwise apt-install and fail without
+      # root). If this job ever moves to an ubuntu-latest GitHub-hosted runner,
+      # restore `--with-deps`.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install chromium
+
+      - name: Build
+        run: pnpm build
+
+      - name: a11y gate
+        run: pnpm test:a11y
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

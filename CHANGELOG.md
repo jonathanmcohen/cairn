@@ -67,6 +67,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Bounded offline editing: opened pages persist to IndexedDB (`y-indexeddb`) on the existing Yjs/Hocuspocus doc, so recently-viewed pages READ offline and offline edits CRDT-merge on reconnect — no new queue. An `aria-live` offline indicator shows connection state.
 - Offline scope is deliberately bounded (NOT offline-first): only Yjs edits to already-opened pages work offline; creating/moving/deleting pages, database mutations, file uploads, comments, and sharing are disabled offline (not silently queued), enforced by a unit-tested `isActionAllowedOffline` gate.
 
+### Added (v0.6.0 P14 — Accessibility / WCAG 2.1 AA)
+- WCAG 2.1 AA compliance across the editor, sidebar, database, dialog, and sign-in screens, verified by an `@axe-core/playwright` gate (`pnpm test:a11y`) on both light and dark themes and run as a CI `a11y` job that fails on any violation.
+- Skip-to-content link, `<main>`/`<nav>`/`<aside>` landmarks with accessible names, labelled icon-only buttons, an `aria-live` region for save-status, ARIA listbox/option roles on the editor's slash + mention popups, dialog roles + Esc-close + focus restore on overlays, AA-contrast theme tokens (light + dark), and a global visible `:focus-visible` ring.
+- A manual screen-reader checklist (`docs/a11y-screen-reader-checklist.md`) covers what axe can't (reading order, live announcement quality, keyboard feel).
+- Editor mount fix: distinct `PluginKey` per `@tiptap/suggestion` plugin (member-mention `@`, page-link `[[`, page-mention `@@`), unblocking the audit and fixing a runtime crash that landed in P10.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)

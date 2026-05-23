@@ -329,6 +329,23 @@ See [SECURITY.md](SECURITY.md) for the STRIDE-lite threat model, the
 trust-boundary→control table, residual risks, and the vulnerability-reporting
 process.
 
+## Accessibility
+
+Cairn targets **WCAG 2.1 Level AA** across the authenticated app surfaces.
+Compliance is enforced by an `@axe-core/playwright` gate (`pnpm test:a11y`)
+that audits the editor, sidebar, database table, share/page-actions dialog,
+and sign-in screen on both **light and dark** themes. The same gate runs in
+CI as a dedicated `a11y` job and fails the build on any WCAG 2.1 AA
+violation, so a regression in semantic landmarks, ARIA usage, color contrast,
+focus management, or labelled controls blocks the merge.
+
+What axe cannot evaluate — screen-reader reading order, live-region
+announcement quality, the keyboard-driven feel of menus and grids — is
+covered by a manual checklist at
+[docs/a11y-screen-reader-checklist.md](docs/a11y-screen-reader-checklist.md).
+Run that checklist before any release that touches the editor, sidebar,
+database views, dialogs/popovers, or sign-in.
+
 ## License
 
 MIT — see [LICENSE](LICENSE). Built from scratch, not derived from any other
