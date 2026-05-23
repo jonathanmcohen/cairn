@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -49,7 +50,7 @@ afterAll(async () => {
   await stopPostgres();
 });
 beforeEach(async () => {
-  await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks, audit_log
+  await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks, audit_log, user_totp
     RESTART IDENTITY CASCADE`;
 });
 
@@ -269,5 +270,138 @@ describe('audit log + viewer never leak secrets', () => {
     expect(body).toContain('webhook.created');
     expect(body).toContain('invite.created');
     expect(body).toContain('page.share_changed');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P19: 2FA TOTP — the shared secret is encrypted at rest, recovery codes are
+// hashed (one-way, single-use). Neither plaintext, the sealed bytea, nor any
+// stored hash may surface in API responses, audit metadata, or process logs.
+// (Workspace-export coverage lands in P21 once export is wired — for now we
+// cover responses + the stored row + a log-spy on the enrollment path.)
+// ---------------------------------------------------------------------------
+
+describe('secret-leak: TOTP secrets + recovery codes', () => {
+  type EnrollmentBundle = {
+    workspaceId: string;
+    userId: string;
+    secret: string;
+    recoveryCodes: string[];
+    sealedHex: string;
+    sealedLatin1: string;
+    storedHashes: string[];
+  };
+
+  async function seedEnrolledUser(): Promise<EnrollmentBundle> {
+    const ws = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    const { beginEnrollment, confirmEnrollment } = await import('@/lib/auth/two-factor');
+    const { generateSync, NobleCryptoPlugin, ScureBase32Plugin } = await import('otplib');
+    const oCrypto = new NobleCryptoPlugin();
+    const oBase32 = new ScureBase32Plugin();
+
+    const out = await beginEnrollment(db, {
+      userId: ws.userId,
+      account: 'a@b.c',
+      key: process.env.AUTH_SECRET ?? '',
+    });
+    const ok = await confirmEnrollment(db, {
+      userId: ws.userId,
+      token: generateSync({ secret: out.secret, crypto: oCrypto, base32: oBase32 }),
+      key: process.env.AUTH_SECRET ?? '',
+    });
+    expect(ok).toBe(true);
+
+    const [row] = await db
+      .select()
+      .from(schema.userTotp)
+      .where(eq(schema.userTotp.userId, ws.userId));
+    if (!row) throw new Error('user_totp row missing post-confirm');
+    const sealed = row.secretEncrypted as Buffer;
+    const stored = row.recoveryCodes as { hash: string; usedAt: string | null }[];
+
+    return {
+      workspaceId: ws.workspaceId,
+      userId: ws.userId,
+      secret: out.secret,
+      recoveryCodes: out.recoveryCodes,
+      sealedHex: sealed.toString('hex'),
+      sealedLatin1: sealed.toString('latin1'),
+      storedHashes: stored.map((c) => c.hash),
+    };
+  }
+
+  function assertNoTotpMaterial(body: string, b: EnrollmentBundle) {
+    expect(body).not.toContain(b.secret);
+    expect(body).not.toContain(b.sealedHex);
+    expect(body).not.toContain(b.sealedLatin1);
+    for (const code of b.recoveryCodes) expect(body).not.toContain(code);
+    for (const h of b.storedHashes) expect(body).not.toContain(h);
+  }
+
+  it('the stored user_totp row holds only encrypted/hashed material — no plaintext', async () => {
+    const b = await seedEnrolledUser();
+    const [row] = await db
+      .select()
+      .from(schema.userTotp)
+      .where(eq(schema.userTotp.userId, b.userId));
+    const serialized = JSON.stringify(row, (_k, v) =>
+      Buffer.isBuffer(v) ? v.toString('latin1') : v,
+    );
+    expect(serialized).not.toContain(b.secret);
+    for (const code of b.recoveryCodes) expect(serialized).not.toContain(code);
+  });
+
+  it('the workspace members listing never leaks TOTP material', async () => {
+    const b = await seedEnrolledUser();
+    await actAs(b.userId);
+    const route = await import('@/app/api/workspaces/members/route');
+    const res = await route.GET(new Request('http://t/api/workspaces/members?q='));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoTotpMaterial(body, b);
+  });
+
+  it('the webhook listing never leaks TOTP material', async () => {
+    const b = await seedEnrolledUser();
+    await actAs(b.userId);
+    const route = await import('@/app/api/webhooks/route');
+    const res = await route.GET();
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoTotpMaterial(body, b);
+  });
+
+  it('the admin audit viewer response never leaks TOTP material', async () => {
+    const b = await seedEnrolledUser();
+    activeCookie = { name: 'cairn_ws', value: b.workspaceId };
+    await actAs(b.userId);
+    const route = await import('@/app/api/admin/audit/route');
+    const res = await route.GET(new Request('http://t/api/admin/audit?limit=100') as never);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoSecretPrefixes(body);
+    assertNoTotpMaterial(body, b);
+  });
+
+  it('the enrollment + confirm path emits no TOTP material via console', async () => {
+    const logs: string[] = [];
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) =>
+      vi.spyOn(console, m).mockImplementation((...args: unknown[]) => {
+        logs.push(args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+      }),
+    );
+    try {
+      const b = await seedEnrolledUser();
+      const text = logs.join('\n');
+      expect(text).not.toContain(b.secret);
+      expect(text).not.toContain(b.sealedHex);
+      for (const code of b.recoveryCodes) expect(text).not.toContain(code);
+      for (const h of b.storedHashes) expect(text).not.toContain(h);
+    } finally {
+      for (const s of spies) s.mockRestore();
+    }
   });
 });
