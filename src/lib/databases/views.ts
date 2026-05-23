@@ -29,6 +29,9 @@ const ViewConfigSchema = z.object({
   calcFooter: z
     .record(z.uuid(), z.enum(['count', 'sum', 'avg', 'min', 'max', 'empty', 'filled']))
     .default({}),
+  columnWidths: z.record(z.uuid(), z.number().int().positive()).default({}),
+  frozenColumnIds: z.array(z.uuid()).default([]),
+  hiddenColumnIds: z.array(z.uuid()).default([]),
 });
 
 export type ViewConfig = z.infer<typeof ViewConfigSchema>;
