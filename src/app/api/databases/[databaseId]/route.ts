@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
+import { archiveDatabase } from '@/lib/databases/delete';
 import { getDatabaseWithMeta } from '@/lib/databases/get';
 
 type Ctx = { params: Promise<{ databaseId: string }> };
@@ -62,10 +63,12 @@ export async function DELETE(_req: Request, { params }: Ctx): Promise<Response> 
     const { databaseId } = await params;
     const meta = await getDatabaseWithMeta(getDb(), { databaseId, workspaceId: ctx.workspaceId });
     if (!meta) return NextResponse.json({ error: 'not found' }, { status: 404 });
-    await getDb()
-      .update(schema.databases)
-      .set({ archivedAt: new Date() })
-      .where(eq(schema.databases.id, databaseId));
+    // Helper writes the soft-delete + the audit row in a single transaction.
+    await archiveDatabase(getDb(), {
+      databaseId,
+      workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
+    });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
     if (err instanceof HttpError)

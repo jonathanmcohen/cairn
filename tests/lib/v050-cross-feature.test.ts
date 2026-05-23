@@ -133,6 +133,7 @@ describe('v0.5.0 cross-feature smoke', () => {
     //        DIFFERENT workspace with fresh ids — no original id may survive.
     const tpl = await savePageAsTemplate(db, {
       workspaceId: u.workspaceId,
+      actorUserId: u.userId,
       rootPageId: page.id,
       name: 'Smoke Tpl',
     });

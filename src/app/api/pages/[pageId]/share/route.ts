@@ -32,6 +32,7 @@ export async function PATCH(req: Request, { params }: RouteCtx): Promise<Respons
     await setShareSettings(getDb(), {
       pageId,
       workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
       password: body.password,
       expiresAt,
       allowDuplication: body.allowDuplication,

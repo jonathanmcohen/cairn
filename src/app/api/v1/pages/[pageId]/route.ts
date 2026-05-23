@@ -55,6 +55,10 @@ export const DELETE = (req: Request, { params }: Params): Promise<Response> =>
     const ws = requireWorkspace(ctx);
     const { pageId } = await params;
     await loadScoped(ws.workspaceId, ws.role, pageId, 'editor');
-    await softDeletePage(getDb(), { pageId, workspaceId: ws.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId,
+      workspaceId: ws.workspaceId,
+      actorUserId: ws.userId,
+    });
     return new Response(null, { status: 204 });
   })(req);

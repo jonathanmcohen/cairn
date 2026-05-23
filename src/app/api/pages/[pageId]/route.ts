@@ -67,7 +67,11 @@ export async function DELETE(_req: Request, { params }: RouteCtx): Promise<Respo
   try {
     const { pageId } = await params;
     const { ctx } = await requirePageAccess(pageId, 'editor');
-    await softDeletePage(getDb(), { pageId, workspaceId: ctx.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId,
+      workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
+    });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
     return errorToResponse(err);

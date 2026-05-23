@@ -1,6 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 
 export type AdminMemberErrorCode =
   | 'CANNOT_SET_OWNER'
@@ -68,6 +69,9 @@ async function ownerCount(db: Db, workspaceId: string): Promise<number> {
  *
  * The actor's authority (owner/admin) is enforced by `requireRole` at the route
  * layer; this helper trusts the caller.
+ *
+ * The update + the `member.role_changed` audit row are written in a single
+ * transaction so the audit can never drift from the action (spec §2.27).
  */
 export async function setMemberRole(
   db: Db,
@@ -81,30 +85,42 @@ export async function setMemberRole(
   if (input.role === 'owner') {
     throw new AdminMemberError('CANNOT_SET_OWNER', 'Use transfer ownership');
   }
-  // If we're demoting an existing owner, ensure another owner remains so we
-  // never strand a workspace with zero owners.
-  const [target] = await db
-    .select()
-    .from(schema.workspaceMembers)
-    .where(
-      and(
-        eq(schema.workspaceMembers.workspaceId, input.workspaceId),
-        eq(schema.workspaceMembers.userId, input.targetUserId),
-      ),
-    );
-  if (target?.role === 'owner') {
-    const owners = await ownerCount(db, input.workspaceId);
-    if (owners <= 1) throw new AdminMemberError('LAST_OWNER');
-  }
-  await db
-    .update(schema.workspaceMembers)
-    .set({ role: input.role })
-    .where(
-      and(
-        eq(schema.workspaceMembers.workspaceId, input.workspaceId),
-        eq(schema.workspaceMembers.userId, input.targetUserId),
-      ),
-    );
+  await db.transaction(async (tx) => {
+    // Load current state once — used for the LAST_OWNER guard AND the before/after audit metadata.
+    const [target] = await tx
+      .select()
+      .from(schema.workspaceMembers)
+      .where(
+        and(
+          eq(schema.workspaceMembers.workspaceId, input.workspaceId),
+          eq(schema.workspaceMembers.userId, input.targetUserId),
+        ),
+      );
+    if (target?.role === 'owner') {
+      const owners = await ownerCount(tx, input.workspaceId);
+      if (owners <= 1) throw new AdminMemberError('LAST_OWNER');
+    }
+    await tx
+      .update(schema.workspaceMembers)
+      .set({ role: input.role })
+      .where(
+        and(
+          eq(schema.workspaceMembers.workspaceId, input.workspaceId),
+          eq(schema.workspaceMembers.userId, input.targetUserId),
+        ),
+      );
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'member.role_changed',
+      targetType: 'member',
+      targetId: input.targetUserId,
+      metadata: {
+        before: { role: target?.role ?? null },
+        after: { role: input.role },
+      },
+    });
+  });
 }
 
 /**
@@ -113,6 +129,9 @@ export async function setMemberRole(
  * Refuses:
  * - removing an owner (`CANNOT_REMOVE_OWNER`) — transfer ownership first.
  * - the actor removing themselves (`CANNOT_REMOVE_SELF`) — use the leave flow.
+ *
+ * The delete + the `member.removed` audit row are written in a single
+ * transaction so the audit can never drift from the action (spec §2.27).
  */
 export async function removeMember(
   db: Db,
@@ -121,24 +140,34 @@ export async function removeMember(
   if (input.actorUserId === input.targetUserId) {
     throw new AdminMemberError('CANNOT_REMOVE_SELF');
   }
-  const [target] = await db
-    .select()
-    .from(schema.workspaceMembers)
-    .where(
-      and(
-        eq(schema.workspaceMembers.workspaceId, input.workspaceId),
-        eq(schema.workspaceMembers.userId, input.targetUserId),
-      ),
-    );
-  if (target?.role === 'owner') {
-    throw new AdminMemberError('CANNOT_REMOVE_OWNER');
-  }
-  await db
-    .delete(schema.workspaceMembers)
-    .where(
-      and(
-        eq(schema.workspaceMembers.workspaceId, input.workspaceId),
-        eq(schema.workspaceMembers.userId, input.targetUserId),
-      ),
-    );
+  await db.transaction(async (tx) => {
+    const [target] = await tx
+      .select()
+      .from(schema.workspaceMembers)
+      .where(
+        and(
+          eq(schema.workspaceMembers.workspaceId, input.workspaceId),
+          eq(schema.workspaceMembers.userId, input.targetUserId),
+        ),
+      );
+    if (target?.role === 'owner') {
+      throw new AdminMemberError('CANNOT_REMOVE_OWNER');
+    }
+    await tx
+      .delete(schema.workspaceMembers)
+      .where(
+        and(
+          eq(schema.workspaceMembers.workspaceId, input.workspaceId),
+          eq(schema.workspaceMembers.userId, input.targetUserId),
+        ),
+      );
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'member.removed',
+      targetType: 'member',
+      targetId: input.targetUserId,
+      metadata: { role: target?.role ?? null },
+    });
+  });
 }

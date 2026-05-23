@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
+import { DeleteWebhookError, deleteWebhook } from '@/lib/webhooks/admin';
 
 const PatchWebhook = z.object({ active: z.boolean() });
 
@@ -46,16 +47,18 @@ export async function DELETE(
   try {
     const ctx = await requireRole('admin');
     const { id } = await params;
-    // Deliveries cascade via the FK; scope the delete to the workspace.
-    const deleted = await getDb()
-      .delete(schema.webhooks)
-      .where(and(eq(schema.webhooks.id, id), eq(schema.webhooks.workspaceId, ctx.workspaceId)))
-      .returning({ id: schema.webhooks.id });
-    if (deleted.length === 0) {
-      return NextResponse.json({ error: 'not found' }, { status: 404 });
-    }
+    // Deliveries cascade via the FK; helper scopes the delete to the workspace
+    // and writes the audit row in the same transaction.
+    await deleteWebhook(getDb(), {
+      workspaceId: ctx.workspaceId,
+      webhookId: id,
+      actorUserId: ctx.userId,
+    });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
+    if (err instanceof DeleteWebhookError) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }

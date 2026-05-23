@@ -35,10 +35,15 @@ async function protectedPage() {
     .insert(schema.pages)
     .values({ workspaceId: u.workspaceId, title: 'Secret', createdBy: u.userId })
     .returning();
-  const { slug } = await publishPage(db, { pageId: p!.id, workspaceId: u.workspaceId });
+  const { slug } = await publishPage(db, {
+    pageId: p!.id,
+    workspaceId: u.workspaceId,
+    actorUserId: u.userId,
+  });
   await setShareSettings(db, {
     pageId: p!.id,
     workspaceId: u.workspaceId,
+    actorUserId: u.userId,
     password: 'correct horse',
   });
   return { pageId: p!.id, slug };
@@ -84,10 +89,15 @@ describe('security: gated-existence non-leak', () => {
       .insert(schema.pages)
       .values({ workspaceId: u.workspaceId, title: 'X', createdBy: u.userId })
       .returning();
-    const { slug } = await publishPage(db, { pageId: p!.id, workspaceId: u.workspaceId });
+    const { slug } = await publishPage(db, {
+      pageId: p!.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     await setShareSettings(db, {
       pageId: p!.id,
       workspaceId: u.workspaceId,
+      actorUserId: u.userId,
       password: 'pw',
       expiresAt: new Date(Date.now() - 1000),
     });
@@ -100,8 +110,16 @@ describe('security: gated-existence non-leak', () => {
       .insert(schema.pages)
       .values({ workspaceId: u.workspaceId, title: 'Y', createdBy: u.userId })
       .returning();
-    const { slug } = await publishPage(db, { pageId: p!.id, workspaceId: u.workspaceId });
-    await unpublishPage(db, { pageId: p!.id, workspaceId: u.workspaceId });
+    const { slug } = await publishPage(db, {
+      pageId: p!.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
+    await unpublishPage(db, {
+      pageId: p!.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     expect((await requirePublicPageAccess(db, slug, false)).ok).toBe(false);
     expect((await requirePublicPageAccess(db, 'totally-unknown-zzz', false)).ok).toBe(false);
   });

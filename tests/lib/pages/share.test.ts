@@ -35,7 +35,11 @@ async function publishedPage(title = 'Roadmap') {
     .values({ workspaceId: u.workspaceId, title, createdBy: u.userId })
     .returning();
   if (!p) throw new Error('insert failed');
-  const { slug } = await publishPage(db, { pageId: p.id, workspaceId: u.workspaceId });
+  const { slug } = await publishPage(db, {
+    pageId: p.id,
+    workspaceId: u.workspaceId,
+    actorUserId: u.userId,
+  });
   return { ...u, page: p, slug };
 }
 
@@ -45,6 +49,7 @@ describe('setShareSettings', () => {
     await setShareSettings(db, {
       pageId: f.page.id,
       workspaceId: f.workspaceId,
+      actorUserId: f.userId,
       password: 'hunter2',
       expiresAt: new Date('2099-01-01'),
       allowDuplication: true,
@@ -58,8 +63,18 @@ describe('setShareSettings', () => {
 
   it('clears the password when password is null', async () => {
     const f = await publishedPage();
-    await setShareSettings(db, { pageId: f.page.id, workspaceId: f.workspaceId, password: 'x' });
-    await setShareSettings(db, { pageId: f.page.id, workspaceId: f.workspaceId, password: null });
+    await setShareSettings(db, {
+      pageId: f.page.id,
+      workspaceId: f.workspaceId,
+      actorUserId: f.userId,
+      password: 'x',
+    });
+    await setShareSettings(db, {
+      pageId: f.page.id,
+      workspaceId: f.workspaceId,
+      actorUserId: f.userId,
+      password: null,
+    });
     const [row] = await db.select().from(schema.pages).where(eq(schema.pages.id, f.page.id));
     expect(row?.linkPasswordHash).toBeNull();
   });
@@ -68,7 +83,12 @@ describe('setShareSettings', () => {
     const f = await publishedPage();
     const other = await createTestWorkspaceWithUser(db);
     await expect(
-      setShareSettings(db, { pageId: f.page.id, workspaceId: other.workspaceId, password: 'x' }),
+      setShareSettings(db, {
+        pageId: f.page.id,
+        workspaceId: other.workspaceId,
+        actorUserId: other.userId,
+        password: 'x',
+      }),
     ).rejects.toThrow();
   });
 });
@@ -79,6 +99,7 @@ describe('verifyShareAccess', () => {
     await setShareSettings(db, {
       pageId: f.page.id,
       workspaceId: f.workspaceId,
+      actorUserId: f.userId,
       password: 'hunter2',
     });
     const [row] = await db.select().from(schema.pages).where(eq(schema.pages.id, f.page.id));
@@ -96,14 +117,24 @@ describe('requirePublicPageAccess', () => {
 
   it('ok:gate for a password-protected page without a valid cookie', async () => {
     const f = await publishedPage();
-    await setShareSettings(db, { pageId: f.page.id, workspaceId: f.workspaceId, password: 'pw' });
+    await setShareSettings(db, {
+      pageId: f.page.id,
+      workspaceId: f.workspaceId,
+      actorUserId: f.userId,
+      password: 'pw',
+    });
     const r = await requirePublicPageAccess(db, f.slug, false);
     expect(r.ok).toBe('gate');
   });
 
   it('ok:true for a password-protected page WITH a valid cookie', async () => {
     const f = await publishedPage();
-    await setShareSettings(db, { pageId: f.page.id, workspaceId: f.workspaceId, password: 'pw' });
+    await setShareSettings(db, {
+      pageId: f.page.id,
+      workspaceId: f.workspaceId,
+      actorUserId: f.userId,
+      password: 'pw',
+    });
     const r = await requirePublicPageAccess(db, f.slug, true);
     expect(r.ok).toBe(true);
   });
@@ -113,6 +144,7 @@ describe('requirePublicPageAccess', () => {
     await setShareSettings(db, {
       pageId: f.page.id,
       workspaceId: f.workspaceId,
+      actorUserId: f.userId,
       expiresAt: new Date(Date.now() - 1000),
     });
     const r = await requirePublicPageAccess(db, f.slug, true);

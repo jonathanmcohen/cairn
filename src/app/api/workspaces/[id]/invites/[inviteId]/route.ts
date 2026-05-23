@@ -34,7 +34,11 @@ export async function DELETE(
     const parsedInviteId = IdSchema.parse(inviteId);
     const ctx = await requireRole('admin');
     if (ctx.workspaceId !== workspaceId) throw new HttpError(404, 'Workspace not found');
-    await revokeInvite(getDb(), { workspaceId, inviteId: parsedInviteId });
+    await revokeInvite(getDb(), {
+      workspaceId,
+      inviteId: parsedInviteId,
+      actorUserId: ctx.userId,
+    });
     return NextResponse.json({ ok: true }, { status: 200 });
   } catch (err) {
     return toResponse(err);

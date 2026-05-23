@@ -52,10 +52,15 @@ describe('duplicatePublicPage', () => {
     const src = await createTestWorkspaceWithUser(db);
     const dst = await createTestWorkspaceWithUser(db);
     const { root, child } = await tree(src.workspaceId, src.userId);
-    await publishPage(db, { pageId: root.id, workspaceId: src.workspaceId });
+    await publishPage(db, {
+      pageId: root.id,
+      workspaceId: src.workspaceId,
+      actorUserId: src.userId,
+    });
     await setShareSettings(db, {
       pageId: root.id,
       workspaceId: src.workspaceId,
+      actorUserId: src.userId,
       allowDuplication: true,
     });
 
@@ -86,7 +91,11 @@ describe('duplicatePublicPage', () => {
     const src = await createTestWorkspaceWithUser(db);
     const dst = await createTestWorkspaceWithUser(db);
     const { root } = await tree(src.workspaceId, src.userId);
-    await publishPage(db, { pageId: root.id, workspaceId: src.workspaceId });
+    await publishPage(db, {
+      pageId: root.id,
+      workspaceId: src.workspaceId,
+      actorUserId: src.userId,
+    });
     await expect(
       duplicatePublicPage(db, {
         sourcePageId: root.id,

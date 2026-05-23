@@ -1,6 +1,7 @@
 import { and, desc, eq, notInArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 
 /** Skip a snapshot if the latest version is younger than this (keystroke debounce). */
 export const SNAPSHOT_DEBOUNCE_MS = 60_000;
@@ -105,16 +106,21 @@ export async function listVersions(
 /**
  * Non-destructive restore: copy the chosen version's content onto the live
  * page AND record it as a brand-new version. History is append-only.
+ *
+ * The page update + new-version insert + the `page.version_restored` audit row
+ * are written in a single transaction so the audit can never drift from the
+ * action (spec §2.27). Pass `workspaceId` so the audit row lands in the right
+ * tenant; the route layer has already verified ownership of the version.
  */
 export async function restoreVersion(
   db: PostgresJsDatabase<typeof schema>,
-  versionId: string,
+  input: { versionId: string; workspaceId: string; actorUserId: string },
 ): Promise<schema.PageVersion> {
   return db.transaction(async (tx) => {
     const [chosen] = await tx
       .select()
       .from(schema.pageVersions)
-      .where(eq(schema.pageVersions.id, versionId))
+      .where(eq(schema.pageVersions.id, input.versionId))
       .limit(1);
     if (!chosen) throw new Error('Version not found');
 
@@ -132,6 +138,16 @@ export async function restoreVersion(
       })
       .returning();
     if (!newVersion) throw new Error('Restore insert returned no row');
+
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'page.version_restored',
+      targetType: 'page',
+      targetId: chosen.pageId,
+      metadata: { versionId: input.versionId },
+    });
+
     return newVersion;
   });
 }

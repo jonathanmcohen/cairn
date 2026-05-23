@@ -75,7 +75,7 @@ describe('revokeInvite', () => {
   it('marks a pending invite revoked (sets usedAt)', async () => {
     const w = await ws();
     const inv = await seedInvite(w);
-    await revokeInvite(db, { workspaceId: w, inviteId: inv.id });
+    await revokeInvite(db, { workspaceId: w, inviteId: inv.id, actorUserId: null });
     const [row] = await db
       .select()
       .from(schema.inviteTokens)
@@ -86,8 +86,10 @@ describe('revokeInvite', () => {
   it('a second revoke throws NOT_FOUND (idempotent at the route layer)', async () => {
     const w = await ws();
     const inv = await seedInvite(w);
-    await revokeInvite(db, { workspaceId: w, inviteId: inv.id });
-    await expect(revokeInvite(db, { workspaceId: w, inviteId: inv.id })).rejects.toMatchObject({
+    await revokeInvite(db, { workspaceId: w, inviteId: inv.id, actorUserId: null });
+    await expect(
+      revokeInvite(db, { workspaceId: w, inviteId: inv.id, actorUserId: null }),
+    ).rejects.toMatchObject({
       code: 'NOT_FOUND',
     });
   });
@@ -96,8 +98,8 @@ describe('revokeInvite', () => {
     const w = await ws();
     const other = await ws();
     const inv = await seedInvite(other);
-    await expect(revokeInvite(db, { workspaceId: w, inviteId: inv.id })).rejects.toBeInstanceOf(
-      RevokeInviteError,
-    );
+    await expect(
+      revokeInvite(db, { workspaceId: w, inviteId: inv.id, actorUserId: null }),
+    ).rejects.toBeInstanceOf(RevokeInviteError);
   });
 });

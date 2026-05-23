@@ -32,7 +32,11 @@ describe('autoPurge', () => {
   it('deletes pages whose deleted_at is older than retention', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(db, { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     await sql`UPDATE pages SET deleted_at = now() - interval '31 days' WHERE id = ${p.id}`;
 
     const purged = await autoPurge(db, { retentionDays: 30 });
@@ -44,7 +48,11 @@ describe('autoPurge', () => {
   it('does NOT touch pages within the retention window', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(db, { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const purged = await autoPurge(db, { retentionDays: 30 });
     expect(purged).toBe(0);
     const remaining = await db.select().from(schema.pages);
@@ -54,7 +62,11 @@ describe('autoPurge', () => {
   it('is a no-op when last purge was less than 1 hour ago', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(db, { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     await sql`UPDATE pages SET deleted_at = now() - interval '31 days' WHERE id = ${p.id}`;
 
     await sql`

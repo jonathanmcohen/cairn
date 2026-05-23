@@ -52,7 +52,11 @@ describe('getPublicSitePages', () => {
       .insert(schema.pages)
       .values({ workspaceId: a.workspaceId, title: 'Published', createdBy: a.userId })
       .returning();
-    await publishPage(db, { pageId: pub!.id, workspaceId: a.workspaceId });
+    await publishPage(db, {
+      pageId: pub!.id,
+      workspaceId: a.workspaceId,
+      actorUserId: a.userId,
+    });
     await db
       .insert(schema.pages)
       .values({ workspaceId: a.workspaceId, title: 'Private', createdBy: a.userId });

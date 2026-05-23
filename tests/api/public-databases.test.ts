@@ -49,7 +49,11 @@ async function setup(opts: { published: boolean }) {
     createdBy: u.userId,
   });
   if (opts.published) {
-    await publishPage(getDb(), { pageId: page.id, workspaceId: u.workspaceId });
+    await publishPage(getDb(), {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
   }
   return { databaseId: database.id };
 }

@@ -35,7 +35,7 @@ async function makePublishedPage(workspaceId: string, userId: string, title = 'R
     .values({ workspaceId, title, createdBy: userId })
     .returning();
   if (!p) throw new Error('page insert failed');
-  const { slug } = await publishPage(db, { pageId: p.id, workspaceId });
+  const { slug } = await publishPage(db, { pageId: p.id, workspaceId, actorUserId: userId });
   return { page: p, slug };
 }
 
