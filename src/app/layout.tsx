@@ -1,7 +1,11 @@
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { AuthSessionProvider } from '@/components/session-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { dir, LOCALE_COOKIE } from '@/lib/i18n/config';
+import { getMessages } from '@/lib/i18n/messages';
+import { I18nProvider } from '@/lib/i18n/provider';
+import { resolveLocale } from '@/lib/i18n/resolve';
 import { cspNonce } from '@/lib/security/headers';
 import 'tippy.js/dist/tippy.css';
 import './globals.css';
@@ -19,13 +23,22 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // Content-Security-Policy header. next-themes injects its own inline bootstrap
   // <script>, so it needs the nonce explicitly (Next auto-nonces only its own
   // framework scripts) — otherwise that one inline script is CSP-blocked.
-  const nonce = cspNonce((await headers()).get('content-security-policy'));
+  const hdrs = await headers();
+  const nonce = cspNonce(hdrs.get('content-security-policy'));
+  const cookieStore = await cookies();
+  const locale = resolveLocale(
+    cookieStore.get(LOCALE_COOKIE)?.value ?? null,
+    hdrs.get('accept-language'),
+  );
+  const messages = getMessages(locale);
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale} dir={dir(locale)} suppressHydrationWarning>
       <body className="bg-background text-foreground min-h-screen antialiased">
-        <AuthSessionProvider>
-          <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
-        </AuthSessionProvider>
+        <I18nProvider locale={locale} messages={messages}>
+          <AuthSessionProvider>
+            <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
+          </AuthSessionProvider>
+        </I18nProvider>
       </body>
     </html>
   );

@@ -5,6 +5,7 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
+import { useT } from '@/lib/i18n/provider';
 import { getShortcuts } from '@/lib/shortcuts/registry';
 
 type SearchResult = {
@@ -21,6 +22,7 @@ type PaletteAction = {
 };
 
 export function SearchPalette() {
+  const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
@@ -99,12 +101,12 @@ export function SearchPalette() {
         <Command.Input
           value={query}
           onValueChange={setQuery}
-          placeholder="Search pages…"
+          placeholder={t('palette.searchPlaceholder')}
           className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         <Command.List className="max-h-80 overflow-y-auto border-t">
           {actions.length > 0 && (
-            <Command.Group heading="Actions">
+            <Command.Group heading={t('palette.actions')}>
               {actions.map((a) => (
                 <Command.Item
                   key={a.id}
@@ -116,7 +118,7 @@ export function SearchPalette() {
                   }}
                   className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
                 >
-                  {a.labelKey}
+                  {t(a.labelKey)}
                 </Command.Item>
               ))}
             </Command.Group>

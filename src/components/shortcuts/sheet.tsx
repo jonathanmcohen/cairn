@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useT } from '@/lib/i18n/provider';
 import { getShortcuts, type ShortcutScope } from '@/lib/shortcuts/registry';
 import { useShortcutSheet } from './dispatcher';
 
@@ -30,11 +31,8 @@ export function prettyKeys(keys: string): string {
   return mac ? rendered.join('') : rendered.join('+');
 }
 
-export type ShortcutSheetProps = {
-  label?: (key: string) => string;
-};
-
-export function ShortcutSheet({ label = (k) => k }: ShortcutSheetProps) {
+export function ShortcutSheet() {
+  const t = useT();
   const { open, setOpen } = useShortcutSheet();
 
   useEffect(() => {
@@ -55,18 +53,18 @@ export function ShortcutSheet({ label = (k) => k }: ShortcutSheetProps) {
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[15vh]">
       <button
         type="button"
-        aria-label={label('shortcuts.close')}
+        aria-label={t('shortcuts.close')}
         className="fixed inset-0 bg-black/30"
         onClick={() => setOpen(false)}
       />
       <div
         role="dialog"
         aria-modal="true"
-        aria-label={label('shortcuts.title')}
+        aria-label={t('shortcuts.title')}
         className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
       >
         <div className="border-b px-4 py-3">
-          <h2 className="text-sm font-semibold">{label('shortcuts.title')}</h2>
+          <h2 className="text-sm font-semibold">{t('shortcuts.title')}</h2>
         </div>
         <div className="max-h-[60vh] overflow-y-auto p-4">
           {SCOPES.map(({ scope, titleKey }) => {
@@ -75,12 +73,12 @@ export function ShortcutSheet({ label = (k) => k }: ShortcutSheetProps) {
             return (
               <section key={scope} className="mb-4 last:mb-0">
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {label(titleKey)}
+                  {t(titleKey)}
                 </h3>
                 <ul className="space-y-1">
                   {entries.map((s) => (
                     <li key={s.id} className="flex items-center justify-between gap-4 text-sm">
-                      <span>{label(s.labelKey)}</span>
+                      <span>{t(s.labelKey)}</span>
                       <kbd className="rounded border bg-muted px-2 py-0.5 font-mono text-xs">
                         {prettyKeys(s.keys)}
                       </kbd>
