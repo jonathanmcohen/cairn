@@ -1,9 +1,14 @@
 import { LayoutTemplate, Trash } from 'lucide-react';
 import Link from 'next/link';
+import { getDb } from '@/db/client';
+import { getAuthContext } from '@/lib/auth/require-role';
+import { listFavorites, listRecents } from '@/lib/prefs/user-page-prefs';
 import { appVersion } from '@/lib/version';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
 import { NotificationBell } from './notifications/bell';
+import { SidebarFavorites } from './sidebar-favorites';
+import { SidebarRecents } from './sidebar-recents';
 import { SidebarTree } from './sidebar-tree';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
@@ -14,13 +19,16 @@ import { WorkspaceSwitcher } from './workspace-switcher';
  * off-canvas drawer. Layout chrome (width/border/height) lives in each wrapper;
  * this body just fills its container.
  */
-export function SidebarContent({
+export async function SidebarContent({
   workspaceId,
   workspaces,
 }: {
   workspaceId: string;
   workspaces: UserWorkspace[];
 }) {
+  const ctx = await getAuthContext();
+  const favorites = ctx ? await listFavorites(getDb(), { userId: ctx.userId, workspaceId }) : [];
+  const recents = ctx ? await listRecents(getDb(), { userId: ctx.userId, workspaceId }) : [];
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center justify-between gap-2 border-b p-2">
@@ -31,6 +39,8 @@ export function SidebarContent({
         <ThemeToggle />
       </div>
       <nav aria-labelledby="sidebar-pages-heading" className="flex-1 overflow-y-auto p-3">
+        <SidebarFavorites favorites={favorites} />
+        <SidebarRecents recents={recents} />
         <div className="mb-2 flex items-center justify-between px-2">
           <p
             id="sidebar-pages-heading"
