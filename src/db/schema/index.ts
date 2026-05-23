@@ -1,4 +1,5 @@
 export * from './api-keys';
+export * from './audit-log';
 export * from './auth';
 export * from './comments';
 export * from './databases';
@@ -13,6 +14,7 @@ export * from './suggestions';
 export * from './system-meta';
 export * from './templates';
 export * from './user-page-prefs';
+export * from './user-totp';
 export * from './users';
 export * from './webhooks';
 export * from './workspace-members';
