@@ -2,6 +2,7 @@ import { and, eq, isNull, sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 import {
   getAuthContext,
   HttpError,
@@ -162,4 +163,97 @@ export async function requirePageAcl(
   }
 
   return { page, ctx, effectivePermission: permission };
+}
+
+export type SetPageAclInput = {
+  workspaceId: string;
+  pageId: string;
+  userId: string;
+  permission: 'view' | 'comment' | 'edit';
+  actorUserId: string;
+};
+
+/**
+ * Upsert a page ACL row + record an audit event in one transaction. The audit
+ * action is `page_acl.created` for new rows, `page_acl.changed` for updates
+ * (existing row found before the upsert).
+ *
+ * The metadata records `{userId, permission}` — both are safe (no secret
+ * substrings; userId is opaque, permission is a closed enum).
+ */
+export async function setPageAcl(
+  db: PostgresJsDatabase<typeof schema>,
+  input: SetPageAclInput,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const [existing] = await tx
+      .select()
+      .from(schema.pageAcls)
+      .where(
+        and(eq(schema.pageAcls.pageId, input.pageId), eq(schema.pageAcls.userId, input.userId)),
+      )
+      .limit(1);
+
+    if (existing) {
+      await tx
+        .update(schema.pageAcls)
+        .set({ permission: input.permission, updatedAt: new Date() })
+        .where(eq(schema.pageAcls.id, existing.id));
+    } else {
+      await tx.insert(schema.pageAcls).values({
+        pageId: input.pageId,
+        userId: input.userId,
+        permission: input.permission,
+      });
+    }
+
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: existing ? 'page_acl.changed' : 'page_acl.created',
+      targetType: 'page_acl',
+      targetId: input.pageId,
+      metadata: {
+        userId: input.userId,
+        permission: input.permission,
+        ...(existing ? { previousPermission: existing.permission } : {}),
+      },
+    });
+  });
+}
+
+export type RemovePageAclInput = {
+  workspaceId: string;
+  pageId: string;
+  userId: string;
+  actorUserId: string;
+};
+
+/**
+ * Delete a page ACL row + record a `page_acl.removed` audit event in one tx.
+ * Idempotent: returns silently if no ACL exists for the (pageId, userId) pair.
+ */
+export async function removePageAcl(
+  db: PostgresJsDatabase<typeof schema>,
+  input: RemovePageAclInput,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(schema.pageAcls)
+      .where(
+        and(eq(schema.pageAcls.pageId, input.pageId), eq(schema.pageAcls.userId, input.userId)),
+      )
+      .returning({ id: schema.pageAcls.id, permission: schema.pageAcls.permission });
+    if (deleted.length === 0) return;
+    const row = deleted[0];
+
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'page_acl.removed',
+      targetType: 'page_acl',
+      targetId: input.pageId,
+      metadata: { userId: input.userId, permission: row?.permission ?? null },
+    });
+  });
 }

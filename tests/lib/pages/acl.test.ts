@@ -47,7 +47,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`TRUNCATE page_acls, pages, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE page_acls, audit_log, pages, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
 });
 
 /** Insert a page chain: root -> child -> grandchild, return their ids. */
@@ -245,5 +245,120 @@ describe('requirePageAcl - gate behavior', () => {
     await actAs(owner.userId);
     await expect(requirePageAcl(grandId, 'edit')).resolves.toBeDefined();
     await expect(requirePageAcl(grandId, 'comment')).resolves.toBeDefined();
+  });
+});
+
+describe('setPageAcl', () => {
+  it('creates a new ACL row + records page_acl.created audit in one tx', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+
+    const { setPageAcl } = await import('@/lib/pages/acl');
+    await setPageAcl(db, {
+      workspaceId: owner.workspaceId,
+      pageId: grandId,
+      userId: editor,
+      permission: 'view',
+      actorUserId: owner.userId,
+    });
+
+    const [acl] = await db
+      .select()
+      .from(schema.pageAcls)
+      .where(eq(schema.pageAcls.pageId, grandId))
+      .limit(1);
+    expect(acl?.permission).toBe('view');
+    expect(acl?.userId).toBe(editor);
+
+    const [audit] = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.targetType, 'page_acl'))
+      .limit(1);
+    expect(audit?.action).toBe('page_acl.created');
+    expect(audit?.actorUserId).toBe(owner.userId);
+  });
+
+  it('updating an existing ACL records page_acl.changed', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+
+    const { setPageAcl } = await import('@/lib/pages/acl');
+    await setPageAcl(db, {
+      workspaceId: owner.workspaceId,
+      pageId: grandId,
+      userId: editor,
+      permission: 'view',
+      actorUserId: owner.userId,
+    });
+    await setPageAcl(db, {
+      workspaceId: owner.workspaceId,
+      pageId: grandId,
+      userId: editor,
+      permission: 'edit',
+      actorUserId: owner.userId,
+    });
+
+    const audits = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.targetType, 'page_acl'))
+      .orderBy(schema.auditLog.createdAt);
+    const actions = audits.map((a) => a.action);
+    expect(actions).toContain('page_acl.created');
+    expect(actions).toContain('page_acl.changed');
+  });
+});
+
+describe('removePageAcl', () => {
+  it('deletes the ACL + records page_acl.removed in one tx', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+
+    const { removePageAcl, setPageAcl } = await import('@/lib/pages/acl');
+    await setPageAcl(db, {
+      workspaceId: owner.workspaceId,
+      pageId: grandId,
+      userId: editor,
+      permission: 'view',
+      actorUserId: owner.userId,
+    });
+    await removePageAcl(db, {
+      workspaceId: owner.workspaceId,
+      pageId: grandId,
+      userId: editor,
+      actorUserId: owner.userId,
+    });
+
+    const rows = await db
+      .select()
+      .from(schema.pageAcls)
+      .where(eq(schema.pageAcls.pageId, grandId));
+    expect(rows).toHaveLength(0);
+
+    const audits = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.targetType, 'page_acl'))
+      .orderBy(schema.auditLog.createdAt);
+    expect(audits.map((a) => a.action)).toContain('page_acl.removed');
+  });
+
+  it('returns silently for a non-existent ACL (idempotent)', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+    const { removePageAcl } = await import('@/lib/pages/acl');
+    await expect(
+      removePageAcl(db, {
+        workspaceId: owner.workspaceId,
+        pageId: grandId,
+        userId: editor,
+        actorUserId: owner.userId,
+      }),
+    ).resolves.toBeUndefined();
   });
 });
