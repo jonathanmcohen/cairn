@@ -101,6 +101,11 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
+          # gitleaks-action v2 now requires GITHUB_TOKEN for PR scans (breaking
+          # change announced in the action's README — see the action's runtime
+          # error message). The default GITHUB_TOKEN has read-only access to
+          # the repo's pulls/issues which is what the action needs.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Run the adversarial security suite explicitly (also runs in `pnpm test`).
       - name: security tests
