@@ -7,6 +7,7 @@ import { appVersion } from '@/lib/version';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
 import { NotificationBell } from './notifications/bell';
+import { SavedSearches } from './sidebar/saved-searches';
 import { SidebarFavorites } from './sidebar-favorites';
 import { SidebarRecents } from './sidebar-recents';
 import { SidebarTree } from './sidebar-tree';
@@ -41,6 +42,7 @@ export async function SidebarContent({
       <nav aria-labelledby="sidebar-pages-heading" className="flex-1 overflow-y-auto p-3">
         <SidebarFavorites favorites={favorites} />
         <SidebarRecents recents={recents} />
+        <SavedSearches />
         <div className="mb-2 flex items-center justify-between px-2">
           <p
             id="sidebar-pages-heading"
