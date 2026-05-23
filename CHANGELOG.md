@@ -100,6 +100,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Admin audit viewer at `/settings/admin/audit` (filter bar + paginated table with expandable metadata) and a per-page activity feed (mounted in the page menu) that links `page.version_restored` entries to version history for content diffs.
 - The v0.5.1 secret-leak suite is extended with cross-cutting assertions: no `audit_log` row's metadata and no admin viewer response leaks an API token, webhook signing secret, invite token, share password, TOTP `secret_encrypted`, recovery codes, password/token hash, or the metrics token.
 
+### Added (v0.6.0 P19 — TOTP 2FA + recovery codes)
+- Per-user TOTP enrollment (RFC 6238, otplib 13) with QR + manual key + 10 single-use recovery codes shown ONCE at `/settings/security`. The shared secret is **encrypted at rest** (AES-256-GCM with an HKDF-derived key from `AUTH_SECRET` — `src/lib/crypto/secret-box.ts`); recovery codes are **hashed at rest** (SHA-256 over a normalized form, single-use consumed atomically).
+- Sign-in second-factor challenge in the Auth.js credentials `authorize`: a 2FA-enabled user must supply a valid TOTP code OR an unused recovery code; a missing/blank code with 2FA enabled fails closed (generic `CredentialsSignin` — no enumeration). `verifySecondFactor` stamps `last_used_at` on any success and persists the consumed recovery-code set in the same update.
+- `require_2fa` workspace gate: when any of a signed-in user's workspaces has `require_2fa=true`, the `(app)` layout redirects to `/settings/security?enroll=required` until enrollment confirms — `src/proxy.ts` pipes the request path via `x-pathname` so the layout can read it (proxy.ts stays cookie-only by design).
+- The v0.5.1 secret-leak suite is extended with TOTP coverage: the stored `user_totp` row never contains the plaintext secret or codes; the workspace-members / webhooks / admin-audit responses never contain the plaintext secret, the sealed bytea (hex or latin1), any plaintext recovery code, or any stored recovery-code hash; the enroll+confirm path emits no TOTP material via `console`.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
