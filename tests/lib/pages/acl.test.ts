@@ -333,10 +333,7 @@ describe('removePageAcl', () => {
       actorUserId: owner.userId,
     });
 
-    const rows = await db
-      .select()
-      .from(schema.pageAcls)
-      .where(eq(schema.pageAcls.pageId, grandId));
+    const rows = await db.select().from(schema.pageAcls).where(eq(schema.pageAcls.pageId, grandId));
     expect(rows).toHaveLength(0);
 
     const audits = await db
