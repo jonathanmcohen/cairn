@@ -2,6 +2,7 @@
 
 import { MoreHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { PageActivityFeed } from '@/components/pages/activity-feed';
 import { SharePanel } from '@/components/pages/share-panel';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ export function PageMenu({
   const [slug, setSlug] = useState<string | null>(initialSlug);
   const [copied, setCopied] = useState(false);
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
+  const [activityOpen, setActivityOpen] = useState(false);
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -217,6 +219,20 @@ export function PageMenu({
           >
             {savedAsTemplate ? 'Saved to templates' : 'Save as template…'}
           </button>
+          <div className="my-1 border-t" />
+          <button
+            type="button"
+            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            aria-expanded={activityOpen}
+            onClick={() => setActivityOpen((v) => !v)}
+          >
+            {activityOpen ? 'Hide activity' : 'Show activity'}
+          </button>
+          {activityOpen ? (
+            <div className="px-3 py-2">
+              <PageActivityFeed pageId={pageId} />
+            </div>
+          ) : null}
         </div>
       )}
     </div>
