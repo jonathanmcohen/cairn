@@ -11,9 +11,20 @@ on:
       - 'docs/**'
       - '**/*.md'
 
+# Runner target — single source of truth. Flip to `'["ubuntu-latest"]'` to
+# revert to GitHub-hosted runners (e.g. if the self-hosted runner is down).
+# The self-hosted runner is a Linux x64 Docker container with the host Docker
+# socket mounted (see docs/ci-runner-setup.md); without that mount, the
+# Testcontainers Postgres + Playwright/Chromium steps fail. `actions/cache`
+# +  `actions/setup-node` `cache: pnpm` keep dep + Playwright caches warm
+# against GHA's cache backend regardless of whether the runner container is
+# ephemeral.
+env:
+  RUNNER_LABELS: '["self-hosted","Linux","X64"]'
+
 jobs:
   ci:
-    runs-on: [self-hosted, X64]
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || env.RUNNER_LABELS) }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -64,7 +75,7 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: [self-hosted, X64]
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || env.RUNNER_LABELS) }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -95,7 +106,7 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: [self-hosted, X64]
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || env.RUNNER_LABELS) }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -133,6 +144,17 @@ jobs:
 
       - name: Migrate test DB
         run: pnpm db:migrate
+
+      # Cache the Playwright browser download keyed on the installed playwright
+      # version + OS. Survives ephemeral-runner restarts via GHA's cache backend
+      # (not local disk), so the next run skips the ~150MB Chromium download.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
 
       # Chromium-only; the audit doesn't need the full browser matrix. The
       # self-hosted runner already has the system libs Chromium needs, so we
