@@ -1,6 +1,10 @@
+import { getSchema } from '@tiptap/core';
 import { eq } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
+import { prosemirrorJSONToYDoc } from 'y-prosemirror';
+import * as Y from 'yjs';
+import { schemaExtensions } from '@/components/editor/schema';
 import * as schema from '@/db/schema';
 import { hashPassword } from '@/lib/auth/password';
 import { createDatabase } from '@/lib/databases/create';
@@ -39,6 +43,41 @@ function sampleDocument(): unknown {
 }
 
 /**
+ * Page document with an inline `database` node, so the editor renders the
+ * database block and its `<table>` view (the a11y target for the database
+ * spec). Atom node carrying the `databaseId` attribute, matching the schema
+ * in `src/components/editor/database-node.ts`.
+ */
+function documentWithDatabase(databaseId: string): Record<string, unknown> {
+  return {
+    type: 'doc',
+    content: [
+      { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Welcome' }] },
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: 'This page is seeded for the accessibility gate.' }],
+      },
+      { type: 'database', attrs: { databaseId } },
+    ],
+  };
+}
+
+/**
+ * Build the Hocuspocus-compatible Yjs binary for a ProseMirror JSON doc using
+ * the server-safe editor schema. The harness pre-seeds `page_yjs.state` with
+ * this so the editor renders the inline database (and any other custom nodes)
+ * even when the test app cannot reach a Hocuspocus collab server — without it
+ * the editor's empty-doc seed never fires (it depends on `provider.synced`)
+ * and the `<table>` block under audit never mounts.
+ */
+function buildYjsState(doc: Record<string, unknown>): Buffer {
+  const pmSchema = getSchema(schemaExtensions());
+  const ydoc = prosemirrorJSONToYDoc(pmSchema, doc, 'default');
+  const update = Y.encodeStateAsUpdate(ydoc);
+  return Buffer.from(update);
+}
+
+/**
  * Seed a deterministic workspace + page + inline database into the DB the booted
  * app points at (DATABASE_URL). Idempotent: if the deterministic user already
  * exists we resolve and return the existing ids instead of re-creating. Reuses
@@ -74,6 +113,28 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
         .where(eq(schema.databases.workspaceId, existingWs.id))
         .limit(1);
       if (page && database) {
+        // Ensure the page content embeds the database node, so the editor
+        // renders the inline database surface for the a11y spec. Idempotent
+        // re-write: if a prior seed left the page with the legacy
+        // database-less document, refresh it here. We also pre-seed the
+        // `page_yjs.state` Hocuspocus-persisted binary directly from this
+        // ProseMirror JSON, because the test app cannot reach a Hocuspocus
+        // collab server — without a pre-seeded Yjs state the editor stays
+        // in "Connecting…" and never renders the inline database block.
+        const doc = documentWithDatabase(database.id);
+        await updatePage(db, {
+          pageId: page.id,
+          workspaceId: existingWs.id,
+          patch: { content: doc },
+        });
+        const state = buildYjsState(doc);
+        await db
+          .insert(schema.pageYjs)
+          .values({ pageId: page.id, state })
+          .onConflictDoUpdate({
+            target: schema.pageYjs.pageId,
+            set: { state, updatedAt: new Date() },
+          });
         return {
           workspaceId: existingWs.id,
           workspaceSlug: existingWs.slug,
@@ -136,6 +197,25 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
       createdBy: user.id,
       name: 'A11y Database',
     });
+    // Re-write the page content to include the database node so the editor
+    // renders the inline `<table>` view of the database — the surface the
+    // database a11y spec targets. Also pre-seed `page_yjs.state` from the
+    // same JSON so the editor renders the content even though the test app
+    // can't reach a Hocuspocus collab server.
+    const doc = documentWithDatabase(database.id);
+    await updatePage(db, {
+      pageId: page.id,
+      workspaceId: ws.id,
+      patch: { content: doc },
+    });
+    const state = buildYjsState(doc);
+    await db
+      .insert(schema.pageYjs)
+      .values({ pageId: page.id, state })
+      .onConflictDoUpdate({
+        target: schema.pageYjs.pageId,
+        set: { state, updatedAt: new Date() },
+      });
     // One extra property beyond the default "Name" column.
     await createProperty(db, {
       databaseId: database.id,

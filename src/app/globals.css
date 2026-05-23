@@ -94,6 +94,18 @@
       "rlig" 1,
       "calt" 1;
   }
+  /*
+   * Global visible focus ring (WCAG 2.4.7 + 1.4.11). Keyboard users see a 2px
+   * solid ring in the theme's `--ring` color on every focusable element; mouse
+   * users get nothing because :focus-visible only matches keyboard / a11y-tool
+   * focus. The ring color is theme-token-driven so it adapts to light/dark and
+   * any future palette change. Per-component `focus-visible:ring-*` utilities
+   * still layer on top where a component opts into a richer focus treatment.
+   */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
 }
 
 @keyframes comment-anchor-flash {

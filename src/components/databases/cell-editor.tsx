@@ -70,6 +70,7 @@ export function CellEditor({
       return (
         <input
           type="checkbox"
+          aria-label={property.name}
           checked={Boolean(local)}
           onChange={(e) => void save(e.target.checked)}
         />
@@ -78,6 +79,7 @@ export function CellEditor({
       return (
         <input
           type="number"
+          aria-label={property.name}
           className="w-full bg-transparent outline-hidden"
           defaultValue={local === null || local === undefined ? '' : String(local)}
           onBlur={(e) => void save(e.target.value === '' ? null : Number(e.target.value))}
@@ -87,6 +89,7 @@ export function CellEditor({
       return (
         <input
           type="date"
+          aria-label={property.name}
           className="w-full bg-transparent outline-hidden"
           defaultValue={typeof local === 'string' ? local.slice(0, 10) : ''}
           onBlur={(e) => void save(e.target.value || null)}
@@ -97,6 +100,7 @@ export function CellEditor({
         (property.config as { options?: { id: string; name: string }[] })?.options ?? [];
       return (
         <select
+          aria-label={property.name}
           className="w-full bg-transparent outline-hidden"
           value={typeof local === 'string' ? local : ''}
           onChange={(e) => void save(e.target.value || null)}
@@ -115,6 +119,7 @@ export function CellEditor({
       return (
         <input
           type="text"
+          aria-label={property.name}
           className="w-full bg-transparent outline-hidden"
           defaultValue={
             Array.isArray(local)
