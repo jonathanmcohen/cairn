@@ -1,5 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  incAutomationRule,
+  incConnectorSync,
+  incEmbedding,
+  incMcpTool,
   incNotificationsSent,
   incWebhook,
   metricsRegistry,
@@ -75,6 +79,68 @@ describe('metrics registry', () => {
   it('LEAK GUARD: a concrete id in a route value never reaches the exposition', async () => {
     observeHttp({ method: 'GET', route: '/api/v1/pages/:id', status: 200, durationSec: 0.01 });
     const text = await metricsRegistry().metrics();
+    expect(text).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
+  });
+
+  it('exposes the v0.7.0 metric series (MCP, embedding, automation, connector)', async () => {
+    incMcpTool({ tool: 'pages.list', outcome: 'success', durationSec: 0.01 });
+    incEmbedding({ provider: 'local', outcome: 'success', durationSec: 0.05 });
+    incAutomationRule({ actionType: 'notify', outcome: 'success' });
+    incConnectorSync({ kind: 'google_sheets', outcome: 'success', durationSec: 1.2 });
+    const text = await metricsRegistry().metrics();
+    for (const name of [
+      'mcp_tool_called_total',
+      'mcp_tool_duration_seconds',
+      'embedding_generation_total',
+      'embedding_generation_duration_seconds',
+      'automation_rule_fired_total',
+      'connector_sync_total',
+      'connector_sync_duration_seconds',
+    ]) {
+      expect(text).toContain(name);
+    }
+    // Spot-check that the recorded labels render correctly.
+    expect(text).toContain('mcp_tool_called_total{tool="pages.list",outcome="success"} 1');
+    expect(text).toContain('connector_sync_total{kind="google_sheets",outcome="success"} 1');
+  });
+
+  it('LEAK GUARD (v0.7.0 extension): new metrics declare only closed-enum labels', () => {
+    const allowedLabels = new Set([
+      'app', // default-label
+      'method',
+      'route',
+      'status', // v0.6 P20 http
+      'operation', // v0.6 P20 db
+      'event', // v0.6 P20 webhook
+      'channel', // v0.6 P20 notifications
+      'outcome', // shared v0.7.0
+      // v0.7.0 NEW:
+      'tool',
+      'provider',
+      'action_type',
+      'kind',
+    ]);
+    const json = metricsRegistry().getMetricsAsArray() as Array<{
+      name: string;
+      labelNames?: string[];
+    }>;
+    for (const m of json) {
+      for (const label of m.labelNames ?? []) {
+        expect(allowedLabels, `metric ${m.name} declares unknown label "${label}"`).toContain(
+          label,
+        );
+      }
+    }
+  });
+
+  it('LEAK GUARD (v0.7.0): banned label keys still rejected on new metrics', async () => {
+    incMcpTool({ tool: 'pages.list', outcome: 'success', durationSec: 0.01 });
+    incConnectorSync({ kind: 'csv', outcome: 'failed', durationSec: 0.5 });
+    const text = await metricsRegistry().metrics();
+    expect(text).not.toMatch(/workspace_id/);
+    expect(text).not.toMatch(/user_id/);
+    expect(text).not.toMatch(/page_id/);
+    expect(text).not.toMatch(/tenant/);
     expect(text).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
   });
 });
