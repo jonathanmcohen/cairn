@@ -46,10 +46,15 @@ beforeEach(async () => {
 });
 
 async function seedUsage(workspaceId: string, tokenId: string, userId: string, n: number) {
+  // Explicit, strictly-increasing timestamps (one-second spacing) so keyset
+  // pagination is deterministic — `now()` from fast back-to-back INSERTs can
+  // collide at microsecond level and Date.toISOString() drops sub-millis.
+  const base = Date.UTC(2026, 0, 1, 0, 0, 0);
   for (let i = 0; i < n; i++) {
+    const ts = new Date(base + i * 1000).toISOString();
     await sql`
-      INSERT INTO token_usage_log (workspace_id, token_kind, token_id, user_id, route, status)
-      VALUES (${workspaceId}, 'pat', ${tokenId}, ${userId}, ${`/api/v1/pages/${i}`}, 200)
+      INSERT INTO token_usage_log (workspace_id, token_kind, token_id, user_id, route, status, created_at)
+      VALUES (${workspaceId}, 'pat', ${tokenId}, ${userId}, ${`/api/v1/pages/${i}`}, 200, ${ts})
     `;
   }
 }
