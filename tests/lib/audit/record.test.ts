@@ -172,6 +172,27 @@ describe('assertAuditMetadataClean', () => {
     expect(() => assertAuditMetadataClean({ secret_encrypted: 'abc' })).toThrow();
   });
 
+  // v0.7.0 G1 P5 — PAT prefix substring is forbidden so callers can't
+  // accidentally surface a `cairn_pat_…` display prefix or plaintext in audit
+  // metadata. The mint/revoke audit paths log {name, scopes, …} only.
+  it('rejects metadata containing a cairn_pat_ display prefix', () => {
+    expect(() => assertAuditMetadataClean({ tokenPrefix: 'cairn_pat_abcd' })).toThrow(/cairn_pat_/);
+  });
+
+  it('rejects nested metadata containing a cairn_pat_ secret', () => {
+    expect(() =>
+      assertAuditMetadataClean({
+        nested: { token: 'cairn_pat_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
+      }),
+    ).toThrow();
+  });
+
+  it('accepts clean PAT-flavored metadata with no secret material', () => {
+    expect(() =>
+      assertAuditMetadataClean({ name: 'CI bot', scopes: ['pages:read'] }),
+    ).not.toThrow();
+  });
+
   it('throws when a value matches the live AUTH_SECRET env value', () => {
     const original = process.env.AUTH_SECRET;
     process.env.AUTH_SECRET = 'super-secret-test-value-1234567890';

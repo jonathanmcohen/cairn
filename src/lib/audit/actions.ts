@@ -1,4 +1,4 @@
-/** Documented audit-action vocabulary (spec §2.27). Append-only history of sensitive events. */
+/** Documented audit-action vocabulary (spec §2.27, §3 G1). Append-only history of sensitive events. */
 export const AUDIT_ACTIONS = [
   'member.role_changed',
   'member.removed',
@@ -18,6 +18,13 @@ export const AUDIT_ACTIONS = [
   'workspace.settings_changed',
   'workspace.ownership_transferred',
   'workspace.deleted',
+  // v0.7.0 G1 P5 — personal-access-token + page-ACL events.
+  'pat.created',
+  'pat.revoked',
+  'pat.expired',
+  'page_acl.created',
+  'page_acl.changed',
+  'page_acl.removed',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -30,4 +37,7 @@ export type AuditTargetType =
   | 'api_key'
   | 'webhook'
   | 'invite'
-  | 'template';
+  | 'template'
+  // v0.7.0 G1 P5 — new target types for PATs + ACL rows.
+  | 'personal_access_token'
+  | 'page_acl';

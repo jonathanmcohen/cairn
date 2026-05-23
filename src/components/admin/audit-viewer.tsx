@@ -30,9 +30,11 @@ const TARGET_TYPES: AuditTargetType[] = [
   'webhook',
   'invite',
   'template',
+  'personal_access_token',
+  'page_acl',
 ];
 
-// Human-readable labels for the documented action vocabulary (spec §2.27).
+// Human-readable labels for the documented action vocabulary (spec §2.27, §3 G1).
 const ACTION_LABEL: Record<AuditAction, string> = {
   'member.role_changed': 'Member role changed',
   'member.removed': 'Member removed',
@@ -52,6 +54,13 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'workspace.settings_changed': 'Workspace settings changed',
   'workspace.ownership_transferred': 'Workspace ownership transferred',
   'workspace.deleted': 'Workspace deleted',
+  // v0.7.0 G1 P5 — personal-access-token + page-ACL events.
+  'pat.created': 'Personal access token created',
+  'pat.revoked': 'Personal access token revoked',
+  'pat.expired': 'Personal access token expired',
+  'page_acl.created': 'Page ACL granted',
+  'page_acl.changed': 'Page ACL permission changed',
+  'page_acl.removed': 'Page ACL removed',
 };
 
 function actionLabel(action: string): string {

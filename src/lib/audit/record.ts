@@ -25,6 +25,7 @@ const FORBIDDEN_SUBSTRINGS = [
   'AUTH_SECRET',
   'cairn_whsec_',
   'cairn_sk_',
+  'cairn_pat_', // v0.7.0 G1 P5
   'token_hash',
   'password_hash',
   'secret_encrypted',
