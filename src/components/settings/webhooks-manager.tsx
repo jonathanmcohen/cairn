@@ -78,6 +78,12 @@ export function WebhooksManager({
   const [copied, setCopied] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [rotatingId, setRotatingId] = useState<string | null>(null);
+  // Transient one-shot reveal of a newly-rotated secret. Cleared when the
+  // operator clicks "I copied it" — the plaintext never persists past dismiss.
+  const [rotatedSecret, setRotatedSecret] = useState<{ hookId: string; secret: string } | null>(
+    null,
+  );
 
   function resetForm() {
     setUrl('');
@@ -142,6 +148,30 @@ export function WebhooksManager({
     }
   }
 
+  async function onRotate(hook: WebhookRow) {
+    if (
+      !confirm(
+        'Rotate this webhook secret? Existing signed deliveries will stop verifying — receivers must adopt the new secret immediately.',
+      )
+    ) {
+      return;
+    }
+    setRotatingId(hook.id);
+    setError(null);
+    try {
+      const res = await fetch(`/api/webhooks/${hook.id}/rotate-secret`, { method: 'POST' });
+      if (!res.ok) {
+        const body = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(body?.error ?? `Rotate failed (${res.status})`);
+        return;
+      }
+      const { secret } = (await res.json()) as { secret: string };
+      setRotatedSecret({ hookId: hook.id, secret });
+    } finally {
+      setRotatingId(null);
+    }
+  }
+
   async function onDelete(id: string) {
     if (!confirm('Delete this webhook? Its delivery history will be removed too.')) return;
     setDeletingId(id);
@@ -170,6 +200,42 @@ export function WebhooksManager({
 
   return (
     <div className="space-y-6">
+      {/* Show-once panel for ROTATED secrets. Same one-shot reveal rule as
+          the create flow — once dismissed, plaintext is gone for good. */}
+      {rotatedSecret ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>New webhook signing secret</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-destructive">
+              Rotated. Copy now — Cairn won&apos;t show it again. Existing receivers must adopt this
+              secret immediately or signatures will start failing.
+            </p>
+            <code className="block break-all rounded border bg-muted px-3 py-2 font-mono text-sm">
+              {rotatedSecret.secret}
+            </code>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                onClick={() => {
+                  void navigator.clipboard.writeText(rotatedSecret.secret).catch(() => {});
+                }}
+              >
+                Copy
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setRotatedSecret(null)}
+              >
+                I copied it
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      ) : null}
+
       {/* Show-once panel: the signing secret is never retrievable again. */}
       {newSecret ? (
         <Card>
@@ -307,16 +373,30 @@ export function WebhooksManager({
                     </Button>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="text-destructive hover:text-destructive"
-                      disabled={deletingId === h.id}
-                      onClick={() => void onDelete(h.id)}
-                    >
-                      Delete
-                    </Button>
+                    <div className="flex justify-end gap-1">
+                      <Button type="button" variant="ghost" size="sm" asChild>
+                        <a href={`/settings/admin/webhooks/${h.id}/deliveries`}>Deliveries</a>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={rotatingId === h.id}
+                        onClick={() => void onRotate(h)}
+                      >
+                        {rotatingId === h.id ? 'Rotating…' : 'Rotate secret'}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="text-destructive hover:text-destructive"
+                        disabled={deletingId === h.id}
+                        onClick={() => void onDelete(h.id)}
+                      >
+                        Delete
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
