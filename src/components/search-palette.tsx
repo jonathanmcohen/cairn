@@ -4,6 +4,8 @@ import { Command } from 'cmdk';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
+import { getShortcuts } from '@/lib/shortcuts/registry';
 
 type SearchResult = {
   id: string;
@@ -12,12 +14,28 @@ type SearchResult = {
   breadcrumb: { id: string; title: string }[];
 };
 
+type PaletteAction = {
+  id: string;
+  labelKey: string;
+  run: () => void;
+};
+
 export function SearchPalette() {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [actions, setActions] = useState<PaletteAction[]>([]);
+
+  useEffect(() => {
+    ensureAppShortcuts();
+    setActions(
+      getShortcuts('global')
+        .filter((s) => s.kind === 'action')
+        .map((s) => ({ id: s.id, labelKey: s.labelKey, run: s.run })),
+    );
+  }, []);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -85,6 +103,24 @@ export function SearchPalette() {
           className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         <Command.List className="max-h-80 overflow-y-auto border-t">
+          {actions.length > 0 && (
+            <Command.Group heading="Actions">
+              {actions.map((a) => (
+                <Command.Item
+                  key={a.id}
+                  value={`action:${a.id}`}
+                  onSelect={() => {
+                    setOpen(false);
+                    setQuery('');
+                    a.run();
+                  }}
+                  className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
+                >
+                  {a.labelKey}
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
           {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}
           {!loading && query && results.length === 0 && (
             <div className="px-4 py-2 text-sm text-muted-foreground">No results.</div>
