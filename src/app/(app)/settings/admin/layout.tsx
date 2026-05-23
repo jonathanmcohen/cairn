@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <a href="/settings/admin">Members</a>
         <a href="/settings/admin/invites">Invites</a>
         <a href="/settings/admin/settings">Settings</a>
+        <a href="/settings/admin/danger">Danger</a>
       </nav>
       {children}
     </div>

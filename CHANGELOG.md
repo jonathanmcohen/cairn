@@ -84,6 +84,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Column ergonomics in `db_views` config jsonb (no schema): `columnWidths` / `frozenColumnIds` / `hiddenColumnIds` validated by `ViewConfigSchema`. The table view renders a `<colgroup>` for stable widths, drops hidden columns, and emits sticky `inset-inline-start` offsets (RTL-safe) for frozen columns.
 - Editor `turnInto(name)` block-conversion command over a typed CONVERTIBLE map (paragraph ↔ heading/lists/blockquote/codeBlock), declines incompatible targets without mutating. Multi-block selection helpers (`blockRange`/`selectBlockRange`/`deleteBlocks`/`convertBlocks`) enabling bulk delete + bulk convert as ordinary ProseMirror transactions — a Yjs round-trip audit proves identical JSON across two Yjs-bound editors after conversion.
 
+### Added (v0.6.0 P17 — Workspace admin console)
+- Migration `0021` adds `workspaces.require_2fa` + `workspaces.home_page_id` columns + new `audit_log` and `user_totp` tables (consumed by P18 audit-log viewer + P19 TOTP 2FA, both without further migrations).
+- Admin route group at `/settings/admin` (admin+ gated) with Members, Invites, Settings, and Danger sub-pages.
+- Members management: `PATCH`/`DELETE /api/workspaces/[id]/members/[userId]` over `setMemberRole`/`removeMember` helpers with typed error codes (`CANNOT_SET_OWNER`, `LAST_OWNER`, `CANNOT_REMOVE_OWNER`, `CANNOT_REMOVE_SELF`); cross-workspace → 404.
+- Invites: `listPendingInvites`/`revokeInvite` helpers + `GET /api/workspaces/[id]/invites` + `DELETE /api/workspaces/[id]/invites/[inviteId]` over the v0.2.0 invite path (revoke reuses `usedAt`); admin UI lists pending and shows the `/invite/<token>` link on create.
+- Workspace settings: `updateWorkspaceSettings(db, …)` + `PATCH /api/workspaces/[id]/settings` for `name`/`require_2fa`/`home_page_id` (home page validated to be in the same workspace; persisted with an audit `workspace.settings_changed`).
+- Owner-only lifecycle: `transferOwnership` (promote target, demote actor to admin, audited `workspace.ownership_transferred`) + `deleteWorkspace` (cascade-deletes; audited `workspace.deleted`) + `POST /api/workspaces/[id]/transfer` + `DELETE /api/workspaces/[id]` + a danger-zone UI requiring typed-name confirmation.
+- `recordAudit(tx, …)` helper introduced as a stub; P18 fully wires it into every sensitive helper + ships the audit-log viewer + per-page activity feed.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
