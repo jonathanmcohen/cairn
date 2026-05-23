@@ -23,6 +23,22 @@ The app does **not** host a cron daemon (design decision 36). Two options:
 - `pnpm cli reconcile [--workspace <id>]` — recompute `storage_bytes_used` from the actual
   stored files. Run it after a restore or if you suspect counter drift.
 
+### MCP SSE fallback session store
+
+The legacy SSE-fallback transport (`GET /api/mcp/sse` + `POST /api/mcp/messages`) keeps
+its session-to-stream mapping in process memory (`src/lib/mcp/session-store.ts`). The
+Streamable HTTP transport (`POST /api/mcp`) is stateless and unaffected.
+
+**Implication for multi-instance deployments:** the SSE `GET` and the corresponding
+`/api/mcp/messages` POSTs MUST land on the same process. Without sticky-session
+load balancing on the `/api/mcp/sse` + `/api/mcp/messages` pair, POSTs will see
+`404 session not found`. Configure your reverse proxy / ingress to pin these two
+routes by `sessionId` query parameter, or accept that the SSE fallback is
+single-instance only.
+
+The default session idle TTL is 5 minutes (`SSE_SESSION_TTL_MS`); a background
+sweep evicts idle sessions every 60 seconds.
+
 ## Self-hosted CI / Release runners
 
 `.github/workflows/ci.yml` and `.github/workflows/release.yml` target self-hosted runners by
