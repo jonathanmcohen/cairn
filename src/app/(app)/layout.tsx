@@ -1,12 +1,12 @@
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { LiveRegionProvider } from '@/components/a11y/live-region';
-import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
 import { NoWorkspace } from '@/components/no-workspace';
 import { OfflineProvider } from '@/components/pwa/offline-context';
 import { OfflineIndicator } from '@/components/pwa/offline-indicator';
 import { RegisterSw } from '@/components/pwa/register-sw';
 import { SearchPalette } from '@/components/search-palette';
+import { ShortcutDispatcher } from '@/components/shortcuts/dispatcher';
 import { Sidebar } from '@/components/sidebar';
 import { SidebarContent } from '@/components/sidebar-content';
 import { SidebarDrawer } from '@/components/sidebar-drawer';
@@ -26,23 +26,24 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   return (
     <OfflineProvider>
       <LiveRegionProvider>
-        <SkipLink />
-        <div className="flex min-h-screen flex-col md:flex-row">
-          <RegisterSw />
-          <KeyboardShortcuts />
-          <SearchPalette />
-          <Sidebar workspaceId={ctx.workspaceId} />
-          <SidebarDrawer>
-            <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
-          </SidebarDrawer>
-          <main id="main-content" className="flex-1 p-8">
-            <div className="mb-2 flex justify-end">
-              <OfflineIndicator />
-            </div>
-            {children}
-          </main>
-          <Toaster />
-        </div>
+        <ShortcutDispatcher>
+          <SkipLink />
+          <div className="flex min-h-screen flex-col md:flex-row">
+            <RegisterSw />
+            <SearchPalette />
+            <Sidebar workspaceId={ctx.workspaceId} />
+            <SidebarDrawer>
+              <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
+            </SidebarDrawer>
+            <main id="main-content" className="flex-1 p-8">
+              <div className="mb-2 flex justify-end">
+                <OfflineIndicator />
+              </div>
+              {children}
+            </main>
+            <Toaster />
+          </div>
+        </ShortcutDispatcher>
       </LiveRegionProvider>
     </OfflineProvider>
   );
