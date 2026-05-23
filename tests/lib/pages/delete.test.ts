@@ -49,7 +49,11 @@ describe('softDeletePage', () => {
       title: 'Grand',
     });
 
-    await softDeletePage(db, { pageId: root.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: root.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
 
     const rows = await db.select().from(schema.pages);
     for (const r of rows) {
@@ -67,7 +71,11 @@ describe('softDeletePage', () => {
     const u = await createTestWorkspaceWithUser(db);
     const a = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'A' });
     const b = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'B' });
-    await softDeletePage(db, { pageId: a.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: a.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const [bRow] = await db.select().from(schema.pages).where(eq(schema.pages.id, b.id));
     expect(bRow?.deletedAt).toBeNull();
   });
@@ -76,8 +84,12 @@ describe('softDeletePage', () => {
     const a = await createTestWorkspaceWithUser(db);
     const b = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: b.workspaceId, createdBy: b.userId });
-    await expect(softDeletePage(db, { pageId: p.id, workspaceId: a.workspaceId })).rejects.toThrow(
-      /not found/i,
-    );
+    await expect(
+      softDeletePage(db, {
+        pageId: p.id,
+        workspaceId: a.workspaceId,
+        actorUserId: a.userId,
+      }),
+    ).rejects.toThrow(/not found/i);
   });
 });

@@ -9,8 +9,15 @@ function publicExtensions() {
   // Swap the editor's `database` node for the public read-only one, and the
   // interactive `mention` node (link + suggestion) for the inert read-only
   // span variant so stored `@[Name](userId)` tokens still render as `@Name`.
+  //
+  // The page-link nodes (pageLink/pageMention/pageEmbed) are schema-pure with a
+  // static renderHTML, so they flow through from baseExtensions() unchanged and
+  // render the stored snapshot on `/p/` + `/s/`. Only their interactive picker
+  // plugin (`pageLinkSuggestion`) is dropped from the read-only path.
   return [
-    ...baseExtensions().filter((e) => e.name !== 'database' && e.name !== 'mention'),
+    ...baseExtensions().filter(
+      (e) => e.name !== 'database' && e.name !== 'mention' && e.name !== 'pageLinkSuggestion',
+    ),
     PublicDatabaseNode,
     ReadOnlyMentionExtension,
   ];

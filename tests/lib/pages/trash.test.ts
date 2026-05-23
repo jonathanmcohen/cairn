@@ -42,7 +42,11 @@ describe('listTrash', () => {
       parentId: root.id,
       title: 'C',
     });
-    await softDeletePage(db, { pageId: root.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: root.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const trash = await listTrash(db, u.workspaceId);
     expect(trash).toHaveLength(1);
     expect(trash[0]?.title).toBe('R');
@@ -59,9 +63,17 @@ describe('listTrash', () => {
     const u = await createTestWorkspaceWithUser(db);
     const a = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'A' });
     const b = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'B' });
-    await softDeletePage(db, { pageId: a.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: a.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     await new Promise((r) => setTimeout(r, 30));
-    await softDeletePage(db, { pageId: b.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: b.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const trash = await listTrash(db, u.workspaceId);
     expect(trash.map((t) => t.title)).toEqual(['B', 'A']);
   });
@@ -70,7 +82,11 @@ describe('listTrash', () => {
     const a = await createTestWorkspaceWithUser(db);
     const b = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: b.workspaceId, createdBy: b.userId, title: 'B' });
-    await softDeletePage(db, { pageId: p.id, workspaceId: b.workspaceId });
+    await softDeletePage(db, {
+      pageId: p.id,
+      workspaceId: b.workspaceId,
+      actorUserId: b.userId,
+    });
     const trash = await listTrash(db, a.workspaceId);
     expect(trash).toEqual([]);
   });

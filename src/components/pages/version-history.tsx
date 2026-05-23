@@ -124,11 +124,11 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
       <Button
         variant="ghost"
         size="icon"
-        title="Version history"
+        aria-label="Version history"
         aria-pressed={open}
         onClick={() => setOpen((v) => !v)}
       >
-        <History className="h-4 w-4" />
+        <History aria-hidden="true" className="h-4 w-4" />
       </Button>
       {open && (
         <div className="fixed inset-y-0 right-0 z-30 shadow-lg">
@@ -139,10 +139,10 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                title="Close"
+                aria-label="Close version history"
                 onClick={() => setOpen(false)}
               >
-                <X className="h-4 w-4" />
+                <X aria-hidden="true" className="h-4 w-4" />
               </Button>
             </div>
 
@@ -167,11 +167,11 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
                             variant="ghost"
                             size="icon"
                             className="h-6 w-6"
-                            title="Restore this version"
+                            aria-label="Restore this version"
                             disabled={pending}
                             onClick={() => restore(v.id)}
                           >
-                            <RotateCcw className="h-3.5 w-3.5" />
+                            <RotateCcw aria-hidden="true" className="h-3.5 w-3.5" />
                           </Button>
                         )}
                       </div>

@@ -5,6 +5,133 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-05-23
+
+> Large consolidated release closing Notion-parity gaps across content/databases, sharing/collaboration, mobile/a11y/i18n, admin/observability/ops, and import/export. Migrations `0013`–`0023`. Built area-by-area (plans P1–P23); entries below are grouped by plan.
+
+### Added (v0.6.0 P23 — Combined smoke & release)
+- Combined cross-feature docker-compose smoke (`scripts/smoke-v0.6.0.sh`) exercising all five bands against a live boot: content/database (reverse relations, list view, row hierarchy, calc footer, new blocks), sharing (password + expiry publish, public site `/s/<slug>`, duplicate), collaboration (row comment, suggestion accept), mobile/observability (PWA manifest, token-gated `/metrics`), admin/ops (audit log, 2FA enroll, quota enforcement), and import/export (workspace archive round-trip).
+- README "v0.6.0 features" overview + "Security & operations caveats"; SECURITY.md updated with the new secret classes, anonymous surfaces, observability gating, and the single-instance scheduling ceiling.
+- Bumped version to 0.6.0; reused the existing private-repo-safe multi-arch native-runner release workflow to publish `ghcr.io/jonathanmcohen/cairn:0.6.0`.
+
+### Added (v0.6.0 P1 — Reverse (bidirectional) relations)
+- Relation properties can mint a mirrored relation on the target database (`reversePropertyId` in the relation config); writing a relation cell syncs the paired cell on the linked rows, with a re-entrancy guard so the two sides never loop.
+
+### Added (v0.6.0 P2 — List view + filters + grouping + multi-sort)
+- New `list` view type (migration `0013`, `ALTER TYPE view_type ADD VALUE 'list'`); per-type filter operators (text contains/starts/ends/is/is-not/is-any-of, number/date between/≠, checkbox is); client-side grouping (`groupRows`) with a leading "Uncategorized" group; multi-column sort config.
+
+### Added (v0.6.0 P3 — Row hierarchy / sub-items)
+- `db_rows.parent_row_id` self-FK (migration `0013`, on-delete set null); same-database + no-cycle validation; rows render as an expand/collapse forest.
+
+### Added (v0.6.0 P4 — Blocks pt.1: toggle / columns / table)
+- Toggle (collapsible) block, multi-column layout block, and a simple table block (`@tiptap` TableKit) — all Yjs round-trip safe.
+
+### Added (v0.6.0 P5 — Blocks pt.2: embed / bookmark / math / synced)
+- Allowlist-only `embed` (YouTube/Vimeo/Figma/gist/CodeSandbox, https-only, sandboxed iframe); `bookmark` unfurl card via an SSRF-guarded `/api/unfurl`; KaTeX `math` (inline + block); same-page `syncedBlock` (live read-only mirror of a source block). Yjs round-trip audited.
+
+### Added (v0.6.0 P6 — Table of contents + outline + full-page DB + calc footer)
+- `tableOfContents` node (live heading links, no stored state) + a header-toggled outline panel; full-page-database render mode over the existing views; per-column calc footer (count/sum/avg/min/max/empty/filled) stored in the view config jsonb.
+
+### Added (v0.6.0 P7 — Per-page share settings + public site)
+- Per-page link password (Argon2id via `@node-rs/argon2`), expiry, and allow-duplication (migration `0014`); an HMAC-signed per-page access cookie reusing the v0.5.0 file-URL signer (no new secret); a workspace public site at `/s/<slug>` (migration `0015`) listing published pages and linking through to each page's own `/p/` gate. Expired/unpublished/unknown → 404, never 403. CSP `frame-src` now allowlists exactly the embed providers (unblocks P5 embeds, drift-guarded against the embed allowlist).
+
+### Added (v0.6.0 P8 — Comments on databases + files)
+- `0016` migration: `comment_target` enum (`page`/`db_row`/`file`) + `target_type`/`target_id` columns on `comments`, a `(target_type, target_id)` index, existing rows back-filled to their page (`target_id = page_id`); `page_id` is now nullable to permit page-less file comments.
+- Polymorphic comment threads: comments anchor to a page, a database row, or a file via `(target_type, target_id)`, workspace-scoped, cross-workspace → 404. `page_id` is denormalized (owning page of the row's database / the file's page) so the @mention + comment-reply notification fan-out stays page-anchored.
+- `src/lib/comments/target.ts`: `CommentTarget` schema + `resolveTarget` (validate target in workspace, denormalize page id). `createComment` now takes a `target` and fires the `comment.created` webhook for every target type; `listCommentsByTarget` lists by target; `resolve`/`delete` are target-agnostic.
+- API: `POST`/`GET /api/databases/[databaseId]/rows/[rowId]/comments` and `POST`/`GET /api/files/[fileId]/comments` (editor+ / viewer+). PATCH/DELETE reuse `/api/comments/[commentId]`.
+- Target-generic `TargetCommentPanel` + `RowComments`/`FileComments` wrappers (mounting awaits a row-expand / file-viewer surface).
+
+### Added (v0.6.0 P9 — Suggestion / track-changes mode)
+- Yjs-native suggestion mode: `suggestion-insert`/`suggestion-delete` marks + a `suggestion-block` node carrying author + suggestion id ride the live collab doc; a `suggestions` index table (migration 0017, `suggestion_status` enum) lists open suggestions without parsing the doc.
+- Propose / accept / reject: a pure ProseMirror transform resolves a suggestion to clean text, applied both to the live Y.Doc (idempotent) and to `pages.content` server-side under a status-guarded conditional update, so the index never drifts from the marks and concurrent resolves can't flip-flop.
+- A suggestion-mode toolbar toggle + accept/reject UI (editor+ only); public `/p/` + `/s/` pages render the clean accepted text (no suggestion chrome).
+- Role-gated: proposing and accepting/rejecting require `editor`+; viewers see no suggestion controls and the API fails closed.
+
+### Added (v0.6.0 P11 — BYO-SMTP email notifications + preferences)
+- Opt-in email notifications via a bring-your-own SMTP server (`SMTP_HOST`/`PORT`/`USER`/`PASS`/`FROM`/`SECURE` env, `nodemailer`); fully disabled — a clean no-op — when `SMTP_HOST` is unset (the transport factory returns null, the single chokepoint every send path checks).
+- Per-event email fired fire-and-forget from the notify path (`setImmediate`, never awaited, errors swallowed — mirroring the webhook `emit` pattern), gated by each user's `notification_email_prefs`; the SSRF guard runs on every rendered deep link.
+- Digest mode: `scanDigests` batches a user's unread digest-only notifications into one email, idempotent via a per-user `system_meta` watermark; runnable via `pnpm email:digest` (tsx) or an opt-in single-instance `CAIRN_DIGEST_INTERVAL` ticker in instrumentation (external-cron recommended).
+- Email templates (plain text + minimal inline-styled HTML).
+- Notification-preferences API (`GET`/`PUT /api/notifications/prefs`) + a settings panel (`/settings/notifications`) with a per-type email / in-app-only / daily-digest choice, surfacing the SMTP-unset state. Backed by the `notification_email_prefs` table (created in migration 0018).
+
+### Added (v0.6.0 P10 — page links + backlinks + page mentions/embeds + row templates)
+- Page links: `[[` autocomplete inserts a `pageLink` to another workspace page; `@@` inserts a `pageMention` (member `@`-mentions unchanged); a "Page embed" slash entry inserts a `pageEmbed` snapshot card.
+- Write-time `page_links` index (`reindexPageLinks` on save) powering a "Linked references" backlinks panel; read-time "Unlinked mentions" FTS search for the page title.
+- Per-database row templates (`rowTemplates` in `databases.config`, migration 0019) + a "new row from template" picker on the table view.
+- `GET /api/workspaces/pages?q=` — workspace page search (viewer+) for the page picker; `GET /api/pages/[pageId]/backlinks`.
+- Migration `0018`: `page_links` index table + `notification_email_prefs` (the email-prefs store consumed by P11).
+- New editor nodes (`pageLink`/`pageMention`/`pageEmbed`) verified Yjs round-trip safe.
+
+### Added (v0.6.0 P12 — Responsive / mobile UI)
+- A shared `useFocusTrap` a11y primitive (unit-tested); below the `md` breakpoint the desktop sidebar is replaced by a hamburger + an off-canvas, `aria-modal`, focus-trapped, Escape/backdrop-dismissable drawer rendering the same nav; the page header wraps and tightens gutters and the editor prose relaxes width on small screens; database views adapt for touch (table horizontal-scroll + taller rows, narrower kanban columns, single-column gallery under `sm`).
+
+### Added (v0.6.0 P13 — PWA + bounded offline)
+- Cairn is now an installable PWA: a web app manifest, maskable + any-purpose icons, an apple-touch icon, and a service worker built with `@serwist/next` (configurator mode — `serwist build` post-step, Turbopack-compatible). SW registration is CSP-nonce-clean (a bundled module, not an inline script; auto-registration disabled).
+- The service worker precaches the app shell, stale-while-revalidates idempotent page/search reads, network-firsts navigations with an `/offline` fallback, and is **network-only (never caches)** for auth, mutations, signed `/api/files` URLs, and the collab WebSocket. The strategy allow-list is unit-tested (network-only checked first).
+- Bounded offline editing: opened pages persist to IndexedDB (`y-indexeddb`) on the existing Yjs/Hocuspocus doc, so recently-viewed pages READ offline and offline edits CRDT-merge on reconnect — no new queue. An `aria-live` offline indicator shows connection state.
+- Offline scope is deliberately bounded (NOT offline-first): only Yjs edits to already-opened pages work offline; creating/moving/deleting pages, database mutations, file uploads, comments, and sharing are disabled offline (not silently queued), enforced by a unit-tested `isActionAllowedOffline` gate.
+
+### Added (v0.6.0 P14 — Accessibility / WCAG 2.1 AA)
+- WCAG 2.1 AA compliance across the editor, sidebar, database, dialog, and sign-in screens, verified by an `@axe-core/playwright` gate (`pnpm test:a11y`) on both light and dark themes and run as a CI `a11y` job that fails on any violation.
+- Skip-to-content link, `<main>`/`<nav>`/`<aside>` landmarks with accessible names, labelled icon-only buttons, an `aria-live` region for save-status, ARIA listbox/option roles on the editor's slash + mention popups, dialog roles + Esc-close + focus restore on overlays, AA-contrast theme tokens (light + dark), and a global visible `:focus-visible` ring.
+- A manual screen-reader checklist (`docs/a11y-screen-reader-checklist.md`) covers what axe can't (reading order, live announcement quality, keyboard feel).
+- Editor mount fix: distinct `PluginKey` per `@tiptap/suggestion` plugin (member-mention `@`, page-link `[[`, page-mention `@@`), unblocking the audit and fixing a runtime crash that landed in P10.
+
+### Added (v0.6.0 P15 — Keyboard shortcuts + i18n)
+- Typed shortcut registry (`src/lib/shortcuts/registry.ts`) with registration-time conflict detection + a pure `matchShortcut` (unit-tested), driving a global dispatcher (replacing the hand-rolled ⌘N handler), a discoverable ⌘/ overlay sheet listing every registered shortcut grouped by scope, and the ⌘K palette's Actions group — all reading the SAME registry (one source of truth).
+- Global entries seeded: ⌘N New page, ⌘⇧L Toggle theme, ⌘⇧O Switch workspace, ⌘⇧F Open favorites, ⌘/ Show shortcuts.
+- Dependency-light i18n: pure `t()` (flat-key + `{name}` interpolation + `Intl.PluralRules` plural + missing-key→key fallback, unit-tested), pure `resolveLocale(cookie, acceptLanguage)` (unit-tested, cookie → Accept-Language → en), an `I18nProvider`/`useT()`/`useLocale()`, flat-key JSON catalogs for `en` + `ar` (the RTL proof), a `<LocaleSwitcher>` writing the `cairn_locale` cookie, and root-layout `<html lang dir>` wiring with RTL logical-property CSS (`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`) on the always-rendered app chrome.
+
+### Added (v0.6.0 P16 — Favorites/recents + column ergonomics + block convert + multi-select)
+- Migration `0020` adds a `user_page_prefs` table (`{user_id, workspace_id, page_id, favorite, favorite_order, last_visited_at}`, unique `(user_id, page_id)`, favorites + recents read indexes).
+- Favorites + Recents helpers (`toggleFavorite`/`reorderFavorites`/`recordVisit`/`listFavorites`/`listRecents`, recents capped at 20, favorites never pruned) + `GET`/`POST /api/prefs/favorites`, `POST /api/prefs/favorites/reorder`, `GET /api/prefs/recents`. Favorites + Recents sidebar sections render above the page tree (in both desktop aside and mobile drawer); favorites support star toggle + native drag-and-drop reorder.
+- Column ergonomics in `db_views` config jsonb (no schema): `columnWidths` / `frozenColumnIds` / `hiddenColumnIds` validated by `ViewConfigSchema`. The table view renders a `<colgroup>` for stable widths, drops hidden columns, and emits sticky `inset-inline-start` offsets (RTL-safe) for frozen columns.
+- Editor `turnInto(name)` block-conversion command over a typed CONVERTIBLE map (paragraph ↔ heading/lists/blockquote/codeBlock), declines incompatible targets without mutating. Multi-block selection helpers (`blockRange`/`selectBlockRange`/`deleteBlocks`/`convertBlocks`) enabling bulk delete + bulk convert as ordinary ProseMirror transactions — a Yjs round-trip audit proves identical JSON across two Yjs-bound editors after conversion.
+
+### Added (v0.6.0 P17 — Workspace admin console)
+- Migration `0021` adds `workspaces.require_2fa` + `workspaces.home_page_id` columns + new `audit_log` and `user_totp` tables (consumed by P18 audit-log viewer + P19 TOTP 2FA, both without further migrations).
+- Admin route group at `/settings/admin` (admin+ gated) with Members, Invites, Settings, and Danger sub-pages.
+- Members management: `PATCH`/`DELETE /api/workspaces/[id]/members/[userId]` over `setMemberRole`/`removeMember` helpers with typed error codes (`CANNOT_SET_OWNER`, `LAST_OWNER`, `CANNOT_REMOVE_OWNER`, `CANNOT_REMOVE_SELF`); cross-workspace → 404.
+- Invites: `listPendingInvites`/`revokeInvite` helpers + `GET /api/workspaces/[id]/invites` + `DELETE /api/workspaces/[id]/invites/[inviteId]` over the v0.2.0 invite path (revoke reuses `usedAt`); admin UI lists pending and shows the `/invite/<token>` link on create.
+- Workspace settings: `updateWorkspaceSettings(db, …)` + `PATCH /api/workspaces/[id]/settings` for `name`/`require_2fa`/`home_page_id` (home page validated to be in the same workspace; persisted with an audit `workspace.settings_changed`).
+- Owner-only lifecycle: `transferOwnership` (promote target, demote actor to admin, audited `workspace.ownership_transferred`) + `deleteWorkspace` (cascade-deletes; audited `workspace.deleted`) + `POST /api/workspaces/[id]/transfer` + `DELETE /api/workspaces/[id]` + a danger-zone UI requiring typed-name confirmation.
+- `recordAudit(tx, …)` helper introduced as a stub; P18 fully wires it into every sensitive helper + ships the audit-log viewer + per-page activity feed.
+
+### Added (v0.6.0 P18 — Audit log + per-page activity feed)
+- Real append-only `recordAudit(db|tx, …)` helper returning the inserted row, called INSIDE each sensitive action's transaction so the log can never drift; strict `AuditAction` literal union (one documented vocabulary) + `assertAuditMetadataClean` defense-in-depth redaction guard rejecting any forbidden substring (AUTH_SECRET / `cairn_whsec_` / `cairn_sk_` / `token_hash` / `password_hash` / `secret_encrypted`) or secret-ish key with a long base64 value.
+- Wired `recordAudit` into 16 sensitive sites: `publishPage` / `unpublishPage`, `setShareSettings` (P7), `mintKey` + `revokeKey`, `createWebhook` + `deleteWebhook`, `softDeletePage`, `archiveDatabase`, `setMemberRole` + `removeMember` (P17), `createInvite` + `revokeInvite`, `savePageAsTemplate` + `saveDatabaseAsTemplate`, `restoreVersion`. Metadata is ids/names/roles/booleans only — never secrets.
+- Paginated/filterable audit query layer (`listAuditLog` + `listPageActivity`, keyset cursor) + `GET /api/admin/audit` (admin-gated, workspace-scoped, filters: action / actorId / targetType / targetId / from / to) + `GET /api/pages/[pageId]/activity` (gated `viewer+` via `requirePageAccess`).
+- Admin audit viewer at `/settings/admin/audit` (filter bar + paginated table with expandable metadata) and a per-page activity feed (mounted in the page menu) that links `page.version_restored` entries to version history for content diffs.
+- The v0.5.1 secret-leak suite is extended with cross-cutting assertions: no `audit_log` row's metadata and no admin viewer response leaks an API token, webhook signing secret, invite token, share password, TOTP `secret_encrypted`, recovery codes, password/token hash, or the metrics token.
+
+### Added (v0.6.0 P19 — TOTP 2FA + recovery codes)
+- Per-user TOTP enrollment (RFC 6238, otplib 13) with QR + manual key + 10 single-use recovery codes shown ONCE at `/settings/security`. The shared secret is **encrypted at rest** (AES-256-GCM with an HKDF-derived key from `AUTH_SECRET` — `src/lib/crypto/secret-box.ts`); recovery codes are **hashed at rest** (SHA-256 over a normalized form, single-use consumed atomically).
+- Sign-in second-factor challenge in the Auth.js credentials `authorize`: a 2FA-enabled user must supply a valid TOTP code OR an unused recovery code; a missing/blank code with 2FA enabled fails closed (generic `CredentialsSignin` — no enumeration). `verifySecondFactor` stamps `last_used_at` on any success and persists the consumed recovery-code set in the same update.
+- `require_2fa` workspace gate: when any of a signed-in user's workspaces has `require_2fa=true`, the `(app)` layout redirects to `/settings/security?enroll=required` until enrollment confirms — `src/proxy.ts` pipes the request path via `x-pathname` so the layout can read it (proxy.ts stays cookie-only by design).
+- The v0.5.1 secret-leak suite is extended with TOTP coverage: the stored `user_totp` row never contains the plaintext secret or codes; the workspace-members / webhooks / admin-audit responses never contain the plaintext secret, the sealed bytea (hex or latin1), any plaintext recovery code, or any stored recovery-code hash; the enroll+confirm path emits no TOTP material via `console`.
+
+### Added (v0.6.0 P20 — Observability: metrics + structured logging)
+- `prom-client`-backed metrics registry (`src/lib/observability/metrics.ts`) with a closed set of aggregate-only metrics — `http_request_duration_seconds` + `http_requests_total` (labels: `method` / `route` / `status`), `db_query_duration_seconds`, `collab_active_connections`, `collab_doc_updates_total`, `webhook_delivery_total` + `webhook_delivery_duration_seconds`, `notifications_sent_total`. Every `labelNames` list is closed and contains **no tenant / user / page identifier**.
+- `routeTemplate()` normalizer (`src/lib/observability/route-template.ts`) collapses concrete ids (UUIDs, long hex, numeric, opaque slugs) to `:id` so the `route` label stays bounded — 1000 distinct page ids collapse to a single series (cardinality guard).
+- `GET /metrics` (`src/app/metrics/route.ts`, nodejs runtime): **off by default — 404 when `CAIRN_METRICS_TOKEN` is unset**, **401** with missing/wrong bearer (`crypto.timingSafeEqual`), **200** Prometheus exposition only on the right token. Reads `process.env.CAIRN_METRICS_TOKEN` directly so the toggle is per-request.
+- Instrumentation: `src/proxy.ts` records every request (route TEMPLATE, never the raw pathname); `listRows` in `src/lib/databases/rows.ts` records `db_query_duration_seconds{operation="list_rows"}`; the collab process (`collab/server.ts`) maintains a per-process gauge of active connections and a doc-update counter (counters populate the collab process's own registry — cross-process aggregation is a deploy concern, not faked here).
+- `pino` structured-JSON logger (`src/lib/observability/logger.ts`) with a wildcard `REDACT_PATHS` list covering `passwordHash` / `tokenHash` / `secret` / `secret_encrypted` / `recovery_codes` / `authorization` / `cookie` / `AUTH_SECRET` / `CAIRN_METRICS_TOKEN` / `sig`; the test asserts every declared secret VALUE is absent from real serialized output and `[Redacted]` appears in its place. The webhook dispatcher and notification fan-out swap their `console.*` for the logger and record `incWebhook({ event, outcome, durationSec })` / `incNotificationsSent({ channel })` with bounded label values.
+
+### Added (v0.6.0 P21 — Quotas + scheduled backups + import/export)
+- **Per-workspace storage quotas** (`workspace_quotas` table) with lazy row creation, transactional counter (`incrementStorageUsed`/`decrementStorageUsed` clamped at zero), `checkStorageQuota` enforcement at `storeUpload` BEFORE any blob is written (rejects with `QuotaExceededError` when `used + incoming > limit` — null limit = unlimited), and `reconcileQuota` recompute from the canonical `files.size` sum (CLI `reconcile [--workspace <id>]` — the counter-drift backstop).
+- **Backup CLI extensions:** `--retention-days N` prunes old `cairn-backup-*` / `cairn-uploads-*` bundles in `--out` after a successful run; `--target s3` additionally mirrors the bundle into the configured `FileStorage` (S3/MinIO) under `backups/`. Scheduling mechanism is documented external cron (recommended) OR an opt-in, off-by-default, **single-instance** `CAIRN_BACKUP_INTERVAL` ticker — multi-instance double-fires; no distributed lock for v1.0.
+- **Workspace export** (`cli export --workspace <id> --out <dir>`, `runWorkspaceExport`): a re-importable ZIP containing pages (JSON + Markdown), databases (JSON + CSV), file blobs from `FileStorage`, and a `manifest.json` declaring `format: 'cairn-workspace-archive@1'`. **Secrets are excluded** — no API keys, webhook secrets, TOTP material, recovery codes, or password hashes.
+- **Workspace import** (`cli import --source notion|markdown-folder|workspace-archive --file <path> --workspace <id>`, `runImport`): three importer modules all routing through `buildRemap`/`rewriteRefs` (templates id-rewrite — same proven second-pass) so every intra-export id (page, database, property, view, row, parent, page link, relation/rollup config) gets a freshly-minted uuid in the destination workspace, never a colliding source id. Persisted via a direct `persistImportPayload` writer that nests pages exactly as the payload specifies. Each run opens an `import_jobs` bookkeeping row (`status: running` → `completed`/`failed`) and emits a structured `ImportReport` enumerating per-item fidelity gaps (synced blocks, unsupported db property types, Notion-hosted external file URLs). The round-trip integration test proves export → import into a fresh workspace produces the same content with new ids and no secrets.
+- **PDF + per-page/per-database UI export:** the page menu adds "Export → Markdown / JSON / PDF" and the database toolbar adds "Export → CSV / JSON" buttons over `/api/pages/[pageId]/export` and `/api/databases/[databaseId]/export`. **PDF is browser-driven** — the route returns print-ready HTML with auto-open `window.print()`; users save as PDF from the browser's native print dialog. This avoids a heavy server-side Chromium/PDF dependency in the homelab image; a native server-side PDF path is deferred to a future plan.
+
+### Added (v0.6.0 P22 — Search filters + saved searches + reminders + bulk ops + workspace-home)
+- **Structured search filters:** `compileSearchFilters({author?, dateRange?, types?, scopeDatabaseId?})` AND-composes SQL fragments onto the existing FTS + trigram CTEs in `searchPages`. Author + date range ship live; `types` and `scopeDatabaseId` are accepted-but-inert (reserved for a future pages+db_rows union search; the filter vocabulary is part of saved_searches.filters jsonb so the shape is stable today). Every interpolated UUID is validated to defend the raw-SQL boundary.
+- **Per-user saved searches** (`saved_searches` table from P21): `createSavedSearch` / `listSavedSearches` / `updateSavedSearch` / `deleteSavedSearch` with owner-scoped predicates (cross-user mutation rejects). REST endpoints at `GET`/`POST /api/search/saved` and `PATCH`/`DELETE /api/search/saved/[savedSearchId]`. UI: a "Saved searches" cmdk group + "Save this search" footer in the search palette and a sidebar list (clickable to re-run, delete-with-confirm). `/api/search` now accepts `author` / `from` / `to` / `types` / `scopeDatabaseId` query params and forwards them through the compiler.
+- **Reminder materialization + scan:** `materializeReminders(db, {workspaceId, databaseId, rowId})` reads each `date`-typed property's `config.reminder.leadTime` and upserts a `reminders` row at `remind_at = dateValue - leadTime` (idempotent per `(row_id, property_id)`; clearing the date deletes the reminder). `scanReminders(db, now)` fires polled in-app notifications via the v0.3.0 path (new `notifications.type = 'reminder'` literal, no migration — column is plain text) and stamps `fired_at` so a row never double-fires; served by P21's partial index `reminders(remind_at) WHERE fired_at IS NULL`. A `pnpm cli reminders:scan` subcommand wires it. **Single-instance ceiling:** two instances scanning concurrently can double-fire (same ceiling as the backup ticker and single-instance collab — no distributed lock for v1.0).
+- **Bulk operations:** `bulkTrashPages` / `bulkRestorePages` / `bulkMovePages` run a per-item soft-delete / restore / parent-move over a selection inside one transaction. Each item attempts independently; the response carries `{succeeded[], failed:[{id, reason}]}` (partial-failure report). Role checked once up front (editor+); per-item workspace ownership enforced in the SQL predicate so cross-workspace ids can't slip through. Exposed at `POST /api/bulk` with a Zod-validated `{op, ids[], params?}` body. UI multi-select bar and `bulkDuplicate` / `bulkTagRows` deferred — they require invasive selection-state wiring into the existing components and deep integration with the per-item duplicate/cell helpers.
+- **Workspace-home landing:** `resolveLandingPage(db, {workspaceId, userId})` returns `workspaces.home_page_id` if set AND the page is live + in-workspace, else the oldest live page, else null. The `(app)` dashboard route now `redirect()`s to `/pages/<id>` when a landing resolves, falling back to the empty-state CTA otherwise.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)

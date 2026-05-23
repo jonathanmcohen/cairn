@@ -1,6 +1,48 @@
-import { sql as rawSql } from 'drizzle-orm';
+import { sql as rawSql, type SQL } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/db/schema';
+
+const UUID_RE = /^[0-9a-f-]{36}$/i;
+
+export type SearchFilters = {
+  author?: string;
+  dateRange?: { from?: string; to?: string };
+  /**
+   * Reserved: future pages+db_rows union search would split results by source.
+   * The current search only covers `pages`, so this is accepted but no SQL is emitted.
+   */
+  types?: ('page' | 'db_row')[];
+  /**
+   * Reserved: see `types` — the pages table has no database_id link column,
+   * so this is accepted but inert. Kept in the type so saved_searches.filters
+   * jsonb can store the full vocabulary.
+   */
+  scopeDatabaseId?: string;
+};
+
+/**
+ * Compile structured search filters into SQL fragments that AND onto the
+ * FTS / trigram WHERE clauses. Pure + config-only — no schema change.
+ * Every interpolated id is UUID-validated to defend the raw-SQL boundary
+ * (mirrors getBreadcrumbs).
+ */
+export function compileSearchFilters(filters: SearchFilters): SQL[] {
+  const frags: SQL[] = [];
+  if (filters.author) {
+    if (!UUID_RE.test(filters.author)) {
+      throw new Error(`invalid author uuid: ${filters.author}`);
+    }
+    frags.push(rawSql`created_by = ${filters.author}::uuid`);
+  }
+  if (filters.dateRange?.from) {
+    frags.push(rawSql`created_at >= ${filters.dateRange.from}::timestamptz`);
+  }
+  if (filters.dateRange?.to) {
+    frags.push(rawSql`created_at <= ${filters.dateRange.to}::timestamptz`);
+  }
+  // `types` and `scopeDatabaseId` accepted but currently no-op (see type docs).
+  return frags;
+}
 
 export type SearchResult = {
   id: string;
@@ -14,6 +56,7 @@ export type SearchPagesInput = {
   workspaceId: string;
   query: string;
   limit?: number;
+  filters?: SearchFilters;
 };
 
 export async function searchPages(
@@ -23,6 +66,11 @@ export async function searchPages(
   const limit = Math.min(input.limit ?? 20, 50);
   const q = input.query.trim();
   if (!q) return [];
+
+  // Build extra WHERE fragment (or `true` when no filters).
+  const extraFrags = compileSearchFilters(input.filters ?? {});
+  const extra =
+    extraFrags.length === 0 ? rawSql`true` : extraFrags.reduce((acc, f) => rawSql`${acc} AND ${f}`);
 
   const rows = (await db.execute(rawSql`
     WITH fts AS (
@@ -40,6 +88,7 @@ export async function searchPages(
       WHERE workspace_id = ${input.workspaceId}
         AND deleted_at IS NULL
         AND content_tsv @@ websearch_to_tsquery('english', ${q})
+        AND ${extra}
       ORDER BY rank DESC
       LIMIT ${limit}
     ),
@@ -54,6 +103,7 @@ export async function searchPages(
         AND deleted_at IS NULL
         AND similarity(title, ${q}) > 0.2
         AND id NOT IN (SELECT id FROM fts)
+        AND ${extra}
       ORDER BY rank DESC
       LIMIT ${limit}
     )

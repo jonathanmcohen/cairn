@@ -115,7 +115,7 @@ export function NotificationBell() {
         onClick={toggle}
       >
         <span className="relative">
-          <Bell className="h-5 w-5" />
+          <Bell aria-hidden="true" className="h-5 w-5" />
           {unread > 0 && (
             <span
               role="img"

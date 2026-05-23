@@ -11,18 +11,18 @@ type Any = any;
 function fixture(): TemplatePayload {
   return {
     kind: 'page',
-    rootPageId: 'page-root',
+    rootPageId: 'Xpage-root',
     pages: [
       {
-        id: 'page-root',
+        id: 'Xpage-root',
         parentId: null,
         title: 'Root',
         icon: null,
         content: { type: 'doc', content: [] },
       },
       {
-        id: 'page-child',
-        parentId: 'page-root',
+        id: 'Xpage-child',
+        parentId: 'Xpage-root',
         title: 'Child',
         icon: '📄',
         content: {
@@ -30,19 +30,19 @@ function fixture(): TemplatePayload {
           content: [
             { type: 'paragraph', content: [{ type: 'text', text: 'hi' }] },
             // database node nested inside another block — deep walk must reach it
-            { type: 'callout', content: [{ type: 'database', attrs: { databaseId: 'db-a' } }] },
-            { type: 'database', attrs: { databaseId: 'db-b' } },
+            { type: 'callout', content: [{ type: 'database', attrs: { databaseId: 'Xdb-a' } }] },
+            { type: 'database', attrs: { databaseId: 'Xdb-b' } },
           ],
         },
       },
     ],
     databases: [
       {
-        id: 'db-a',
+        id: 'Xdb-a',
         name: 'Tasks',
         properties: [
           {
-            id: 'prop-status',
+            id: 'Xprop-status',
             name: 'Status',
             type: 'select',
             config: { options: [{ id: 'o1', name: 'Open' }] },
@@ -50,48 +50,50 @@ function fixture(): TemplatePayload {
           },
           // relation property pointing at db-b; rollup pointing at a prop in db-b
           {
-            id: 'prop-rel',
+            id: 'Xprop-rel',
             name: 'Project',
             type: 'relation',
-            config: { targetDatabaseId: 'db-b' },
+            config: { targetDatabaseId: 'Xdb-b' },
             position: 1,
           },
           {
-            id: 'prop-roll',
+            id: 'Xprop-roll',
             name: 'Sum',
             type: 'rollup',
-            config: { relationPropertyId: 'prop-rel', targetPropertyId: 'prop-b-num' },
+            config: { relationPropertyId: 'Xprop-rel', targetPropertyId: 'Xprop-b-num' },
             position: 2,
           },
-          { id: 'prop-due', name: 'Due', type: 'date', config: {}, position: 3 },
+          { id: 'Xprop-due', name: 'Due', type: 'date', config: {}, position: 3 },
         ],
         views: [
           {
-            id: 'view-table',
+            id: 'Xview-table',
             type: 'table',
             name: 'All',
             config: {
-              visibleProperties: ['prop-status', 'prop-rel'],
-              sorts: [{ propertyId: 'prop-status', direction: 'asc' }],
-              filters: [{ propertyId: 'prop-rel', op: 'is_not_empty', value: null }],
-              groupBy: 'prop-status',
+              visibleProperties: ['Xprop-status', 'Xprop-rel'],
+              sorts: [{ propertyId: 'Xprop-status', direction: 'asc' }],
+              filters: [{ propertyId: 'Xprop-rel', op: 'is_not_empty', value: null }],
+              groupBy: 'Xprop-status',
             },
             position: 0,
           },
           {
-            id: 'view-cal',
+            id: 'Xview-cal',
             type: 'calendar',
             name: 'Calendar',
-            config: { dateProperty: 'prop-due' },
+            config: { dateProperty: 'Xprop-due' },
             position: 1,
           },
         ],
-        rows: [{ id: 'row-1', cells: [{ propertyId: 'prop-status', value: 'o1' }] }],
+        rows: [{ id: 'Xrow-1', cells: [{ propertyId: 'Xprop-status', value: 'o1' }] }],
       },
       {
-        id: 'db-b',
+        id: 'Xdb-b',
         name: 'Projects',
-        properties: [{ id: 'prop-b-num', name: 'Budget', type: 'number', config: {}, position: 0 }],
+        properties: [
+          { id: 'Xprop-b-num', name: 'Budget', type: 'number', config: {}, position: 0 },
+        ],
         views: [],
         rows: [],
       },
@@ -103,18 +105,18 @@ describe('buildRemap', () => {
   it('mints a fresh uuid for every entity id and is injective', () => {
     const remap = buildRemap(fixture());
     const sources = [
-      'page-root',
-      'page-child',
-      'db-a',
-      'db-b',
-      'prop-status',
-      'prop-rel',
-      'prop-roll',
-      'view-table',
-      'view-cal',
-      'row-1',
-      'prop-b-num',
-      'prop-due',
+      'Xpage-root',
+      'Xpage-child',
+      'Xdb-a',
+      'Xdb-b',
+      'Xprop-status',
+      'Xprop-rel',
+      'Xprop-roll',
+      'Xview-table',
+      'Xview-cal',
+      'Xrow-1',
+      'Xprop-b-num',
+      'Xprop-due',
     ];
     for (const s of sources) {
       expect(remap.get(s)).toMatch(UUID);
@@ -135,67 +137,67 @@ describe('rewriteRefs', () => {
     // 1. page ids + parent links
     const root = out.pages.find((p) => p.title === 'Root')!;
     const child = out.pages.find((p) => p.title === 'Child')!;
-    expect(root.id).toBe(m('page-root'));
-    expect(child.id).toBe(m('page-child'));
-    expect(child.parentId).toBe(m('page-root'));
+    expect(root.id).toBe(m('Xpage-root'));
+    expect(child.id).toBe(m('Xpage-child'));
+    expect(child.parentId).toBe(m('Xpage-root'));
     expect(child.icon).toBe('📄'); // untouched
-    expect(out.rootPageId).toBe(m('page-root'));
+    expect(out.rootPageId).toBe(m('Xpage-root'));
 
     // 2. embedded database-node databaseIds (incl. deeply nested)
     const blocks = (child.content as Any).content;
-    expect(blocks[1].content[0].attrs.databaseId).toBe(m('db-a')); // inside callout
-    expect(blocks[2].attrs.databaseId).toBe(m('db-b'));
+    expect(blocks[1].content[0].attrs.databaseId).toBe(m('Xdb-a')); // inside callout
+    expect(blocks[2].attrs.databaseId).toBe(m('Xdb-b'));
     expect(blocks[0].content[0].text).toBe('hi'); // text untouched
 
     // 3. database ids
     const dbA = out.databases.find((d) => d.name === 'Tasks')!;
     const dbB = out.databases.find((d) => d.name === 'Projects')!;
-    expect(dbA.id).toBe(m('db-a'));
-    expect(dbB.id).toBe(m('db-b'));
+    expect(dbA.id).toBe(m('Xdb-a'));
+    expect(dbB.id).toBe(m('Xdb-b'));
 
     // 4. property / view / row / cell ids
     const status = dbA.properties.find((p) => p.name === 'Status')!;
     const rel = dbA.properties.find((p) => p.name === 'Project')!;
     const roll = dbA.properties.find((p) => p.name === 'Sum')!;
-    expect(status.id).toBe(m('prop-status'));
-    expect(rel.id).toBe(m('prop-rel'));
-    expect(dbA.views[0]!.id).toBe(m('view-table'));
-    expect(dbA.rows[0]!.id).toBe(m('row-1'));
-    expect(dbA.rows[0]!.cells[0]!.propertyId).toBe(m('prop-status'));
+    expect(status.id).toBe(m('Xprop-status'));
+    expect(rel.id).toBe(m('Xprop-rel'));
+    expect(dbA.views[0]!.id).toBe(m('Xview-table'));
+    expect(dbA.rows[0]!.id).toBe(m('Xrow-1'));
+    expect(dbA.rows[0]!.cells[0]!.propertyId).toBe(m('Xprop-status'));
     expect(dbA.rows[0]!.cells[0]!.value).toBe('o1'); // cell value untouched (option id, not an entity id)
 
     // 5a. relation/rollup config refs
-    expect((rel.config as Any).targetDatabaseId).toBe(m('db-b'));
-    expect((roll.config as Any).relationPropertyId).toBe(m('prop-rel'));
-    expect((roll.config as Any).targetPropertyId).toBe(m('prop-b-num'));
+    expect((rel.config as Any).targetDatabaseId).toBe(m('Xdb-b'));
+    expect((roll.config as Any).relationPropertyId).toBe(m('Xprop-rel'));
+    expect((roll.config as Any).targetPropertyId).toBe(m('Xprop-b-num'));
     // select option ids are NOT entity ids → left alone
     expect((status.config as Any).options[0].id).toBe('o1');
 
     // 5b. view-config property refs
     const vc = dbA.views[0]!.config as Any;
-    expect(vc.visibleProperties).toEqual([m('prop-status'), m('prop-rel')]);
-    expect(vc.sorts[0].propertyId).toBe(m('prop-status'));
-    expect(vc.filters[0].propertyId).toBe(m('prop-rel'));
-    expect(vc.groupBy).toBe(m('prop-status'));
+    expect(vc.visibleProperties).toEqual([m('Xprop-status'), m('Xprop-rel')]);
+    expect(vc.sorts[0].propertyId).toBe(m('Xprop-status'));
+    expect(vc.filters[0].propertyId).toBe(m('Xprop-rel'));
+    expect(vc.groupBy).toBe(m('Xprop-status'));
     // calendar view dateProperty ref
     const cal = dbA.views.find((v) => v.name === 'Calendar')!;
-    expect((cal.config as Any).dateProperty).toBe(m('prop-due'));
+    expect((cal.config as Any).dateProperty).toBe(m('Xprop-due'));
 
     // NO source id survives anywhere in the output (the dangling-ref guarantee)
     const serialized = JSON.stringify(out);
     for (const src of [
-      'page-root',
-      'page-child',
-      'db-a',
-      'db-b',
-      'prop-status',
-      'prop-rel',
-      'prop-roll',
-      'view-table',
-      'view-cal',
-      'row-1',
-      'prop-b-num',
-      'prop-due',
+      'Xpage-root',
+      'Xpage-child',
+      'Xdb-a',
+      'Xdb-b',
+      'Xprop-status',
+      'Xprop-rel',
+      'Xprop-roll',
+      'Xview-table',
+      'Xview-cal',
+      'Xrow-1',
+      'Xprop-b-num',
+      'Xprop-due',
     ]) {
       expect(serialized).not.toContain(src);
     }

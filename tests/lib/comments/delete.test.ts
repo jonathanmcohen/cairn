@@ -44,7 +44,7 @@ describe('deleteComment', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'mine',
     });
@@ -63,7 +63,7 @@ describe('deleteComment', () => {
     const p = await createPage(db, { workspaceId: author.workspaceId, createdBy: author.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: author.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: author.userId,
       body: 'x',
     });
@@ -85,7 +85,7 @@ describe('deleteComment', () => {
     const p = await createPage(db, { workspaceId: author.workspaceId, createdBy: author.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: author.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: author.userId,
       body: 'x',
     });
@@ -106,7 +106,7 @@ describe('deleteComment', () => {
     const p = await createPage(db, { workspaceId: other.workspaceId, createdBy: other.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: other.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: other.userId,
       body: 'x',
     });

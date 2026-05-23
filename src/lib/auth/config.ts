@@ -7,13 +7,16 @@ import Google from 'next-auth/providers/google';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { env } from '@/lib/env';
 import { ipKey, loginLimiter } from '@/lib/security/rate-limit';
 import { applyOAuthGate } from './oauth-gate';
 import { verifyPassword } from './password';
+import { isTwoFactorEnabled, verifySecondFactor } from './two-factor';
 
 const CredentialsSchema = z.object({
   email: z.email(),
   password: z.string().min(1),
+  totp: z.string().optional(),
 });
 
 function buildProviders(): NextAuthConfig['providers'] {
@@ -41,6 +44,20 @@ function buildProviders(): NextAuthConfig['providers'] {
         if (!user) return null;
         const ok = await verifyPassword(parsed.data.password, user.passwordHash);
         if (!ok) return null;
+        // Second factor: if this user has TOTP enabled, a valid TOTP or recovery
+        // code is required before we issue a session. A missing/blank code with
+        // 2FA enabled fails closed (returns null → generic CredentialsSignin).
+        const enabled = await isTwoFactorEnabled(db, user.id);
+        if (enabled) {
+          const code = parsed.data.totp?.trim();
+          if (!code) return null;
+          const passed = await verifySecondFactor(db, {
+            userId: user.id,
+            code,
+            key: env().AUTH_SECRET,
+          });
+          if (!passed) return null;
+        }
         return { id: user.id, email: user.email, name: user.name };
       },
     }),

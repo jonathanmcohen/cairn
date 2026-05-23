@@ -68,6 +68,7 @@ export async function POST(req: Request): Promise<Response> {
       if (!page) return NextResponse.json({ error: 'not found' }, { status: 404 });
       const tpl = await savePageAsTemplate(db, {
         workspaceId: ctx.workspaceId,
+        actorUserId: ctx.userId,
         rootPageId: parsed.pageId,
         name: parsed.name,
       });
@@ -90,6 +91,7 @@ export async function POST(req: Request): Promise<Response> {
     if (!database) return NextResponse.json({ error: 'not found' }, { status: 404 });
     const tpl = await saveDatabaseAsTemplate(db, {
       workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
       databaseId: parsed.databaseId,
       name: parsed.name,
       withSampleRows: parsed.withSampleRows,

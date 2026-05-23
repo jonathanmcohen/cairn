@@ -54,7 +54,11 @@ describe('trash routes', () => {
       createdBy: u.userId,
       title: 'X',
     });
-    await softDeletePage(getDb(), { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const { GET } = await import('@/app/api/trash/route');
     const res = await GET();
     expect(res.status).toBe(200);
@@ -65,7 +69,11 @@ describe('trash routes', () => {
   it('POST /api/pages/[pageId]/restore restores as editor', async () => {
     const u = await asUser('editor');
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(getDb(), { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const { POST } = await import('@/app/api/pages/[pageId]/restore/route');
     const res = await POST(
       new Request(`http://localhost/api/pages/${p.id}/restore`, { method: 'POST' }),
@@ -77,7 +85,11 @@ describe('trash routes', () => {
   it('POST restore: viewer is 403', async () => {
     const u = await asUser('viewer');
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(getDb(), { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const { POST } = await import('@/app/api/pages/[pageId]/restore/route');
     const res = await POST(
       new Request(`http://localhost/api/pages/${p.id}/restore`, { method: 'POST' }),
@@ -89,7 +101,11 @@ describe('trash routes', () => {
   it('DELETE /api/trash/[pageId] hard-deletes as editor', async () => {
     const u = await asUser('editor');
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(getDb(), { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const { DELETE } = await import('@/app/api/trash/[pageId]/route');
     const res = await DELETE(
       new Request(`http://localhost/api/trash/${p.id}`, { method: 'DELETE' }),
@@ -101,7 +117,11 @@ describe('trash routes', () => {
   it('DELETE /api/trash/[pageId]: viewer is 403', async () => {
     const u = await asUser('viewer');
     const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
-    await softDeletePage(getDb(), { pageId: p.id, workspaceId: u.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId: p.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     const { DELETE } = await import('@/app/api/trash/[pageId]/route');
     const res = await DELETE(
       new Request(`http://localhost/api/trash/${p.id}`, { method: 'DELETE' }),

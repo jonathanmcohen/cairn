@@ -19,6 +19,7 @@ let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle<typeof schema>>;
 let pageId: string;
 let authorId: string;
+let workspaceId: string;
 
 beforeAll(async () => {
   const uri = await startPostgres();
@@ -36,6 +37,7 @@ beforeEach(async () => {
   await sql`TRUNCATE page_versions, pages, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
   const u = await createTestWorkspaceWithUser(db);
   authorId = u.userId;
+  workspaceId = u.workspaceId;
   const page = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
   pageId = page.id;
 });
@@ -103,7 +105,11 @@ describe('restoreVersion', () => {
     );
     await snapshotIfChanged(db, { pageId, content: doc('second'), authorId });
 
-    const restored = await restoreVersion(db, v1!.id);
+    const restored = await restoreVersion(db, {
+      versionId: v1!.id,
+      workspaceId,
+      actorUserId: authorId,
+    });
     // page content is back to v1
     expect(restored.content).toEqual(doc('first'));
     const [page] = await db.select().from(schema.pages).where(eq(schema.pages.id, pageId));
@@ -115,7 +121,9 @@ describe('restoreVersion', () => {
   });
 
   it('throws on an unknown version id', async () => {
-    await expect(restoreVersion(db, randomUUID())).rejects.toThrow();
+    await expect(
+      restoreVersion(db, { versionId: randomUUID(), workspaceId, actorUserId: authorId }),
+    ).rejects.toThrow();
   });
 });
 

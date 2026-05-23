@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   integer,
   jsonb,
@@ -24,7 +25,14 @@ export const propertyType = pgEnum('property_type', [
   'relation',
   'rollup',
 ]);
-export const viewType = pgEnum('view_type', ['table', 'kanban', 'gallery', 'calendar', 'timeline']);
+export const viewType = pgEnum('view_type', [
+  'table',
+  'kanban',
+  'gallery',
+  'calendar',
+  'timeline',
+  'list',
+]);
 
 export const databases = pgTable('databases', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -35,6 +43,7 @@ export const databases = pgTable('databases', {
     .notNull()
     .references(() => pages.id, { onDelete: 'cascade' }),
   name: text('name').notNull().default('Untitled database'),
+  config: jsonb('config').notNull().default({}),
   createdBy: uuid('created_by')
     .notNull()
     .references(() => users.id, { onDelete: 'restrict' }),
@@ -58,6 +67,9 @@ export const dbRows = pgTable('db_rows', {
   databaseId: uuid('database_id')
     .notNull()
     .references(() => databases.id, { onDelete: 'cascade' }),
+  parentRowId: uuid('parent_row_id').references((): AnyPgColumn => dbRows.id, {
+    onDelete: 'set null',
+  }),
   createdBy: uuid('created_by')
     .notNull()
     .references(() => users.id, { onDelete: 'restrict' }),

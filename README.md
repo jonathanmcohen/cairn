@@ -6,12 +6,47 @@
 
 **Self-hosted, Notion-style block-based notes for homelab deployment.**
 
-Cairn is a single-container web app you can run on your own hardware. It gives
-you a familiar block-editor experience for nested notes, plus inline
-databases, full-text search, and file uploads — without sending your content
-to anyone else.
+Cairn is a small, multi-container web app you run on your own hardware. By
+v0.6.0 it covers a Notion-shaped surface — nested pages, inline databases
+with reverse relations and rollups, real-time collaboration with comments
+and track-changes suggestions, per-page public sharing and a multi-page
+public site, a responsive PWA with bounded offline, WCAG 2.1 AA, TOTP 2FA,
+audit log + observability, per-workspace storage quotas, scheduled backups,
+import/export, search-filter + saved searches, reminders, and bulk page ops
+— without sending your content to anyone else.
 
-## Features
+## v0.6.0 features
+
+The v0.6.0 surface in five bands (see [CHANGELOG.md](CHANGELOG.md) for the
+full list):
+
+- **Content & databases** — reverse/bidirectional relations, list view,
+  filters + grouping + multi-sort, row hierarchy (sub-items), toggle /
+  columns / table blocks, embed / bookmark / math / synced blocks,
+  table-of-contents + outline + full-page DB view + calc footer.
+- **Sharing & collaboration** — per-page share settings (password + expiry
+  + duplicate), public multi-page site at `/s/<slug>`, comments on
+  databases + files, Yjs suggestion / track-changes mode, page links +
+  backlinks + page mentions/embeds + row templates, BYO-SMTP email
+  notifications with digest mode and per-event preferences.
+- **Mobile / a11y / i18n** — responsive mobile UI with off-canvas drawer,
+  PWA + bounded offline (`y-indexeddb`), WCAG 2.1 AA + axe CI gate,
+  keyboard-shortcuts registry + ⌘/ sheet, en + ar (RTL) i18n proof.
+- **Admin, observability & ops** — favorites/recents + column ergonomics +
+  block convert + multi-select, workspace admin console, audit log +
+  per-page activity feed, TOTP 2FA + recovery codes, Prometheus metrics
+  (`prom-client`) + structured logging (`pino`).
+- **Quotas, import/export, search, bulk** — per-workspace storage quotas
+  + `reconcile` CLI, scheduled-backup flags (`--retention-days`,
+  `--target s3`), re-importable workspace export archive (secrets
+  excluded), Notion + Markdown-folder + workspace-archive import with
+  templates id-rewrite + import report, PDF export (browser-print) +
+  per-page/per-database UI export buttons, search-filter compiler (author
+  + date range) + per-user saved searches + sidebar list + palette
+  section, due-date reminders + `reminders:scan` CLI, bulk trash / restore
+  / move pages with partial-failure report, workspace-home landing.
+
+## Features (carry-over from v0.1–v0.5)
 
 - 🌳 **Nested pages** with sidebar tree, emoji icons, cover images
 - ✍️ **Block editor** (paragraph, headings, lists, todo lists, blockquote,
@@ -90,15 +125,18 @@ workspace owner.
 ### Pulling a published image
 
 ```sh
-docker pull ghcr.io/jonathanmcohen/cairn:0.1.0
+docker pull ghcr.io/jonathanmcohen/cairn:0.6.0
+docker pull ghcr.io/jonathanmcohen/cairn-collab:0.6.0
 ```
 
-Then point your docker-compose at the published image instead of `build: .`:
+Then point your docker-compose at the published images instead of `build: .`:
 
 ```yaml
 services:
   app:
-    image: ghcr.io/jonathanmcohen/cairn:0.1.0
+    image: ghcr.io/jonathanmcohen/cairn:0.6.0
+  collab:
+    image: ghcr.io/jonathanmcohen/cairn-collab:0.6.0
 ```
 
 ## Configuration
@@ -111,6 +149,14 @@ services:
 | `CAIRN_MAX_UPLOAD_MB` | `25` | Per-file upload size limit |
 | `CAIRN_TRASH_RETENTION_DAYS` | `30` | Days before trash auto-purges |
 | `CAIRN_LOG_LEVEL` | `info` | `debug` / `info` / `warn` / `error` |
+| `CAIRN_METRICS_TOKEN` | _unset_ | Bearer token gating `/metrics` (≥ 16 chars). `/metrics` is **OFF** until set. |
+| `CAIRN_BACKUP_INTERVAL` | _unset_ | Opt-in in-process backup ticker (e.g. `24h`). OFF + single-instance only. |
+| `CAIRN_REMINDER_INTERVAL` | _unset_ | Opt-in in-process `reminders:scan` ticker. OFF + single-instance only. |
+| `CAIRN_DIGEST_INTERVAL` | `0` | Opt-in in-process email-digest ticker (minutes). `0` = off, single-instance only. |
+| `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` / `SMTP_SECURE` | _unset_ | BYO-SMTP for email notifications + digests. Email is OFF until host + from are set. |
+
+See [docs/operations.md](docs/operations.md) for the scheduled-backups /
+reminders / quotas runbook and the external-cron pattern.
 
 ### OAuth setup (optional)
 
@@ -157,12 +203,12 @@ The browser connects to the collab server via `COLLAB_URL` (the public WS URL of
 the `cairn-collab` service; set it in `.env`). Images:
 
 ```
-ghcr.io/jonathanmcohen/cairn:0.3.0          # the Next.js app
-ghcr.io/jonathanmcohen/cairn-collab:0.3.0   # the collab (Hocuspocus) server
+ghcr.io/jonathanmcohen/cairn:0.6.0          # the Next.js app
+ghcr.io/jonathanmcohen/cairn-collab:0.6.0   # the collab (Hocuspocus) server
 ```
 
-Public/read-only `/p/<slug>` pages do not use the collab socket and have no
-presence or comments.
+Public/read-only `/p/<slug>` pages and the multi-page public site at
+`/s/<slug>` do not use the collab socket and have no presence or comments.
 
 ## Operations
 
@@ -219,7 +265,7 @@ full `DATABASE_URL` and `NEXTAUTH_URL` directly.
 cp .env.example .env   # full set; both compose AND pnpm read from here
 pnpm install
 pnpm dev               # http://localhost:3000
-pnpm test              # 441 tests, requires Docker for testcontainers
+pnpm test              # 1129 passing, requires Docker for testcontainers
 pnpm lint              # Biome
 pnpm typecheck         # tsc
 pnpm build             # Next.js standalone + entrypoint compile
@@ -303,13 +349,15 @@ A generated OpenAPI document is out of scope for this release.
 
 ## Roadmap
 
-v0.1.0 is the initial release. Planned for later versions:
+v0.6.0 closes the v0.1 → v0.6 plan (real-time collab, public site, mobile
+PWA, a11y AA, 2FA, observability, quotas, scheduled backups, import/export,
+saved searches, reminders, bulk page ops). Carried into v1.0 / later:
 
-- **v0.3.x:** owner-transfer and workspace deletion; comment-reply threads
-- **v0.4.x:** reverse / bidirectional relations; filter & sort on computed
-  (formula/rollup) values
-- **v0.4.x+:** native mobile apps, public API + webhooks, templates,
-  page version history, S3/MinIO backend, backup/restore CLI
+- **Filter & sort on computed (formula/rollup) values** — still display-only.
+- **`totp:disable` CLI** for lockout recovery (admin out-of-band).
+- **Distributed lock** for backup / reminder / digest tickers so they're
+  safe on multi-instance deploys (today: external cron).
+- **Native mobile apps**, **public API + webhooks**, **OpenAPI document**.
 
 See [CHANGELOG.md](CHANGELOG.md) for the full release history.
 
@@ -328,6 +376,51 @@ the live docker stack (headers, CSP-renders-the-app, anon denial, forged tokens)
 See [SECURITY.md](SECURITY.md) for the STRIDE-lite threat model, the
 trust-boundary→control table, residual risks, and the vulnerability-reporting
 process.
+
+### v0.6.0 security & operations caveats
+
+- **Metrics endpoint (`/metrics`) is OFF by default.** It binds only when
+  `CAIRN_METRICS_TOKEN` is set, and requires a matching `Authorization:
+  Bearer <token>` on every scrape. Labels are aggregate-only — no tenant /
+  workspace / user ids are exported.
+- **TOTP 2FA secrets are encrypted at rest** (AES-256-GCM, key derived from
+  `AUTH_SECRET`); recovery codes are stored hashed and are single-use.
+  Lockout recovery (a `totp:disable` CLI subcommand) is deferred — handle
+  lost-device cases out-of-band today.
+- **Single-instance scheduling ceiling.** `CAIRN_BACKUP_INTERVAL`,
+  `CAIRN_REMINDER_INTERVAL`, and `CAIRN_DIGEST_INTERVAL` are in-process
+  tickers, **OFF by default and SINGLE-INSTANCE only** — two replicas
+  double-fire. Prefer external cron invoking the CLI (`pnpm cli backup`,
+  `pnpm cli reminders:scan`, `pnpm cli email:digest`) for multi-instance
+  setups; there is no distributed lock in v1.0.
+- **Anonymous public surfaces (`/p/`, `/s/`).** Password-protected pages
+  use Argon2id + HMAC-signed cookies. The public site at `/s/<slug>` lists
+  only pages explicitly published into it. The CSP `frame-src` allowlist
+  is pinned to the embed providers below and is drift-guarded by a test.
+- **Offline scope.** The PWA's `y-indexeddb` offline buffer is **bounded**
+  (recent pages only) and resyncs on reconnect. It is not a full
+  offline-first sync engine — don't expect parity with the server while
+  disconnected for long stretches.
+- **Embed allowlist.** Only YouTube, Vimeo, Figma, GitHub gist, and
+  CodeSandbox iframes are accepted; all are sandboxed and HTTPS-only.
+  Arbitrary `<iframe>` embeds are explicitly out of scope.
+
+## Accessibility
+
+Cairn targets **WCAG 2.1 Level AA** across the authenticated app surfaces.
+Compliance is enforced by an `@axe-core/playwright` gate (`pnpm test:a11y`)
+that audits the editor, sidebar, database table, share/page-actions dialog,
+and sign-in screen on both **light and dark** themes. The same gate runs in
+CI as a dedicated `a11y` job and fails the build on any WCAG 2.1 AA
+violation, so a regression in semantic landmarks, ARIA usage, color contrast,
+focus management, or labelled controls blocks the merge.
+
+What axe cannot evaluate — screen-reader reading order, live-region
+announcement quality, the keyboard-driven feel of menus and grids — is
+covered by a manual checklist at
+[docs/a11y-screen-reader-checklist.md](docs/a11y-screen-reader-checklist.md).
+Run that checklist before any release that touches the editor, sidebar,
+database views, dialogs/popovers, or sign-in.
 
 ## License
 

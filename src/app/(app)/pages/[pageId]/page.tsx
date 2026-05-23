@@ -5,6 +5,7 @@ import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
+import { PageExportMenu } from '@/components/pages/export-menu';
 import { VersionHistory } from '@/components/pages/version-history';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
@@ -32,11 +33,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
+    <div className="mx-auto w-full max-w-3xl px-1 sm:px-0">
       <CoverImage pageId={page.id} initial={page.coverUrl} />
-      <div className="mb-6 flex items-center gap-3">
+      <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
         <PageIconPicker pageId={page.id} initial={page.icon} />
-        <div className="flex-1">
+        <div className="min-w-0 flex-1 basis-full sm:basis-auto">
           <PageTitleInput pageId={page.id} initial={page.title} />
         </div>
         <CommentsToggle
@@ -46,11 +47,15 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           currentRole={ctx.role}
         />
         <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
+        <PageExportMenu pageId={page.id} />
         <PageMenu
           pageId={page.id}
           initialPublished={page.published}
           initialSlug={page.publicSlug}
           pageTitle={page.title}
+          initialAllowDuplication={page.allowDuplication}
+          initialHasPassword={!!page.linkPasswordHash}
+          initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
         />
       </div>
       <Editor

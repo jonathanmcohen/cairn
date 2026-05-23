@@ -42,7 +42,11 @@ describe('hardDeletePage', () => {
       parentId: root.id,
       title: 'C',
     });
-    await softDeletePage(db, { pageId: root.id, workspaceId: u.workspaceId });
+    await softDeletePage(db, {
+      pageId: root.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     await hardDeletePage(db, { pageId: root.id, workspaceId: u.workspaceId });
     const rows = await db.select().from(schema.pages);
     expect(rows).toEqual([]);
@@ -60,7 +64,11 @@ describe('hardDeletePage', () => {
     const a = await createTestWorkspaceWithUser(db);
     const b = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: b.workspaceId, createdBy: b.userId });
-    await softDeletePage(db, { pageId: p.id, workspaceId: b.workspaceId });
+    await softDeletePage(db, {
+      pageId: p.id,
+      workspaceId: b.workspaceId,
+      actorUserId: b.userId,
+    });
     await expect(hardDeletePage(db, { pageId: p.id, workspaceId: a.workspaceId })).rejects.toThrow(
       /not in trash/i,
     );

@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -16,6 +17,14 @@ vi.mock('@/lib/auth/config', () => {
     },
   };
 });
+
+// The admin audit + workspaces APIs read the active workspace from a cookie
+// (`cairn_ws`). Mock `next/headers` so we can pin it per-test (mirrors the
+// pattern in tests/api/admin-members.test.ts).
+let activeCookie: { name: string; value: string } | undefined;
+vi.mock('next/headers', () => ({
+  cookies: async () => ({ get: () => activeCookie, set: () => {} }),
+}));
 
 async function actAs(userId: string): Promise<void> {
   const mod = (await import('@/lib/auth/config')) as unknown as {
@@ -41,13 +50,36 @@ afterAll(async () => {
   await stopPostgres();
 });
 beforeEach(async () => {
-  await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks
+  await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks, audit_log, user_totp
     RESTART IDENTITY CASCADE`;
 });
 
 // Secret-bearing column/field names that must NEVER appear in an API response,
-// plus the live AUTH_SECRET value itself.
-const FORBIDDEN_KEYS = ['passwordHash', 'password_hash', 'tokenHash', 'token_hash', 'AUTH_SECRET'];
+// plus the live AUTH_SECRET value itself, plus other key/secret-ish fields
+// added by post-v0.5.1 features (2FA recovery codes, BYO-SMTP encrypted
+// secrets, metrics token env). These are field-name needles; prefixes like
+// `cairn_sk_` are NOT in this set because the api-key display prefix
+// (`cairn_sk_ab12`) is intentionally surfaced in the keys list and would
+// trigger a false positive — those prefix substrings are checked separately
+// by `assertNoSecretPrefixes` below, on responses where they MUST NOT appear.
+const FORBIDDEN_KEYS = [
+  'passwordHash',
+  'password_hash',
+  'tokenHash',
+  'token_hash',
+  'AUTH_SECRET',
+  'secret_encrypted',
+  'secretEncrypted',
+  'recovery_codes',
+  'recoveryCodes',
+  'CAIRN_METRICS_TOKEN',
+];
+
+// Full-secret prefixes. These MUST never appear in audit metadata or in the
+// admin audit viewer response (a full minted token would start with one of
+// these). They're separated from `FORBIDDEN_KEYS` because the api-key listing
+// legitimately surfaces a 4-char display prefix that starts with `cairn_sk_`.
+const FORBIDDEN_SECRET_PREFIXES = ['cairn_whsec_', 'cairn_sk_'];
 
 function assertNoSecrets(body: string) {
   for (const k of FORBIDDEN_KEYS) {
@@ -55,6 +87,12 @@ function assertNoSecrets(body: string) {
   }
   // The webhook signing secret value and the live AUTH_SECRET must be absent.
   expect(body).not.toContain(process.env.AUTH_SECRET ?? '__never__');
+}
+
+function assertNoSecretPrefixes(body: string) {
+  for (const p of FORBIDDEN_SECRET_PREFIXES) {
+    expect(body).not.toContain(p);
+  }
 }
 
 describe('secret non-leakage in API responses', () => {
@@ -117,5 +155,253 @@ describe('secret non-leakage in API responses', () => {
     assertNoSecrets(body);
     expect(body).toContain('cairn_sk_ab12'); // prefix is safe to surface
     expect(body).not.toContain('a'.repeat(64)); // the hash is not
+  });
+});
+
+describe('audit log + viewer never leak secrets', () => {
+  // Seed a workspace + admin user, then drive the documented sensitive flows
+  // through their real helper functions (which record audit rows inside the
+  // same transaction as the action). Returns the freshly-minted plaintext
+  // tokens / secrets / passwords so each test can assert their absence.
+  async function seedAuditedActions(): Promise<{
+    workspaceId: string;
+    userId: string;
+    pageId: string;
+    rawApiToken: string;
+    webhookSecret: string;
+    rawInviteToken: string;
+    sharePassword: string;
+  }> {
+    const ws = await createTestWorkspaceWithUser(db, { role: 'admin' });
+
+    // Seed a page so `setShareSettings` has something to act on.
+    const [page] = await db
+      .insert(schema.pages)
+      .values({ workspaceId: ws.workspaceId, title: 'p', content: {}, createdBy: ws.userId })
+      .returning();
+    if (!page) throw new Error('failed to seed page');
+
+    const { mintKey } = await import('@/lib/api/keys');
+    const { token: rawApiToken } = await mintKey(db, {
+      workspaceId: ws.workspaceId,
+      name: 'audit-test-key',
+      role: 'viewer',
+      createdBy: ws.userId,
+    });
+
+    const { createWebhook } = await import('@/lib/webhooks/admin');
+    const { secret: webhookSecret } = await createWebhook(db, {
+      workspaceId: ws.workspaceId,
+      actorUserId: ws.userId,
+      url: 'https://example.com/hook',
+      events: ['page.created'],
+    });
+
+    const { createInvite } = await import('@/lib/workspaces/invites');
+    const { token: rawInviteToken } = await createInvite(db, {
+      workspaceId: ws.workspaceId,
+      actorUserId: ws.userId,
+      email: 'invitee@example.com',
+      role: 'editor',
+    });
+
+    const sharePassword = 'PWUNIQ123!';
+    const { setShareSettings } = await import('@/lib/pages/share');
+    await setShareSettings(db, {
+      pageId: page.id,
+      workspaceId: ws.workspaceId,
+      actorUserId: ws.userId,
+      password: sharePassword,
+    });
+
+    return {
+      workspaceId: ws.workspaceId,
+      userId: ws.userId,
+      pageId: page.id,
+      rawApiToken,
+      webhookSecret,
+      rawInviteToken,
+      sharePassword,
+    };
+  }
+
+  it('sensitive actions write audit rows with no secret in metadata', async () => {
+    const seeded = await seedAuditedActions();
+
+    const rows = await db.select().from(schema.auditLog);
+    expect(rows.length).toBeGreaterThan(0);
+
+    const body = JSON.stringify(rows);
+    assertNoSecrets(body);
+    assertNoSecretPrefixes(body);
+    expect(body).not.toContain(seeded.rawApiToken);
+    expect(body).not.toContain(seeded.webhookSecret);
+    expect(body).not.toContain(seeded.rawInviteToken);
+    expect(body).not.toContain(seeded.sharePassword);
+
+    // Sanity: the audited events we expected are actually present.
+    const actions = rows.map((r) => r.action);
+    expect(actions).toContain('api_key.created');
+    expect(actions).toContain('webhook.created');
+    expect(actions).toContain('invite.created');
+    expect(actions).toContain('page.share_changed');
+  });
+
+  it('the admin audit viewer response leaks no secret', async () => {
+    const seeded = await seedAuditedActions();
+
+    activeCookie = { name: 'cairn_ws', value: seeded.workspaceId };
+    await actAs(seeded.userId);
+
+    const route = await import('@/app/api/admin/audit/route');
+    const res = await route.GET(new Request('http://t/api/admin/audit?limit=100') as never);
+    expect(res.status).toBe(200);
+
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoSecretPrefixes(body);
+    expect(body).not.toContain(seeded.rawApiToken);
+    expect(body).not.toContain(seeded.webhookSecret);
+    expect(body).not.toContain(seeded.rawInviteToken);
+    expect(body).not.toContain(seeded.sharePassword);
+
+    // Sanity: audited events actually surface in the viewer response.
+    expect(body).toContain('api_key.created');
+    expect(body).toContain('webhook.created');
+    expect(body).toContain('invite.created');
+    expect(body).toContain('page.share_changed');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// P19: 2FA TOTP — the shared secret is encrypted at rest, recovery codes are
+// hashed (one-way, single-use). Neither plaintext, the sealed bytea, nor any
+// stored hash may surface in API responses, audit metadata, or process logs.
+// (Workspace-export coverage lands in P21 once export is wired — for now we
+// cover responses + the stored row + a log-spy on the enrollment path.)
+// ---------------------------------------------------------------------------
+
+describe('secret-leak: TOTP secrets + recovery codes', () => {
+  type EnrollmentBundle = {
+    workspaceId: string;
+    userId: string;
+    secret: string;
+    recoveryCodes: string[];
+    sealedHex: string;
+    sealedLatin1: string;
+    storedHashes: string[];
+  };
+
+  async function seedEnrolledUser(): Promise<EnrollmentBundle> {
+    const ws = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    const { beginEnrollment, confirmEnrollment } = await import('@/lib/auth/two-factor');
+    const { generateSync, NobleCryptoPlugin, ScureBase32Plugin } = await import('otplib');
+    const oCrypto = new NobleCryptoPlugin();
+    const oBase32 = new ScureBase32Plugin();
+
+    const out = await beginEnrollment(db, {
+      userId: ws.userId,
+      account: 'a@b.c',
+      key: process.env.AUTH_SECRET ?? '',
+    });
+    const ok = await confirmEnrollment(db, {
+      userId: ws.userId,
+      token: generateSync({ secret: out.secret, crypto: oCrypto, base32: oBase32 }),
+      key: process.env.AUTH_SECRET ?? '',
+    });
+    expect(ok).toBe(true);
+
+    const [row] = await db
+      .select()
+      .from(schema.userTotp)
+      .where(eq(schema.userTotp.userId, ws.userId));
+    if (!row) throw new Error('user_totp row missing post-confirm');
+    const sealed = row.secretEncrypted as Buffer;
+    const stored = row.recoveryCodes as { hash: string; usedAt: string | null }[];
+
+    return {
+      workspaceId: ws.workspaceId,
+      userId: ws.userId,
+      secret: out.secret,
+      recoveryCodes: out.recoveryCodes,
+      sealedHex: sealed.toString('hex'),
+      sealedLatin1: sealed.toString('latin1'),
+      storedHashes: stored.map((c) => c.hash),
+    };
+  }
+
+  function assertNoTotpMaterial(body: string, b: EnrollmentBundle) {
+    expect(body).not.toContain(b.secret);
+    expect(body).not.toContain(b.sealedHex);
+    expect(body).not.toContain(b.sealedLatin1);
+    for (const code of b.recoveryCodes) expect(body).not.toContain(code);
+    for (const h of b.storedHashes) expect(body).not.toContain(h);
+  }
+
+  it('the stored user_totp row holds only encrypted/hashed material — no plaintext', async () => {
+    const b = await seedEnrolledUser();
+    const [row] = await db
+      .select()
+      .from(schema.userTotp)
+      .where(eq(schema.userTotp.userId, b.userId));
+    const serialized = JSON.stringify(row, (_k, v) =>
+      Buffer.isBuffer(v) ? v.toString('latin1') : v,
+    );
+    expect(serialized).not.toContain(b.secret);
+    for (const code of b.recoveryCodes) expect(serialized).not.toContain(code);
+  });
+
+  it('the workspace members listing never leaks TOTP material', async () => {
+    const b = await seedEnrolledUser();
+    await actAs(b.userId);
+    const route = await import('@/app/api/workspaces/members/route');
+    const res = await route.GET(new Request('http://t/api/workspaces/members?q='));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoTotpMaterial(body, b);
+  });
+
+  it('the webhook listing never leaks TOTP material', async () => {
+    const b = await seedEnrolledUser();
+    await actAs(b.userId);
+    const route = await import('@/app/api/webhooks/route');
+    const res = await route.GET();
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoTotpMaterial(body, b);
+  });
+
+  it('the admin audit viewer response never leaks TOTP material', async () => {
+    const b = await seedEnrolledUser();
+    activeCookie = { name: 'cairn_ws', value: b.workspaceId };
+    await actAs(b.userId);
+    const route = await import('@/app/api/admin/audit/route');
+    const res = await route.GET(new Request('http://t/api/admin/audit?limit=100') as never);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    assertNoSecrets(body);
+    assertNoSecretPrefixes(body);
+    assertNoTotpMaterial(body, b);
+  });
+
+  it('the enrollment + confirm path emits no TOTP material via console', async () => {
+    const logs: string[] = [];
+    const spies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((m) =>
+      vi.spyOn(console, m).mockImplementation((...args: unknown[]) => {
+        logs.push(args.map((a) => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+      }),
+    );
+    try {
+      const b = await seedEnrolledUser();
+      const text = logs.join('\n');
+      expect(text).not.toContain(b.secret);
+      expect(text).not.toContain(b.sealedHex);
+      for (const code of b.recoveryCodes) expect(text).not.toContain(code);
+      for (const h of b.storedHashes) expect(text).not.toContain(h);
+    } finally {
+      for (const s of spies) s.mockRestore();
+    }
   });
 });

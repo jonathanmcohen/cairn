@@ -9,11 +9,15 @@ type RouteCtx = { params: Promise<{ pageId: string; versionId: string }> };
 export async function POST(_req: Request, { params }: RouteCtx): Promise<Response> {
   try {
     const { pageId, versionId } = await params;
-    await requirePageAccess(pageId, 'editor');
+    const { ctx } = await requirePageAccess(pageId, 'editor');
     // the version must belong to this page (avoid cross-page restore)
     const owned = (await listVersions(getDb(), pageId)).some((v) => v.id === versionId);
     if (!owned) return NextResponse.json({ error: 'Version not found' }, { status: 404 });
-    const restored = await restoreVersion(getDb(), versionId);
+    const restored = await restoreVersion(getDb(), {
+      versionId,
+      workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
+    });
     return NextResponse.json(restored);
   } catch (err) {
     if (err instanceof HttpError) {

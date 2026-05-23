@@ -1,10 +1,12 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { observeDb } from '@/lib/observability/metrics';
 import { emit } from '@/lib/webhooks/dispatch';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
-import { resolveRelationCells, validateRelationCells } from './relations';
+import { validateParent } from './hierarchy';
+import { resolveRelationCells, syncRelationCells, validateRelationCells } from './relations';
 import { resolveRollupCells } from './rollup/resolve';
 import { compileSorts, type SortSpec } from './sort';
 
@@ -20,6 +22,7 @@ export async function createRow(
     workspaceId: string;
     createdBy: string;
     cells?: Record<string, unknown>;
+    parentRowId?: string | null;
   },
 ): Promise<schema.DbRow> {
   const row = await db.transaction(async (tx) => {
@@ -56,6 +59,27 @@ export async function createRow(
       if (cellValues.length > 0) {
         await tx.insert(schema.dbCells).values(cellValues);
       }
+      // Mirror paired (reverse) relations: a new row has no prior cells, so before = {}.
+      await syncRelationCells(tx, {
+        rowId: row.id,
+        props,
+        before: {},
+        after: coercedByProp,
+      });
+    }
+
+    if (input.parentRowId !== undefined && input.parentRowId !== null) {
+      await validateParent(tx, {
+        rowId: row.id,
+        databaseId: input.databaseId,
+        parentId: input.parentRowId,
+      });
+      const [updated] = await tx
+        .update(schema.dbRows)
+        .set({ parentRowId: input.parentRowId })
+        .where(eq(schema.dbRows.id, row.id))
+        .returning();
+      return updated ?? row;
     }
     return row;
   });
@@ -71,6 +95,7 @@ export async function updateCells(
     databaseId: string;
     workspaceId: string;
     cells: Record<string, unknown>;
+    parentRowId?: string | null;
   },
 ): Promise<void> {
   await db.transaction(async (tx) => {
@@ -92,6 +117,24 @@ export async function updateCells(
       .where(eq(schema.dbProperties.databaseId, input.databaseId));
     const propsById = new Map(props.map((p) => [p.id, p]));
 
+    // Capture prior relation cell values BEFORE writing, so the reverse-sync diff is correct.
+    const relationPropIdsInWrite = Object.keys(input.cells).filter(
+      (propId) => propsById.get(propId)?.type === 'relation',
+    );
+    const before: Record<string, unknown> = {};
+    if (relationPropIdsInWrite.length > 0) {
+      const prior = await tx
+        .select({ propertyId: schema.dbCells.propertyId, value: schema.dbCells.value })
+        .from(schema.dbCells)
+        .where(
+          and(
+            eq(schema.dbCells.rowId, input.rowId),
+            inArray(schema.dbCells.propertyId, relationPropIdsInWrite),
+          ),
+        );
+      for (const c of prior) before[c.propertyId] = c.value;
+    }
+
     const coercedByProp: Record<string, unknown> = {};
     for (const [propId, raw] of Object.entries(input.cells)) {
       const prop = propsById.get(propId);
@@ -107,6 +150,19 @@ export async function updateCells(
         });
     }
     await validateRelationCells(tx, props, coercedByProp);
+    // Mirror paired (reverse) relations: diff before -> after for relation props in this write.
+    await syncRelationCells(tx, { rowId: input.rowId, props, before, after: coercedByProp });
+    if (input.parentRowId !== undefined) {
+      await validateParent(tx, {
+        rowId: input.rowId,
+        databaseId: input.databaseId,
+        parentId: input.parentRowId,
+      });
+      await tx
+        .update(schema.dbRows)
+        .set({ parentRowId: input.parentRowId })
+        .where(eq(schema.dbRows.id, input.rowId));
+    }
     await tx
       .update(schema.dbRows)
       .set({ updatedAt: new Date() })
@@ -181,6 +237,28 @@ export async function archiveRow(
 }
 
 export async function listRows(
+  db: PostgresJsDatabase<typeof schema>,
+  input: {
+    databaseId: string;
+    workspaceId: string;
+    filters?: FilterCondition[];
+    sorts?: SortSpec[];
+    limit?: number;
+    offset?: number;
+  },
+): Promise<RowWithCells[]> {
+  // Time the entire list-rows path (workspace-scope check + props load + filter/
+  // sort + page fetch + cells/relations/rollups/formulas). Single fixed operation
+  // label per spec §610 (bounded label set; no table/id/SQL text in labels).
+  const __t0 = performance.now();
+  try {
+    return await listRowsInner(db, input);
+  } finally {
+    observeDb({ operation: 'list_rows', durationSec: (performance.now() - __t0) / 1000 });
+  }
+}
+
+async function listRowsInner(
   db: PostgresJsDatabase<typeof schema>,
   input: {
     databaseId: string;

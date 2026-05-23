@@ -43,7 +43,11 @@ describe('emit wiring (pages)', () => {
       expect.objectContaining({ id: page.id }),
     );
 
-    await softDeletePage(getDb(), { pageId: page.id, workspaceId: u.workspaceId });
+    await softDeletePage(getDb(), {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     expect(emit).toHaveBeenCalledWith(
       'page.deleted',
       u.workspaceId,

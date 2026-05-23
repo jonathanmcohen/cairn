@@ -1,0 +1,17 @@
+{
+  "app.title": "Cairn",
+  "shortcuts.title": "Keyboard shortcuts",
+  "shortcuts.close": "Close shortcuts",
+  "shortcuts.group.global": "Global",
+  "shortcuts.group.editor": "Editor",
+  "shortcut.newPage": "New page",
+  "shortcut.toggleTheme": "Toggle theme",
+  "shortcut.switchWorkspace": "Switch workspace",
+  "shortcut.openFavorites": "Open favorites",
+  "shortcut.openSheet": "Open keyboard shortcuts",
+  "palette.actions": "Actions",
+  "palette.searchPlaceholder": "Search pages…",
+  "locale.label": "Language",
+  "locale.en": "English",
+  "locale.ar": "العربية"
+}

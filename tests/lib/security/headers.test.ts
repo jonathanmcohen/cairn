@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { EMBED_FRAME_HOSTS } from '@/lib/editor/embed-allowlist';
 import { buildCsp, cspNonce, cspOrigin, headersFor, securityHeaders } from '@/lib/security/headers';
 
 describe('cspOrigin', () => {
@@ -20,6 +21,22 @@ describe('buildCsp', () => {
     expect(csp).not.toContain("script-src 'self' 'unsafe-inline'");
     expect(csp).toContain("object-src 'none'");
     expect(csp).toContain("frame-ancestors 'none'");
+  });
+  it('frame-src allowlists only the embed providers (no arbitrary iframes)', () => {
+    const csp = buildCsp();
+    expect(csp).toContain('frame-src');
+    expect(csp).toContain("frame-src 'self' https://www.youtube.com");
+    expect(csp).toContain('https://player.vimeo.com');
+    expect(csp).toContain('https://codesandbox.io');
+    // the public render keeps the same embed allowlist (embeds render read-only on /p)
+    expect(buildCsp({ publicPath: true })).toContain("frame-src 'self' https://www.youtube.com");
+  });
+  it('frame-src exactly matches the embed-allowlist host set (drift guard)', () => {
+    // headers.ts inlines the host list (import-free for the next.config loader);
+    // this asserts it never drifts from the canonical EMBED_FRAME_HOSTS.
+    const csp = buildCsp();
+    const frameSrc = csp.split('; ').find((d) => d.startsWith('frame-src '));
+    expect(frameSrc).toBe(`frame-src 'self' ${EMBED_FRAME_HOSTS.join(' ')}`);
   });
   it('allows inline styles (TipTap/Tailwind) but not inline scripts', () => {
     const csp = buildCsp();

@@ -38,7 +38,7 @@ describe('parseDbUrl', () => {
 
 describe('parseArgs', () => {
   it('parses backup with --out', () => {
-    expect(parseArgs(['backup', '--out', '/backups'])).toEqual({
+    expect(parseArgs(['backup', '--out', '/backups'])).toMatchObject({
       command: 'backup',
       out: '/backups',
       force: false,
@@ -46,7 +46,7 @@ describe('parseArgs', () => {
   });
 
   it('parses restore with --in and --force', () => {
-    expect(parseArgs(['restore', '--in', '/b/x.tar', '--force'])).toEqual({
+    expect(parseArgs(['restore', '--in', '/b/x.tar', '--force'])).toMatchObject({
       command: 'restore',
       in: '/b/x.tar',
       force: true,

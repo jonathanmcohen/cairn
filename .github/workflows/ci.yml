@@ -11,9 +11,17 @@ on:
       - 'docs/**'
       - '**/*.md'
 
+# Runner target — defaults to GitHub-hosted `ubuntu-latest`. Override via the
+# `CI_RUNNER_LABELS` repository variable (Settings → Secrets and variables →
+# Actions → Variables) to a JSON array like `["self-hosted","Linux","X64"]` to
+# point CI at a self-hosted runner instead. Workflow-level `env` is NOT
+# available in `runs-on` per GHA expressions, so the default is inlined at
+# each job. release.yml still targets self-hosted by default for the
+# multi-arch build (see docs/operations.md "Self-hosted CI / Release runners").
+
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -64,7 +72,14 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: ubuntu-latest
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    # gitleaks-action calls the PR REST API to scope the scan and (optionally)
+    # post review comments — both require pull-requests: write on top of the
+    # default contents: read. Without these, the action throws
+    # "Resource not accessible by integration".
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -89,7 +104,84 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITLEAKS_CONFIG: .gitleaks.toml
+          # gitleaks-action v2 now requires GITHUB_TOKEN for PR scans (breaking
+          # change announced in the action's README — see the action's runtime
+          # error message). The default GITHUB_TOKEN has read-only access to
+          # the repo's pulls/issues which is what the action needs.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       # Run the adversarial security suite explicitly (also runs in `pnpm test`).
       - name: security tests
         run: pnpm test tests/security
+
+  a11y:
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: cairn
+          POSTGRES_PASSWORD: cairn
+          POSTGRES_DB: cairn_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
+      AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
+      NEXTAUTH_URL: http://localhost:3100
+      A11Y_PORT: '3100'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Migrate test DB
+        run: pnpm db:migrate
+
+      # Cache the Playwright browser download keyed on the installed playwright
+      # version + OS. Survives ephemeral-runner restarts via GHA's cache backend
+      # (not local disk), so the next run skips the ~150MB Chromium download.
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      # Chromium-only; the audit doesn't need the full browser matrix.
+      # `--with-deps` apt-installs the system libs Chromium needs on the
+      # ubuntu-latest runner. If this job moves back to a self-hosted runner
+      # that already has those libs + no apt root, drop `--with-deps`.
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Build
+        run: pnpm build
+
+      - name: a11y gate
+        run: pnpm test:a11y
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7

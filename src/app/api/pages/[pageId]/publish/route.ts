@@ -10,7 +10,11 @@ export async function POST(_req: Request, { params }: RouteCtx): Promise<Respons
   try {
     const { pageId } = await params;
     const { ctx } = await requirePageAccess(pageId, 'editor');
-    const { slug } = await publishPage(getDb(), { pageId, workspaceId: ctx.workspaceId });
+    const { slug } = await publishPage(getDb(), {
+      pageId,
+      workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
+    });
     return NextResponse.json({ slug, url: `/p/${slug}` });
   } catch (err) {
     if (err instanceof HttpError) {

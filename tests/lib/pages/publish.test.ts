@@ -51,7 +51,11 @@ describe('publishPage', () => {
   it('sets published and mints a slug shaped <slug>-<6hex>', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const page = await makePage(u.workspaceId, u.userId, 'Roadmap');
-    const { slug } = await publishPage(db, { pageId: page.id, workspaceId: u.workspaceId });
+    const { slug } = await publishPage(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     expect(slug).toMatch(/^roadmap-[0-9a-f]{6}$/);
     const [row] = await db.select().from(schema.pages).where(eq(schema.pages.id, page.id));
     expect(row?.published).toBe(true);
@@ -61,9 +65,17 @@ describe('publishPage', () => {
   it('re-publish keeps the same slug', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const page = await makePage(u.workspaceId, u.userId, 'Roadmap');
-    const first = await publishPage(db, { pageId: page.id, workspaceId: u.workspaceId });
-    await unpublishPage(db, { pageId: page.id, workspaceId: u.workspaceId });
-    const second = await publishPage(db, { pageId: page.id, workspaceId: u.workspaceId });
+    const first = await publishPage(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
+    await unpublishPage(db, { pageId: page.id, workspaceId: u.workspaceId, actorUserId: u.userId });
+    const second = await publishPage(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
     expect(second.slug).toBe(first.slug);
   });
 
@@ -72,7 +84,7 @@ describe('publishPage', () => {
     const b = await createTestWorkspaceWithUser(db);
     const page = await makePage(a.workspaceId, a.userId, 'Secret');
     await expect(
-      publishPage(db, { pageId: page.id, workspaceId: b.workspaceId }),
+      publishPage(db, { pageId: page.id, workspaceId: b.workspaceId, actorUserId: b.userId }),
     ).rejects.toThrow();
   });
 });
@@ -81,8 +93,12 @@ describe('unpublishPage', () => {
   it('sets published false but retains the slug', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const page = await makePage(u.workspaceId, u.userId, 'Roadmap');
-    const { slug } = await publishPage(db, { pageId: page.id, workspaceId: u.workspaceId });
-    await unpublishPage(db, { pageId: page.id, workspaceId: u.workspaceId });
+    const { slug } = await publishPage(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+    });
+    await unpublishPage(db, { pageId: page.id, workspaceId: u.workspaceId, actorUserId: u.userId });
     const [row] = await db.select().from(schema.pages).where(eq(schema.pages.id, page.id));
     expect(row?.published).toBe(false);
     expect(row?.publicSlug).toBe(slug);
@@ -93,7 +109,7 @@ describe('unpublishPage', () => {
     const b = await createTestWorkspaceWithUser(db);
     const page = await makePage(a.workspaceId, a.userId, 'Secret');
     await expect(
-      unpublishPage(db, { pageId: page.id, workspaceId: b.workspaceId }),
+      unpublishPage(db, { pageId: page.id, workspaceId: b.workspaceId, actorUserId: b.userId }),
     ).rejects.toThrow();
   });
 });

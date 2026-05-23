@@ -1,8 +1,15 @@
 import Mention from '@tiptap/extension-mention';
+import { PluginKey } from '@tiptap/pm/state';
 import { ReactRenderer } from '@tiptap/react';
 import type { SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
 import { type MentionItem, MentionList, type MentionListRef } from './mention-list';
+
+// Distinct PluginKey so this Suggestion plugin doesn't collide with the page-link
+// `[[`/`@@` suggestions (page-link-suggestion.ts). All three share `@tiptap/suggestion`
+// which defaults to `PluginKey('suggestion')`; without unique keys the editor crashes
+// at mount with "Adding different instances of a keyed plugin (suggestion$)".
+const MENTION_PLUGIN_KEY = new PluginKey('mentionSuggestion$');
 
 async function fetchMembers(query: string): Promise<MentionItem[]> {
   try {
@@ -38,6 +45,7 @@ export const MentionExtension = Mention.configure({
     ];
   },
   suggestion: {
+    pluginKey: MENTION_PLUGIN_KEY,
     char: '@',
     // The Mention node reads `props.id` + `props.label`; map our member shape.
     command: ({ editor, range, props }) => {

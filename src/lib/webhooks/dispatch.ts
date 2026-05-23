@@ -1,6 +1,8 @@
 import { and, arrayContains, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { logger } from '@/lib/observability/logger';
+import { incWebhook } from '@/lib/observability/metrics';
 import { signBody } from './sign';
 import { assertPublicUrl } from './ssrf';
 
@@ -10,7 +12,8 @@ export type WebhookEvent =
   | 'page.deleted'
   | 'row.created'
   | 'row.updated'
-  | 'row.deleted';
+  | 'row.deleted'
+  | 'comment.created';
 
 const MAX_ATTEMPTS = 3;
 
@@ -66,7 +69,10 @@ export async function emit(
     }
   } catch (err) {
     // Emit must never break the mutation it hangs off of.
-    console.error('[webhooks] emit failed', err);
+    logger.error(
+      { err: err instanceof Error ? { message: err.message, name: err.name } : err },
+      '[webhooks] emit failed',
+    );
   }
 }
 
@@ -105,6 +111,8 @@ export async function deliver(
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
     attempts = attempt;
+    const attemptStart = performance.now();
+    let outcome: 'success' | 'failed' = 'failed';
     try {
       await assertPublicUrl(row.url); // re-checked every attempt (DNS may change)
       const res = await fetch(row.url, {
@@ -119,16 +127,35 @@ export async function deliver(
       });
       lastStatus = res.status;
       if (res.ok) {
+        outcome = 'success';
         await db
           .update(schema.webhookDeliveries)
           .set({ status: 'success', attempts, lastStatus, deliveredAt: new Date() })
           .where(eq(schema.webhookDeliveries.id, deliveryId));
+        incWebhook({
+          event: row.delivery.event,
+          outcome,
+          durationSec: (performance.now() - attemptStart) / 1000,
+        });
         return;
       }
     } catch (err) {
-      console.error(`[webhooks] delivery ${deliveryId} attempt ${attempt} error`, err);
+      logger.warn(
+        {
+          deliveryId,
+          attempt,
+          err: err instanceof Error ? { message: err.message, name: err.name } : err,
+        },
+        '[webhooks] delivery attempt error',
+      );
       lastStatus = null; // network/SSRF error — no HTTP status
     }
+    // Record outcome for the attempt (success path already returned above).
+    incWebhook({
+      event: row.delivery.event,
+      outcome,
+      durationSec: (performance.now() - attemptStart) / 1000,
+    });
     if (attempt < MAX_ATTEMPTS) await sleep(backoff(attempt));
   }
 

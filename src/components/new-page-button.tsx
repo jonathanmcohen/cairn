@@ -3,11 +3,13 @@ import { Plus } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
 
 export function NewPageButton({ parentId }: { parentId?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const allowed = useActionAllowed('page-create');
 
   async function onClick() {
     setBusy(true);
@@ -31,12 +33,12 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
       variant="ghost"
       size="icon"
       onClick={onClick}
-      disabled={busy}
+      disabled={busy || !allowed}
       aria-label="New page"
-      title="New page"
+      title={allowed ? 'New page' : 'Unavailable offline'}
       className="h-6 w-6"
     >
-      <Plus className="h-4 w-4" />
+      <Plus aria-hidden="true" className="h-4 w-4" />
     </Button>
   );
 }

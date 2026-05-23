@@ -36,6 +36,12 @@ Thumbs.db
 # tests / coverage
 coverage/
 .vitest/
+playwright-report/
+test-results/
 
 # drizzle local
 drizzle/.snapshot
+
+# PWA service worker (built by `pnpm build:sw` via @serwist/cli)
+public/sw.js
+public/sw.js.map

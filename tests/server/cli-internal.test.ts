@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest';
+import { parseArgs } from '../../src/server/cli-internal';
+
+describe('parseArgs (P21 additions)', () => {
+  it('parses backup --retention-days and --target', () => {
+    const a = parseArgs(['backup', '--out', '/b', '--retention-days', '14', '--target', 's3']);
+    expect(a).toMatchObject({ command: 'backup', out: '/b', retentionDays: 14, target: 's3' });
+  });
+  it('defaults target to local and retentionDays to undefined', () => {
+    const a = parseArgs(['backup', '--out', '/b']);
+    expect(a).toMatchObject({ command: 'backup', target: 'local' });
+    expect(a.retentionDays).toBeUndefined();
+  });
+  it('rejects an invalid --target', () => {
+    expect(() => parseArgs(['backup', '--out', '/b', '--target', 'ftp'])).toThrow();
+  });
+  it('rejects a non-numeric --retention-days', () => {
+    expect(() => parseArgs(['backup', '--out', '/b', '--retention-days', 'soon'])).toThrow();
+  });
+  it('parses export --workspace --out', () => {
+    const a = parseArgs(['export', '--workspace', 'w1', '--out', '/e']);
+    expect(a).toMatchObject({ command: 'export', workspace: 'w1', out: '/e' });
+  });
+  it('parses import --source --file --workspace', () => {
+    const a = parseArgs(['import', '--source', 'notion', '--file', '/n.zip', '--workspace', 'w1']);
+    expect(a).toMatchObject({
+      command: 'import',
+      source: 'notion',
+      file: '/n.zip',
+      workspace: 'w1',
+    });
+  });
+  it('rejects an unknown --source', () => {
+    expect(() =>
+      parseArgs(['import', '--source', 'evernote', '--file', '/x', '--workspace', 'w']),
+    ).toThrow();
+  });
+  it('parses reconcile (all) and reconcile --workspace', () => {
+    expect(parseArgs(['reconcile'])).toMatchObject({ command: 'reconcile' });
+    expect(parseArgs(['reconcile', '--workspace', 'w1'])).toMatchObject({
+      command: 'reconcile',
+      workspace: 'w1',
+    });
+  });
+  it('parses reminders:scan with no flags', () => {
+    expect(parseArgs(['reminders:scan'])).toMatchObject({ command: 'reminders:scan' });
+  });
+});

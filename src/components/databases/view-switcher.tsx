@@ -26,7 +26,7 @@ export function ViewSwitcher({
   const [pendingType, setPendingType] = useState<'calendar' | 'timeline' | null>(null);
   const [pickedDateProp, setPickedDateProp] = useState<string>('');
 
-  async function addSimpleView(type: 'table' | 'gallery') {
+  async function addSimpleView(type: 'table' | 'gallery' | 'list') {
     setAdding(true);
     await fetch(`/api/databases/${databaseId}/views`, {
       method: 'POST',
@@ -93,6 +93,14 @@ export function ViewSwitcher({
             className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
           >
             + Gallery
+          </button>
+          <button
+            type="button"
+            disabled={adding}
+            onClick={() => void addSimpleView('list')}
+            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+          >
+            + List
           </button>
           <button
             type="button"

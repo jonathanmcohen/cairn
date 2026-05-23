@@ -26,6 +26,12 @@ const ViewConfigSchema = z.object({
   startProperty: z.uuid().nullable().default(null),
   endProperty: z.uuid().nullable().default(null),
   visibleProperties: z.array(z.uuid()).default([]),
+  calcFooter: z
+    .record(z.uuid(), z.enum(['count', 'sum', 'avg', 'min', 'max', 'empty', 'filled']))
+    .default({}),
+  columnWidths: z.record(z.uuid(), z.number().int().positive()).default({}),
+  frozenColumnIds: z.array(z.uuid()).default([]),
+  hiddenColumnIds: z.array(z.uuid()).default([]),
 });
 
 export type ViewConfig = z.infer<typeof ViewConfigSchema>;
@@ -44,6 +50,8 @@ function assertViewConfig(type: schema.ViewType, config: ViewConfig): void {
   ) {
     throw new Error('timeline view requires a dateProperty or a startProperty+endProperty pair');
   }
+  // 'list' has no required config — grouping (groupBy) and multi-sort (sorts) are optional.
+  if (type === 'list') return;
 }
 
 export type CreateViewInput = {

@@ -1,8 +1,65 @@
 import { Extension } from '@tiptap/core';
+import type { Editor } from '@tiptap/react';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
+import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
+import { fetchPages } from './page-link-suggestion';
 import { type SlashItem, SlashMenu, type SlashMenuRef } from './slash-menu';
+
+/**
+ * Open a transient page-picker popup at the current selection, reusing the
+ * `[[`/`@@` autocomplete's `fetchPages` + `PageLinkList`. Calls `onPick` with the
+ * chosen page, then tears the popup down. Used by the "Page embed" slash item.
+ */
+function openPagePicker(editor: Editor, onPick: (item: PageItem) => void): void {
+  let component: ReactRenderer<
+    PageLinkListRef,
+    { items: PageItem[]; command: (i: PageItem) => void }
+  >;
+  let popup: Instance<TippyProps>;
+
+  const close = () => {
+    document.removeEventListener('keydown', onKeyDown, true);
+    popup?.destroy();
+    component?.destroy();
+  };
+  const choose = (item: PageItem) => {
+    onPick(item);
+    close();
+  };
+  const onKeyDown = (event: KeyboardEvent) => {
+    if (event.key === 'Escape') {
+      close();
+      return;
+    }
+    if (component?.ref?.onKeyDown(event)) event.preventDefault();
+  };
+
+  const rect = () => {
+    const coords = editor.view.coordsAtPos(editor.state.selection.from);
+    return new DOMRect(coords.left, coords.top, 0, coords.bottom - coords.top);
+  };
+
+  component = new ReactRenderer(PageLinkList, {
+    props: { items: [], command: choose },
+    editor,
+  });
+  popup = tippy(document.body, {
+    getReferenceClientRect: rect,
+    appendTo: () => document.body,
+    content: component.element,
+    showOnCreate: true,
+    interactive: true,
+    trigger: 'manual',
+    placement: 'bottom-start',
+  });
+  document.addEventListener('keydown', onKeyDown, true);
+
+  void fetchPages('').then((items) => {
+    component.updateProps({ items, command: choose });
+  });
+}
 
 const items: SlashItem[] = [
   {
@@ -54,6 +111,22 @@ const items: SlashItem[] = [
     title: 'Callout',
     description: 'Highlighted aside',
     command: (editor) => editor.chain().focus().setCallout('default').run(),
+  },
+  {
+    title: 'Toggle',
+    description: 'Collapsible block',
+    command: (editor) => editor.chain().focus().setToggle().run(),
+  },
+  {
+    title: 'Columns',
+    description: 'Two side-by-side columns',
+    command: (editor) => editor.chain().focus().setColumns(2).run(),
+  },
+  {
+    title: 'Table',
+    description: 'Simple table',
+    command: (editor) =>
+      editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
   },
   {
     title: 'Image',
@@ -115,6 +188,36 @@ const items: SlashItem[] = [
     },
   },
   {
+    title: 'Embed',
+    description: 'Embed a YouTube, Vimeo, Figma, gist, or CodeSandbox URL',
+    command: (editor) =>
+      editor
+        .chain()
+        .focus()
+        .insertContent({ type: 'embed', attrs: { provider: null, src: null } })
+        .run(),
+  },
+  {
+    title: 'Bookmark',
+    description: 'Save a link as a rich preview card',
+    command: (editor) => editor.chain().focus().setBookmark('').run(),
+  },
+  {
+    title: 'Equation',
+    description: 'Block math rendered with KaTeX',
+    command: (editor) => editor.chain().focus().setMath({ latex: '', display: true }).run(),
+  },
+  {
+    title: 'Synced block',
+    description: 'Reusable block mirrored elsewhere on this page',
+    command: (editor) => editor.chain().focus().setSyncedBlock().run(),
+  },
+  {
+    title: 'Table of contents',
+    description: "Linked outline of this page's headings",
+    command: (editor) => editor.chain().focus().insertTableOfContents().run(),
+  },
+  {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
     command: (editor) => {
@@ -134,6 +237,22 @@ const items: SlashItem[] = [
           .insertContent({ type: 'database', attrs: { databaseId: id } })
           .run();
       })();
+    },
+  },
+  {
+    title: 'Page embed',
+    description: 'Embed a link to another page as a preview card',
+    command: (editor) => {
+      openPagePicker(editor, (item) => {
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'pageEmbed',
+            attrs: { targetPageId: item.id, label: item.title || 'Untitled' },
+          })
+          .run();
+      });
     },
   },
 ];

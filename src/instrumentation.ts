@@ -38,4 +38,15 @@ export async function register(): Promise<void> {
     .catch((err) => {
       console.error('[templates] startup seed failed', err);
     });
+
+  const { env } = await import('@/lib/env');
+  const interval = env().CAIRN_DIGEST_INTERVAL;
+  if (interval > 0) {
+    const { scanDigests } = await import('@/lib/email/digest');
+    setInterval(() => {
+      void scanDigests(getDb()).catch(() => {});
+    }, interval * 60_000);
+    // biome-ignore lint/suspicious/noConsole: server startup
+    console.log(`[email] digest ticker every ${interval}m (single-instance only)`);
+  }
 }

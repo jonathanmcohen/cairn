@@ -1,8 +1,23 @@
 /**
- * Pure security-header builders. No Next/runtime imports so they're unit-testable
- * and reusable from next.config.mjs headers() and the smoke. All values are
+ * Pure security-header builders. No imports at all (not even `@/…`) so the module
+ * stays loadable from next.config.mjs, which imports it OUTSIDE the tsconfig
+ * path-alias resolver (`@/…` → ERR_MODULE_NOT_FOUND there). All values are
  * deliberately explicit (no wildcards) per spec §3.1.
  */
+
+/**
+ * CSP `frame-src` allowlist for the P5 embed node — the EXACT origins
+ * `EMBED_FRAME_HOSTS` in `src/lib/editor/embed-allowlist.ts` resolves to. Inlined
+ * (not imported) to keep this module import-free for the next.config.mjs loader; a
+ * drift-guard test (tests/lib/security/headers.test.ts) asserts the two stay equal.
+ */
+const EMBED_FRAME_HOSTS = [
+  'https://www.youtube.com',
+  'https://player.vimeo.com',
+  'https://www.figma.com',
+  'https://gist.github.com',
+  'https://codesandbox.io',
+] as const;
 
 export type CspOptions = {
   /** Collab WebSocket origin (env COLLAB_URL); added to connect-src. */
@@ -84,6 +99,10 @@ export function buildCsp(opts: CspOptions = {}): string {
     'img-src': ["'self'", 'data:', 'blob:'],
     'font-src': ["'self'", 'data:'],
     'connect-src': connect,
+    // Allowlisted embed providers only (P5 embed node). Anything not on this exact
+    // host set is refused at insert time (resolveEmbed) AND blocked by the CSP, so
+    // arbitrary iframes can never load — matches the embed-allowlist threat model.
+    'frame-src': ["'self'", ...EMBED_FRAME_HOSTS],
     'frame-ancestors': ["'none'"],
     'base-uri': ["'self'"],
     'form-action': ["'self'"],

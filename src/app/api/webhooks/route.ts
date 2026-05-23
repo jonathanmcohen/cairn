@@ -1,10 +1,10 @@
-import { randomBytes } from 'node:crypto';
 import { desc, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
+import { createWebhook } from '@/lib/webhooks/admin';
 import { assertPublicUrl } from '@/lib/webhooks/ssrf';
 
 const WEBHOOK_EVENTS = [
@@ -55,24 +55,13 @@ export async function POST(req: Request): Promise<Response> {
     // Reject internal targets at creation time (the authoritative guard also
     // runs at delivery; this surfaces the error to the form early).
     await assertPublicUrl(parsed.url);
-    // The secret signs deliveries (X-Cairn-Signature) and is shown once here.
-    const secret = `cairn_whsec_${randomBytes(24).toString('hex')}`;
-    const [hook] = await getDb()
-      .insert(schema.webhooks)
-      .values({
-        workspaceId: ctx.workspaceId,
-        url: parsed.url,
-        events: parsed.events,
-        secret,
-      })
-      .returning({
-        id: schema.webhooks.id,
-        url: schema.webhooks.url,
-        events: schema.webhooks.events,
-        active: schema.webhooks.active,
-        createdAt: schema.webhooks.createdAt,
-      });
-    return NextResponse.json({ secret, webhook: hook }, { status: 201 });
+    const { webhook, secret } = await createWebhook(getDb(), {
+      workspaceId: ctx.workspaceId,
+      actorUserId: ctx.userId,
+      url: parsed.url,
+      events: parsed.events,
+    });
+    return NextResponse.json({ secret, webhook }, { status: 201 });
   } catch (err) {
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status });

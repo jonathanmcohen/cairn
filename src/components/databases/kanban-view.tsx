@@ -52,7 +52,7 @@ export function KanbanView({ databaseId, meta, rows, view, onChange }: ViewProps
           // biome-ignore lint/a11y/noStaticElementInteractions: kanban drop target; native HTML5 drag-and-drop has no equivalent interactive element/role
           <div
             key={col.id || 'uncategorized'}
-            className="flex w-60 shrink-0 flex-col rounded-md bg-muted/40 p-2"
+            className="flex w-56 shrink-0 flex-col rounded-md bg-muted/40 p-2 sm:w-60"
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => {
               if (dragRowId) void moveCard(dragRowId, col.id);

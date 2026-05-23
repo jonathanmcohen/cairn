@@ -30,4 +30,10 @@ const nextConfig = {
   },
 };
 
+// NOTE: the PWA service worker is NOT wired through next.config here. We use
+// Serwist's "configurator" mode (`@serwist/next/config` + `@serwist/cli`),
+// which builds public/sw.js as a separate post-`next build` step. The init-mode
+// plugin (`withSerwistInit`) injects a webpack config, which is incompatible
+// with this app's Turbopack build (client-reachable `node:` imports fail under
+// webpack). See serwist.config.mjs and the `build:sw` script in package.json.
 export default nextConfig;

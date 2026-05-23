@@ -3,7 +3,10 @@
 import { Command } from 'cmdk';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
+import { useT } from '@/lib/i18n/provider';
+import { getShortcuts } from '@/lib/shortcuts/registry';
 
 type SearchResult = {
   id: string;
@@ -12,12 +15,66 @@ type SearchResult = {
   breadcrumb: { id: string; title: string }[];
 };
 
+type PaletteAction = {
+  id: string;
+  labelKey: string;
+  run: () => void;
+};
+
+type SavedSearch = {
+  id: string;
+  name: string;
+  query: string;
+  filters: Record<string, unknown>;
+};
+
 export function SearchPalette() {
+  const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
+  const [actions, setActions] = useState<PaletteAction[]>([]);
+  const [saved, setSaved] = useState<SavedSearch[]>([]);
+
+  useEffect(() => {
+    ensureAppShortcuts();
+    setActions(
+      getShortcuts('global')
+        .filter((s) => s.kind === 'action')
+        .map((s) => ({ id: s.id, labelKey: s.labelKey, run: s.run })),
+    );
+  }, []);
+
+  const refreshSaved = useCallback(async () => {
+    try {
+      const r = await fetch('/api/search/saved');
+      if (!r.ok) return;
+      const data = (await r.json()) as { savedSearches: SavedSearch[] };
+      setSaved(data.savedSearches);
+    } catch {
+      // silent
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    void refreshSaved();
+  }, [open, refreshSaved]);
+
+  async function saveCurrent() {
+    const q = query.trim();
+    if (!q) return;
+    const name = window.prompt('Name this saved search:', q);
+    if (!name) return;
+    const r = await fetch('/api/search/saved', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ name, query: q, filters: {} }),
+    });
+    if (r.ok) void refreshSaved();
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -81,10 +138,42 @@ export function SearchPalette() {
         <Command.Input
           value={query}
           onValueChange={setQuery}
-          placeholder="Search pages…"
+          placeholder={t('palette.searchPlaceholder')}
           className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         <Command.List className="max-h-80 overflow-y-auto border-t">
+          {actions.length > 0 && (
+            <Command.Group heading={t('palette.actions')}>
+              {actions.map((a) => (
+                <Command.Item
+                  key={a.id}
+                  value={`action:${a.id}`}
+                  onSelect={() => {
+                    setOpen(false);
+                    setQuery('');
+                    a.run();
+                  }}
+                  className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
+                >
+                  {t(a.labelKey)}
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
+          {saved.length > 0 && (
+            <Command.Group heading="Saved searches">
+              {saved.map((s) => (
+                <Command.Item
+                  key={s.id}
+                  value={`saved:${s.id}`}
+                  onSelect={() => setQuery(s.query)}
+                  className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
+                >
+                  {s.name}
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
           {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}
           {!loading && query && results.length === 0 && (
             <div className="px-4 py-2 text-sm text-muted-foreground">No results.</div>
@@ -115,6 +204,17 @@ export function SearchPalette() {
             </Command.Item>
           ))}
         </Command.List>
+        {query.trim().length > 0 && (
+          <div className="flex justify-end border-t px-3 py-2">
+            <button
+              type="button"
+              onClick={() => void saveCurrent()}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              Save this search
+            </button>
+          </div>
+        )}
       </Command>
     </div>
   );

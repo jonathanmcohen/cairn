@@ -32,7 +32,7 @@ describe('resolveComment / reopenComment', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'x',
     });
@@ -49,7 +49,7 @@ describe('resolveComment / reopenComment', () => {
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     const { comment: c } = await createComment(db, {
       workspaceId: u.workspaceId,
-      pageId: p.id,
+      target: { type: 'page', id: p.id },
       authorId: u.userId,
       body: 'x',
     });

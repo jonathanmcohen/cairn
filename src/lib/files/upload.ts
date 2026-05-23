@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { extname } from 'node:path';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { checkStorageQuota, incrementStorageUsed } from '@/lib/quotas/quota';
 import { signFileUrl } from './signing';
 import type { FileStorage } from './storage';
 
@@ -43,22 +44,34 @@ export async function storeUpload(input: StoreUploadInput): Promise<StoreUploadR
   const id = randomUUID();
   const ext = extname(input.filename).toLowerCase().slice(0, 8);
   const path = `${input.workspaceId}/${id}${ext}`;
-  await input.storage.put(path, input.body, input.mimeType);
 
-  const [file] = await input.db
-    .insert(schema.files)
-    .values({
-      id,
+  const file = await input.db.transaction(async (tx) => {
+    // Reject BEFORE writing the blob if it would breach the quota.
+    await checkStorageQuota(tx, {
       workspaceId: input.workspaceId,
-      pageId: input.pageId ?? null,
-      name: input.filename,
-      mimeType: input.mimeType,
-      size: input.body.length,
-      path,
-      uploadedBy: input.uploadedBy,
-    })
-    .returning();
-  if (!file) throw new Error('file insert returned no row');
+      incomingBytes: input.body.length,
+    });
+    // Put the blob inside the txn so a downstream insert failure rolls back
+    // both rows — an orphan blob (no files row) is invisible to the counter
+    // and reconcileQuota is the drift backstop.
+    await input.storage.put(path, input.body, input.mimeType);
+    const [row] = await tx
+      .insert(schema.files)
+      .values({
+        id,
+        workspaceId: input.workspaceId,
+        pageId: input.pageId ?? null,
+        name: input.filename,
+        mimeType: input.mimeType,
+        size: input.body.length,
+        path,
+        uploadedBy: input.uploadedBy,
+      })
+      .returning();
+    if (!row) throw new Error('file insert returned no row');
+    await incrementStorageUsed(tx, input.workspaceId, input.body.length);
+    return row;
+  });
 
   const expiresAt = Math.floor(Date.now() / 1000) + SIGNED_URL_TTL_SECONDS;
   const sig = signFileUrl({ fileId: file.id, expiresAt, secret: input.secret });

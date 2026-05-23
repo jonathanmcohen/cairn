@@ -2,6 +2,7 @@
 
 import { HocuspocusProvider } from '@hocuspocus/provider';
 import { useEffect, useMemo, useState } from 'react';
+import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 
 export type CollabStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
@@ -10,6 +11,7 @@ export type UseCollabDoc = {
   ydoc: Y.Doc;
   provider: HocuspocusProvider | null;
   status: CollabStatus;
+  offlineReady: boolean;
 };
 
 export function useCollabDoc(pageId: string): UseCollabDoc {
@@ -17,6 +19,7 @@ export function useCollabDoc(pageId: string): UseCollabDoc {
   const ydoc = useMemo(() => new Y.Doc(), []);
   const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
   const [status, setStatus] = useState<CollabStatus>('connecting');
+  const [offlineReady, setOfflineReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,5 +59,22 @@ export function useCollabDoc(pageId: string): UseCollabDoc {
     };
   }, [pageId, ydoc]);
 
-  return { ydoc, provider, status };
+  // Persist this doc to IndexedDB so a recently-viewed page reads offline and
+  // offline edits CRDT-merge on reconnect. Same ydoc is bound to both the
+  // IndexeddbPersistence and the HocuspocusProvider — Yjs handles convergence.
+  // Not gated on the token/provider: offline read must work without network.
+  useEffect(() => {
+    const persistence = new IndexeddbPersistence(`cairn-doc-${pageId}`, ydoc);
+    const onSynced = () => setOfflineReady(true);
+    persistence.on('synced', onSynced);
+
+    return () => {
+      setOfflineReady(false);
+      persistence.off('synced', onSynced);
+      // Do NOT clearData() — persisted data must survive for the next open.
+      void persistence.destroy();
+    };
+  }, [pageId, ydoc]);
+
+  return { ydoc, provider, status, offlineReady };
 }

@@ -1,7 +1,8 @@
 import { createHash, randomBytes } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 import type { AuthContext, MemberRole } from '@/lib/auth/require-role';
 
 const TOKEN_PREFIX = 'cairn_sk_';
@@ -22,6 +23,12 @@ export type MintInput = {
 /**
  * Generate a `cairn_sk_<32 hex>` token, persist its sha256 hash + a short
  * display prefix, and return the plaintext ONCE (never recoverable after).
+ *
+ * The insert + the `api_key.created` audit row are written in a single
+ * transaction so the audit can never drift from the action (spec §2.27).
+ * Audit metadata records only `{name, role}` — the plaintext token,
+ * `tokenPrefix` (which starts with the forbidden `cairn_sk_` substring),
+ * and the hash are deliberately NEVER recorded.
  */
 export async function mintKey(
   db: PostgresJsDatabase<typeof schema>,
@@ -31,20 +38,72 @@ export async function mintKey(
   const tokenHash = hashToken(token);
   const tokenPrefix = token.slice(0, TOKEN_PREFIX.length + 4); // e.g. 'cairn_sk_ab12'
 
-  const [key] = await db
-    .insert(schema.apiKeys)
-    .values({
+  return db.transaction(async (tx) => {
+    const [key] = await tx
+      .insert(schema.apiKeys)
+      .values({
+        workspaceId: input.workspaceId,
+        name: input.name,
+        tokenHash,
+        tokenPrefix,
+        role: input.role,
+        createdBy: input.createdBy,
+        expiresAt: input.expiresAt ?? null,
+      })
+      .returning();
+    if (!key) throw new Error('failed to mint API key');
+    await recordAudit(tx, {
       workspaceId: input.workspaceId,
-      name: input.name,
-      tokenHash,
-      tokenPrefix,
-      role: input.role,
-      createdBy: input.createdBy,
-      expiresAt: input.expiresAt ?? null,
-    })
-    .returning();
-  if (!key) throw new Error('failed to mint API key');
-  return { token, key };
+      actorUserId: input.createdBy,
+      action: 'api_key.created',
+      targetType: 'api_key',
+      targetId: key.id,
+      metadata: { name: input.name, role: input.role },
+    });
+    return { token, key };
+  });
+}
+
+export type RevokeKeyErrorCode = 'NOT_FOUND';
+
+export class RevokeKeyError extends Error {
+  constructor(
+    public code: RevokeKeyErrorCode,
+    message?: string,
+  ) {
+    super(message ?? code);
+    this.name = 'RevokeKeyError';
+  }
+}
+
+/**
+ * Revoke (delete) an API key scoped to a workspace. The delete + the
+ * `api_key.revoked` audit row are written in a single transaction so the
+ * audit can never drift from the action. Cross-workspace ids throw
+ * `NOT_FOUND` so we don't leak existence.
+ */
+export async function revokeKey(
+  db: PostgresJsDatabase<typeof schema>,
+  input: { workspaceId: string; keyId: string; actorUserId: string },
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    const deleted = await tx
+      .delete(schema.apiKeys)
+      .where(
+        and(eq(schema.apiKeys.id, input.keyId), eq(schema.apiKeys.workspaceId, input.workspaceId)),
+      )
+      .returning({ id: schema.apiKeys.id, name: schema.apiKeys.name, role: schema.apiKeys.role });
+    if (deleted.length === 0) throw new RevokeKeyError('NOT_FOUND');
+    const [row] = deleted;
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'api_key.revoked',
+      targetType: 'api_key',
+      targetId: row?.id ?? input.keyId,
+      metadata: { name: row?.name ?? null, role: row?.role ?? null },
+    });
+  });
 }
 
 /**

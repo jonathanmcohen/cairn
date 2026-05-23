@@ -1,7 +1,6 @@
-import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
+import { RevokeKeyError, revokeKey } from '@/lib/api/keys';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
 export async function DELETE(
@@ -11,16 +10,18 @@ export async function DELETE(
   try {
     const ctx = await requireRole('admin');
     const { id } = await params;
-    // Scope the delete to the active workspace so cross-workspace ids no-op.
-    const deleted = await getDb()
-      .delete(schema.apiKeys)
-      .where(and(eq(schema.apiKeys.id, id), eq(schema.apiKeys.workspaceId, ctx.workspaceId)))
-      .returning({ id: schema.apiKeys.id });
-    if (deleted.length === 0) {
-      return NextResponse.json({ error: 'not found' }, { status: 404 });
-    }
+    // Helper scopes the delete to the workspace and writes the audit row in the
+    // same transaction; cross-workspace ids 404.
+    await revokeKey(getDb(), {
+      workspaceId: ctx.workspaceId,
+      keyId: id,
+      actorUserId: ctx.userId,
+    });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
+    if (err instanceof RevokeKeyError) {
+      return NextResponse.json({ error: 'not found' }, { status: 404 });
+    }
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }

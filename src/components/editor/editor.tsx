@@ -2,13 +2,18 @@
 
 import type { Editor as TiptapEditor } from '@tiptap/react';
 import { EditorContent, useEditor } from '@tiptap/react';
-import { useCallback, useEffect, useRef } from 'react';
-import { prosemirrorJSONToYDoc } from 'y-prosemirror';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
+import { useAnnounce } from '@/components/a11y/live-region';
+import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
+import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { DragHandle } from './drag-handle';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
+import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
+import { SuggestionToolbar } from './suggestion-toolbar';
 import { useCollabDoc } from './use-collab-doc';
 
 export type EditorProps = {
@@ -39,10 +44,37 @@ const STATUS_LABEL = {
 export function Editor({ pageId, initialContent, currentUser, editable }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(pageId);
   const presentUsers = useCollabPresence(provider);
+  const announce = useAnnounce();
+
+  // Announce collab connection-status transitions through the shell's polite
+  // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
+  // "Offline" even when the visible status pill is off-focus. Errors go
+  // assertive; routine connecting/connected/disconnected stay polite.
+  useEffect(() => {
+    const label = STATUS_LABEL[status];
+    announce(label, status === 'error' ? 'assertive' : 'polite');
+  }, [status, announce]);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
+  const [outlineOpen, setOutlineOpen] = useState(false);
+  // Suggestion mode (editor+ only). `activeSuggestionId` is the open proposal
+  // that new insert/delete marks attach to while suggesting; `resolvable` is the
+  // suggestionId under the current selection (drives the Accept/Reject buttons).
+  const [suggestionMode, setSuggestionMode] = useState(false);
+  const [openCount, setOpenCount] = useState(0);
+  const [resolvable, setResolvable] = useState<string | null>(null);
+  const activeSuggestionRef = useRef<string | null>(null);
+
+  // Uploads hit the server, so they are blocked offline (bounded-offline gate).
+  // Yjs node inserts (callout/toggle/heading) and typing/formatting stay enabled.
+  const uploadAllowed = useActionAllowed('file-upload');
+  const uploadAllowedRef = useRef(uploadAllowed);
+  useEffect(() => {
+    uploadAllowedRef.current = uploadAllowed;
+  }, [uploadAllowed]);
 
   const uploadAndInsert = useCallback(async (files: File[]) => {
+    if (!uploadAllowedRef.current) return;
     for (const file of files) {
       const fd = new FormData();
       fd.set('file', file);
@@ -82,7 +114,8 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
           immediatelyRender: false,
           editorProps: {
             attributes: {
-              class: 'prose dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
+              class:
+                'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
             },
             handleDrop(_view, event, _slice, moved) {
               if (moved) return false;
@@ -167,15 +200,145 @@ export function Editor({ pageId, initialContent, currentUser, editable }: Editor
     };
   }, [editor, provider, ydoc, initialContent]);
 
+  // Load the open-suggestion count once the editable editor exists.
+  useEffect(() => {
+    if (!editable || !pageId) return;
+    let cancelled = false;
+    void (async () => {
+      const res = await fetch(`/api/pages/${pageId}/suggestions`);
+      if (!res.ok || cancelled) return;
+      const data = (await res.json()) as { suggestions: unknown[] };
+      if (!cancelled) setOpenCount(data.suggestions.length);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editable, pageId]);
+
+  // Track the suggestionId under the selection so Accept/Reject can target it.
+  useEffect(() => {
+    if (!editor || !editable) return;
+    const update = () => {
+      const id =
+        (editor.getAttributes('suggestionInsert').suggestionId as string | undefined) ||
+        (editor.getAttributes('suggestionDelete').suggestionId as string | undefined) ||
+        null;
+      setResolvable(id);
+    };
+    editor.on('selectionUpdate', update);
+    editor.on('transaction', update);
+    update();
+    return () => {
+      editor.off('selectionUpdate', update);
+      editor.off('transaction', update);
+    };
+  }, [editor, editable]);
+
+  // Toggle suggestion mode. Turning ON proposes a new open suggestion (the
+  // marks applied while suggesting share its id); turning OFF clears the active
+  // id. Input routing is intentionally minimal for this release: rather than a
+  // global keystroke interceptor, the toolbar exposes explicit "mark
+  // insert"/"mark delete" affordances over the current selection.
+  const toggleSuggestion = useCallback(async () => {
+    if (suggestionMode) {
+      setSuggestionMode(false);
+      activeSuggestionRef.current = null;
+      return;
+    }
+    const res = await fetch(`/api/pages/${pageId}/suggestions`, { method: 'POST' });
+    if (!res.ok) return;
+    const data = (await res.json()) as { suggestionId: string };
+    activeSuggestionRef.current = data.suggestionId;
+    setSuggestionMode(true);
+    setOpenCount((c) => c + 1);
+  }, [suggestionMode, pageId]);
+
+  const markSelection = useCallback(
+    (kind: 'insert' | 'delete') => {
+      const ed = editorRef.current;
+      const id = activeSuggestionRef.current;
+      if (!ed || !id) return;
+      const attrs = {
+        suggestionId: id,
+        authorId: currentUser.id,
+        createdAt: new Date().toISOString(),
+      };
+      ed.chain()
+        .focus()
+        .setMark(kind === 'insert' ? 'suggestionInsert' : 'suggestionDelete', attrs)
+        .run();
+      // biome-ignore lint/correctness/useExhaustiveDependencies: currentUser.id is stable for the editor's lifetime
+    },
+    [currentUser.id],
+  );
+
+  // Resolve a suggestion server-side (authoritative 200/403/409), then mirror
+  // the SAME pure transform onto the live Y.Doc so all peers converge. Reuses
+  // the v0.3.0 seeding pattern: build a fresh Y.Doc from the next JSON and apply
+  // it as an update inside a transaction.
+  const resolve = useCallback(
+    async (action: 'accept' | 'reject', suggestionId: string) => {
+      const ed = editorRef.current;
+      if (!ed) return;
+      const res = await fetch(`/api/pages/${pageId}/suggestions/${suggestionId}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ action }),
+      });
+      if (!res.ok) return; // 403 viewer / 409 already resolved — no local apply
+      const current = yDocToProsemirrorJSON(ydoc, 'default') as Json;
+      const next =
+        action === 'accept'
+          ? acceptSuggestion(current, suggestionId)
+          : rejectSuggestion(current, suggestionId);
+      const seeded = prosemirrorJSONToYDoc(ed.schema, next, 'default');
+      ydoc.transact(() => {
+        Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(seeded));
+      });
+      setOpenCount((c) => Math.max(0, c - 1));
+      if (activeSuggestionRef.current === suggestionId) {
+        activeSuggestionRef.current = null;
+        setSuggestionMode(false);
+      }
+    },
+    [pageId, ydoc],
+  );
+
   return (
     <div className="relative">
-      <div className="mb-1 flex items-center justify-end gap-3">
+      <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        {editable && (
+          <SuggestionToolbar
+            editor={editor}
+            active={suggestionMode}
+            onToggle={() => void toggleSuggestion()}
+            openCount={openCount}
+            onMarkInsert={() => markSelection('insert')}
+            onMarkDelete={() => markSelection('delete')}
+            resolvable={resolvable}
+            onAccept={(id) => void resolve('accept', id)}
+            onReject={(id) => void resolve('reject', id)}
+          />
+        )}
         <PresenceAvatars users={presentUsers} />
         <span className="text-muted-foreground text-xs">{STATUS_LABEL[status]}</span>
+        <button
+          type="button"
+          onClick={() => setOutlineOpen((v) => !v)}
+          aria-pressed={outlineOpen}
+          className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+        >
+          Outline
+        </button>
       </div>
-      <div className="relative">
-        {editor && <DragHandle editor={editor} />}
-        <EditorContent editor={editor} />
+      <div className="flex gap-4">
+        <div className="relative min-w-0 flex-1">
+          {editor && <DragHandle editor={editor} />}
+          <EditorContent editor={editor} />
+        </div>
+        {editor && outlineOpen && (
+          <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
+        )}
       </div>
     </div>
   );

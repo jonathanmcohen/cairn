@@ -1,13 +1,20 @@
 import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 import { emit } from '@/lib/webhooks/dispatch';
 
 export type SoftDeleteInput = {
   pageId: string;
   workspaceId: string;
+  actorUserId: string;
 };
 
+/**
+ * Soft-delete a page and its descendants. The mutation + the `page.deleted`
+ * audit row are written in a single transaction so the audit can never drift
+ * from the action (spec §2.27).
+ */
 export async function softDeletePage(
   db: PostgresJsDatabase<typeof schema>,
   input: SoftDeleteInput,
@@ -37,6 +44,14 @@ export async function softDeletePage(
           deleted_root = (id = ${input.pageId})
       WHERE id IN (SELECT id FROM descendants)
     `);
+
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'page.deleted',
+      targetType: 'page',
+      targetId: input.pageId,
+    });
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
   void emit('page.deleted', input.workspaceId, { id: input.pageId });

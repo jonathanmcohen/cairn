@@ -1,4 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { observeHttp } from '@/lib/observability/metrics';
+import { routeTemplate } from '@/lib/observability/route-template';
 import { buildCsp } from '@/lib/security/headers';
 
 const PUBLIC_PATHS = [
@@ -8,6 +10,7 @@ const PUBLIC_PATHS = [
   '/api/auth',
   '/api/health',
   '/p/',
+  '/s/',
   '/api/public',
   // Embedded images on public pages are loaded by anonymous visitors via
   // HMAC-signed URLs. The /api/files handler verifies the signature itself
@@ -26,8 +29,25 @@ function hasSessionCookie(req: NextRequest): boolean {
   return SESSION_COOKIE_NAMES.some((name) => req.cookies.has(name));
 }
 
+function record(
+  res: NextResponse | Response,
+  start: number,
+  method: string,
+  pathname: string,
+): NextResponse | Response {
+  observeHttp({
+    method,
+    route: routeTemplate(pathname),
+    status: res.status ?? 307,
+    durationSec: (performance.now() - start) / 1000,
+  });
+  return res;
+}
+
 export function proxy(req: NextRequest) {
+  const start = performance.now();
   const { pathname } = req.nextUrl;
+  const method = req.method;
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const hasSession = hasSessionCookie(req);
 
@@ -50,23 +70,28 @@ export function proxy(req: NextRequest) {
     url.searchParams.set('next', pathname);
     const res = NextResponse.redirect(url);
     res.headers.set('Content-Security-Policy', csp);
-    return res;
+    return record(res, start, method, pathname);
   }
   if (hasSession && (pathname === '/login' || pathname === '/signup')) {
     const url = req.nextUrl.clone();
     url.pathname = '/';
     const res = NextResponse.redirect(url);
     res.headers.set('Content-Security-Policy', csp);
-    return res;
+    return record(res, start, method, pathname);
   }
 
   // Forward the nonce'd CSP on the request so the renderer can read it and apply
   // the nonce to its inline scripts, and set it on the response for the browser.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('Content-Security-Policy', csp);
+  // Forward the request pathname so server components / layouts can apply
+  // path-aware gates (e.g. the (app)/layout require_2fa enrollment gate) without
+  // re-implementing routing — proxy.ts owns the lightweight URL view of every
+  // request.
+  requestHeaders.set('x-pathname', pathname);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set('Content-Security-Policy', csp);
-  return res;
+  return record(res, start, method, pathname);
 }
 
 export const config = {

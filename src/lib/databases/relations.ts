@@ -1,11 +1,16 @@
-import { and, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import * as schema from '@/db/schema';
 
-/** A relation property points at exactly one target database (same workspace, validated separately). */
+/**
+ * A relation property points at exactly one target database (same workspace, validated separately).
+ * `reversePropertyId`, when present, links this relation to its mirror on the target database
+ * (spec decision #1). Both halves of a pair carry it, pointing at each other.
+ */
 export const RelationConfig = z.object({
   targetDatabaseId: z.uuid(),
+  reversePropertyId: z.uuid().optional(),
 });
 
 export type RelationConfig = z.infer<typeof RelationConfig>;
@@ -17,6 +22,88 @@ export const RelationCellValue = z.array(z.uuid());
 export function relationTargetId(config: unknown): string | undefined {
   const parsed = RelationConfig.safeParse(config);
   return parsed.success ? parsed.data.targetDatabaseId : undefined;
+}
+
+/** Read a relation property's reversePropertyId, or undefined if unset/malformed. */
+export function relationReverseId(config: unknown): string | undefined {
+  const parsed = RelationConfig.safeParse(config);
+  return parsed.success ? parsed.data.reversePropertyId : undefined;
+}
+
+/**
+ * Create the mirrored relation for `sourcePropertyId` on its target database and link
+ * both configs by `reversePropertyId`. Runs inside the caller's transaction.
+ * Throws if the source is not a relation or already has a reverse.
+ * Returns the newly-created reverse property.
+ */
+export async function createReverseRelationProperty(
+  tx: PostgresJsDatabase<typeof schema>,
+  input: { sourcePropertyId: string; reverseName: string },
+): Promise<schema.DbProperty> {
+  const [source] = await tx
+    .select()
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.id, input.sourcePropertyId))
+    .limit(1);
+  if (!source) throw new Error('source property not found');
+  if (source.type !== 'relation') throw new Error('source property is not a relation');
+
+  const sourceCfg = RelationConfig.safeParse(source.config);
+  if (!sourceCfg.success) throw new Error('source relation has no valid config');
+  if (sourceCfg.data.reversePropertyId) throw new Error('source already has a reverse property');
+
+  const targetDatabaseId = sourceCfg.data.targetDatabaseId;
+
+  // Position the mirror at the end of the target database's property list.
+  const existing = await tx
+    .select({ position: schema.dbProperties.position })
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.databaseId, targetDatabaseId));
+  const nextPosition = existing.reduce((m, p) => Math.max(m, p.position + 1), 0);
+
+  const [reverse] = await tx
+    .insert(schema.dbProperties)
+    .values({
+      databaseId: targetDatabaseId,
+      name: input.reverseName,
+      type: 'relation',
+      position: nextPosition,
+      // reverse points back at the source's database, and links to the source property
+      config: { targetDatabaseId: source.databaseId, reversePropertyId: source.id },
+    })
+    .returning();
+  if (!reverse) throw new Error('reverse property insert failed');
+
+  // Link the source to the new reverse.
+  await tx
+    .update(schema.dbProperties)
+    .set({ config: { targetDatabaseId, reversePropertyId: reverse.id } })
+    .where(eq(schema.dbProperties.id, source.id));
+
+  return reverse;
+}
+
+/**
+ * Drop the `reversePropertyId` link on `propertyId`, degrading it to a plain relation.
+ * Called on the surviving partner when the other side of a pair is deleted (spec decision #1:
+ * deleting one side clears the other's link; it is NOT auto-deleted). No-op if it has no reverse.
+ */
+export async function clearReverseLink(
+  tx: PostgresJsDatabase<typeof schema>,
+  propertyId: string,
+): Promise<void> {
+  const [prop] = await tx
+    .select()
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.id, propertyId))
+    .limit(1);
+  if (!prop) return;
+  const cfg = RelationConfig.safeParse(prop.config);
+  if (!cfg.success || !cfg.data.reversePropertyId) return;
+  await tx
+    .update(schema.dbProperties)
+    .set({ config: { targetDatabaseId: cfg.data.targetDatabaseId } })
+    .where(eq(schema.dbProperties.id, propertyId));
 }
 
 /**
@@ -61,6 +148,98 @@ export async function validateRelationCells(
       }
     }
   }
+}
+
+/**
+ * Mirror relation cell changes onto the paired (reverse) relation, inside the caller's
+ * transaction (spec decision #1). For each paired relation property in `props`, diff the
+ * before/after id lists for `rowId` and apply the deltas to the reverse property's cells on
+ * each affected target row: an ADD of target T means T.reverse += rowId; a REMOVE means
+ * T.reverse -= rowId.
+ *
+ * Re-entrancy: each `rowId:propertyId` pair touched is recorded in `guard`; a cell already in
+ * the guard is skipped, so the mirror's own write cannot re-trigger sync within this
+ * transaction. The caller passes a shared `guard` Set (defaulting to a fresh one) and should
+ * seed it with the originating `rowId:propertyId` before the first call when chaining.
+ *
+ * Plain (unpaired) relations are ignored.
+ */
+export async function syncRelationCells(
+  tx: PostgresJsDatabase<typeof schema>,
+  input: {
+    rowId: string;
+    props: Pick<schema.DbProperty, 'id' | 'type' | 'config'>[];
+    before: Record<string, unknown>;
+    after: Record<string, unknown>;
+    guard?: Set<string>;
+  },
+): Promise<void> {
+  const guard = input.guard ?? new Set<string>();
+  // The originating cell is the source of truth this pass; never let a nested write touch it.
+  for (const p of input.props) {
+    if (p.type === 'relation') guard.add(`${input.rowId}:${p.id}`);
+  }
+
+  for (const p of input.props) {
+    if (p.type !== 'relation') continue;
+    const reverseId = relationReverseId(p.config);
+    if (!reverseId) continue; // plain relation — nothing to mirror
+
+    const before = toIdArray(input.before[p.id]);
+    const after = toIdArray(input.after[p.id]);
+    const beforeSet = new Set(before);
+    const afterSet = new Set(after);
+    const added = after.filter((id) => !beforeSet.has(id));
+    const removed = before.filter((id) => !afterSet.has(id));
+    if (added.length === 0 && removed.length === 0) continue;
+
+    for (const targetRowId of added) {
+      await mirrorEdit(tx, targetRowId, reverseId, input.rowId, 'add', guard);
+    }
+    for (const targetRowId of removed) {
+      await mirrorEdit(tx, targetRowId, reverseId, input.rowId, 'remove', guard);
+    }
+  }
+}
+
+function toIdArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((v): v is string => typeof v === 'string');
+}
+
+/** Apply one add/remove of `linkedRowId` to (targetRowId, reversePropertyId), guard-checked. */
+async function mirrorEdit(
+  tx: PostgresJsDatabase<typeof schema>,
+  targetRowId: string,
+  reversePropertyId: string,
+  linkedRowId: string,
+  op: 'add' | 'remove',
+  guard: Set<string>,
+): Promise<void> {
+  const key = `${targetRowId}:${reversePropertyId}`;
+  if (guard.has(key)) return; // already authoritative this transaction — do not re-touch
+  guard.add(key);
+
+  const [cell] = await tx
+    .select({ value: schema.dbCells.value })
+    .from(schema.dbCells)
+    .where(
+      and(eq(schema.dbCells.rowId, targetRowId), eq(schema.dbCells.propertyId, reversePropertyId)),
+    )
+    .limit(1);
+  const current = toIdArray(cell?.value);
+  const set = new Set(current);
+  if (op === 'add') set.add(linkedRowId);
+  else set.delete(linkedRowId);
+  const next = [...set];
+
+  await tx
+    .insert(schema.dbCells)
+    .values({ rowId: targetRowId, propertyId: reversePropertyId, value: next })
+    .onConflictDoUpdate({
+      target: [schema.dbCells.rowId, schema.dbCells.propertyId],
+      set: { value: next },
+    });
 }
 
 export type ResolvedRelation = { ids: string[]; labels: string[] };
