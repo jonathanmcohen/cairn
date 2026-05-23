@@ -50,7 +50,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`TRUNCATE personal_access_tokens, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE personal_access_tokens, audit_log, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
   active = undefined;
 });
 
@@ -186,6 +186,35 @@ describe('DELETE /api/dev/tokens/[tokenId]', () => {
       .limit(1);
     expect(row).toBeDefined();
     expect(row?.revokedAt).not.toBeNull();
+  });
+
+  it('writes a pat.revoked audit row in the same transaction', async () => {
+    const u = await createTestWorkspaceWithUser(db, { role: 'editor' });
+    await actAs(u.userId, u.workspaceId);
+    const { POST } = await import('@/app/api/dev/tokens/route');
+    const mintRes = await POST(
+      new Request('http://localhost/api/dev/tokens', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ name: 'CI bot', scopes: ['pages:read'], mcpTools: [] }),
+      }),
+    );
+    const minted = (await mintRes.json()) as { row: { id: string } };
+
+    const { DELETE } = await import('@/app/api/dev/tokens/[tokenId]/route');
+    await DELETE(
+      new Request(`http://localhost/api/dev/tokens/${minted.row.id}`, { method: 'DELETE' }),
+      { params: Promise.resolve({ tokenId: minted.row.id }) },
+    );
+
+    const audits = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.targetId, minted.row.id))
+      .orderBy(schema.auditLog.createdAt);
+    const actions = audits.map((a) => a.action);
+    expect(actions).toContain('pat.created');
+    expect(actions).toContain('pat.revoked');
   });
 
   it("returns 404 when revoking another user's token (no existence leak)", async () => {
