@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError } from '@/lib/auth/require-role';
+import { pageToPdfHtml } from '@/lib/export/pdf';
+import { pageToJson, pageToMarkdown } from '@/lib/export/renderers';
 import { streamSubtreeZip } from '@/lib/markdown/export-subtree';
-import { proseToMarkdown } from '@/lib/markdown/from-prose';
 import { requirePageAccess } from '@/lib/pages/access';
 
 export async function GET(
@@ -14,6 +15,8 @@ export async function GET(
     const { page, ctx } = await requirePageAccess(pageId, 'viewer');
     const url = new URL(req.url);
     const recursive = url.searchParams.get('recursive') === 'true';
+    const format = url.searchParams.get('format') ?? 'md';
+    const safeName = (page.title ?? page.id).replace(/[^\w.-]+/g, '_').slice(0, 80) || page.id;
 
     if (recursive) {
       const stream = await streamSubtreeZip(getDb(), {
@@ -30,11 +33,30 @@ export async function GET(
       });
     }
 
-    const md = proseToMarkdown(page.content);
-    return new Response(md, {
+    if (format === 'json') {
+      return new NextResponse(JSON.stringify(pageToJson(page), null, 2), {
+        headers: {
+          'content-type': 'application/json; charset=utf-8',
+          'content-disposition': `attachment; filename="${safeName}.json"`,
+        },
+      });
+    }
+
+    if (format === 'pdf') {
+      return new NextResponse(pageToPdfHtml(page), {
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+          // Inline so the browser renders the print dialog; users save as PDF.
+          'content-disposition': `inline; filename="${safeName}.html"`,
+        },
+      });
+    }
+
+    // Default: markdown (preserves prior behaviour).
+    return new Response(pageToMarkdown(page), {
       status: 200,
       headers: {
-        'content-type': 'text/markdown',
+        'content-type': 'text/markdown; charset=utf-8',
         'content-disposition': `attachment; filename="${page.title || 'page'}.md"`,
       },
     });
