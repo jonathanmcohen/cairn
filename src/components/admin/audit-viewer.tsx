@@ -50,6 +50,7 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'api_key.revoked': 'API key revoked',
   'webhook.created': 'Webhook created',
   'webhook.deleted': 'Webhook deleted',
+  'webhook.secret_rotated': 'Webhook secret rotated',
   'template.created': 'Template created',
   'workspace.settings_changed': 'Workspace settings changed',
   'workspace.ownership_transferred': 'Workspace ownership transferred',

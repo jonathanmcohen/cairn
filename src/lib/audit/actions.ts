@@ -14,6 +14,7 @@ export const AUDIT_ACTIONS = [
   'api_key.revoked',
   'webhook.created',
   'webhook.deleted',
+  'webhook.secret_rotated',
   'template.created',
   'workspace.settings_changed',
   'workspace.ownership_transferred',
