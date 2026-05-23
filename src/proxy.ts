@@ -65,6 +65,11 @@ export function proxy(req: NextRequest) {
   // the nonce to its inline scripts, and set it on the response for the browser.
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set('Content-Security-Policy', csp);
+  // Forward the request pathname so server components / layouts can apply
+  // path-aware gates (e.g. the (app)/layout require_2fa enrollment gate) without
+  // re-implementing routing — proxy.ts owns the lightweight URL view of every
+  // request.
+  requestHeaders.set('x-pathname', pathname);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set('Content-Security-Policy', csp);
   return res;

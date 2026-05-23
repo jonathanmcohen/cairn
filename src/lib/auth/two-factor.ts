@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { openSecret, sealSecret } from '@/lib/crypto/secret-box';
@@ -115,6 +115,23 @@ export async function verifySecondFactor(
 
 export async function disableTwoFactor(db: Db, userId: string): Promise<void> {
   await db.delete(schema.userTotp).where(eq(schema.userTotp.userId, userId));
+}
+
+/**
+ * True iff the user belongs to any workspace with require_2fa=true. Used by the
+ * (app) layout to force enrollment before any app content renders. Cheap join
+ * with a LIMIT 1 — boolean existence check, not an enumeration.
+ */
+export async function userHasWorkspaceRequiring2fa(db: Db, userId: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: schema.workspaces.id })
+    .from(schema.workspaceMembers)
+    .innerJoin(schema.workspaces, eq(schema.workspaces.id, schema.workspaceMembers.workspaceId))
+    .where(
+      and(eq(schema.workspaceMembers.userId, userId), eq(schema.workspaces.requireTwofa, true)),
+    )
+    .limit(1);
+  return Boolean(row);
 }
 
 async function getRow(db: Db, userId: string) {
