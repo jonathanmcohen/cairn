@@ -77,6 +77,13 @@ jobs:
 
   security:
     runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
+    # gitleaks-action calls the PR REST API to scope the scan and (optionally)
+    # post review comments — both require pull-requests: write on top of the
+    # default contents: read. Without these, the action throws
+    # "Resource not accessible by integration".
+    permissions:
+      contents: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
         with:
