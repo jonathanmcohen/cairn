@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { metricsRegistry, observeHttp, resetMetrics } from '@/lib/observability/metrics';
 import { routeTemplate } from '@/lib/observability/route-template';
 
 describe('routeTemplate', () => {
@@ -37,5 +38,20 @@ describe('routeTemplate', () => {
     }
     expect(seen.size).toBe(1);
     expect([...seen][0]).toBe('/api/v1/pages/:id');
+  });
+});
+
+describe('request-path cardinality (integration of routeTemplate + observeHttp)', () => {
+  it('1000 distinct page ids produce ONE route label series', async () => {
+    resetMetrics();
+    for (let i = 0; i < 1000; i++) {
+      const path = `/api/v1/pages/${crypto.randomUUID()}`;
+      observeHttp({ method: 'GET', route: routeTemplate(path), status: 200, durationSec: 0.01 });
+    }
+    const text = await metricsRegistry().metrics();
+    const series = text.split('\n').filter((l) => l.startsWith('http_requests_total{'));
+    expect(series).toHaveLength(1);
+    expect(series[0]).toContain('route="/api/v1/pages/:id"');
+    expect(text).not.toMatch(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i);
   });
 });

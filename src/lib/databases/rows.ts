@@ -1,6 +1,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { observeDb } from '@/lib/observability/metrics';
 import { emit } from '@/lib/webhooks/dispatch';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
@@ -236,6 +237,28 @@ export async function archiveRow(
 }
 
 export async function listRows(
+  db: PostgresJsDatabase<typeof schema>,
+  input: {
+    databaseId: string;
+    workspaceId: string;
+    filters?: FilterCondition[];
+    sorts?: SortSpec[];
+    limit?: number;
+    offset?: number;
+  },
+): Promise<RowWithCells[]> {
+  // Time the entire list-rows path (workspace-scope check + props load + filter/
+  // sort + page fetch + cells/relations/rollups/formulas). Single fixed operation
+  // label per spec §610 (bounded label set; no table/id/SQL text in labels).
+  const __t0 = performance.now();
+  try {
+    return await listRowsInner(db, input);
+  } finally {
+    observeDb({ operation: 'list_rows', durationSec: (performance.now() - __t0) / 1000 });
+  }
+}
+
+async function listRowsInner(
   db: PostgresJsDatabase<typeof schema>,
   input: {
     databaseId: string;

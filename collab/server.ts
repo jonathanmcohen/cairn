@@ -4,6 +4,7 @@ import postgres from 'postgres';
 import * as Y from 'yjs';
 import { authorizeCollab } from '../src/lib/collab/authorize.js';
 import { yjsStateToProseDoc } from '../src/lib/collab/materialize.js';
+import { incCollabDocUpdate, setCollabConnections } from '../src/lib/observability/metrics.js';
 import { createMaterializeScheduler } from './materialize-scheduler.js';
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -19,6 +20,11 @@ const secret = AUTH_SECRET;
 // documentName (page id) -> live Y.Doc, kept current by the Hocuspocus hooks so
 // the disconnect-flush can materialize the final state without a live socket.
 const docs = new Map<string, Y.Doc>();
+
+// In-process collab connection count. The Next-app /metrics endpoint scrapes a
+// different process's registry, so this counter lives only in the collab
+// process — aggregating across processes is a deployment concern (deferred).
+let connectionCount = 0;
 
 /**
  * Encode the live Y.Doc to ProseMirror JSON (fragment 'default', matching the
@@ -58,6 +64,10 @@ const server = new Server({
       // Throwing rejects the connection.
       throw new Error('Unauthorized');
     }
+    // Bump connection metric AFTER auth passes so rejected attempts don't inflate
+    // the gauge. Decrement happens in onDisconnect.
+    connectionCount += 1;
+    setCollabConnections(connectionCount);
     // Expose claims to later hooks (used in Plan 2 for materialize attribution).
     return { user: { id: result.userId, role: result.role } };
   },
@@ -65,9 +75,12 @@ const server = new Server({
   async onStoreDocument({ documentName, document }) {
     docs.set(documentName, document);
     await materialize(documentName);
+    incCollabDocUpdate(1);
   },
   // On the last client leaving, flush immediately so trailing edits aren't lost.
   async onDisconnect({ documentName, clientsCount }) {
+    connectionCount = Math.max(0, connectionCount - 1);
+    setCollabConnections(connectionCount);
     if (clientsCount === 0) {
       scheduler.onLastDisconnect(documentName);
     }

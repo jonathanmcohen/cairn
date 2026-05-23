@@ -1,4 +1,6 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { observeHttp } from '@/lib/observability/metrics';
+import { routeTemplate } from '@/lib/observability/route-template';
 import { buildCsp } from '@/lib/security/headers';
 
 const PUBLIC_PATHS = [
@@ -27,8 +29,25 @@ function hasSessionCookie(req: NextRequest): boolean {
   return SESSION_COOKIE_NAMES.some((name) => req.cookies.has(name));
 }
 
+function record(
+  res: NextResponse | Response,
+  start: number,
+  method: string,
+  pathname: string,
+): NextResponse | Response {
+  observeHttp({
+    method,
+    route: routeTemplate(pathname),
+    status: res.status ?? 307,
+    durationSec: (performance.now() - start) / 1000,
+  });
+  return res;
+}
+
 export function proxy(req: NextRequest) {
+  const start = performance.now();
   const { pathname } = req.nextUrl;
+  const method = req.method;
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const hasSession = hasSessionCookie(req);
 
@@ -51,14 +70,14 @@ export function proxy(req: NextRequest) {
     url.searchParams.set('next', pathname);
     const res = NextResponse.redirect(url);
     res.headers.set('Content-Security-Policy', csp);
-    return res;
+    return record(res, start, method, pathname);
   }
   if (hasSession && (pathname === '/login' || pathname === '/signup')) {
     const url = req.nextUrl.clone();
     url.pathname = '/';
     const res = NextResponse.redirect(url);
     res.headers.set('Content-Security-Policy', csp);
-    return res;
+    return record(res, start, method, pathname);
   }
 
   // Forward the nonce'd CSP on the request so the renderer can read it and apply
@@ -72,7 +91,7 @@ export function proxy(req: NextRequest) {
   requestHeaders.set('x-pathname', pathname);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set('Content-Security-Policy', csp);
-  return res;
+  return record(res, start, method, pathname);
 }
 
 export const config = {
