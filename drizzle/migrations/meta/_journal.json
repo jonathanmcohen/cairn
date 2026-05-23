@@ -162,6 +162,13 @@
       "when": 1779519563658,
       "tag": "0022_flowery_daimon_hellstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1779522116303,
+      "tag": "0023_melted_mole_man",
+      "breakpoints": true
     }
   ]
 }

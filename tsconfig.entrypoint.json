@@ -8,6 +8,16 @@
     "moduleResolution": "bundler",
     "rootDir": "src"
   },
-  "include": ["src/server/**/*", "src/db/**/*", "src/lib/env.ts"],
+  "include": [
+    "src/server/**/*",
+    "src/db/**/*",
+    "src/lib/env.ts",
+    "src/lib/files/**/*.ts",
+    "src/lib/quotas/**/*.ts",
+    "src/lib/export/**/*.ts",
+    "src/lib/import/**/*.ts",
+    "src/lib/markdown/**/*.ts",
+    "src/lib/templates/**/*.ts"
+  ],
   "exclude": ["node_modules", ".next", "tests", "src/**/__tests__/**"]
 }

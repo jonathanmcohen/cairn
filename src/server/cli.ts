@@ -237,33 +237,25 @@ async function main(): Promise<void> {
     await restore(conn, args.in, args.force);
   } else if (args.command === 'export') {
     if (!args.workspace || !args.out) throw new Error('--workspace + --out required');
-    // Variable-path dynamic import: T3 ships the dispatch wiring; the actual
-    // export lib lands in T4 (./lib/export/workspace-archive.ts). The string
-    // is computed so tsc doesn't resolve it at compile time.
-    const exportModulePath = '../lib/export/workspace-archive.js';
-    const exportMod = (await import(exportModulePath)) as {
-      runWorkspaceExport: (args: { workspaceId: string; outDir: string }) => Promise<void>;
-    };
-    await exportMod.runWorkspaceExport({ workspaceId: args.workspace, outDir: args.out });
+    const { runWorkspaceExport } = await import('../lib/export/workspace-archive.js');
+    await runWorkspaceExport({ workspaceId: args.workspace, outDir: args.out });
     await recordCliAudit(conn, 'export.created', { workspaceId: args.workspace });
   } else if (args.command === 'import') {
     if (!args.source || !args.file || !args.workspace) {
       throw new Error('--source + --file + --workspace required');
     }
-    // Variable-path dynamic import: T3 ships the dispatch wiring; the actual
-    // import lib lands in T5 (./lib/import/run.ts).
-    const importModulePath = '../lib/import/run.js';
-    const importMod = (await import(importModulePath)) as {
-      runImport: (args: {
-        source: 'notion' | 'markdown-folder' | 'workspace-archive';
-        file: string;
-        workspaceId: string;
-      }) => Promise<{ counts: Record<string, number> }>;
-    };
-    const report = await importMod.runImport({
+    // Actor user id is provided via env var; the CLI can be run unattended
+    // from cron/restore scripts, and the audit row needs an FK target.
+    const actorUserId = process.env.CAIRN_CLI_ACTOR_USER_ID;
+    if (!actorUserId) {
+      throw new Error('CAIRN_CLI_ACTOR_USER_ID env var is required for cli import');
+    }
+    const { runImport } = await import('../lib/import/run.js');
+    const report = await runImport({
       source: args.source,
       file: args.file,
       workspaceId: args.workspace,
+      actorUserId,
     });
     console.log(JSON.stringify(report, null, 2));
     await recordCliAudit(conn, 'import.completed', { source: args.source, ...report.counts });
