@@ -14,6 +14,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
       <nav className="mb-6 flex gap-4 text-sm" aria-label="Admin sections">
         <a href="/settings/admin">Members</a>
         <a href="/settings/admin/invites">Invites</a>
+        <a href="/settings/admin/settings">Settings</a>
       </nav>
       {children}
     </div>
