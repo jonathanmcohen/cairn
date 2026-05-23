@@ -91,7 +91,9 @@ function fixture(): TemplatePayload {
       {
         id: 'Xdb-b',
         name: 'Projects',
-        properties: [{ id: 'Xprop-b-num', name: 'Budget', type: 'number', config: {}, position: 0 }],
+        properties: [
+          { id: 'Xprop-b-num', name: 'Budget', type: 'number', config: {}, position: 0 },
+        ],
         views: [],
         rows: [],
       },
