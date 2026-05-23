@@ -7,6 +7,7 @@ import { OfflineIndicator } from '@/components/pwa/offline-indicator';
 import { RegisterSw } from '@/components/pwa/register-sw';
 import { SearchPalette } from '@/components/search-palette';
 import { ShortcutDispatcher } from '@/components/shortcuts/dispatcher';
+import { ShortcutSheet } from '@/components/shortcuts/sheet';
 import { Sidebar } from '@/components/sidebar';
 import { SidebarContent } from '@/components/sidebar-content';
 import { SidebarDrawer } from '@/components/sidebar-drawer';
@@ -31,6 +32,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <div className="flex min-h-screen flex-col md:flex-row">
             <RegisterSw />
             <SearchPalette />
+            <ShortcutSheet />
             <Sidebar workspaceId={ctx.workspaceId} />
             <SidebarDrawer>
               <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
