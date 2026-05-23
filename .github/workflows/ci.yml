@@ -11,21 +11,17 @@ on:
       - 'docs/**'
       - '**/*.md'
 
-# Runner target — flip via the `CI_RUNNER_LABELS` repository variable
-# (Settings → Secrets and variables → Actions → Variables). Set it to a JSON
-# array like `["ubuntu-latest"]` to revert to GitHub-hosted runners; unset
-# it (or leave undefined) to use the inline default `["self-hosted","Linux","X64"]`.
-# Workflow-level `env` is NOT available in `runs-on` per GHA expressions, so
-# the default is inlined at each job. The self-hosted runner is a Linux x64
-# Docker container with the host Docker socket mounted (see docs/operations.md
-# "Self-hosted CI / Release runners"); without that mount, the Testcontainers
-# Postgres + Playwright/Chromium steps fail. `actions/setup-node` `cache: pnpm`
-# + `actions/cache` keep deps + Playwright warm against GHA's cache backend
-# regardless of whether the runner container is ephemeral.
+# Runner target — defaults to GitHub-hosted `ubuntu-latest`. Override via the
+# `CI_RUNNER_LABELS` repository variable (Settings → Secrets and variables →
+# Actions → Variables) to a JSON array like `["self-hosted","Linux","X64"]` to
+# point CI at a self-hosted runner instead. Workflow-level `env` is NOT
+# available in `runs-on` per GHA expressions, so the default is inlined at
+# each job. release.yml still targets self-hosted by default for the
+# multi-arch build (see docs/operations.md "Self-hosted CI / Release runners").
 
 jobs:
   ci:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -76,7 +72,7 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     # gitleaks-action calls the PR REST API to scope the scan and (optionally)
     # post review comments — both require pull-requests: write on top of the
     # default contents: read. Without these, the action throws
@@ -119,7 +115,7 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -169,13 +165,12 @@ jobs:
           restore-keys: |
             playwright-${{ runner.os }}-
 
-      # Chromium-only; the audit doesn't need the full browser matrix. The
-      # self-hosted runner already has the system libs Chromium needs, so we
-      # skip `--with-deps` (which would otherwise apt-install and fail without
-      # root). If this job ever moves to an ubuntu-latest GitHub-hosted runner,
-      # restore `--with-deps`.
+      # Chromium-only; the audit doesn't need the full browser matrix.
+      # `--with-deps` apt-installs the system libs Chromium needs on the
+      # ubuntu-latest runner. If this job moves back to a self-hosted runner
+      # that already has those libs + no apt root, drop `--with-deps`.
       - name: Install Playwright Chromium
-        run: pnpm exec playwright install chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Build
         run: pnpm build
