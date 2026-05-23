@@ -4,6 +4,7 @@ import * as schema from '@/db/schema';
 import { HttpError } from '@/lib/auth/require-role';
 import type { TokenContext } from '@/lib/auth/token';
 import { logger } from '@/lib/observability/logger';
+import { incMcpTool, type McpOutcome } from '@/lib/observability/metrics';
 import { MCP_ERROR_CODE, McpError, mcpError } from './error';
 import { toolMap } from './tools';
 
@@ -96,6 +97,28 @@ function statusForCode(code: number): number {
   }
 }
 
+/**
+ * Map an MCP error code (or `null` for success) onto the closed-enum outcome
+ * label used by the `mcp_tool_called_total` metric series (spec §5.4). The
+ * cardinality guarantee of the metric depends on this being a closed mapping.
+ */
+function outcomeFromCode(code: number | null): McpOutcome {
+  if (code === null) return 'success';
+  switch (code) {
+    case MCP_ERROR_CODE.SCOPE_DENIED:
+      return 'scope_denied';
+    case MCP_ERROR_CODE.ALLOWLIST_DENIED:
+      return 'allowlist_denied';
+    case MCP_ERROR_CODE.ACL_DENIED:
+      return 'acl_denied';
+    case MCP_ERROR_CODE.RATE_LIMITED:
+      return 'rate_limited';
+    default:
+      // METHOD_NOT_FOUND, INVALID_PARAMS, INVALID_REQUEST, INTERNAL_ERROR …
+      return 'handler_error';
+  }
+}
+
 async function logUsage(ctx: TokenContext, toolId: string, status: number): Promise<void> {
   try {
     await getDb()
@@ -116,9 +139,22 @@ async function logUsage(ctx: TokenContext, toolId: string, status: number): Prom
       '[mcp] token_usage_log insert failed',
     );
   }
-  // TODO(P9): emit `mcp_tool_called_total{tool, outcome}` here once P9's
-  // metric registration lands. Outcome vocabulary: success | scope_denied |
-  // allowlist_denied | acl_denied | invalid_params | rate_limited | error.
+}
+
+function recordMcpOutcome(toolId: string, code: number | null, startTimeMs: number): void {
+  try {
+    incMcpTool({
+      tool: toolId,
+      outcome: outcomeFromCode(code),
+      durationSec: Math.max(0, (Date.now() - startTimeMs) / 1000),
+    });
+  } catch (err) {
+    // Metric recording MUST NEVER break the dispatch result.
+    logger.error(
+      { err: err instanceof Error ? err.message : err, toolId },
+      '[mcp] metric record failed',
+    );
+  }
 }
 
 /**
@@ -142,10 +178,12 @@ export async function dispatchTool(
   toolId: string,
   args: unknown,
 ): Promise<unknown> {
+  const startedAt = Date.now();
   const tool = toolMap.get(toolId);
   if (!tool) {
     const err = mcpError(MCP_ERROR_CODE.METHOD_NOT_FOUND, 'unknown tool', { tool: toolId });
     await logUsage(ctx, toolId, statusForCode(err.code));
+    recordMcpOutcome(toolId, err.code, startedAt);
     throw err;
   }
 
@@ -156,6 +194,7 @@ export async function dispatchTool(
       required: tool.scope,
     });
     await logUsage(ctx, toolId, statusForCode(err.code));
+    recordMcpOutcome(toolId, err.code, startedAt);
     throw err;
   }
 
@@ -164,12 +203,14 @@ export async function dispatchTool(
       tool: toolId,
     });
     await logUsage(ctx, toolId, statusForCode(err.code));
+    recordMcpOutcome(toolId, err.code, startedAt);
     throw err;
   }
 
   if (!consumeToken(`${ctx.tokenId}:${toolId}`)) {
     const err = mcpError(MCP_ERROR_CODE.RATE_LIMITED, 'rate limit exceeded', { tool: toolId });
     await logUsage(ctx, toolId, statusForCode(err.code));
+    recordMcpOutcome(toolId, err.code, startedAt);
     throw err;
   }
 
@@ -179,16 +220,19 @@ export async function dispatchTool(
   } catch (err) {
     const mErr = toMcpError(err);
     await logUsage(ctx, toolId, statusForCode(mErr.code));
+    recordMcpOutcome(toolId, mErr.code, startedAt);
     throw mErr;
   }
 
   try {
     const result = await tool.handler(ctx, parsed);
     await logUsage(ctx, toolId, 200);
+    recordMcpOutcome(toolId, null, startedAt);
     return result;
   } catch (err) {
     const mErr = toMcpError(err);
     await logUsage(ctx, toolId, statusForCode(mErr.code));
+    recordMcpOutcome(toolId, mErr.code, startedAt);
     throw mErr;
   }
 }
