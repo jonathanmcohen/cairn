@@ -11,20 +11,21 @@ on:
       - 'docs/**'
       - '**/*.md'
 
-# Runner target — single source of truth. Flip to `'["ubuntu-latest"]'` to
-# revert to GitHub-hosted runners (e.g. if the self-hosted runner is down).
-# The self-hosted runner is a Linux x64 Docker container with the host Docker
-# socket mounted (see docs/ci-runner-setup.md); without that mount, the
-# Testcontainers Postgres + Playwright/Chromium steps fail. `actions/cache`
-# +  `actions/setup-node` `cache: pnpm` keep dep + Playwright caches warm
-# against GHA's cache backend regardless of whether the runner container is
-# ephemeral.
-env:
-  RUNNER_LABELS: '["self-hosted","Linux","X64"]'
+# Runner target — flip via the `CI_RUNNER_LABELS` repository variable
+# (Settings → Secrets and variables → Actions → Variables). Set it to a JSON
+# array like `["ubuntu-latest"]` to revert to GitHub-hosted runners; unset
+# it (or leave undefined) to use the inline default `["self-hosted","Linux","X64"]`.
+# Workflow-level `env` is NOT available in `runs-on` per GHA expressions, so
+# the default is inlined at each job. The self-hosted runner is a Linux x64
+# Docker container with the host Docker socket mounted (see docs/operations.md
+# "Self-hosted CI / Release runners"); without that mount, the Testcontainers
+# Postgres + Playwright/Chromium steps fail. `actions/setup-node` `cache: pnpm`
+# + `actions/cache` keep deps + Playwright warm against GHA's cache backend
+# regardless of whether the runner container is ephemeral.
 
 jobs:
   ci:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || env.RUNNER_LABELS) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
     services:
       postgres:
         image: postgres:16-alpine
@@ -75,7 +76,7 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || env.RUNNER_LABELS) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -106,7 +107,7 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || env.RUNNER_LABELS) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["self-hosted","Linux","X64"]') }}
     services:
       postgres:
         image: postgres:16-alpine
