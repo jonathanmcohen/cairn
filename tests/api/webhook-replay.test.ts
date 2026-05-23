@@ -52,9 +52,7 @@ async function setUser(userId: string | null) {
 }
 
 async function callReplay(id: string, deliveryId: string) {
-  const { POST } = await import(
-    '@/app/api/webhooks/[id]/deliveries/[deliveryId]/replay/route'
-  );
+  const { POST } = await import('@/app/api/webhooks/[id]/deliveries/[deliveryId]/replay/route');
   return POST(
     new Request(`http://localhost/api/webhooks/${id}/deliveries/${deliveryId}/replay`, {
       method: 'POST',

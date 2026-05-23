@@ -40,10 +40,9 @@ export function WebhookDeliveryRowActions({
     setReplaying(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/webhooks/${webhookId}/deliveries/${deliveryId}/replay`,
-        { method: 'POST' },
-      );
+      const res = await fetch(`/api/webhooks/${webhookId}/deliveries/${deliveryId}/replay`, {
+        method: 'POST',
+      });
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         setError(typeof body.error === 'string' ? body.error : `failed (${res.status})`);

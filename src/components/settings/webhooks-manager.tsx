@@ -224,11 +224,7 @@ export function WebhooksManager({
               >
                 Copy
               </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setRotatedSecret(null)}
-              >
+              <Button type="button" variant="outline" onClick={() => setRotatedSecret(null)}>
                 I copied it
               </Button>
             </div>

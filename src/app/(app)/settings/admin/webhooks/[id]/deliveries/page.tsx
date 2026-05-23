@@ -20,11 +20,7 @@ export const dynamic = 'force-dynamic';
  * include a verbatim, working signature WITHOUT the secret ever leaving the
  * server.
  */
-export default async function WebhookDeliveriesPage({
-  params,
-}: {
-  params: Promise<Params>;
-}) {
+export default async function WebhookDeliveriesPage({ params }: { params: Promise<Params> }) {
   const ctx = await requireRole('admin');
   const { id } = await params;
   const db = getDb();
