@@ -3,6 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { sendNotificationEmail } from '@/lib/email/notify-email';
+import { incNotificationsSent } from '@/lib/observability/metrics';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
@@ -15,7 +16,11 @@ type Db = PostgresJsDatabase<typeof schema>;
 function scheduleEmails(rows: schema.Notification[]): void {
   for (const n of rows) {
     setImmediate(() => {
-      void sendNotificationEmail(getDb(), n).catch(() => {});
+      void sendNotificationEmail(getDb(), n)
+        .then((sent) => {
+          if (sent) incNotificationsSent({ channel: 'email' });
+        })
+        .catch(() => {});
     });
   }
 }
@@ -43,6 +48,7 @@ export async function notifyMentions(
       })),
     )
     .returning();
+  for (const _row of rows) incNotificationsSent({ channel: 'in_app' });
   scheduleEmails(rows);
   return rows;
 }
@@ -71,6 +77,7 @@ export async function notifyCommentReply(
       })),
     )
     .returning();
+  for (const _row of inserted) incNotificationsSent({ channel: 'in_app' });
   scheduleEmails(inserted);
   return inserted;
 }
