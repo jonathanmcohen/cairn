@@ -13,6 +13,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
     <div className="mx-auto max-w-3xl">
       <nav className="mb-6 flex gap-4 text-sm" aria-label="Admin sections">
         <a href="/settings/admin">Members</a>
+        <a href="/settings/admin/invites">Invites</a>
       </nav>
       {children}
     </div>
