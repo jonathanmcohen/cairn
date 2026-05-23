@@ -73,6 +73,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - A manual screen-reader checklist (`docs/a11y-screen-reader-checklist.md`) covers what axe can't (reading order, live announcement quality, keyboard feel).
 - Editor mount fix: distinct `PluginKey` per `@tiptap/suggestion` plugin (member-mention `@`, page-link `[[`, page-mention `@@`), unblocking the audit and fixing a runtime crash that landed in P10.
 
+### Added (v0.6.0 P15 — Keyboard shortcuts + i18n)
+- Typed shortcut registry (`src/lib/shortcuts/registry.ts`) with registration-time conflict detection + a pure `matchShortcut` (unit-tested), driving a global dispatcher (replacing the hand-rolled ⌘N handler), a discoverable ⌘/ overlay sheet listing every registered shortcut grouped by scope, and the ⌘K palette's Actions group — all reading the SAME registry (one source of truth).
+- Global entries seeded: ⌘N New page, ⌘⇧L Toggle theme, ⌘⇧O Switch workspace, ⌘⇧F Open favorites, ⌘/ Show shortcuts.
+- Dependency-light i18n: pure `t()` (flat-key + `{name}` interpolation + `Intl.PluralRules` plural + missing-key→key fallback, unit-tested), pure `resolveLocale(cookie, acceptLanguage)` (unit-tested, cookie → Accept-Language → en), an `I18nProvider`/`useT()`/`useLocale()`, flat-key JSON catalogs for `en` + `ar` (the RTL proof), a `<LocaleSwitcher>` writing the `cairn_locale` cookie, and root-layout `<html lang dir>` wiring with RTL logical-property CSS (`ms-`/`me-`/`ps-`/`pe-`/`start-`/`end-`/`text-start`) on the always-rendered app chrome.
+
 ## [0.5.1] - 2026-05-21
 
 ### Security (v0.5.1)
