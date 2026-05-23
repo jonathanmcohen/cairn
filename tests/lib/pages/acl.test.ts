@@ -1,12 +1,32 @@
 import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
-import { resolveEffectivePermission } from '@/lib/pages/acl';
+import { HttpError } from '@/lib/auth/require-role';
+import { requirePageAcl, resolveEffectivePermission } from '@/lib/pages/acl';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
+
+// requirePageAcl reads the active user via Auth.js (mocked here) and the live
+// db through getDb(); set DATABASE_URL so getDb() targets the testcontainer.
+vi.mock('@/lib/auth/config', () => {
+  let session: { userId: string } | null = null;
+  return {
+    auth: async () => (session ? { user: { id: session.userId } } : null),
+    __set: (s: { userId: string } | null) => {
+      session = s;
+    },
+  };
+});
+
+async function actAs(userId: string | null) {
+  const mod = (await import('@/lib/auth/config')) as unknown as {
+    __set: (s: { userId: string } | null) => void;
+  };
+  mod.__set(userId ? { userId } : null);
+}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle<typeof schema>>;
@@ -16,6 +36,9 @@ beforeAll(async () => {
   await runMigrations(uri);
   sql = postgres(uri);
   db = drizzle(sql, { schema });
+  process.env.DATABASE_URL = uri;
+  process.env.AUTH_SECRET = 'x'.repeat(32);
+  process.env.NEXTAUTH_URL = 'http://localhost:3000';
 });
 
 afterAll(async () => {
@@ -157,5 +180,70 @@ describe('resolveEffectivePermission - UUID hygiene', () => {
     expect(
       await resolveEffectivePermission(db, { userId: owner.userId, pageId: fakeId }),
     ).toBeNull();
+  });
+});
+
+describe('requirePageAcl - gate behavior', () => {
+  it('returns {page, ctx, effectivePermission} when the user passes the min-perm gate', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+    await actAs(owner.userId);
+    const result = await requirePageAcl(grandId, 'view');
+    expect(result.page.id).toBe(grandId);
+    expect(result.ctx.workspaceId).toBe(owner.workspaceId);
+    expect(result.effectivePermission).toBe('owner');
+  });
+
+  it('throws HttpError(404) for a non-UUID pageId', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    await actAs(owner.userId);
+    let caught: unknown = null;
+    try {
+      await requirePageAcl('not-a-uuid', 'view');
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(HttpError);
+    expect((caught as HttpError).status).toBe(404);
+  });
+
+  it('throws HttpError(404) for a page in another workspace (no existence leak)', async () => {
+    const a = await createTestWorkspaceWithUser(db, { role: 'owner', email: 'a@x.com' });
+    const b = await createTestWorkspaceWithUser(db, { role: 'owner', email: 'b@x.com' });
+    const { grandId } = await makePageChain(a.workspaceId, a.userId);
+    // ensure b is treated as a different workspace member
+    expect(b.workspaceId).not.toBe(a.workspaceId);
+    await actAs(b.userId);
+    let caught: unknown = null;
+    try {
+      await requirePageAcl(grandId, 'view');
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(HttpError);
+    expect((caught as HttpError).status).toBe(404);
+  });
+
+  it('throws HttpError(403) when effective permission is below min-permission', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const viewer = await addMember(owner.workspaceId, 'v@x.com', 'viewer');
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+    await actAs(viewer);
+    let caught: unknown = null;
+    try {
+      await requirePageAcl(grandId, 'edit'); // viewer has 'view', not 'edit'
+    } catch (err) {
+      caught = err;
+    }
+    expect(caught).toBeInstanceOf(HttpError);
+    expect((caught as HttpError).status).toBe(403);
+  });
+
+  it('treats "owner" effective permission as satisfying any min-permission (incl. edit)', async () => {
+    const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
+    await actAs(owner.userId);
+    await expect(requirePageAcl(grandId, 'edit')).resolves.toBeDefined();
+    await expect(requirePageAcl(grandId, 'comment')).resolves.toBeDefined();
   });
 });

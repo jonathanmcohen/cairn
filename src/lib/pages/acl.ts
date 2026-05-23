@@ -1,6 +1,13 @@
-import { sql as rawSql } from 'drizzle-orm';
+import { and, eq, isNull, sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import type * as schema from '@/db/schema';
+import { getDb } from '@/db/client';
+import * as schema from '@/db/schema';
+import {
+  getAuthContext,
+  HttpError,
+  requireWorkspace,
+  type WorkspaceContext,
+} from '@/lib/auth/require-role';
 
 /**
  * Effective permission tier returned by the resolver. Ordered for the
@@ -102,4 +109,57 @@ export async function resolveEffectivePermission(
     default:
       return null;
   }
+}
+
+export type PageAclAccess = {
+  page: schema.Page;
+  ctx: WorkspaceContext;
+  effectivePermission: EffectivePermission;
+};
+
+/**
+ * v0.7 sibling of v0.6 requirePageAccess. Validates the page exists in the
+ * active workspace, resolves the user's effective permission via the ACL
+ * resolver, and gates on minPermission.
+ *
+ * - 404 for non-UUID pageId (no DB cast error)
+ * - 404 for cross-workspace pageId (no existence leak)
+ * - 403 when effectivePermission < minPermission
+ * - returns {page, ctx, effectivePermission} otherwise
+ *
+ * Does NOT replace requirePageAccess — v0.6 routes keep their role-based gate.
+ * New v0.7 routes opt into ACL-aware access by calling this instead.
+ */
+export async function requirePageAcl(
+  pageId: string,
+  minPermission: EffectivePermission,
+): Promise<PageAclAccess> {
+  const ctx = requireWorkspace(await getAuthContext());
+  if (!UUID_RE.test(pageId)) {
+    throw new HttpError(404, 'Page not found');
+  }
+  const db = getDb();
+  const [page] = await db
+    .select()
+    .from(schema.pages)
+    .where(and(eq(schema.pages.id, pageId), isNull(schema.pages.deletedAt)))
+    .limit(1);
+  if (!page) throw new HttpError(404, 'Page not found');
+  if (page.workspaceId !== ctx.workspaceId) {
+    // Same status as not-found to avoid leaking page existence across workspaces.
+    throw new HttpError(404, 'Page not found');
+  }
+
+  const permission = await resolveEffectivePermission(db, {
+    userId: ctx.userId,
+    pageId,
+  });
+  if (!permission) {
+    throw new HttpError(403, 'No access to this page');
+  }
+  if (!permissionAtLeast(permission, minPermission)) {
+    throw new HttpError(403, `Requires ${minPermission} permission`);
+  }
+
+  return { page, ctx, effectivePermission: permission };
 }
