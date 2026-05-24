@@ -45,4 +45,23 @@ describe('parseArgs (P21 additions)', () => {
   it('parses reminders:scan with no flags', () => {
     expect(parseArgs(['reminders:scan'])).toMatchObject({ command: 'reminders:scan' });
   });
+  it('parses reindex-embeddings (no flags)', () => {
+    expect(parseArgs(['reindex-embeddings'])).toMatchObject({ command: 'reindex-embeddings' });
+  });
+  it('parses reindex-embeddings --workspace', () => {
+    expect(parseArgs(['reindex-embeddings', '--workspace', 'w1'])).toMatchObject({
+      command: 'reindex-embeddings',
+      workspace: 'w1',
+    });
+  });
+  it('parses reindex-embeddings --batch-size', () => {
+    expect(parseArgs(['reindex-embeddings', '--batch-size', '32'])).toMatchObject({
+      command: 'reindex-embeddings',
+      batchSize: 32,
+    });
+  });
+  it('rejects a non-positive --batch-size', () => {
+    expect(() => parseArgs(['reindex-embeddings', '--batch-size', '0'])).toThrow();
+    expect(() => parseArgs(['reindex-embeddings', '--batch-size', 'soon'])).toThrow();
+  });
 });

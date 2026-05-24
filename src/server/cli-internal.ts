@@ -23,7 +23,14 @@ export function parseDbUrl(raw: string): DbConnection {
 }
 
 export interface CliArgs {
-  command: 'backup' | 'restore' | 'export' | 'import' | 'reconcile' | 'reminders:scan';
+  command:
+    | 'backup'
+    | 'restore'
+    | 'export'
+    | 'import'
+    | 'reconcile'
+    | 'reminders:scan'
+    | 'reindex-embeddings';
   out?: string;
   in?: string;
   force: boolean;
@@ -32,6 +39,7 @@ export interface CliArgs {
   workspace?: string;
   source?: 'notion' | 'markdown-folder' | 'workspace-archive';
   file?: string;
+  batchSize?: number;
 }
 
 const KNOWN_COMMANDS = [
@@ -41,6 +49,7 @@ const KNOWN_COMMANDS = [
   'import',
   'reconcile',
   'reminders:scan',
+  'reindex-embeddings',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 
@@ -61,6 +70,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let workspace: string | undefined;
   let source: CliArgs['source'];
   let file: string | undefined;
+  let batchSize: number | undefined;
 
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -86,7 +96,14 @@ export function parseArgs(argv: string[]): CliArgs {
       }
       source = s;
     } else if (a === '--file') file = rest[++i];
-    else throw new Error(`Unknown flag: ${a}`);
+    else if (a === '--batch-size') {
+      const raw = rest[++i];
+      const n = Number(raw);
+      if (raw === undefined || !Number.isInteger(n) || n < 1) {
+        throw new Error('--batch-size requires a positive integer');
+      }
+      batchSize = n;
+    } else throw new Error(`Unknown flag: ${a}`);
   }
   if (cmd === 'backup' && !out) throw new Error('backup requires --out <dir>');
   if (cmd === 'restore' && !inBundle) throw new Error('restore requires --in <bundle>');
@@ -106,5 +123,6 @@ export function parseArgs(argv: string[]): CliArgs {
     workspace,
     source,
     file,
+    batchSize,
   };
 }

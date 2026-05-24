@@ -1,5 +1,14 @@
 import { vi } from 'vitest';
 
+// v0.7.0 G4 P12: the on-write embedding hook in src/lib/pages/{create,update}.ts
+// fires a setImmediate that ultimately runs embedPage against the same db
+// reference the caller used. In integration tests, this background work can
+// race with the next test's TRUNCATE (deadlock) and tries to use the db after
+// the suite has closed it. Disable by default for the whole test suite; the
+// targeted on-write hook test (tests/lib/pages/update-embeds.test.ts) re-enables
+// it explicitly with vi.doMock + delete process.env.CAIRN_DISABLE_EMBED_HOOK.
+process.env.CAIRN_DISABLE_EMBED_HOOK = '1';
+
 // getAuthContext() now reads/writes the `cairn_ws` cookie via next/headers.
 // Outside a Next.js request scope (i.e. in unit/integration tests) `cookies()`
 // throws. Provide a per-test in-memory cookie store so existing tests that drive

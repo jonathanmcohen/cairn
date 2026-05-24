@@ -45,5 +45,22 @@ export async function createPage(
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
   void emit('page.created', page.workspaceId, { id: page.id, title: page.title });
+  // Fire-and-forget: regenerate the embedding off the request path. Never
+  // blocks the create; errors logged but never thrown. (v0.7.0 G4 P12.)
+  // The CAIRN_DISABLE_EMBED_HOOK escape hatch mirrors update.ts — see
+  // tests/setup.ts for why the test suite sets it.
+  if (process.env.CAIRN_DISABLE_EMBED_HOOK !== '1') {
+    setImmediate(() => {
+      void (async () => {
+        try {
+          const { embedPage } = await import('@/lib/search/embed-page');
+          await embedPage(db, page.id);
+        } catch (err) {
+          const { logger } = await import('@/lib/observability/logger');
+          logger.warn({ err, pageId: page.id }, 'embedPage failed (page-create hook)');
+        }
+      })();
+    });
+  }
   return page;
 }

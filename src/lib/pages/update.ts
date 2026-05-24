@@ -69,5 +69,23 @@ export async function updatePage(
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
   void emit('page.updated', updated.workspaceId, { id: updated.id, title: updated.title });
+  // Fire-and-forget: regenerate the embedding off the request path. Never
+  // blocks the update; errors logged but never thrown. (v0.7.0 G4 P12.)
+  // The CAIRN_DISABLE_EMBED_HOOK escape hatch is set in tests/setup.ts so
+  // background embed work can't race the next test's TRUNCATE; production
+  // never sets it.
+  if (process.env.CAIRN_DISABLE_EMBED_HOOK !== '1') {
+    setImmediate(() => {
+      void (async () => {
+        try {
+          const { embedPage } = await import('@/lib/search/embed-page');
+          await embedPage(db, updated.id);
+        } catch (err) {
+          const { logger } = await import('@/lib/observability/logger');
+          logger.warn({ err, pageId: updated.id }, 'embedPage failed (page-update hook)');
+        }
+      })();
+    });
+  }
   return updated;
 }

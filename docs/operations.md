@@ -23,6 +23,18 @@ The app does **not** host a cron daemon (design decision 36). Two options:
 - `pnpm cli reconcile [--workspace <id>]` — recompute `storage_bytes_used` from the actual
   stored files. Run it after a restore or if you suspect counter drift.
 
+### Embedding backfill (one-time, opt-in)
+
+Setting `CAIRN_BACKFILL_EMBEDDINGS=1` on the first boot after upgrading to v0.7.0 kicks a one-time
+background pass that embeds every page lacking an embedding (or whose `content_text` has changed
+since the last embed). Same single-instance ceiling as `CAIRN_BACKUP_INTERVAL` — two app processes
+both run their own pass and burn extra embedding-provider calls. Prefer running
+`pnpm cli reindex-embeddings` from a one-shot container if you operate multi-instance.
+
+After the first pass, unset the env. The on-write hook in `src/lib/pages/update.ts` +
+`src/lib/pages/create.ts` keeps embeddings current going forward. The CLI accepts
+`--workspace <id>` to restrict the pass and `--batch-size N` (default 16) to tune parallelism.
+
 ### MCP SSE fallback session store
 
 The legacy SSE-fallback transport (`GET /api/mcp/sse` + `POST /api/mcp/messages`) keeps

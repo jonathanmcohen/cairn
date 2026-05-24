@@ -218,7 +218,8 @@ async function main(): Promise<void> {
         `  cli export --workspace <id> --out <dir>\n` +
         `  cli import --source notion|markdown-folder|workspace-archive --file <path> --workspace <id>\n` +
         `  cli reconcile [--workspace <id>]\n` +
-        `  cli reminders:scan`,
+        `  cli reminders:scan\n` +
+        `  cli reindex-embeddings [--workspace <id>] [--batch-size N]`,
     );
     process.exit(2);
   }
@@ -268,6 +269,17 @@ async function main(): Promise<void> {
     const { runRemindersScan } = await import('../lib/reminders/reminders-cli.js');
     const { fired } = await runRemindersScan();
     console.log(`reminders:scan fired ${fired} reminder(s)`);
+  } else if (args.command === 'reindex-embeddings') {
+    const { runReindexEmbeddingsCli } = await import('../lib/search/reindex-cli.js');
+    const summary = await runReindexEmbeddingsCli({
+      workspaceId: args.workspace,
+      batchSize: args.batchSize,
+    });
+    console.log(JSON.stringify(summary, null, 2));
+    await recordCliAudit(conn, 'embedding.backfill_completed', {
+      workspaceId: args.workspace,
+      ...summary,
+    });
   }
 }
 
