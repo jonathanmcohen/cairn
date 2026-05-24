@@ -36,6 +36,8 @@ const Schema = z.object({
   CAIRN_EMBEDDING_MODEL: z.string().optional(),
   CAIRN_EMBEDDING_API_KEY: z.string().optional(),
   CAIRN_BACKFILL_EMBEDDINGS: z.coerce.boolean().optional(),
+  CAIRN_GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
+  CAIRN_GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;

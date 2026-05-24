@@ -61,6 +61,7 @@
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "emoji-picker-element": "^1.21.0",
+    "googleapis": "^172.0.0",
     "katex": "^0.17.0",
     "lowlight": "^3.1.0",
     "lucide-react": "^1.16.0",
