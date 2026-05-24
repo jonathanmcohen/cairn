@@ -253,4 +253,27 @@ describe('SheetsAdapter — round-trip', () => {
     const { acks } = await SheetsAdapter.applyChanges(state, diff);
     expect(acks.map((a) => (a.kind === 'update' ? a.externalId : null))).toEqual(['r1', 'r2']);
   });
+
+  it('subscribe channel-token uses workspaceId:connectorId format', async () => {
+    stubs.filesWatch.mockResolvedValue({ data: { id: 'ch', resourceId: 'res' } });
+    const state = makeState({ workspaceId: 'workspace-zzz', connectorId: 'con-abc' });
+    await SheetsAdapter.subscribe?.(state, () => {});
+    const watchCall = stubs.filesWatch.mock.calls.at(-1)?.[0];
+    expect(watchCall.requestBody.token).toBe('workspace-zzz:con-abc');
+  });
+});
+
+describe('OAuth callback — secret hygiene', () => {
+  it('encryptAuthConfig persists the refresh token as a sealed bytea, not plaintext', async () => {
+    const { encryptAuthConfig, decryptAuthConfig } = await import('@/lib/connectors/auth');
+    const blob = encryptAuthConfig({ refresh_token: 'super-secret-token' });
+    expect(Buffer.isBuffer(blob)).toBe(true);
+    // The encrypted blob must not contain the plaintext token anywhere.
+    expect(blob.toString('utf8').includes('super-secret-token')).toBe(false);
+    expect(blob.toString('hex').includes('super-secret-token')).toBe(false);
+    expect(blob.toString('base64').includes('super-secret-token')).toBe(false);
+    // Round-trip recovers the original payload.
+    const round = decryptAuthConfig(blob);
+    expect(round).toEqual({ refresh_token: 'super-secret-token' });
+  });
 });
