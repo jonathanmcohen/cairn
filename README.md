@@ -15,6 +15,52 @@ audit log + observability, per-workspace storage quotas, scheduled backups,
 import/export, search-filter + saved searches, reminders, and bulk page ops
 — without sending your content to anyone else.
 
+## v0.7.0 features
+
+**Authz primitives.** Per-user **Personal Access Tokens** (`cairn_pat_*`)
+coexist with v0.5 workspace API keys; PATs carry a closed-vocab scope set
+(`pages:read`, `mcp:write`, etc.) and a per-token **MCP tool allowlist**. Page
+ACLs override workspace role per subtree (owner role bypasses the chain
+entirely for recovery). A `/settings/developer` page lets users mint/revoke
+PATs, view a per-token usage timeline, and copy a Claude Desktop / Cursor
+config snippet.
+
+**MCP server.** Streamable HTTP at `POST /api/mcp` plus an SSE fallback shim
+at `GET /api/mcp/sse` + `POST /api/mcp/messages` for first-generation clients.
+~20 tools cover pages / databases / rows / search / comments / files / workspace.
+Tool dispatch enforces (scope ∈ PAT) ∧ (tool ∈ PAT allowlist) ∧
+(user role + page ACL permits the underlying mutation).
+
+**Observability + ops delta.** Always-open `GET /healthz` (K8s liveness probe);
+`/metrics` still token-gated (unchanged from v0.6 P20) with new closed-label
+series for `mcp_tool_called_total`, `embedding_generation_total`,
+`automation_rule_fired_total`, and `connector_sync_total`. A per-webhook
+delivery dashboard with manual replay + HMAC-secret rotate.
+
+**Vector / semantic search.** pgvector + a bundled `all-MiniLM-L6-v2` ONNX
+local embedding model (no external network needed); `CAIRN_EMBEDDING_URL` env
+override for any OpenAI-compatible endpoint (Ollama, OpenAI, vLLM…). On-write
+fire-and-forget embedding pipeline + a `pnpm cli reindex-embeddings` backfill.
+`/api/search?mode=semantic` and `?mode=hybrid` (RRF) join the existing FTS path.
+
+**Bulk import/export + scheduled S3 backup.** Workspace-settings UI for bulk
+imports (Notion / Markdown folder / workspace archive) over the v0.6 P21 lib,
+with SSE progress streaming. A `cron_schedules` table + an entrypoint scheduler
+exec the existing backup CLI on a schedule; `pnpm cli restore --from-s3` closes
+the v0.5/v0.6 gap where backups went to S3 but restore wanted a local file.
+
+**Automation / rules engine.** Settings-page form builder: trigger event
+(`row.created`, `page.updated`, …) → condition (the v0.6 filter operator vocab)
+→ action (`notify`, `send_webhook`, `set_property`, `create_page`). Rules
+persist as DB rows + fire fire-and-forget off the same internal event bus the
+webhook dispatcher reads from.
+
+**Two-way DB connectors.** A `ConnectorAdapter` interface + sync engine with
+LWW per-cell conflict resolution and a conflict-review inbox. Three concrete
+adapters: **Google Sheets** (OAuth + Drive change webhooks + Sheets API),
+**Airtable** (paste-PAT + Airtable webhooks + Records API), **CSV** (file path
+under `CAIRN_CONNECTOR_CSV_PATH`, poll-only).
+
 ## v0.6.0 features
 
 The v0.6.0 surface in five bands (see [CHANGELOG.md](CHANGELOG.md) for the
@@ -376,6 +422,44 @@ the live docker stack (headers, CSP-renders-the-app, anon denial, forged tokens)
 See [SECURITY.md](SECURITY.md) for the STRIDE-lite threat model, the
 trust-boundary→control table, residual risks, and the vulnerability-reporting
 process.
+
+### v0.7.0 security & operations caveats (additions)
+
+- **PATs are per-user, scoped, and a separate token class.** PAT secrets are
+  prefixed `cairn_pat_` and stored only as a SHA-256 hash; the plaintext is
+  shown once at mint and never echoed. PATs carry an explicit scope list
+  (`pages:read`, `mcp:write`, …) and — for MCP tools — a per-token tool
+  allowlist. Empty allowlist = no MCP access regardless of scope. Tool
+  dispatch always falls through to the acting user's workspace role + page
+  ACL; a PAT can never escalate beyond the minting user.
+- **Page ACL precedence.** Effective permission = nearest ancestor ACL else
+  the user's workspace role; **owner role bypasses the ACL chain** for
+  recovery + ownership guarantee. Public-share (`/p/<slug>`) is a separate
+  axis — anonymous-only; logged-in members always route through the
+  role+ACL resolver.
+- **MCP tool allowlist + write safety.** Tool dispatch requires (scope ∈ PAT)
+  ∧ (tool ID ∈ PAT.mcp_tools) ∧ (the underlying mutation passes the user's
+  role + page ACL check). Named presets ("read-only", "full CRUD",
+  "write-minus-destructive", "MCP read-only", "MCP full") cover the common
+  cases; advanced multi-select for power users. There are no per-call
+  agent-confirmation prompts (UX-fragile across MCP clients).
+- **Connector OAuth refresh tokens + Airtable PAT + webhook MAC secret.**
+  All connector auth material is encrypted at rest in
+  `database_connectors.auth_config` via the v0.6 secret-box (AES-256-GCM, key
+  derived from `AUTH_SECRET` via HKDF). Plaintext is decrypted only inside the
+  sync engine; never echoed in any API response, audit metadata, token-usage
+  log, or workspace-archive export (asserted by the extended secret-leak
+  suite in P22).
+- **Embedding API key (BYO mode).** If `CAIRN_EMBEDDING_URL` +
+  `CAIRN_EMBEDDING_API_KEY` are configured, the key is in `pino`'s redact list
+  and never appears in logs / API responses / the workspace export. The
+  default bundled local model (`all-MiniLM-L6-v2`) has no API key.
+- **Single-instance ceiling — three new schedulers.** Cairn still has no
+  distributed lock; the new `cron_schedules` ticker (G5), the automation
+  event-subscriber loop (G6), and the connector sync orchestrator (G7) all
+  inherit the v0.6 P21 single-instance ceiling. Multiple instances will
+  double-fire all three. Documented alongside the v0.6 backup/reminders/digest
+  tickers in `docs/operations.md`.
 
 ### v0.6.0 security & operations caveats
 
