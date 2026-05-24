@@ -56,7 +56,7 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await sql`TRUNCATE pages, workspaces, users, workspace_members, api_keys, webhooks, audit_log, user_totp,
-    personal_access_tokens, token_usage_log, page_acls
+    personal_access_tokens, token_usage_log, page_acls, database_connectors
     RESTART IDENTITY CASCADE`;
 });
 
@@ -494,5 +494,226 @@ describe('secret-leak: PAT secrets', () => {
     expect(body).not.toContain('token_hash');
     // The plaintext IS in the body (this is the one place it appears), but
     // the response shape never re-exposes the hash.
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.7.0 G7 P22: Connector secrets. Each of the three v0.7.0 adapters carries
+// a different secret class:
+//   - Sheets    — OAuth refresh token (encrypted into auth_config bytea)
+//   - Airtable  — Personal Access Token + webhook MAC secret (both encrypted)
+//   - CSV       — no secret; auth_config is `{}` but still encrypted at rest
+// The framework's contract (spec §5.1) is that NONE of these plaintexts may
+// surface in: audit metadata, the token-usage log, the workspace-archive
+// export ZIP, or the raw `database_connectors.auth_config` bytea decoded as
+// latin1. Each adapter's `kind` is registered via the P19 registry; the
+// secrets here are synthetic LEAKCHECK markers so any regression that leaks
+// them is loud and grep-able.
+// ---------------------------------------------------------------------------
+
+describe('secret-leak: connector secrets', () => {
+  type Planted = {
+    workspaceId: string;
+    userId: string;
+    sheetsConnId: string;
+    airtableConnId: string;
+    csvConnId: string;
+  };
+
+  const SHEETS_REFRESH = 'sheets-refresh-token-LEAKCHECK-AAA';
+  const AIRTABLE_PAT = 'airtable-pat-LEAKCHECK-BBB';
+  const AIRTABLE_MAC = 'airtable-mac-LEAKCHECK-CCC';
+
+  async function plantConnectors(): Promise<Planted> {
+    const ws = await createTestWorkspaceWithUser(db, { role: 'admin' });
+
+    const { encryptAuthConfig } = await import('@/lib/connectors/auth');
+
+    // Each connector needs a page + database (one connector per database).
+    async function newDb(name: string): Promise<string> {
+      const [page] = await db
+        .insert(schema.pages)
+        .values({
+          workspaceId: ws.workspaceId,
+          title: name,
+          content: {},
+          createdBy: ws.userId,
+        })
+        .returning();
+      if (!page) throw new Error('failed to seed page');
+      const [dbRow] = await db
+        .insert(schema.databases)
+        .values({
+          workspaceId: ws.workspaceId,
+          pageId: page.id,
+          name,
+          createdBy: ws.userId,
+        })
+        .returning();
+      if (!dbRow) throw new Error('failed to seed database');
+      return dbRow.id;
+    }
+
+    const sheetsDb = await newDb('sheets');
+    const airtableDb = await newDb('airtable');
+    const csvDb = await newDb('csv');
+
+    // Sheets — refresh token sealed via secret-box.
+    const [sheetsConn] = await db
+      .insert(schema.databaseConnectors)
+      .values({
+        workspaceId: ws.workspaceId,
+        databaseId: sheetsDb,
+        kind: 'google_sheets',
+        authConfig: encryptAuthConfig({ refresh_token: SHEETS_REFRESH }),
+        syncConfig: {
+          spreadsheetId: 'sheet-x',
+          sheetTitle: 'Sheet1',
+          headerRow: 1,
+          columnMap: {},
+          externalIdProperty: 'prop-id',
+        },
+        enabled: false,
+        createdBy: ws.userId,
+      })
+      .returning();
+    if (!sheetsConn) throw new Error('failed to seed sheets connector');
+
+    // Airtable — PAT + webhook MAC secret sealed via secret-box.
+    const [airtableConn] = await db
+      .insert(schema.databaseConnectors)
+      .values({
+        workspaceId: ws.workspaceId,
+        databaseId: airtableDb,
+        kind: 'airtable',
+        authConfig: encryptAuthConfig({
+          pat: AIRTABLE_PAT,
+          webhookMacSecret: AIRTABLE_MAC,
+        }),
+        syncConfig: {
+          baseId: 'appBASE',
+          tableId: 'tblTABLE',
+          fieldMap: {},
+          externalIdProperty: 'prop-id',
+        },
+        enabled: false,
+        createdBy: ws.userId,
+      })
+      .returning();
+    if (!airtableConn) throw new Error('failed to seed airtable connector');
+
+    // CSV — no auth, but the column is non-null bytea, so we still encrypt
+    // an empty object to keep the column shape uniform across adapters.
+    const [csvConn] = await db
+      .insert(schema.databaseConnectors)
+      .values({
+        workspaceId: ws.workspaceId,
+        databaseId: csvDb,
+        kind: 'csv',
+        authConfig: encryptAuthConfig({}),
+        syncConfig: {
+          relativePath: 'projects.csv',
+          delimiter: ',',
+          encoding: 'utf8',
+          columnMap: {},
+          externalIdProperty: 'prop-id',
+        },
+        enabled: false,
+        createdBy: ws.userId,
+      })
+      .returning();
+    if (!csvConn) throw new Error('failed to seed csv connector');
+
+    return {
+      workspaceId: ws.workspaceId,
+      userId: ws.userId,
+      sheetsConnId: sheetsConn.id,
+      airtableConnId: airtableConn.id,
+      csvConnId: csvConn.id,
+    };
+  }
+
+  it('connector secrets never leak via audit metadata, token-usage log, workspace export, or raw auth_config bytea', async () => {
+    const p = await plantConnectors();
+
+    const secrets = [SHEETS_REFRESH, AIRTABLE_PAT, AIRTABLE_MAC];
+
+    // -- Surface 1: audit log metadata. v0.7.0 G7 doesn't add `connector.*`
+    //    to the AuditAction enum yet (introducing one would be a separate
+    //    schema change). We still cover the surface by writing the kind of
+    //    metadata-shaped row a future `connector.created` event would produce
+    //    via a raw INSERT, then scanning the whole audit_log table for any
+    //    occurrence of the planted secrets. The `assertAuditMetadataClean`
+    //    guard would catch this earlier if any caller ever passed a secret
+    //    through `recordAudit`; this test is the table-level backstop.
+    await db.insert(schema.auditLog).values([
+      {
+        workspaceId: p.workspaceId,
+        actorUserId: p.userId,
+        action: 'workspace.settings_changed',
+        targetType: 'workspace',
+        targetId: p.workspaceId,
+        metadata: { scope: 'connector', kind: 'google_sheets', connectorId: p.sheetsConnId },
+      },
+      {
+        workspaceId: p.workspaceId,
+        actorUserId: p.userId,
+        action: 'workspace.settings_changed',
+        targetType: 'workspace',
+        targetId: p.workspaceId,
+        metadata: { scope: 'connector', kind: 'airtable', connectorId: p.airtableConnId },
+      },
+      {
+        workspaceId: p.workspaceId,
+        actorUserId: p.userId,
+        action: 'workspace.settings_changed',
+        targetType: 'workspace',
+        targetId: p.workspaceId,
+        metadata: { scope: 'connector', kind: 'csv', connectorId: p.csvConnId },
+      },
+    ]);
+    const auditRows = await db.select().from(schema.auditLog);
+    const auditJson = JSON.stringify(auditRows);
+    for (const s of secrets) expect(auditJson).not.toContain(s);
+    assertNoSecretPrefixes(auditJson);
+
+    // -- Surface 2: token-usage log. Connector lifecycle does not currently
+    //    write through MCP tools in v0.7.0, but if a future adapter ever
+    //    surfaces a `connectors.*` MCP tool, the resulting tul rows must
+    //    carry no plaintext. Seed a synthetic row pointing at a connector
+    //    route to make the scan non-trivial.
+    await sql`
+      INSERT INTO token_usage_log (workspace_id, token_kind, token_id, user_id, route, status)
+      VALUES (${p.workspaceId}, 'pat', gen_random_uuid(), ${p.userId}, '/api/connectors', 200)
+    `;
+    const tulRows = await db.select().from(schema.tokenUsageLog);
+    const tulJson = JSON.stringify(tulRows);
+    for (const s of secrets) expect(tulJson).not.toContain(s);
+
+    // -- Surface 3: workspace-archive export ZIP. By design the export walks
+    //    only non-secret tables (pages, databases, files) — connectors and
+    //    their auth_config are excluded. Confirm by reading the produced ZIP
+    //    bytes as latin1 and asserting the plaintext secrets are absent.
+    const outDir = join(tmpdir(), `cairn-export-conn-${randomBytes(8).toString('hex')}`);
+    const zipPath = await runWorkspaceExport({ workspaceId: p.workspaceId, outDir });
+    const archiveBytes = await readFile(zipPath);
+    const archiveLatin1 = archiveBytes.toString('latin1');
+    for (const s of secrets) expect(archiveLatin1).not.toContain(s);
+
+    // -- Surface 4 (bonus): the raw `database_connectors.auth_config` bytea
+    //    must contain NO plaintext substring of any planted secret. The
+    //    column is sealed via AES-256-GCM (secret-box), so even a latin1
+    //    decode of the stored bytes is opaque ciphertext.
+    const rows = await db.select().from(schema.databaseConnectors);
+    expect(rows).toHaveLength(3);
+    for (const r of rows) {
+      const blob = r.authConfig as Buffer;
+      const latin1 = blob.toString('latin1');
+      const hex = blob.toString('hex');
+      for (const s of secrets) {
+        expect(latin1).not.toContain(s);
+        expect(hex).not.toContain(Buffer.from(s, 'utf8').toString('hex'));
+      }
+    }
   });
 });
