@@ -1,6 +1,7 @@
 import { and, arrayContains, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { evaluateRules } from '@/lib/automation/dispatcher';
 import { logger } from '@/lib/observability/logger';
 import { incWebhook } from '@/lib/observability/metrics';
 import { signBody } from './sign';
@@ -47,26 +48,33 @@ export async function emit(
           arrayContains(schema.webhooks.events, [event]),
         ),
       );
-    if (subscribed.length === 0) return;
+    if (subscribed.length > 0) {
+      const inserted = await db
+        .insert(schema.webhookDeliveries)
+        .values(
+          subscribed.map((h) => ({
+            webhookId: h.id,
+            event,
+            payload: payload as never,
+            status: 'pending',
+          })),
+        )
+        .returning({ id: schema.webhookDeliveries.id });
 
-    const inserted = await db
-      .insert(schema.webhookDeliveries)
-      .values(
-        subscribed.map((h) => ({
-          webhookId: h.id,
-          event,
-          payload: payload as never,
-          status: 'pending',
-        })),
-      )
-      .returning({ id: schema.webhookDeliveries.id });
-
-    for (const { id } of inserted) {
-      // Off the request path. Swallow rejections — status is tracked in the row.
-      setImmediate(() => {
-        void deliver(id).catch(() => {});
-      });
+      for (const { id } of inserted) {
+        // Off the request path. Swallow rejections — status is tracked in the row.
+        setImmediate(() => {
+          void deliver(id).catch(() => {});
+        });
+      }
     }
+
+    // Fan the same event into the automation rules engine, off the request
+    // path. Rules engine failures are isolated — they cannot break webhook
+    // delivery. Mirrors v0.6 P11 email send.
+    setImmediate(() => {
+      void evaluateRules(event, workspaceId, payload).catch(() => {});
+    });
   } catch (err) {
     // Emit must never break the mutation it hangs off of.
     logger.error(

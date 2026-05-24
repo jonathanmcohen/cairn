@@ -1,0 +1,60 @@
+import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { users } from './users';
+import { workspaces } from './workspaces';
+
+/** Condition shape stored in the `condition` jsonb. Empty object = match-all. */
+export type AutomationCondition =
+  | Record<string, never>
+  | {
+      property: string;
+      operator: AutomationOperator;
+      value: unknown;
+    };
+
+export type AutomationOperator =
+  | 'equals'
+  | 'not_equals'
+  | 'contains'
+  | 'not_contains'
+  | 'gt'
+  | 'lt'
+  | 'between'
+  | 'is_empty'
+  | 'is_not_empty'
+  | 'is_true'
+  | 'is_false';
+
+export type AutomationActionType = 'notify' | 'send_webhook' | 'set_property' | 'create_page';
+
+export const automationRules = pgTable(
+  'automation_rules',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // Closed enum at the lib layer — see TRIGGER_EVENTS in src/lib/automation/dispatcher.ts.
+    // e.g. 'row.created' | 'row.updated' | 'row.deleted' | 'page.created' | ...
+    triggerEvent: text('trigger_event').notNull(),
+    // {property: string, operator: string, value: unknown} — see src/lib/automation/condition.ts.
+    // Empty object means "always match".
+    condition: jsonb('condition').$type<AutomationCondition>().notNull().default({}),
+    // 'notify' | 'send_webhook' | 'set_property' | 'create_page' — runner registry in P17.
+    actionType: text('action_type').notNull(),
+    // Action-type-specific config; shape validated by the runner.
+    actionConfig: jsonb('action_config').$type<Record<string, unknown>>().notNull(),
+    enabled: boolean('enabled').notNull().default(true),
+    createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    byWorkspaceTrigger: index('automation_rules_workspace_trigger_idx').on(
+      t.workspaceId,
+      t.triggerEvent,
+    ),
+  }),
+);
+
+export type AutomationRule = typeof automationRules.$inferSelect;
+export type NewAutomationRule = typeof automationRules.$inferInsert;
