@@ -79,6 +79,10 @@ const SearchFtsArg = z.object({
   query: z.string().min(1).max(500),
   limit: z.number().int().min(1).max(50).default(20),
 });
+const SearchSemanticArg = z.object({
+  query: z.string().min(1).max(500),
+  limit: z.number().int().min(1).max(50).default(20),
+});
 const ListCommentsArg = PageIdArg;
 const CreateCommentArg = PageIdArg.extend({ body: z.string().min(1).max(10_000) });
 const ListFilesArg = z.object({
@@ -89,7 +93,7 @@ const FileIdArg = z.object({ fileId: z.uuid() });
 const Empty = z.object({});
 
 /**
- * The hardcoded initial tool set — 19 tools. `search.semantic` is added in P13.
+ * The hardcoded initial tool set — 20 tools (P13 added `search.semantic`).
  *
  * Every handler imports its underlying lib helper dynamically — this keeps the
  * module-level import graph thin and lets the dispatcher / tests stub handlers
@@ -383,6 +387,28 @@ export const registry: ToolDescriptor[] = [
         workspaceId: ctx.workspaceId,
         query: parsed.query,
         limit: parsed.limit,
+      });
+      return { results };
+    },
+  },
+  {
+    id: 'search.semantic',
+    description:
+      'Semantic vector search over the workspace. Returns the pages whose content is most ' +
+      'similar (cosine distance) to the query embedding. Use when the query is conceptual ' +
+      "or paraphrased rather than a literal keyword match — for keyword/typo recall, prefer 'search.fts'.",
+    scope: 'pages:read',
+    destructive: false,
+    inputSchema: SearchSemanticArg,
+    handler: async (ctx, args) => {
+      const { getDb } = await import('@/db/client');
+      const { searchPages } = await import('@/lib/pages/search');
+      const parsed = SearchSemanticArg.parse(args);
+      const results = await searchPages(getDb(), {
+        workspaceId: ctx.workspaceId,
+        query: parsed.query,
+        limit: parsed.limit,
+        mode: 'semantic',
       });
       return { results };
     },

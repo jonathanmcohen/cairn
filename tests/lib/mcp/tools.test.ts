@@ -16,6 +16,7 @@ const EXPECTED_TOOL_IDS = [
   'rows.list',
   'rows.update_cells',
   'search.fts',
+  'search.semantic',
   'comments.list',
   'comments.create',
   'files.list',
@@ -46,7 +47,7 @@ describe('MCP tool registry', () => {
   it('contains exactly the initial v0.7.0 tool set (search.semantic added in P13)', () => {
     const ids = registry.map((t) => t.id).sort();
     expect(ids).toEqual([...EXPECTED_TOOL_IDS].sort());
-    expect(ids).not.toContain('search.semantic'); // added by P13
+    expect(ids).toContain('search.semantic'); // added by P13
   });
 
   it('every descriptor has the required shape', () => {

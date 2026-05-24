@@ -52,14 +52,25 @@ export type SearchResult = {
   breadcrumb: { id: string; title: string }[];
 };
 
+export type SearchMode = 'fts' | 'semantic' | 'hybrid';
+
 export type SearchPagesInput = {
   workspaceId: string;
   query: string;
   limit?: number;
   filters?: SearchFilters;
+  /** Selects the underlying retrieval strategy. Defaults to `'fts'` for full
+   * backward compatibility with v0.6 callers. */
+  mode?: SearchMode;
 };
 
-export async function searchPages(
+/**
+ * Existing FTS + trigram path, extracted into a private function so the
+ * top-level dispatch can pick this OR semantic OR hybrid. Returns rows
+ * WITHOUT breadcrumbs — the dispatcher resolves them once across whatever
+ * mode produced the ids.
+ */
+async function searchFts(
   db: PostgresJsDatabase<typeof schema>,
   input: SearchPagesInput,
 ): Promise<SearchResult[]> {
@@ -113,18 +124,144 @@ export async function searchPages(
     LIMIT ${limit};
   `)) as unknown as { id: string; title: string; rank: number; snippet: string | null }[];
 
-  if (rows.length === 0) return [];
-
-  const ids = rows.map((r) => r.id);
-  const breadcrumbs = await getBreadcrumbs(db, { pageIds: ids, workspaceId: input.workspaceId });
-
   return rows.map((r) => ({
     id: r.id,
     title: r.title,
     snippet: r.snippet,
     rank: Number(r.rank),
-    breadcrumb: breadcrumbs.get(r.id) ?? [],
+    breadcrumb: [],
   }));
+}
+
+/**
+ * Semantic kNN — embeds the query via the P11 provider, then runs a
+ * pgvector cosine-distance nearest-neighbor lookup against the workspace's
+ * page_embeddings rows.
+ *
+ * The embedding provider is dynamically imported so that callers using only
+ * `mode: 'fts'` don't pay the ORT/transformers import cost.
+ */
+async function searchSemantic(
+  db: PostgresJsDatabase<typeof schema>,
+  input: SearchPagesInput,
+): Promise<SearchResult[]> {
+  const limit = Math.min(input.limit ?? 20, 50);
+  const q = input.query.trim();
+  if (!q) return [];
+
+  const { getEmbeddingProvider } = await import('@/lib/search/embed');
+  const provider = getEmbeddingProvider();
+  const vec = await provider.embed(q);
+  const vecLiteral = `[${Array.from(vec).join(',')}]`;
+
+  // <=> is pgvector's cosine-distance operator; ORDER BY ... ASC gives
+  // nearest-first. We don't apply the SearchFilters here yet (date range /
+  // author) — workspace_id + deleted_at IS NULL is the v0.7 surface; the
+  // filter-compile reuse can come in a follow-up if real usage demands it.
+  const rows = (await db.execute(rawSql`
+    SELECT p.id AS id, p.title AS title,
+           (e.embedding <=> ${vecLiteral}::vector) AS distance
+    FROM page_embeddings e
+    JOIN pages p ON p.id = e.page_id
+    WHERE e.workspace_id = ${input.workspaceId}
+      AND p.deleted_at IS NULL
+    ORDER BY e.embedding <=> ${vecLiteral}::vector ASC
+    LIMIT ${limit}
+  `)) as unknown as { id: string; title: string; distance: number }[];
+
+  // Convert cosine distance → rank score (1 - distance, clamped). The bigger,
+  // the more relevant; this mirrors the FTS path's "higher rank is better".
+  return rows.map((r) => ({
+    id: r.id,
+    title: r.title,
+    snippet: null,
+    rank: Math.max(0, 1 - Number(r.distance)),
+    breadcrumb: [],
+  }));
+}
+
+/**
+ * Hybrid retrieval — runs FTS and semantic in parallel with a fanout
+ * (4×limit) larger than the final cap so RRF has room to combine. Pages in
+ * both rankings score higher than pages in either alone.
+ */
+async function searchHybrid(
+  db: PostgresJsDatabase<typeof schema>,
+  input: SearchPagesInput,
+): Promise<SearchResult[]> {
+  const limit = Math.min(input.limit ?? 20, 50);
+  const fanout = limit * 4;
+  const [fts, sem] = await Promise.all([
+    searchFts(db, { ...input, limit: fanout }),
+    searchSemantic(db, { ...input, limit: fanout }),
+  ]);
+
+  const ftsRanking = fts.map((r, i) => ({ id: r.id, rank: i + 1 }));
+  const semRanking = sem.map((r, i) => ({ id: r.id, rank: i + 1 }));
+  const merged = combineWithRrf([ftsRanking, semRanking], { limit });
+
+  // Re-join the merged ids back to the original SearchResult shape — prefer
+  // the FTS-side row (it has a snippet) when available, else the semantic row.
+  const byId = new Map<string, SearchResult>();
+  for (const r of fts) byId.set(r.id, r);
+  for (const r of sem) if (!byId.has(r.id)) byId.set(r.id, r);
+
+  return merged
+    .map((m) => {
+      const row = byId.get(m.id);
+      return row ? { ...row, rank: m.rrfScore } : undefined;
+    })
+    .filter((r): r is SearchResult => Boolean(r));
+}
+
+export async function searchPages(
+  db: PostgresJsDatabase<typeof schema>,
+  input: SearchPagesInput,
+): Promise<SearchResult[]> {
+  const mode: SearchMode = input.mode ?? 'fts';
+  let rows: SearchResult[];
+  if (mode === 'fts') rows = await searchFts(db, input);
+  else if (mode === 'semantic') rows = await searchSemantic(db, input);
+  else if (mode === 'hybrid') rows = await searchHybrid(db, input);
+  else throw new Error(`Unknown search mode: ${String(mode)}`);
+
+  if (rows.length === 0) return [];
+
+  const ids = rows.map((r) => r.id);
+  const breadcrumbs = await getBreadcrumbs(db, { pageIds: ids, workspaceId: input.workspaceId });
+  return rows.map((r) => ({ ...r, breadcrumb: breadcrumbs.get(r.id) ?? [] }));
+}
+
+// ── RRF combiner ───────────────────────────────────────────────────────────
+
+export type RrfRankedItem = { id: string; rank: number };
+export type RrfOpts = { k?: number; limit?: number };
+export type RrfResult = { id: string; rrfScore: number };
+
+/**
+ * Reciprocal Rank Fusion combiner. For each ranking list r, each item's
+ * contribution is 1 / (k + rank), where rank is 1-indexed (1 = best). An
+ * item's combined score is the sum of its contributions across rankings;
+ * items absent from a ranking contribute 0 from it. k=60 is the standard
+ * default (Cormack/Clarke/Buettcher 2009). The output is sorted by
+ * rrfScore DESC, ties broken by id ASC for determinism.
+ *
+ * Pure — no DB, no provider. Used by searchHybrid to merge FTS + semantic.
+ */
+export function combineWithRrf(rankings: RrfRankedItem[][], opts: RrfOpts = {}): RrfResult[] {
+  const k = opts.k ?? 60;
+  const acc = new Map<string, number>();
+  for (const ranking of rankings) {
+    for (const item of ranking) {
+      acc.set(item.id, (acc.get(item.id) ?? 0) + 1 / (k + item.rank));
+    }
+  }
+  const merged: RrfResult[] = [...acc.entries()].map(([id, rrfScore]) => ({ id, rrfScore }));
+  merged.sort((a, b) => {
+    if (b.rrfScore !== a.rrfScore) return b.rrfScore - a.rrfScore;
+    return a.id.localeCompare(b.id);
+  });
+  return opts.limit !== undefined ? merged.slice(0, opts.limit) : merged;
 }
 
 export type Breadcrumb = { id: string; title: string };

@@ -8,6 +8,8 @@ const Query = z.object({
   q: z.string().max(200),
 });
 
+const SearchModeSchema = z.enum(['fts', 'semantic', 'hybrid']);
+
 export async function GET(req: Request): Promise<Response> {
   try {
     const ctx = await requireRole('viewer');
@@ -35,12 +37,20 @@ export async function GET(req: Request): Promise<Response> {
     const scopeDatabaseId = url.searchParams.get('scopeDatabaseId');
     if (scopeDatabaseId) filters.scopeDatabaseId = scopeDatabaseId;
 
+    const modeParam = url.searchParams.get('mode') ?? 'fts';
+    const modeResult = SearchModeSchema.safeParse(modeParam);
+    if (!modeResult.success) {
+      return NextResponse.json({ error: 'unknown mode' }, { status: 400 });
+    }
+    const mode = modeResult.data;
+
     try {
       const results = await searchPages(getDb(), {
         workspaceId: ctx.workspaceId,
         query: parsed.q,
         limit: 20,
         filters,
+        mode,
       });
       return NextResponse.json({ results });
     } catch (err) {
