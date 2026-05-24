@@ -197,6 +197,13 @@
       "when": 1779624650173,
       "tag": "0027_brainy_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1779627123233,
+      "tag": "0028_calm_gwen_stacy",
+      "breakpoints": true
     }
   ]
 }

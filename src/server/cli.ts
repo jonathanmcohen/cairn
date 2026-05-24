@@ -219,7 +219,8 @@ async function main(): Promise<void> {
         `  cli import --source notion|markdown-folder|workspace-archive --file <path> --workspace <id>\n` +
         `  cli reconcile [--workspace <id>]\n` +
         `  cli reminders:scan\n` +
-        `  cli reindex-embeddings [--workspace <id>] [--batch-size N]`,
+        `  cli reindex-embeddings [--workspace <id>] [--batch-size N]\n` +
+        `  cli connector:sync [--connector <id>]`,
     );
     process.exit(2);
   }
@@ -299,6 +300,10 @@ async function main(): Promise<void> {
       workspaceId: args.workspace,
       ...summary,
     });
+  } else if (args.command === 'connector:sync') {
+    const { runConnectorSync } = await import('../lib/connectors/cli.js');
+    await runConnectorSync({ connectorId: args.connectorId });
+    await recordCliAudit(conn, 'connector.sync_invoked', { connectorId: args.connectorId });
   }
 }
 

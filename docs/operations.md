@@ -61,6 +61,21 @@ row to prevent a poison loop.
 and double-fire each due row. Multi-instance deployments should disable this scheduler and use
 external cron / Kubernetes CronJob to invoke the same CLI.
 
+### Connector sync (`connector:sync`)
+
+`pnpm cli connector:sync [--connector <id>]` runs one round-trip of the v0.7.0 connector engine
+(P19) — fetches each enabled connector's external rows, diffs against `connector_row_map`, pushes
+Cairn-side changes to the adapter, applies external-side changes locally, and captures both-changed
+cells into `connector_conflicts` for resolution via the per-connector inbox.
+
+Without `--connector`, syncs every enabled connector in every workspace. Adapter wiring lands in
+P20 (Google Sheets), P21 (Airtable), and P22 (CSV) — until then the framework has no registered
+adapters and the command is a no-op.
+
+**SINGLE-INSTANCE only** — same ceiling as the rest of this section. Running it twice in parallel
+on the same connector double-pushes (and may double-create unmapped Cairn rows). Schedule it via
+the cron table above (e.g. `cron_spec '*/5 * * * *'` for 5-minute polls) or external cron.
+
 ### Restore from S3
 
 `pnpm cli restore --from-s3 backups/cairn-backup-<ts>.dump [--force]` downloads the bundle

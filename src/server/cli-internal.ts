@@ -30,7 +30,8 @@ export interface CliArgs {
     | 'import'
     | 'reconcile'
     | 'reminders:scan'
-    | 'reindex-embeddings';
+    | 'reindex-embeddings'
+    | 'connector:sync';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -41,6 +42,7 @@ export interface CliArgs {
   source?: 'notion' | 'markdown-folder' | 'workspace-archive';
   file?: string;
   batchSize?: number;
+  connectorId?: string;
 }
 
 const KNOWN_COMMANDS = [
@@ -51,6 +53,7 @@ const KNOWN_COMMANDS = [
   'reconcile',
   'reminders:scan',
   'reindex-embeddings',
+  'connector:sync',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 
@@ -73,6 +76,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let source: CliArgs['source'];
   let file: string | undefined;
   let batchSize: number | undefined;
+  let connectorId: string | undefined;
 
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -106,7 +110,8 @@ export function parseArgs(argv: string[]): CliArgs {
         throw new Error('--batch-size requires a positive integer');
       }
       batchSize = n;
-    } else throw new Error(`Unknown flag: ${a}`);
+    } else if (a === '--connector') connectorId = rest[++i];
+    else throw new Error(`Unknown flag: ${a}`);
   }
   if (cmd === 'backup' && !out) throw new Error('backup requires --out <dir>');
   if (cmd === 'restore') {
@@ -135,5 +140,6 @@ export function parseArgs(argv: string[]): CliArgs {
     source,
     file,
     batchSize,
+    connectorId,
   };
 }
