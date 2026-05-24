@@ -123,9 +123,9 @@ describe('CsvAdapter', () => {
   });
 
   it('throws when the relative path escapes the mount', async () => {
-    await expect(
-      CsvAdapter.fetchAll(makeState({ relativePath: '../etc/passwd' })),
-    ).rejects.toThrow(/path escapes mount/);
+    await expect(CsvAdapter.fetchAll(makeState({ relativePath: '../etc/passwd' }))).rejects.toThrow(
+      /path escapes mount/,
+    );
   });
 
   it('does not implement subscribe (poll-only)', () => {
