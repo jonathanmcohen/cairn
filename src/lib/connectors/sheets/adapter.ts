@@ -140,10 +140,7 @@ export const SheetsAdapter: ConnectorAdapter = {
     const externalIdCol = cfg.columnMap[cfg.externalIdProperty];
     const externalIdColIdx = externalIdCol ? colLetterToIndex(externalIdCol) : null;
     let externalIdRows: Array<{ rowNumber: number; externalId: string }> = [];
-    if (
-      externalIdColIdx !== null &&
-      (diff.updates.length > 0 || diff.deletes.length > 0)
-    ) {
+    if (externalIdColIdx !== null && (diff.updates.length > 0 || diff.deletes.length > 0)) {
       const firstDataRow = cfg.headerRow + 1;
       const range = `${cfg.sheetTitle}!${externalIdCol}${firstDataRow}:${externalIdCol}`;
       const { data } = await client.spreadsheets.values.batchGet({

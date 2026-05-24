@@ -42,8 +42,8 @@ vi.mock('googleapis', () => {
   };
 });
 
-import { colLetterToIndex, indexToColLetter, SheetsAdapter } from '@/lib/connectors/sheets/adapter';
 import type { ConnectorState, Diff } from '@/lib/connectors/adapter';
+import { colLetterToIndex, indexToColLetter, SheetsAdapter } from '@/lib/connectors/sheets/adapter';
 
 function makeState(over: Partial<ConnectorState> = {}): ConnectorState {
   return {
@@ -90,7 +90,13 @@ describe('SheetsAdapter.fetchAll', () => {
     stubs.batchGet.mockResolvedValue({
       data: {
         valueRanges: [
-          { range: 'Sheet1!A2:C', values: [['r1', 'foo', '1'], ['r2', 'bar', '2']] },
+          {
+            range: 'Sheet1!A2:C',
+            values: [
+              ['r1', 'foo', '1'],
+              ['r2', 'bar', '2'],
+            ],
+          },
         ],
       },
     });
@@ -220,7 +226,13 @@ describe('SheetsAdapter — round-trip', () => {
       .mockResolvedValueOnce({
         data: {
           valueRanges: [
-            { range: 'Sheet1!A2:C', values: [['r1', 'foo', '1'], ['r2', 'bar', '2']] },
+            {
+              range: 'Sheet1!A2:C',
+              values: [
+                ['r1', 'foo', '1'],
+                ['r2', 'bar', '2'],
+              ],
+            },
           ],
         },
       })

@@ -1,7 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
-import { buildAuthUrl } from '@/lib/connectors/sheets/auth';
 import { signOAuthState } from '@/lib/connectors/oauth-state';
+import { buildAuthUrl } from '@/lib/connectors/sheets/auth';
 
 /**
  * GET `/api/connectors/sheets/oauth/start?databaseId=…`
@@ -15,8 +15,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     const ctx = await requireRole('admin');
     const url = new URL(req.url);
     const databaseId = url.searchParams.get('databaseId');
-    if (!databaseId)
-      return NextResponse.json({ error: 'databaseId required' }, { status: 400 });
+    if (!databaseId) return NextResponse.json({ error: 'databaseId required' }, { status: 400 });
 
     const redirectUri = new URL('/api/connectors/sheets/oauth/callback', url).toString();
     const state = signOAuthState({ workspaceId: ctx.workspaceId, databaseId });

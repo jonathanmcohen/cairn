@@ -9,9 +9,7 @@ beforeEach(() => {
 
 describe('connectors/oauth-state', () => {
   it('signOAuthState → verifyOAuthState round-trips the payload', async () => {
-    const { signOAuthState, verifyOAuthState } = await import(
-      '@/lib/connectors/oauth-state'
-    );
+    const { signOAuthState, verifyOAuthState } = await import('@/lib/connectors/oauth-state');
     const signed = signOAuthState({ workspaceId: 'ws-1', databaseId: 'db-1' });
     const verified = verifyOAuthState(signed);
     expect(verified?.workspaceId).toBe('ws-1');
@@ -21,9 +19,7 @@ describe('connectors/oauth-state', () => {
   });
 
   it('verifyOAuthState rejects a tampered signature', async () => {
-    const { signOAuthState, verifyOAuthState } = await import(
-      '@/lib/connectors/oauth-state'
-    );
+    const { signOAuthState, verifyOAuthState } = await import('@/lib/connectors/oauth-state');
     const signed = signOAuthState({ workspaceId: 'ws-1', databaseId: 'db-1' });
     const [body, sig] = signed.split('.');
     const bad = `${body}.${sig?.slice(0, -2)}aa`;
@@ -42,10 +38,7 @@ describe('connectors/oauth-state', () => {
     // Build a properly signed blob whose JSON lacks `databaseId`.
     const { createHmac } = await import('node:crypto');
     const json = Buffer.from(JSON.stringify({ workspaceId: 'w', csrf: 'c' }), 'utf8');
-    const sig = createHmac(
-      'sha256',
-      Buffer.from(`oauth-state:${process.env.AUTH_SECRET}`, 'utf8'),
-    )
+    const sig = createHmac('sha256', Buffer.from(`oauth-state:${process.env.AUTH_SECRET}`, 'utf8'))
       .update(json)
       .digest();
     const raw = `${json.toString('base64url')}.${sig.toString('base64url')}`;
