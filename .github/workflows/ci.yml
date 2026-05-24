@@ -11,31 +11,9 @@ on:
       - 'docs/**'
       - '**/*.md'
 
-# Runner target — defaults to GitHub-hosted `ubuntu-latest`. Override via the
-# `CI_RUNNER_LABELS` repository variable (Settings → Secrets and variables →
-# Actions → Variables) to a JSON array like `["self-hosted","Linux","X64"]` to
-# point CI at a self-hosted runner instead. Workflow-level `env` is NOT
-# available in `runs-on` per GHA expressions, so the default is inlined at
-# each job. release.yml still targets self-hosted by default for the
-# multi-arch build (see docs/operations.md "Self-hosted CI / Release runners").
-
 jobs:
   ci:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: cairn
-          POSTGRES_PASSWORD: cairn
-          POSTGRES_DB: cairn_test
-        ports: ['5432:5432']
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
+    runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
       AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
@@ -61,6 +39,11 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+        env:
+          # v0.7.0 codebase trips Node's default ~2GB old-space limit; tsc OOMs
+          # (exit 134, "Ineffective mark-compacts near heap limit"). 6 GB on
+          # ubuntu-latest's ~7 GB box is plenty without crowding the runner.
+          NODE_OPTIONS: --max-old-space-size=6144
 
       - name: Test
         run: pnpm test
@@ -72,7 +55,7 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    runs-on: ubuntu-latest
     # gitleaks-action calls the PR REST API to scope the scan and (optionally)
     # post review comments — both require pull-requests: write on top of the
     # default contents: read. Without these, the action throws
@@ -115,10 +98,15 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: ${{ fromJSON(vars.CI_RUNNER_LABELS || '["ubuntu-latest"]') }}
+    runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16-alpine
+        # pgvector/pgvector:pg16 — v0.7.0 migration 0025 runs `CREATE EXTENSION
+        # vector;`. The vanilla `postgres:16-alpine` image doesn't carry
+        # pgvector, so the migration fails with "extension vector is not
+        # available". Match the Testcontainers image (`pgvector/pgvector:pg16`)
+        # used by the wider test suite.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: cairn
           POSTGRES_PASSWORD: cairn
@@ -166,9 +154,8 @@ jobs:
             playwright-${{ runner.os }}-
 
       # Chromium-only; the audit doesn't need the full browser matrix.
-      # `--with-deps` apt-installs the system libs Chromium needs on the
-      # ubuntu-latest runner. If this job moves back to a self-hosted runner
-      # that already has those libs + no apt root, drop `--with-deps`.
+      # `--with-deps` apt-installs the system libs Chromium needs on
+      # ubuntu-latest.
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 

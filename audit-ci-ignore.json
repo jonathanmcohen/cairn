@@ -1,4 +1,40 @@
 {
   "$comment": "Reviewed, time-boxed advisory ignores for `pnpm audit --audit-level=high`. Each entry MUST have a reason and an expiry; CI fails any entry past expiry so ignores can't rot. Empty by default — add only un-fixable transitive advisories.",
-  "ignores": []
+  "ignores": [
+    {
+      "id": 1117571,
+      "module": "protobufjs",
+      "severity": "critical",
+      "reason": "Pinned at 6.11.6 by @xenova/transformers → onnxruntime-web → onnx-proto@4.0.4 (declares ^6.11.2 — won't accept v7). pnpm override to v7 silently fails because onnx-proto's compiled pbjs output targets the v6 API. The advisory is RCE via protobufjs decode of attacker-controlled wire bytes; the only protobuf inputs in this codebase are bundled ONNX model files (operator-controlled). No untrusted protobuf wire traffic reaches the library. Re-review when @xenova/transformers ships a release that drops onnx-proto, or when an onnx-proto-equivalent ships against protobufjs v7.",
+      "expires": "2026-08-23"
+    },
+    {
+      "id": 1118641,
+      "module": "protobufjs",
+      "severity": "high",
+      "reason": "Same chain as 1117571 (onnx-proto pinned). Code-injection through bytes-field defaults in generated toObject — requires attacker control over the protobuf schema, not the wire bytes. No untrusted schemas in this codebase (bundled ONNX models only).",
+      "expires": "2026-08-23"
+    },
+    {
+      "id": 1118928,
+      "module": "protobufjs",
+      "severity": "high",
+      "reason": "Same chain as 1117571. Code-generation gadget after prototype pollution — requires a prior prototype-pollution primitive plus attacker control over the schema. Bundled ONNX models only.",
+      "expires": "2026-08-23"
+    },
+    {
+      "id": 1118930,
+      "module": "protobufjs",
+      "severity": "high",
+      "reason": "Same chain as 1117571. Process-wide DoS through unsafe option paths in protobufjs codegen. Requires attacker control over option paths in the schema. Bundled ONNX models only.",
+      "expires": "2026-08-23"
+    },
+    {
+      "id": 1118932,
+      "module": "protobufjs",
+      "severity": "high",
+      "reason": "Same chain as 1117571. DoS through unbounded protobuf recursion in decode. Wire-byte input only — no untrusted protobuf wire traffic reaches this library in this codebase.",
+      "expires": "2026-08-23"
+    }
+  ]
 }
