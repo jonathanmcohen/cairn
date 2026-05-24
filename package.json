@@ -57,6 +57,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "cmdk": "^1.0.4",
+    "cron-parser": "^5.5.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "emoji-picker-element": "^1.21.0",
