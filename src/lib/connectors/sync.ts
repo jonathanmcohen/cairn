@@ -92,6 +92,7 @@ export async function syncConnector(connectorId: string): Promise<void> {
   const adapter = getAdapter(connector.kind as schema.ConnectorKind);
   const state: ConnectorState = {
     connectorId: connector.id,
+    workspaceId: connector.workspaceId,
     authConfig: decryptAuthConfig(connector.authConfig),
     syncConfig: connector.syncConfig,
   };

@@ -40,6 +40,8 @@ export type AckedChange =
  */
 export type ConnectorState = {
   connectorId: string;
+  /** Set by the sync engine so push subscriptions can sign per-workspace tokens. */
+  workspaceId?: string;
   authConfig: Record<string, unknown>;
   syncConfig: Record<string, unknown>;
 };

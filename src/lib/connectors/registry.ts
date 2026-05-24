@@ -1,5 +1,6 @@
 import type * as schema from '@/db/schema';
 import type { ConnectorAdapter } from './adapter';
+import { SheetsAdapter } from './sheets/adapter';
 
 const adapters = new Map<schema.ConnectorKind, ConnectorAdapter>();
 
@@ -24,3 +25,8 @@ export function getAdapter(kind: schema.ConnectorKind): ConnectorAdapter {
 export function __resetRegistry(): void {
   adapters.clear();
 }
+
+// Built-in adapter registrations. Each adapter is responsible for its own
+// runtime gating (env vars, etc.) — registering here is cheap and just makes
+// the kind resolvable via `getAdapter()`.
+register(SheetsAdapter);
