@@ -32,6 +32,10 @@ const Schema = z.object({
     .string()
     .min(16, 'CAIRN_METRICS_TOKEN must be at least 16 chars')
     .optional(),
+  CAIRN_EMBEDDING_URL: z.url().optional(),
+  CAIRN_EMBEDDING_MODEL: z.string().optional(),
+  CAIRN_EMBEDDING_API_KEY: z.string().optional(),
+  CAIRN_BACKFILL_EMBEDDINGS: z.coerce.boolean().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;

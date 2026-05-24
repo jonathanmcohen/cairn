@@ -27,6 +27,11 @@ export const REDACT_PATHS: string[] = [
   '*.AUTH_SECRET',
   'CAIRN_METRICS_TOKEN',
   '*.CAIRN_METRICS_TOKEN',
+  // Embedding-provider bearer token (P11) — never printed even if a stray
+  // log call interpolates process.env.
+  'env.CAIRN_EMBEDDING_API_KEY',
+  'CAIRN_EMBEDDING_API_KEY',
+  '*.CAIRN_EMBEDDING_API_KEY',
   '*.sig',
   'sig',
 ];

@@ -4,7 +4,7 @@ let container: StartedPostgreSqlContainer | null = null;
 
 export async function startPostgres(): Promise<string> {
   if (container) return container.getConnectionUri();
-  container = await new PostgreSqlContainer('postgres:16-alpine')
+  container = await new PostgreSqlContainer('pgvector/pgvector:pg16')
     .withDatabase('cairn_test')
     .withUsername('cairn')
     .withPassword('cairn')

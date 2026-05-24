@@ -8,6 +8,7 @@ export * from './import-jobs';
 export * from './invite-tokens';
 export * from './notifications';
 export * from './page-acls';
+export * from './page-embeddings';
 export * from './page-links';
 export * from './page-versions';
 export * from './page-yjs';

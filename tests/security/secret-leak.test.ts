@@ -79,6 +79,7 @@ const FORBIDDEN_KEYS = [
   'recovery_codes',
   'recoveryCodes',
   'CAIRN_METRICS_TOKEN',
+  'CAIRN_EMBEDDING_API_KEY',
 ];
 
 // Full-secret prefixes. These MUST never appear in audit metadata or in the
