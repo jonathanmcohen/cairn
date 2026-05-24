@@ -1,6 +1,7 @@
 import type * as schema from '@/db/schema';
 import type { ConnectorAdapter } from './adapter';
 import { AirtableAdapter } from './airtable/adapter';
+import { CsvAdapter } from './csv/adapter';
 import { SheetsAdapter } from './sheets/adapter';
 
 const adapters = new Map<schema.ConnectorKind, ConnectorAdapter>();
@@ -32,3 +33,4 @@ export function __resetRegistry(): void {
 // the kind resolvable via `getAdapter()`.
 register(SheetsAdapter);
 register(AirtableAdapter);
+register(CsvAdapter);
