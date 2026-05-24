@@ -60,7 +60,7 @@ async function makeRule(opts: {
       triggerEvent: opts.triggerEvent ?? 'row.created',
       condition: opts.condition ?? {},
       actionType: opts.actionType ?? 'notify',
-      actionConfig: opts.actionConfig ?? { userId: '00000000-0000-0000-0000-000000000000' },
+      actionConfig: opts.actionConfig ?? { userId },
       enabled: opts.enabled ?? true,
       createdBy: userId,
     })
@@ -105,7 +105,7 @@ describe('evaluateRules', () => {
   });
 
   it('records status=failed + error when the action runner throws', async () => {
-    const spy = vi.spyOn(actionRunner, 'runActionStub').mockRejectedValueOnce(new Error('boom'));
+    const spy = vi.spyOn(actionRunner, 'runAction').mockRejectedValueOnce(new Error('boom'));
     const rule = await makeRule({});
     await evaluateRules('row.created', workspaceId, { row: { id: 'x' } });
     const runs = await db

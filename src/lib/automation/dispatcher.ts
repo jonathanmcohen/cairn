@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { logger } from '@/lib/observability/logger';
+import { runAction } from './actions';
 import { evaluateCondition } from './condition';
 
 /**
@@ -23,28 +24,11 @@ export const TRIGGER_EVENTS = [
 export type TriggerEvent = (typeof TRIGGER_EVENTS)[number];
 
 /**
- * Stub runner — replaced by the real registry in P17. Exported only so the
- * P16 tests can vi.spyOn it. Default behavior is a no-op (success).
- *
- * Implementation is held on an exported object (`actionRunner`) so vitest's
- * `vi.spyOn(mod, 'runActionStub')` can intercept calls made via the module
- * export. The dispatcher invokes `actionRunner.runActionStub(...)` — both the
- * named export and the holder field point to the same function, and the spy
- * replaces both.
+ * Indirection holder — the dispatcher calls `actionRunner.runAction(...)` so
+ * `vi.spyOn(actionRunner, 'runAction')` works in tests. P17 wired this through
+ * to the real `runAction` registry under `src/lib/automation/actions`.
  */
-export async function runActionStub(
-  _actionType: schema.AutomationActionType,
-  _actionConfig: Record<string, unknown>,
-  _payload: unknown,
-): Promise<void> {
-  // Real implementation arrives in P17 (`src/lib/automation/actions/index.ts`).
-}
-
-/**
- * Indirection holder — the dispatcher calls `actionRunner.runActionStub(...)`
- * so `vi.spyOn(actionRunner, 'runActionStub')` works in tests.
- */
-export const actionRunner = { runActionStub };
+export const actionRunner = { runAction };
 
 /**
  * Load enabled rules for `workspaceId` matching `event`, evaluate each rule's
@@ -84,10 +68,15 @@ export async function evaluateRules(
         continue;
       }
       try {
-        await actionRunner.runActionStub(
+        await actionRunner.runAction(
           rule.actionType as schema.AutomationActionType,
           rule.actionConfig,
           payload,
+          {
+            ruleId: rule.id,
+            workspaceId: rule.workspaceId,
+            createdBy: rule.createdBy,
+          },
         );
         await db.insert(schema.automationRuns).values({
           ruleId: rule.id,
