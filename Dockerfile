@@ -20,6 +20,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=postgres://build:build@localhost:5432/build
 ENV AUTH_SECRET=build-only-placeholder-secret-32chars
 ENV NEXTAUTH_URL=http://localhost:3000
+# v0.7.0 trips Node's default ~2 GB old-space limit during `next build` (SWC +
+# Turbopack workload). 6 GB matches the CI workflow's NODE_OPTIONS so the
+# Docker build behaves the same as CI.
+ENV NODE_OPTIONS=--max-old-space-size=6144
 RUN pnpm build
 
 FROM node:${NODE_VERSION} AS runner
