@@ -37,6 +37,68 @@ Cairn is a single Next.js container + Postgres for homelab/small-team deployment
 | Audit log (v0.6.0) | Repudiation, Info-disclosure | Sensitive actions write an `audit_log` row in the same transaction; `assertAuditMetadataClean` redaction guard rejects metadata containing secrets; admin viewer at `/settings/admin/audit` (admin+) |
 | Supply chain | Tampering | `pnpm audit --audit-level=high` (time-boxed reviewed ignore list); lockfile; release SLSA provenance/SBOM on public deploys |
 
+## v0.7.0 additions
+
+### New token class
+- **Personal Access Tokens (`cairn_pat_*`).** Per-user, multi-scope, with a
+  per-token MCP tool allowlist. Stored only as a SHA-256 hash; the plaintext is
+  shown ONCE at mint via a dialog with copy + download buttons and never
+  persisted client-side or echoed in any API response. `FORBIDDEN_SECRET_PREFIXES`
+  includes `cairn_pat_`. PATs coexist with v0.5 `cairn_sk_` API keys (separate
+  table, separate audit-event prefix `pat.*` vs `api_key.*`) so the token-usage
+  log can attribute correctly.
+
+### Page ACLs + precedence
+- Effective permission for `(user, page)` = explicit ACL on the page if one
+  exists; else inherit from the nearest ancestor with an ACL; else fall through
+  to the user's workspace role. **Owner role bypasses the ACL chain entirely.**
+- Public-share (`/p/<slug>`) is a separate axis — applies only to anonymous
+  visitors; logged-in members always route through role + ACL.
+- ACL inheritance is a recursive CTE walking `pages.parent_id` upward, wrapped
+  in React `cache()` per request; the depth in typical Notion-shaped trees is
+  ≤ ~10.
+
+### MCP server
+- Tool dispatch enforces three layers in order: (1) PAT carries the tool's
+  declared scope, (2) tool ID is in the PAT's allowlist, (3) the acting user's
+  workspace role + page ACL permits the underlying mutation. An empty allowlist
+  blocks all MCP access regardless of scopes.
+- Every tool invocation logs to `token_usage_log` (success and error). MCP-side
+  rate-limit reuses the v0.5.1 in-process token-bucket keyed by (token_id, tool_id).
+- New `AuditAction` literals: `pat.created`, `pat.revoked`, `pat.expired`,
+  `page_acl.{created,changed,removed}`. `mcp.tool_called` events go to
+  `token_usage_log` only (not `audit_log`) — too high-cardinality for the audit feed.
+
+### Embedding secrets
+- `CAIRN_EMBEDDING_API_KEY` is in `pino`'s redact list. `FORBIDDEN_KEYS`
+  includes it. Bundled local model needs no key; only the BYO remote path uses one.
+
+### Two-way connector secrets
+- Sheets OAuth refresh tokens, Airtable PATs, and Airtable webhook MAC secrets
+  all live encrypted in `database_connectors.auth_config` (v0.6 secret-box;
+  AES-256-GCM, key = HKDF of `AUTH_SECRET`). Decrypted only inside the sync
+  engine. Never echoed in API responses, audit metadata, token-usage log, or
+  workspace export (asserted by the extended secret-leak suite — P22).
+- CSV adapter resolves relative paths under `CAIRN_CONNECTOR_CSV_PATH` and
+  rejects paths whose resolved form escapes the mount prefix.
+
+### Operational ceilings — new schedulers
+- **Single-instance:** the `cron_schedules` ticker (scheduled backups), the
+  automation event-subscriber loop, and the connector sync orchestrator are
+  all opt-in in-process tickers. Multiple instances double-fire all three.
+  This is the same ceiling v0.6 documented for the backup/reminders/digest
+  tickers — extended now to cover three more loops.
+
+### Observability gating (unchanged)
+- `/metrics` token-gating from v0.6 P20 is unchanged. New series carry
+  closed labels (`tool`, `kind`, `provider`, `action_type`, `outcome`) and
+  no tenant identifiers.
+
+### New always-open surface
+- `GET /healthz` is open (no auth). Returns minimal JSON
+  `{ status, version, db, uptime_seconds }`. Touches the DB with a `SELECT 1`
+  for liveness; returns 503 on DB failure. Safe to expose on a load balancer.
+
 ## v0.6.0 additions
 
 ### Authentication: TOTP 2FA + recovery codes (P19)
