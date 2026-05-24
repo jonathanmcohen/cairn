@@ -1,6 +1,6 @@
 # Cairn Roadmap: v0.6.0 → v1.0.0
 
-> Status: **in progress**. Path from the security-hardened **v0.5.1** state to a stable, feature-complete, documented 1.0.0. **v0.6.0 has shipped** (the combined release that consolidated the formerly-separate v0.6 content/db, v0.7 sharing/collab, v0.8 mobile/a11y/i18n, v0.9 admin/ops/import minors). After v0.6.0 the remaining path is **v0.7.0** (extensibility/AI/automation/permissions — see below) then **v1.0.0** (stabilization). Detailed designs: `specs/2026-05-22-cairn-v0.6.0-design.md`, the forthcoming v0.7.0 spec (brainstormed at the start of the v0.7 cycle), and `specs/2026-05-22-cairn-v1.0.0-design.md`. Each release follows spec → numbered plans → subagent-driven execution.
+> Status: **in progress**. Path from the security-hardened **v0.5.1** state to a stable, feature-complete, documented 1.0.0. **v0.6.0 + v0.7.0 have shipped.** Remaining: **v0.8.0** (experience + 1.0-readiness — see below) then **v1.0.0** (stabilization). Detailed designs: `specs/2026-05-22-cairn-v0.6.0-design.md`, `specs/2026-05-23-cairn-v0.7.0-design.md`, `specs/2026-05-24-cairn-v0.8.0-design.md`, and `specs/2026-05-22-cairn-v1.0.0-design.md`. Each release follows spec → numbered plans → subagent-driven execution.
 
 Shipped through **v0.6.0**: everything in v0.5.1 plus reverse relations, list view + filters + grouping + multi-sort, row hierarchy, toggle/columns/table/embed/bookmark/math/synced blocks, TOC + outline + full-page DB + calc footer, per-page share settings + public site `/s/<slug>`, comments on databases + files, Yjs suggestion mode, page links + backlinks + page mentions/embeds + row templates, BYO-SMTP email + digest, mobile/PWA + bounded offline, WCAG 2.1 AA + axe CI gate, keyboard shortcuts + ⌘/ sheet + i18n (en + ar RTL proof), favorites/recents + block convert + multi-select, workspace admin console, audit log + per-page activity, TOTP 2FA + recovery codes, prom-client `/metrics` (token-gated) + pino JSON logger, workspace storage quotas + scheduled backups (`--target s3` + retention), Notion + markdown-folder + workspace-archive import, PDF (browser-print) + per-page/per-database UI export, search filters + saved searches, due-date reminders + `reminders:scan`, bulk trash/restore/move pages, workspace-home landing.
 
@@ -59,6 +59,37 @@ Two releases remain to 1.0.
 
 ---
 
+## v0.8.0 — Experience & 1.0-readiness (single large release)
+
+**Theme:** finish the experience strokes that get Cairn to 1.0. Most items are *deltas* on shipped v0.6 / v0.7 surfaces, plus six genuinely-new top-level capabilities (performance, themes, quick capture, onboarding, covers, settings hub polish). Ships as ONE release (explicitly NOT split) — same area-by-area execution pattern as v0.6.0 / v0.7.0.
+
+| Feature | Notes / scope |
+|---|---|
+| **PWA + offline editing** | **Delta on v0.6 P13** (bounded read-only offline). Drop bounded-cache restriction; persist every opened doc to IndexedDB; full Yjs-over-IndexedDB sync with CRDT auto-merge on reconnect. No edit queue. |
+| **Mobile-responsive layout** | **Delta on v0.6 P12.** Gesture polish (swipe-back, long-press menus, pull-to-refresh) + touch-target audit (WCAG 2.5.5) across v0.7 new routes. |
+| **Command palette (⌘K)** | **Delta on v0.5 cmdk surface.** Expanded action registry (settings, switch-workspace, create-page, MCP info, recent commands surface), search across pages + db rows + commands. |
+| **Performance pass** | **New.** Bounded triage — three targets: virtualize page-tree + db-table (`@tanstack/react-virtual`), code-split heavy editor extensions (math/syncedBlock/embed), DB query audit on top-5 hot routes (driven by v0.6 P20 metrics). Lighthouse CI budget as regression gate. |
+| **Page embeds + link unfurls** | **Delta on v0.6 P5.** Allowlist expansion (Loom/Codepen/Spotify/Vimeo Showcase/Mermaid/Excalidraw) + richer unfurl previews (OpenGraph image + description, 256KB cap). |
+| **Accessibility WCAG pass** | **Delta on v0.6 P14.** New-route sweep across v0.7 surfaces (dev settings, automation, connectors, webhooks dashboard, /healthz, MCP) + keyboard nav + focus management on the new modals. |
+| **Custom themes / appearance** | **New.** Per-user `user_theme_prefs` (accent / font / page width) via CSS custom properties on `<html data-theme-*>`. Reuses Tailwind v4 `@theme` design tokens. |
+| **Favorites + recents** | **Delta on v0.6 P16.** Drag-to-reorder (`@dnd-kit/sortable`), `favorites.position` column, keyboard nav, per-favorite remove. |
+| **Quick capture / inbox** | **New.** PWA-native: in-tab hotkey (`Cmd+Shift+N` via v0.6 P15 shortcut registry) + PWA `share_target` manifest → `POST /api/inbox`. Inbox as workspace-scoped system page (`workspaces.inbox_page_id`). |
+| **First-run onboarding** | **New.** Guided 3-step wizard on first workspace (name + theme + sample-content opt-in). Bundled `welcome.zip` template archive instantiated via v0.5 P3 instantiator. Template gallery at `/templates/gallery`. |
+| **Per-page PDF / print export** | **Delta on v0.6 P21 (browser-print HTML).** Server-side native PDF via Playwright Chromium (promoted dev → runtime). Gated `CAIRN_NATIVE_PDF=1` env (~150MB image growth). Browser-print stays as `?format=pdf-print-html` fallback. |
+| **Backlinks + inline page mentions** | **Delta on v0.6 P10 (page links + backlinks + @@ mentions).** Inline transclusion preview popover on `[[page-link]]` hover; unlinked-mentions sidebar section in the linked-references panel. |
+| **Notification center + email digests** | **Delta on v0.3 in-app notifications + v0.6 P11 digests.** Global-header bell + drawer (today/this-week/older grouping) **and** dedicated `/notifications` page with filter + pagination. Shared list query, two render contexts. |
+| **Page covers + icons** | **New (covers); polish (icons).** `pages.cover jsonb` (color / Unsplash / upload); cover picker UI; emoji-icon search + custom upload + default randomizer. Unsplash opt-in via `CAIRN_UNSPLASH_ACCESS_KEY` env. |
+| **Expanded block types** | **Delta on v0.6 P4/P5.** Most blocks shipped; add the missing small ones — divider, button (CTA + URL action), video upload. |
+| **Settings hub + microcopy polish** | **New (hub) + polish.** Nav-sectioned `/settings` layout (Account / Workspace / Admin / Developer / Notifications / Security); per-feature empty states + microcopy across the app. Pure UI reshape — no backend change. |
+
+**Open design points settled in brainstorm:** offline editing = full Yjs-over-IndexedDB sync (no queue), performance = bounded triage with Lighthouse CI gate, quick capture = PWA-native (no extension/native binary), PDF = Playwright server-side (env-gated), notification center = bell drawer + dedicated page (both).
+
+**Constraints:** every overlap item ships a *delta*, no rebuilds. Every new env var documented in `docs/operations.md`. Single-instance scheduler ceiling unchanged. Secret-leak suite extended for the one new secret class (Unsplash access key).
+
+**Rough size:** 10 plan groups, 26 numbered plans. Migrations `0029`–`0032` (four additive).
+
+---
+
 ## v1.0.0 — Stabilization, API stability, docs & polish
 
 **Theme:** lock it down and call it 1.0. "1.0" for Cairn = **feature-complete** (Notion-parity self-hosted goal met), **stable** (frozen + documented public API, SemVer commitment, tested upgrade path), **documented** (a real docs site), **performant**, and **operable**.
@@ -97,11 +128,12 @@ Two releases remain to 1.0.
 ## Suggested sequence & rationale
 
 1. **v0.6.0 (combined) — SHIPPED.** Executed its 23 plans area-by-area; image published at `ghcr.io/jonathanmcohen/cairn:0.6.0`.
-2. **v0.7.0 (extensibility/automation)** — single large release; ~20+ plans area-by-area (tokens/ACLs/MCP → audit/automation/webhook-dashboard → search/connectors/bulk-import-export/scheduled-backup-restore). Headline = MCP server.
-3. **v1.0.0 (stabilize)** — freeze the API (after expanding it), performance, docs, opt-in AI, final review; declare SemVer. **Must come last** — it freezes everything before it.
+2. **v0.7.0 (extensibility/automation) — SHIPPED.** Headline = MCP server. Image published at `ghcr.io/jonathanmcohen/cairn:0.7.0`.
+3. **v0.8.0 (experience + 1.0-readiness)** — single large release; 26 plans area-by-area (PWA-offline + mobile → performance → quick capture + onboarding → palette + settings hub → a11y → notifications + favorites + backlinks → themes + covers → embeds + new blocks → native PDF → smoke + release).
+4. **v1.0.0 (stabilize)** — freeze the API (after expanding it), performance, docs, opt-in AI, final review; declare SemVer. **Must come last** — it freezes everything before it.
 
 ---
 
 ## Next step
 
-Brainstorm/confirm the v0.7.0 spec — settle the open design points (MCP transport, MCP write-tool safety/scoping, embedding-model hosting, granular page permissions × public-sharing model) — then write its numbered plans and execute subagent-driven, area-by-area, exactly as v0.1.0–v0.6.0.
+v0.8.0 plan suite is being written — once committed, the controller dispatches subagent-driven execution per plan exactly as v0.6.0 / v0.7.0.
