@@ -64,4 +64,17 @@ describe('parseArgs (P21 additions)', () => {
     expect(() => parseArgs(['reindex-embeddings', '--batch-size', '0'])).toThrow();
     expect(() => parseArgs(['reindex-embeddings', '--batch-size', 'soon'])).toThrow();
   });
+  it('parses restore --from-s3 <key>', () => {
+    const a = parseArgs(['restore', '--from-s3', 'backups/x.zip', '--force']);
+    expect(a).toMatchObject({ command: 'restore', fromS3: 'backups/x.zip', force: true });
+    expect(a.in).toBeUndefined();
+  });
+  it('requires either --in or --from-s3 for restore', () => {
+    expect(() => parseArgs(['restore', '--force'])).toThrow();
+  });
+  it('rejects both --in and --from-s3 simultaneously', () => {
+    expect(() =>
+      parseArgs(['restore', '--in', '/tmp/x.zip', '--from-s3', 'backups/x.zip']),
+    ).toThrow();
+  });
 });

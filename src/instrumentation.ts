@@ -69,4 +69,21 @@ export async function register(): Promise<void> {
       })();
     });
   }
+
+  // Opt-in cron-schedules driver (v0.7.0 G5 P14). SINGLE-INSTANCE only —
+  // two app processes both poll cron_schedules and double-fire each due row.
+  // Disable in multi-instance deployments and drive recurring CLI work from
+  // external cron / Kubernetes CronJob. Documented in docs/operations.md
+  // ("Cron-driven CLI scheduler").
+  if (process.env.CAIRN_SCHEDULER_ENABLED === '1') {
+    const { startScheduler } = await import('@/server/scheduler');
+    const handle = startScheduler({ db: getDb() });
+    // biome-ignore lint/suspicious/noConsole: server startup
+    console.log('[scheduler] cron_schedules driver enabled (single-instance only)');
+    const stop = () => {
+      void handle.stop();
+    };
+    process.on('SIGTERM', stop);
+    process.on('SIGINT', stop);
+  }
 }

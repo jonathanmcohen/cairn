@@ -35,6 +35,41 @@ After the first pass, unset the env. The on-write hook in `src/lib/pages/update.
 `src/lib/pages/create.ts` keeps embeddings current going forward. The CLI accepts
 `--workspace <id>` to restrict the pass and `--batch-size N` (default 16) to tune parallelism.
 
+### Cron-driven CLI scheduler (opt-in)
+
+Setting `CAIRN_SCHEDULER_ENABLED=1` boots an in-process scheduler that polls `cron_schedules`
+every 60 seconds, exec'ing any due, enabled row as `node dist/server/cli.js <command>`. Use it
+to schedule recurring backups, exports, reindexes, or reconciles from inside the container.
+
+Manage schedules by inserting/updating rows directly (no admin UI in v0.7.0). Example for a
+nightly S3 backup:
+
+```sql
+INSERT INTO cron_schedules (command, cron_spec, next_run_at)
+VALUES (
+  'backup --target s3 --out /data/backups --retention-days 14',
+  '0 2 * * *',
+  now()
+);
+```
+
+The scheduler advances `next_run_at` via `cron-parser` after each run and writes `last_run_at`
++ `last_status` (`'success'` | `'failure'`) + `last_error`. A malformed `cron_spec` disables the
+row to prevent a poison loop.
+
+**SINGLE-INSTANCE only** — same ceiling as `CAIRN_BACKUP_INTERVAL`. Two app processes both poll
+and double-fire each due row. Multi-instance deployments should disable this scheduler and use
+external cron / Kubernetes CronJob to invoke the same CLI.
+
+### Restore from S3
+
+`pnpm cli restore --from-s3 backups/cairn-backup-<ts>.dump [--force]` downloads the bundle
+from the configured `FileStorage` (driven by `FILE_BACKEND` / S3 env vars) into a temp file
+under `os.tmpdir()`, then runs the existing `restore` path (`pg_restore --clean --if-exists`).
+Mutually exclusive with `--in`. Use it when backups land in S3/MinIO via
+`backup --target s3` and you want to restore without first copying the bundle back to local
+disk.
+
 ### MCP SSE fallback session store
 
 The legacy SSE-fallback transport (`GET /api/mcp/sse` + `POST /api/mcp/messages`) keeps

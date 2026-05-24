@@ -2,6 +2,7 @@ export * from './api-keys';
 export * from './audit-log';
 export * from './auth';
 export * from './comments';
+export * from './cron-schedules';
 export * from './databases';
 export * from './files';
 export * from './import-jobs';

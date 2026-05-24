@@ -33,6 +33,7 @@ export interface CliArgs {
     | 'reindex-embeddings';
   out?: string;
   in?: string;
+  fromS3?: string;
   force: boolean;
   retentionDays?: number;
   target?: 'local' | 's3';
@@ -64,6 +65,7 @@ export function parseArgs(argv: string[]): CliArgs {
   const cmd = command as Command;
   let out: string | undefined;
   let inBundle: string | undefined;
+  let fromS3: string | undefined;
   let force = false;
   let retentionDays: number | undefined;
   let target: 'local' | 's3' | undefined;
@@ -76,6 +78,7 @@ export function parseArgs(argv: string[]): CliArgs {
     const a = rest[i];
     if (a === '--out') out = rest[++i];
     else if (a === '--in') inBundle = rest[++i];
+    else if (a === '--from-s3') fromS3 = rest[++i];
     else if (a === '--force') force = true;
     else if (a === '--retention-days') {
       const raw = rest[++i];
@@ -106,7 +109,14 @@ export function parseArgs(argv: string[]): CliArgs {
     } else throw new Error(`Unknown flag: ${a}`);
   }
   if (cmd === 'backup' && !out) throw new Error('backup requires --out <dir>');
-  if (cmd === 'restore' && !inBundle) throw new Error('restore requires --in <bundle>');
+  if (cmd === 'restore') {
+    if (!inBundle && !fromS3) {
+      throw new Error('restore requires --in <bundle> or --from-s3 <key>');
+    }
+    if (inBundle && fromS3) {
+      throw new Error('restore: --in and --from-s3 are mutually exclusive');
+    }
+  }
   if (cmd === 'export' && (!workspace || !out)) {
     throw new Error('export requires --workspace <id> --out <dir>');
   }
@@ -117,6 +127,7 @@ export function parseArgs(argv: string[]): CliArgs {
     command: cmd,
     out,
     in: inBundle,
+    fromS3,
     force,
     retentionDays,
     target: cmd === 'backup' ? (target ?? 'local') : target,

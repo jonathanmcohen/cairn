@@ -214,7 +214,7 @@ async function main(): Promise<void> {
     console.error(
       `${(err as Error).message}\n\nUsage:\n` +
         `  cli backup --out <dir> [--retention-days N] [--target local|s3]\n` +
-        `  cli restore --in <bundle> [--force]\n` +
+        `  cli restore (--in <bundle> | --from-s3 <key>) [--force]\n` +
         `  cli export --workspace <id> --out <dir>\n` +
         `  cli import --source notion|markdown-folder|workspace-archive --file <path> --workspace <id>\n` +
         `  cli reconcile [--workspace <id>]\n` +
@@ -235,8 +235,27 @@ async function main(): Promise<void> {
       retentionDays: args.retentionDays,
     });
   } else if (args.command === 'restore') {
-    if (!args.in) throw new Error('--in is required for restore');
-    await restore(conn, args.in, args.force);
+    let localBundlePath: string;
+    if (args.fromS3) {
+      const { getStorage } = await import('../lib/files/get-storage.js');
+      const { mkdtemp, writeFile } = await import('node:fs/promises');
+      const { tmpdir } = await import('node:os');
+      const path = await import('node:path');
+      const storage = getStorage();
+      const tmpDir = await mkdtemp(path.join(tmpdir(), 'cairn-restore-'));
+      localBundlePath = path.join(tmpDir, basename(args.fromS3));
+      const readable = storage.read(args.fromS3);
+      const chunks: Buffer[] = [];
+      for await (const chunk of readable) {
+        chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+      }
+      await writeFile(localBundlePath, Buffer.concat(chunks));
+      console.log(`Downloaded ${args.fromS3} → ${localBundlePath}`);
+    } else {
+      if (!args.in) throw new Error('--in is required for restore (or use --from-s3 <key>)');
+      localBundlePath = args.in;
+    }
+    await restore(conn, localBundlePath, args.force);
   } else if (args.command === 'export') {
     if (!args.workspace || !args.out) throw new Error('--workspace + --out required');
     const { runWorkspaceExport } = await import('../lib/export/workspace-archive.js');
