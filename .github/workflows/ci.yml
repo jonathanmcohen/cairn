@@ -11,6 +11,14 @@ on:
       - 'docs/**'
       - '**/*.md'
 
+# Workflow-wide heap bump for Node steps. v0.7.0 codebase trips Node's default
+# ~2 GB old-space limit on multiple steps (tsc, Next build via Turbopack/SWC,
+# Vitest). 6 GB on ubuntu-latest's ~7 GB box is plenty without crowding the
+# runner. Applied via process env so every spawned `node`/`pnpm`/`tsx`
+# inherits it.
+env:
+  NODE_OPTIONS: --max-old-space-size=6144
+
 jobs:
   ci:
     runs-on: ubuntu-latest
@@ -39,11 +47,6 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
-        env:
-          # v0.7.0 codebase trips Node's default ~2GB old-space limit; tsc OOMs
-          # (exit 134, "Ineffective mark-compacts near heap limit"). 6 GB on
-          # ubuntu-latest's ~7 GB box is plenty without crowding the runner.
-          NODE_OPTIONS: --max-old-space-size=6144
 
       - name: Test
         run: pnpm test
