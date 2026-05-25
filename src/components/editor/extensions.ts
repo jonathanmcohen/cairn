@@ -10,6 +10,7 @@ import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
 import { Bookmark } from './blocks/bookmark';
 import { Column, ColumnList } from './blocks/columns';
+import { DividerNode } from './blocks/divider-node';
 import { EmbedNode } from './blocks/embed-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
@@ -61,6 +62,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     MathBlockNode,
     SyncedBlockNode,
     MermaidNode,
+    DividerNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
@@ -138,6 +140,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     renderHTML, no node-view/node-local state.                 SAFE
  *  - PageEmbed      — block atom, attrs `{ targetPageId, label }` only; static
  *                     renderHTML, no node-view/node-local state.                 SAFE
+ *  - Divider        — block atom, NO attrs + NO node-view; static renderHTML
+ *                     emits a styled `<hr>`. v0.8.0 P24.                          SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

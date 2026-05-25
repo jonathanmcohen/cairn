@@ -124,7 +124,7 @@ const items: SlashItem[] = [
   {
     title: 'Divider',
     description: 'Horizontal rule',
-    command: (editor) => editor.chain().focus().setHorizontalRule().run(),
+    command: (editor) => editor.chain().focus().setDivider().run(),
   },
   {
     title: 'Callout',
