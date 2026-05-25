@@ -110,3 +110,28 @@ GitHub-hosted runners — `ubuntu-latest` for CI + amd64 release build,
 manifest merge + the GitHub Release step run on `ubuntu-latest`.
 
 There is no self-hosted-runner support in either workflow.
+
+## DB query audit (v0.8.0)
+
+Five hot routes audited via the v0.6 P20 `db_query_duration_seconds` metric.
+The only call site that emits the metric today is `listRows` (label
+`list_rows`), so the audit cross-references the metric scrape against the
+nearest sibling queries on the same hot path — `getPageTree`,
+`resolveEffectivePermission`, `getBreadcrumbs`, and the per-`listRows`
+`db_properties` sub-query — for an end-to-end view of read-side latency.
+
+| # | Route (template) | Operation label | Module | Pre p99 | Post p99 | Fix |
+|---|---|---|---|---|---|---|
+| 1 | `/api/v1/databases/:id/rows` (GET) | `list_rows` (rows fetch) | `src/lib/databases/rows.ts#listRowsInner` | Seq Scan over `db_rows` filtered by `(database_id, archived_at IS NULL)` then sort by `created_at` — wall-clock grows linearly with workspace row count | Index Scan via composite `(database_id, archived_at, created_at)`; the leading column narrows by database and the trailing column eliminates the explicit sort | `db_rows_database_archived_created_idx` |
+| 2 | `/api/v1/databases/:id/rows` (GET) | `list_rows` (props fetch) | `src/lib/databases/rows.ts#listRowsInner` (props sub-query at line 279) | Seq Scan over `db_properties` for every `listRows` call — small per-database (<50 rows typical) but unbounded across workspaces; same scan shape is repeated in `relations.ts`, `properties.ts`, `get.ts` | Index Scan via `db_properties.database_id` btree | `db_properties_database_id_idx` |
+| 3 | `/api/pages/tree` | (uninstrumented) | `src/lib/pages/tree.ts#flattenedPageTree` | `pages WHERE workspace_id = $1 AND deleted_at IS NULL ORDER BY created_at` — already uses `pages_workspace_idx` then filters in memory | Plan optimal; no change | — |
+| 4 | `/api/v1/pages/:id` ACL gate | (uninstrumented) | `src/lib/pages/acl.ts#resolveEffectivePermission` | Recursive CTE walks `parent_id` (PK + `pages_parent_idx`) then `LEFT JOIN page_acls` on the unique `(page_id, user_id)` index | Plan optimal; no change | — |
+| 5 | `/api/v1/search` (FTS path) | (uninstrumented) | `src/lib/pages/search.ts#searchFts` + `getBreadcrumbs` | FTS hits `pages_content_tsv_idx` (GIN), trigram hits `gin_trgm_ops` (added in 0014), breadcrumbs walk `pages_parent_idx` | Plan optimal; no change | — |
+
+The migration `drizzle/migrations/0029_add_perf_indexes.sql` is purely
+additive (`CREATE INDEX`) — no column changes, no data rewrites — and the
+Drizzle schema files (`src/db/schema/databases.ts`) carry matching
+`index(...)` DSL entries so `db:generate` stays a no-op.
+
+`EXPLAIN ANALYZE` raw plans are not committed; they're re-runnable from the
+seed in `tests/a11y/seed.ts` + `scripts/seed-lhci.ts`.

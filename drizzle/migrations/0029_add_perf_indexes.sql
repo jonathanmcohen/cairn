@@ -1,0 +1,2 @@
+CREATE INDEX "db_properties_database_id_idx" ON "db_properties" USING btree ("database_id");--> statement-breakpoint
+CREATE INDEX "db_rows_database_archived_created_idx" ON "db_rows" USING btree ("database_id","archived_at","created_at");
