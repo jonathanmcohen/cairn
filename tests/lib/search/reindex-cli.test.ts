@@ -26,10 +26,23 @@ afterAll(async () => {
 });
 
 // Helper: drain the on-write embedding hooks scheduled by createPage so
-// the reindex tests start from a deterministic state.
-const drainHooks = async () => {
+// the reindex tests start from a deterministic state. CI runners are slow
+// enough that the embed hook can still be in flight after the original
+// 30 ms — poll the page_embeddings row count until it matches the page
+// count (or we hit a hard timeout).
+const drainHooks = async (expectedEmbeddingCount?: number, expectedWorkspaceId?: string) => {
   await new Promise((r) => setImmediate(r));
   await new Promise((r) => setTimeout(r, 30));
+  if (expectedEmbeddingCount === undefined || expectedWorkspaceId === undefined) return;
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const rows =
+      (await sql`select count(*)::int as c from page_embeddings where workspace_id = ${expectedWorkspaceId}`) as unknown as {
+        c: number;
+      }[];
+    if ((rows[0]?.c ?? 0) >= expectedEmbeddingCount) return;
+    await new Promise((r) => setTimeout(r, 50));
+  }
 };
 
 describe('reindexEmbeddings', () => {
@@ -69,7 +82,10 @@ describe('reindexEmbeddings', () => {
     for (let i = 0; i < 3; i++) {
       await createPage(db, { workspaceId, createdBy: userId, title: `Page ${i}` });
     }
-    await drainHooks();
+    // Wait for ALL three on-write embed hooks to land before wiping —
+    // otherwise an in-flight hook can write a row AFTER the delete, leaving
+    // reindex with 1 or 2 candidates instead of 3 (flaky on CI runners).
+    await drainHooks(3, workspaceId);
     await db
       .delete(schema.pageEmbeddings)
       .where(eq(schema.pageEmbeddings.workspaceId, workspaceId));
