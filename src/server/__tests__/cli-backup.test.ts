@@ -35,7 +35,13 @@ describe.skipIf(!hasPgDump16)('backup/restore round-trip', () => {
     if (!existsSync(cliPath)) {
       execFileSync('pnpm', ['build:entrypoint'], { stdio: 'inherit' });
     }
-    pg = await new PostgreSqlContainer('postgres:16').start();
+    // Match the rest of the suite — Postgres 18 + pgvector. The CLI
+    // backup smoke doesn't itself use pgvector, but every other Postgres
+    // consumer in the repo uses the same ref, and pinning here keeps
+    // pg_dump's wire-version assumptions consistent across the suite.
+    pg = await new PostgreSqlContainer(
+      'ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine',
+    ).start();
     url = pg.getConnectionUri();
     outDir = mkdtempSync(join(tmpdir(), 'cairn-bak-'));
     const sql = postgres(url);

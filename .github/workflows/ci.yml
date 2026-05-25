@@ -22,6 +22,13 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
+    # ghcr.io/jonathanmcohen/postgres-pgvector is a private package; the
+    # Testcontainers helper pulls it on `pnpm test`. `packages: read` lets
+    # the docker login step exchange GITHUB_TOKEN for a pull-capable creds
+    # blob against GHCR.
+    permissions:
+      contents: read
+      packages: read
     env:
       DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
       AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
@@ -47,6 +54,16 @@ jobs:
 
       - name: Typecheck
         run: pnpm typecheck
+
+      # Auth the docker daemon to GHCR so Testcontainers can pull the
+      # private postgres-pgvector image during `pnpm test`. The token is
+      # the workflow's ephemeral GITHUB_TOKEN with packages: read.
+      - name: GHCR login (Testcontainers image)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Test
         run: pnpm test
@@ -102,14 +119,25 @@ jobs:
 
   a11y:
     runs-on: ubuntu-latest
+    # Private GHCR image needs packages: read for the services credentials
+    # block + the explicit docker login step (used by the Playwright web
+    # server which spawns its own db:migrate before pnpm test:a11y).
+    permissions:
+      contents: read
+      packages: read
     services:
       postgres:
-        # pgvector/pgvector:pg16 — v0.7.0 migration 0025 runs `CREATE EXTENSION
-        # vector;`. The vanilla `postgres:16-alpine` image doesn't carry
-        # pgvector, so the migration fails with "extension vector is not
-        # available". Match the Testcontainers image (`pgvector/pgvector:pg16`)
-        # used by the wider test suite.
-        image: pgvector/pgvector:pg16
+        # ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine — Postgres 18 +
+        # pgvector built in-house (docker/postgres-pgvector/Dockerfile,
+        # published by the postgres-pgvector-image workflow). Every
+        # consumer (CI services, Testcontainers, compose) points at the
+        # same ref so the dev/test/CI matrix doesn't drift.
+        image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+        # Private GHCR package — runner has to authenticate to pull the
+        # service image before the job starts.
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         env:
           POSTGRES_USER: cairn
           POSTGRES_PASSWORD: cairn

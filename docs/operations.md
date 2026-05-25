@@ -111,6 +111,28 @@ manifest merge + the GitHub Release step run on `ubuntu-latest`.
 
 There is no self-hosted-runner support in either workflow.
 
+## Postgres image (v0.8.0)
+
+Cairn ships its own Postgres image with pgvector compiled in:
+
+- **Source:** `docker/postgres-pgvector/Dockerfile` (postgres:18-alpine + pgvector master, built `with_llvm=no`).
+- **Published to:** `ghcr.io/jonathanmcohen/postgres-pgvector` (tags `:18-alpine`, `:latest`), multi-arch (linux/amd64, linux/arm64).
+- **Built by:** `.github/workflows/postgres-pgvector-image.yml` on every change to the Dockerfile.
+
+The package is **private** — every consumer (CI services, Testcontainers, docker-compose) authenticates against GHCR before pulling.
+
+**CI workflows.** `ci.yml` and `lighthouse.yml` set `permissions: packages: read`. CI services declare `credentials:` blocks; the `ci` job's `docker login` step authenticates the daemon so Testcontainers can pull during `pnpm test`.
+
+**Local development.** Before `docker compose up` or `pnpm test`, run once:
+
+```sh
+echo "$GHCR_TOKEN" | docker login ghcr.io -u <github-username> --password-stdin
+```
+
+`GHCR_TOKEN` is a classic personal access token with `read:packages`. The credential persists in `~/.docker/config.json`; re-login only when the token rotates.
+
+**Volume layout note.** Postgres 18's image moved `PGDATA` from `/var/lib/postgresql/data` → `/var/lib/postgresql/18/docker`, and declares the upstream volume at `/var/lib/postgresql` (parent). Cairn's compose mount tracks the parent (`cairn_db:/var/lib/postgresql`) so future major bumps keep working without a new volume contract. **A pre-v0.8.0 deployment** running plain `postgres:16-alpine` with `/var/lib/postgresql/data` does NOT migrate cleanly — operators must `pg_dump` v0.7.x, recreate the volume, and `pg_restore` against the new image.
+
 ## DB query audit (v0.8.0)
 
 Five hot routes audited via the v0.6 P20 `db_query_duration_seconds` metric.

@@ -15,11 +15,20 @@ jobs:
     # Run only when the CI workflow that triggered us actually succeeded.
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
+    # packages: read so the runner can pull the private GHCR
+    # postgres-pgvector image declared as a service below.
+    permissions:
+      contents: read
+      packages: read
     services:
       postgres:
-        # pgvector/pgvector:pg16 — db:migrate runs CREATE EXTENSION vector
-        # since v0.7.0 P11, which postgres:16 alone cannot satisfy.
-        image: pgvector/pgvector:pg16
+        # ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine — matches CI
+        # services + Testcontainers + compose. See
+        # docker/postgres-pgvector/Dockerfile.
+        image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
         env:
           POSTGRES_USER: cairn
           POSTGRES_PASSWORD: cairn
