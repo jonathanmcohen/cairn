@@ -2,15 +2,16 @@ import { LayoutTemplate, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
+import { flattenedPageTree } from '@/lib/pages/tree';
 import { listFavorites, listRecents } from '@/lib/prefs/user-page-prefs';
 import { appVersion } from '@/lib/version';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
 import { NotificationBell } from './notifications/bell';
 import { SavedSearches } from './sidebar/saved-searches';
+import { VirtualizedPageTree } from './sidebar/virtualized-page-tree';
 import { SidebarFavorites } from './sidebar-favorites';
 import { SidebarRecents } from './sidebar-recents';
-import { SidebarTree } from './sidebar-tree';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
 import { WorkspaceSwitcher } from './workspace-switcher';
@@ -30,6 +31,9 @@ export async function SidebarContent({
   const ctx = await getAuthContext();
   const favorites = ctx ? await listFavorites(getDb(), { userId: ctx.userId, workspaceId }) : [];
   const recents = ctx ? await listRecents(getDb(), { userId: ctx.userId, workspaceId }) : [];
+  // Server-side flatten so the client renders a windowed flat list (P4); the
+  // recursive shape is gone — depth annotation handles indentation visually.
+  const tree = await flattenedPageTree(getDb(), workspaceId);
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center justify-between gap-2 border-b p-2">
@@ -52,7 +56,7 @@ export async function SidebarContent({
           </p>
           <NewPageButton />
         </div>
-        <SidebarTree workspaceId={workspaceId} />
+        <VirtualizedPageTree initial={tree} />
       </nav>
       <div className="border-t p-3 text-xs text-muted-foreground">
         <Link
