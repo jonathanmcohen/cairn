@@ -12,13 +12,19 @@ export function SettingsBreadcrumb({
     <nav aria-label="Breadcrumb" className="mb-4 text-sm text-muted-foreground">
       <ol className="flex items-center gap-2">
         <li>
-          <Link href={'/settings' as Route} className="hover:text-foreground">
+          <Link
+            href={'/settings' as Route}
+            className="inline-flex min-h-11 min-w-11 items-center hover:text-foreground"
+          >
             Settings
           </Link>
         </li>
         <li aria-hidden="true">/</li>
         <li>
-          <Link href={section.href} className="hover:text-foreground">
+          <Link
+            href={section.href}
+            className="inline-flex min-h-11 min-w-11 items-center hover:text-foreground"
+          >
             {section.label}
           </Link>
         </li>

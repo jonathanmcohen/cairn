@@ -261,6 +261,7 @@ export function WebhooksManager({
         {creating ? null : (
           <Button
             type="button"
+            className="min-h-11"
             onClick={() => {
               setCreating(true);
               setNewSecret(null);
