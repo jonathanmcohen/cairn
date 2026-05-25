@@ -8,6 +8,7 @@ const EXPECTED_TOOL_IDS = [
   'pages.update',
   'pages.delete',
   'pages.move',
+  'pages.export',
   'databases.list',
   'databases.read',
   'databases.create_row',

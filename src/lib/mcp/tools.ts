@@ -83,6 +83,10 @@ const SearchSemanticArg = z.object({
   query: z.string().min(1).max(500),
   limit: z.number().int().min(1).max(50).default(20),
 });
+const ExportPageArg = z.object({
+  pageId: z.uuid(),
+  format: z.enum(['md', 'json', 'pdf']).default('md'),
+});
 const ListCommentsArg = PageIdArg;
 const CreateCommentArg = PageIdArg.extend({ body: z.string().min(1).max(10_000) });
 const ListFilesArg = z.object({
@@ -93,7 +97,7 @@ const FileIdArg = z.object({ fileId: z.uuid() });
 const Empty = z.object({});
 
 /**
- * The hardcoded initial tool set — 20 tools (P13 added `search.semantic`).
+ * The hardcoded initial tool set (P13 added `search.semantic`; v0.8.0 G9 P25 added `pages.export`).
  *
  * Every handler imports its underlying lib helper dynamically — this keeps the
  * module-level import graph thin and lets the dispatcher / tests stub handlers
@@ -232,6 +236,45 @@ export const registry: ToolDescriptor[] = [
         newParentId: parsed.newParentId,
       });
       return { ok: true };
+    },
+  },
+  {
+    id: 'pages.export',
+    description:
+      'Render a page to Markdown, JSON, or native PDF (PDF requires CAIRN_NATIVE_PDF=1 on the server). Returns inline text for md/json; base64-encoded bytes for PDF.',
+    scope: 'pages:read',
+    destructive: false,
+    inputSchema: ExportPageArg,
+    handler: async (ctx, args) => {
+      const { getDb } = await import('@/db/client');
+      const { getPage } = await import('@/lib/pages/get');
+      const { HttpError } = await import('@/lib/auth/require-role');
+      const { pageToJson, pageToMarkdown } = await import('@/lib/export/renderers');
+      const parsed = ExportPageArg.parse(args);
+      const page = await getPage(getDb(), { pageId: parsed.pageId, workspaceId: ctx.workspaceId });
+      if (!page) throw new HttpError(404, 'Page not found');
+      if (parsed.format === 'md') {
+        return { format: 'md', mimeType: 'text/markdown', text: pageToMarkdown(page) };
+      }
+      if (parsed.format === 'json') {
+        return { format: 'json', mimeType: 'application/json', json: pageToJson(page) };
+      }
+      // format === 'pdf'
+      if (process.env.CAIRN_NATIVE_PDF !== '1') {
+        const { mcpError, MCP_ERROR_CODE } = await import('./error');
+        throw mcpError(
+          MCP_ERROR_CODE.INVALID_REQUEST,
+          'pages.export format=pdf requires CAIRN_NATIVE_PDF=1 on the server',
+        );
+      }
+      const { pageToPdf } = await import('@/lib/export/pdf-native');
+      const pdf = await pageToPdf(page);
+      // The JSON-RPC tool-result envelope cannot carry raw bytes — encode as base64.
+      return {
+        format: 'pdf',
+        mimeType: 'application/pdf',
+        bytesBase64: pdf.toString('base64'),
+      };
     },
   },
   // ── databases ────────────────────────────────────────────────────────
