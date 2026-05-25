@@ -41,6 +41,9 @@ importers:
       '@node-rs/argon2':
         specifier: ^2.0.2
         version: 2.0.2
+      '@playwright/test':
+        specifier: ^1.60.0
+        version: 1.60.0
       '@radix-ui/react-label':
         specifier: ^2.1.8
         version: 2.1.8(@types/react-dom@19.2.3(@types/react@19.2.15))(@types/react@19.2.15)(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
@@ -228,9 +231,6 @@ importers:
       '@lhci/cli':
         specifier: ^0.15.1
         version: 0.15.1
-      '@playwright/test':
-        specifier: ^1.60.0
-        version: 1.60.0
       '@serwist/cli':
         specifier: ^9.5.11
         version: 9.5.11(@types/node@22.19.19)(browserslist@4.28.2)(esbuild@0.28.0)(typescript@6.0.3)
