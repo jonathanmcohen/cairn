@@ -17,7 +17,9 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        # pgvector/pgvector:pg16 — db:migrate runs CREATE EXTENSION vector
+        # since v0.7.0 P11, which postgres:16 alone cannot satisfy.
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_USER: cairn
           POSTGRES_PASSWORD: cairn

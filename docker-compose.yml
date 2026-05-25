@@ -40,7 +40,12 @@ services:
         condition: service_healthy
 
   db:
-    image: postgres:16-alpine
+    # pgvector/pgvector:pg16 since v0.7.0 P11 — the embedding pipeline runs
+    # `CREATE EXTENSION IF NOT EXISTS vector` at first migration, which the
+    # plain postgres:16-alpine image does not ship. CI services + the
+    # Testcontainers helper use the same image; compose follows suit so
+    # `docker compose up` against a clean volume completes migrations.
+    image: pgvector/pgvector:pg16
     restart: unless-stopped
     environment:
       POSTGRES_USER: cairn
