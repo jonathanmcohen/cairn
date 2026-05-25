@@ -1,0 +1,53 @@
+name: Publish postgres-pgvector image
+
+# Builds + pushes ghcr.io/jonathanmcohen/postgres-pgvector. Triggers:
+# - on workflow_dispatch (manual)
+# - on push to main when the Dockerfile or this workflow changes
+#
+# Multi-arch (amd64 + arm64) so the Cairn CI runners (amd64) and Apple
+# Silicon dev machines (arm64) share one ref.
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'docker/postgres-pgvector/**'
+      - '.github/workflows/postgres-pgvector-image.yml'
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  IMAGE: ghcr.io/jonathanmcohen/postgres-pgvector
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build + push
+        uses: docker/build-push-action@v6
+        with:
+          context: docker/postgres-pgvector
+          file: docker/postgres-pgvector/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:18-alpine
+            ${{ env.IMAGE }}:latest
+          cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
+          cache-to: type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
