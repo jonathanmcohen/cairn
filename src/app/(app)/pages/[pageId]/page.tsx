@@ -5,14 +5,19 @@ import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
+import { CoverBanner } from '@/components/pages/cover-banner';
+import { CoverPicker } from '@/components/pages/cover-picker';
 import { PageExportMenu } from '@/components/pages/export-menu';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { VersionHistory } from '@/components/pages/version-history';
+import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
 import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
 import { userColor } from '@/lib/collab/user-color';
+import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
+import { getPageCover } from '@/lib/pages/cover';
 
 export default async function PageView({ params }: { params: Promise<{ pageId: string }> }) {
   const { pageId } = await params;
@@ -33,8 +38,25 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
     image: session?.user?.image ?? null,
   };
 
+  const cover = await getPageCover(getDb(), page.id, ctx.workspaceId);
+  const canEdit = hasMinRole(ctx.role, 'editor');
+  const unsplashKey = env().NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY;
+
   return (
     <PageDetailShell>
+      <CoverBanner cover={cover} alt={page.title} />
+      {canEdit && (
+        <div className="mb-2 flex justify-end">
+          <CoverPicker
+            pageId={page.id}
+            current={cover}
+            unsplashKey={unsplashKey}
+            onChange={() => {
+              /* server re-renders on next nav; soft refresh acceptable */
+            }}
+          />
+        </div>
+      )}
       <CoverImage pageId={page.id} initial={page.coverUrl} />
       <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
         <PageIconPicker pageId={page.id} initial={page.icon} />

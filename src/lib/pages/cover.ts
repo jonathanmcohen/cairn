@@ -4,8 +4,7 @@ import { z } from 'zod';
 import * as schema from '@/db/schema';
 
 const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
-const UUID_RE =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 const HTTPS_URL_RE = /^https:\/\//;
 
 /** The jsonb-shaped cover stored in `pages.cover`. */
@@ -63,9 +62,7 @@ export async function setPageCover(
   const result = await db
     .update(schema.pages)
     .set({ cover, updatedAt: new Date() })
-    .where(
-      and(eq(schema.pages.id, input.pageId), eq(schema.pages.workspaceId, input.workspaceId)),
-    )
+    .where(and(eq(schema.pages.id, input.pageId), eq(schema.pages.workspaceId, input.workspaceId)))
     .returning({ id: schema.pages.id });
   return result.length > 0;
 }

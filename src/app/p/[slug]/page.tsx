@@ -1,9 +1,11 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { ReadOnlyView } from '@/components/editor/read-only-view';
+import { CoverBanner } from '@/components/pages/cover-banner';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
 import { getDb } from '@/db/client';
 import { env } from '@/lib/env';
+import { getPageCover } from '@/lib/pages/cover';
 import { resignDocumentImages } from '@/lib/pages/public';
 import { requirePublicPageAccess } from '@/lib/pages/share';
 import { cookieNameFor, verifyAccessCookieValue } from '@/lib/pages/share-cookie';
@@ -48,9 +50,11 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
 
   // Public pages render under the author's theme (no viewer user on /p/<id>).
   const authorPrefs = await getThemePrefs(db, page.createdBy);
+  const cover = await getPageCover(db, page.id, page.workspaceId);
 
   return (
     <UserThemeProvider initialPrefs={authorPrefs}>
+      <CoverBanner cover={cover} alt={page.title} />
       <div className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="mb-6 flex items-center gap-2 text-3xl font-bold">
           {page.icon && <span aria-hidden>{page.icon}</span>}

@@ -72,7 +72,7 @@ export function UnsplashTab({ accessKey, onPick }: UnsplashTabProps) {
             {/** biome-ignore lint/performance/noImgElement: external host */}
             <img
               src={p.urls.thumb}
-              alt={`Photo by ${p.user.name}`}
+              alt={`By ${p.user.name}`}
               className="h-24 w-full object-cover"
             />
           </button>
