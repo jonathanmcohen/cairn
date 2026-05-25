@@ -129,6 +129,15 @@ export function Editor({
             attributes: {
               class:
                 'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
+              // axe `aria-input-field-name`: the ProseMirror contenteditable is
+              // tabbable + editable, and recent axe-core builds (4.10+) map a
+              // tabbable `[contenteditable=true]` to an implicit ARIA textbox.
+              // Without an accessible name the rule trips serious-impact in CI
+              // (dark mode hits it first under the slower runner timing). Give
+              // the editor surface an explicit name so the rule is satisfied.
+              role: 'textbox',
+              'aria-label': 'Page content',
+              'aria-multiline': 'true',
             },
             handleDrop(_view, event, _slice, moved) {
               if (moved) return false;
