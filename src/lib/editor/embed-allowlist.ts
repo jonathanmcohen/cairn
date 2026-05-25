@@ -6,7 +6,17 @@
  * EMBED_FRAME_HOSTS, so the iframe can be locked to those origins by the CSP.
  */
 
-export type EmbedProvider = 'youtube' | 'vimeo' | 'figma' | 'gist' | 'codesandbox';
+export type EmbedProvider =
+  | 'youtube'
+  | 'vimeo'
+  | 'figma'
+  | 'gist'
+  | 'codesandbox'
+  | 'loom'
+  | 'codepen'
+  | 'spotify'
+  | 'vimeoShowcase'
+  | 'excalidraw';
 
 export type ResolvedEmbed = {
   provider: EmbedProvider;
@@ -21,6 +31,11 @@ export const EMBED_FRAME_HOSTS = [
   'https://www.figma.com',
   'https://gist.github.com',
   'https://codesandbox.io',
+  'https://www.loom.com',
+  'https://codepen.io',
+  'https://open.spotify.com',
+  'https://vimeo.com',
+  'https://excalidraw.com',
 ] as const;
 
 const YT_ID = /^[\w-]{11}$/;
@@ -80,12 +95,66 @@ function codesandbox(u: URL): ResolvedEmbed | null {
   return { provider: 'codesandbox', src: `https://codesandbox.io/embed/${m[1]}` };
 }
 
+const LOOM_ID = /^[A-Za-z0-9]{16,}$/;
+
+function loom(u: URL): ResolvedEmbed | null {
+  if (u.hostname.replace(/^www\./, '') !== 'loom.com') return null;
+  let id: string | null = null;
+  if (u.pathname.startsWith('/share/'))
+    id = u.pathname.slice('/share/'.length).split('/')[0] ?? null;
+  else if (u.pathname.startsWith('/embed/'))
+    id = u.pathname.slice('/embed/'.length).split('/')[0] ?? null;
+  if (!id || !LOOM_ID.test(id)) return null;
+  return { provider: 'loom', src: `https://www.loom.com/embed/${id}` };
+}
+
+function codepen(u: URL): ResolvedEmbed | null {
+  if (u.hostname.replace(/^www\./, '') !== 'codepen.io') return null;
+  // /<user>/pen/<id>  or  /<user>/embed/<id>
+  const m = u.pathname.match(/^\/([\w-]+)\/(?:pen|embed)\/([\w-]+)/);
+  if (!m?.[1] || !m?.[2]) return null;
+  return { provider: 'codepen', src: `https://codepen.io/${m[1]}/embed/${m[2]}` };
+}
+
+const SPOTIFY_TYPES = new Set(['track', 'album', 'playlist', 'episode', 'show']);
+
+function spotify(u: URL): ResolvedEmbed | null {
+  if (u.hostname !== 'open.spotify.com') return null;
+  // Both /<type>/<id> and /embed/<type>/<id>
+  const m = u.pathname.match(/^\/(?:embed\/)?([a-z]+)\/(\w+)/);
+  if (!m?.[1] || !m?.[2]) return null;
+  if (!SPOTIFY_TYPES.has(m[1])) return null;
+  return { provider: 'spotify', src: `https://open.spotify.com/embed/${m[1]}/${m[2]}` };
+}
+
+function vimeoShowcase(u: URL): ResolvedEmbed | null {
+  if (u.hostname.replace(/^www\./, '') !== 'vimeo.com') return null;
+  const m = u.pathname.match(/^\/showcase\/(\d+)/);
+  if (!m?.[1]) return null;
+  return { provider: 'vimeoShowcase', src: `https://vimeo.com/showcase/${m[1]}/embed` };
+}
+
+function excalidraw(u: URL): ResolvedEmbed | null {
+  if (u.hostname !== 'excalidraw.com') return null;
+  // Accept any path on excalidraw.com — both /#room=... and /embed/?... are
+  // valid embed surfaces. Return the original URL untouched (the host alone
+  // is the allowlist guard; the CSP also pins it).
+  return { provider: 'excalidraw', src: u.toString() };
+}
+
 const RESOLVERS: Array<(u: URL) => ResolvedEmbed | null> = [
   youtube,
+  // Place vimeoShowcase BEFORE vimeo so `vimeo.com/showcase/...` matches the
+  // showcase resolver first. The base vimeo resolver only accepts /\d+/.
+  vimeoShowcase,
   vimeo,
   figma,
   gist,
   codesandbox,
+  loom,
+  codepen,
+  spotify,
+  excalidraw,
 ];
 
 /** Resolve a pasted URL to an embeddable provider/src, or null if not allowlisted. */
