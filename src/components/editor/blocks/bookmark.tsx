@@ -7,6 +7,7 @@ type Unfurl = {
   title: string | null;
   description: string | null;
   image: string | null;
+  imageData: string | null;
   favicon: string | null;
 };
 
@@ -15,6 +16,7 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
   const title = node.attrs.title as string | null;
   const description = node.attrs.description as string | null;
   const image = node.attrs.image as string | null;
+  const imageData = node.attrs.imageData as string | null;
   const favicon = node.attrs.favicon as string | null;
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
@@ -29,6 +31,7 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
         title: meta.title ?? target,
         description: meta.description ?? null,
         image: meta.image ?? null,
+        imageData: meta.imageData ?? null,
         favicon: meta.favicon ?? null,
       });
     } finally {
@@ -55,8 +58,13 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
               <span className="line-clamp-1">{new URL(url).hostname}</span>
             </span>
           </div>
-          {image && (
-            <img src={image} alt="" className="h-24 w-32 shrink-0 object-cover" loading="lazy" />
+          {(imageData ?? image) && (
+            <img
+              src={imageData ?? (image as string)}
+              alt=""
+              className="h-24 w-32 shrink-0 object-cover"
+              loading="lazy"
+            />
           )}
         </a>
       </NodeViewWrapper>

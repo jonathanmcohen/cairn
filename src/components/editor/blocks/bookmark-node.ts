@@ -27,6 +27,7 @@ export const BookmarkNode = Node.create({
       title: { default: null },
       description: { default: null },
       image: { default: null },
+      imageData: { default: null },
       favicon: { default: null },
     };
   },
