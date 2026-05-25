@@ -16,6 +16,21 @@ export type LaidOutColumn<T> = {
 };
 
 /**
+ * Public, non-generic shape of a laid-out column used at render time. Consumers
+ * (e.g. `<VirtualizedRowBody>`) only need the property fields `<CellEditor>`
+ * reads (`id`, `name`, `type`, `config`), so this widens `prop` to a structural
+ * minimum that matches `meta.properties[i]` from `useDatabaseData`.
+ */
+export type ColumnLayoutItem = LaidOutColumn<{
+  id: string;
+  name: string;
+  type: string;
+  config: unknown;
+  // Allow extra fields without forcing every caller to know their shape.
+  [k: string]: unknown;
+}>;
+
+/**
  * Turn a property list + view ergonomics config into render-ready columns:
  * hidden columns removed (order preserved), each column's width resolved
  * (config or DEFAULT_COLUMN_WIDTH), and frozen columns assigned a cumulative

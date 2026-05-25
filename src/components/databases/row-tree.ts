@@ -6,7 +6,7 @@ export type ForestNode<T extends TreeRow> = {
   children: ForestNode<T>[];
 };
 
-export type VisibleNode<T extends TreeRow> = {
+export type VisibleNode<T extends TreeRow = TreeRow> = {
   row: T;
   depth: number;
   hasChildren: boolean;
