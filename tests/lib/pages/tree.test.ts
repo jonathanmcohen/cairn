@@ -95,12 +95,16 @@ describe('flattenedPageTree', () => {
       title: 'A.1',
     });
     await new Promise((r) => setTimeout(r, 5));
-    const a1a = await createPage(db, {
+    // a1a created purely to verify deep nesting renders into the flat list;
+    // its id isn't asserted directly because depth + parentId chain already
+    // proves DFS order.
+    const _a1a = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
       parentId: a1.id,
       title: 'A.1.a',
     });
+    expect(_a1a.id).toBeTruthy();
     await new Promise((r) => setTimeout(r, 5));
     const a2 = await createPage(db, {
       workspaceId: u.workspaceId,
