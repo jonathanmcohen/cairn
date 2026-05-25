@@ -1,3 +1,4 @@
+import { openQuickCapture } from '@/components/quick-capture/controller';
 import { registerShortcut } from '@/lib/shortcuts/registry';
 
 export type ShortcutHandlers = {
@@ -72,5 +73,14 @@ export function ensureAppShortcuts(): void {
     run: () => {
       handlers?.openSheet();
     },
+  });
+
+  registerShortcut({
+    id: 'app.quickCapture',
+    keys: 'Mod+Shift+N',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcuts.quickCapture',
+    run: openQuickCapture,
   });
 }

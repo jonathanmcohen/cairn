@@ -7,6 +7,7 @@ import { NoWorkspace } from '@/components/no-workspace';
 import { OfflineProvider } from '@/components/pwa/offline-context';
 import { OfflineIndicator } from '@/components/pwa/offline-indicator';
 import { RegisterSw } from '@/components/pwa/register-sw';
+import { QuickCaptureModal } from '@/components/quick-capture/modal';
 import { SearchPalette } from '@/components/search-palette';
 import { ShortcutDispatcher } from '@/components/shortcuts/dispatcher';
 import { ShortcutSheet } from '@/components/shortcuts/sheet';
@@ -52,6 +53,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <RegisterSw />
             <SearchPalette />
             <ShortcutSheet />
+            <QuickCaptureModal />
             <Sidebar workspaceId={ctx.workspaceId} />
             <SidebarDrawer>
               <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
