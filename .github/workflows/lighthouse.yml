@@ -66,8 +66,26 @@ jobs:
       - name: Seed LHCI fixture
         run: pnpm exec tsx scripts/seed-lhci.ts
 
+      # Self-hosted runners don't ship Chrome the way GHA-hosted ones do.
+      # lhci's healthcheck fails ("Chrome installation not found") without
+      # an explicit install. setup-chrome drops a versioned binary on the
+      # runner and exports CHROME_PATH so lhci's default lookup finds it.
+      - name: Install Chrome for Lighthouse
+        id: setup-chrome
+        uses: browser-actions/setup-chrome@v2
+        with:
+          chrome-version: stable
+
       - name: Run Lighthouse CI
         run: pnpm exec lhci autorun
+        env:
+          # lhci healthcheck warns 'GitHub token not set' when this is
+          # absent; LHCI_GITHUB_APP_TOKEN posts a commit status with the
+          # budget result. Using the workflow's GITHUB_TOKEN is fine.
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Explicit Chrome path from setup-chrome's output so lhci's
+          # autodetect can't pick the wrong (or missing) binary.
+          CHROME_PATH: ${{ steps.setup-chrome.outputs.chrome-path }}
 
       - name: Upload Lighthouse reports
         if: always()
