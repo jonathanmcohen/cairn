@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { type ReactNode, useRef, useState } from 'react';
+import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
@@ -18,6 +19,83 @@ export type ViewProps = {
   view: { id: string; type: string; name: string; config: unknown };
   onChange: () => void;
 };
+
+/**
+ * <tr> with a long-press → context-menu sheet (mobile users get Delete /
+ * Duplicate / Open without the right-click affordance). Sheet anchors to the
+ * row via `position: absolute` and dismisses on outside click.
+ */
+function LongPressRow({
+  databaseId,
+  rowId,
+  onChange,
+  className,
+  children,
+}: {
+  databaseId: string;
+  rowId: string;
+  onChange: () => void;
+  className?: string;
+  children: ReactNode;
+}) {
+  const rowRef = useRef<HTMLTableRowElement>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  useLongPress(rowRef, { onLongPress: () => setMenuOpen(true) });
+
+  async function onDelete() {
+    setMenuOpen(false);
+    if (!window.confirm('Delete this row?')) return;
+    await fetch(`/api/databases/${databaseId}/rows/${rowId}`, { method: 'DELETE' });
+    onChange();
+  }
+
+  async function onDuplicate() {
+    setMenuOpen(false);
+    // Reuse the bulk-create endpoint shape: POST /rows with no body creates a
+    // blank row. A true "duplicate" would copy cells; defer to a future plan
+    // (the API doesn't expose a single-row clone today).
+    await fetch(`/api/databases/${databaseId}/rows`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    onChange();
+  }
+
+  return (
+    <tr ref={rowRef} className={className} style={{ position: 'relative' }}>
+      {children}
+      {menuOpen ? (
+        <td
+          aria-hidden="true"
+          style={{ position: 'absolute', right: 0, top: '100%', zIndex: 20, padding: 0 }}
+        >
+          <div
+            role="dialog"
+            aria-label="Row actions"
+            className="w-44 rounded-md border bg-popover py-1 shadow-md"
+            onMouseLeave={() => setMenuOpen(false)}
+          >
+            <button
+              type="button"
+              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+              onClick={() => void onDuplicate()}
+            >
+              Duplicate row
+            </button>
+            <button
+              type="button"
+              className="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-accent"
+              onClick={() => void onDelete()}
+            >
+              Delete row
+            </button>
+          </div>
+        </td>
+      ) : null}
+    </tr>
+  );
+}
 
 export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const [adding, setAdding] = useState(false);
@@ -79,7 +157,13 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
 
   function rowTr(r: RowData) {
     return (
-      <tr key={r.row.id} className="border-b hover:bg-accent/40">
+      <LongPressRow
+        key={r.row.id}
+        databaseId={databaseId}
+        rowId={r.row.id}
+        onChange={onChange}
+        className="border-b hover:bg-accent/40"
+      >
         {columns.map((c) => {
           const stickyStyle =
             c.frozen && c.insetInlineStart !== null
@@ -105,7 +189,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
             </td>
           );
         })}
-      </tr>
+      </LongPressRow>
     );
   }
 
@@ -140,7 +224,13 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           if (!item) return null;
           const isCollapsed = collapsed.has(node.row.id);
           return (
-            <tr key={node.row.id} className="border-b hover:bg-accent/40">
+            <LongPressRow
+              key={node.row.id}
+              databaseId={databaseId}
+              rowId={node.row.id}
+              onChange={onChange}
+              className="border-b hover:bg-accent/40"
+            >
               {columns.map((c, i) => {
                 const stickyStyle =
                   c.frozen && c.insetInlineStart !== null
@@ -203,7 +293,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
                   </td>
                 );
               })}
-            </tr>
+            </LongPressRow>
           );
         })}
         {rows.length === 0 && (
