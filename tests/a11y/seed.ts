@@ -19,6 +19,7 @@ export type SeededA11y = {
   workspaceSlug: string;
   pageId: string;
   databaseId: string;
+  webhookId: string;
   userEmail: string;
   userPassword: string;
 };
@@ -75,6 +76,63 @@ function buildYjsState(doc: Record<string, unknown>): Buffer {
   const ydoc = prosemirrorJSONToYDoc(pmSchema, doc, 'default');
   const update = Y.encodeStateAsUpdate(ydoc);
   return Buffer.from(update);
+}
+
+/**
+ * Idempotent webhook seed for the a11y workspace. Reuses an existing webhook if
+ * one already exists (we filter by the deterministic `url` we plant here), else
+ * inserts one. Returns the webhook id.
+ */
+async function ensureSeedWebhook(
+  db: PostgresJsDatabase<typeof schema>,
+  args: { workspaceId: string },
+): Promise<string> {
+  const URL = 'https://example.invalid/a11y-hook';
+  const [existing] = await db
+    .select({ id: schema.webhooks.id })
+    .from(schema.webhooks)
+    .where(eq(schema.webhooks.workspaceId, args.workspaceId))
+    .limit(1);
+  if (existing) return existing.id;
+  const [inserted] = await db
+    .insert(schema.webhooks)
+    .values({
+      workspaceId: args.workspaceId,
+      url: URL,
+      events: ['page.created'],
+      // The a11y harness never verifies the signature against this; any
+      // 32+ byte hex string is sufficient for the server-side signBody call.
+      secret: 'a11y-test-secret-0123456789abcdef0123456789abcdef',
+      active: true,
+    })
+    .returning({ id: schema.webhooks.id });
+  if (!inserted) throw new Error('failed to insert seed webhook');
+  return inserted.id;
+}
+
+/**
+ * Idempotent delivery row for the seeded webhook so the deliveries page has at
+ * least one row to render.
+ */
+async function ensureSeedDelivery(
+  db: PostgresJsDatabase<typeof schema>,
+  args: { webhookId: string },
+): Promise<void> {
+  const [existing] = await db
+    .select({ id: schema.webhookDeliveries.id })
+    .from(schema.webhookDeliveries)
+    .where(eq(schema.webhookDeliveries.webhookId, args.webhookId))
+    .limit(1);
+  if (existing) return;
+  await db.insert(schema.webhookDeliveries).values({
+    webhookId: args.webhookId,
+    event: 'page.created',
+    payload: { pageId: '00000000-0000-0000-0000-000000000000' },
+    status: 'success',
+    attempts: 1,
+    lastStatus: 200,
+    deliveredAt: new Date(),
+  });
 }
 
 /**
@@ -135,11 +193,14 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
             target: schema.pageYjs.pageId,
             set: { state, updatedAt: new Date() },
           });
+        const webhookId = await ensureSeedWebhook(db, { workspaceId: existingWs.id });
+        await ensureSeedDelivery(db, { webhookId });
         return {
           workspaceId: existingWs.id,
           workspaceSlug: existingWs.slug,
           pageId: page.id,
           databaseId: database.id,
+          webhookId,
           userEmail: USER_EMAIL,
           userPassword: USER_PASSWORD,
         };
@@ -237,11 +298,15 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
       createdBy: user.id,
     });
 
+    const webhookId = await ensureSeedWebhook(db, { workspaceId: ws.id });
+    await ensureSeedDelivery(db, { webhookId });
+
     return {
       workspaceId: ws.id,
       workspaceSlug: ws.slug,
       pageId: page.id,
       databaseId: database.id,
+      webhookId,
       userEmail: USER_EMAIL,
       userPassword: USER_PASSWORD,
     };
