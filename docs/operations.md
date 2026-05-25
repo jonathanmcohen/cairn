@@ -158,3 +158,34 @@ artifact, so regressions are inspectable from the GitHub Actions run page.
 > Deviation from the plan: the upload target is `filesystem` (not
 > `temporary-public-storage`) so reports stay inside CI artifacts rather
 > than an externally-hosted public URL.
+
+## Server-side native PDF (v0.8.0)
+
+Cairn ships two paths for the `format=pdf` page export. The default returns
+print-ready HTML and relies on the browser's "Save as PDF" dialog — no
+Chromium needed on the server. Setting `CAIRN_NATIVE_PDF=1` switches the
+route to render real `application/pdf` bytes server-side via a headless
+Chromium instance (powered by `@playwright/test`, which is a runtime
+dependency as of v0.8.0).
+
+**Trade-offs:**
+
+- **Image growth:** ~150MB (the Chromium binary). The dependency itself is
+  small; the bundled browser is what costs you the bytes.
+- **Cold-start latency:** the first PDF request inside a process pays the
+  Chromium-launch cost (~1.5s). Subsequent requests reuse a singleton
+  `Browser` instance held in the route's module state. The browser closes
+  on `SIGTERM` so the container exits cleanly.
+- **Compatibility:** every block type prints identically to the
+  browser-print HTML path — both paths render through the same
+  `pageToPdfHtml(page)` HTML generator. Only the rasterizer differs.
+
+**Explicit fallback selector:** `?format=pdf-print-html` always returns the
+print-HTML body regardless of `CAIRN_NATIVE_PDF`, in case a caller wants
+to bypass the native path.
+
+**MCP:** the `pages.export` MCP tool accepts the same `format` param and
+returns the PDF base64-encoded inside a JSON-RPC resource envelope. The
+tool rejects `format=pdf` with `INVALID_REQUEST` when `CAIRN_NATIVE_PDF`
+is unset (to keep the tool truthful — there is no MCP shape that can
+deliver an HTML "save as" dialog).
