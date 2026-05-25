@@ -26,14 +26,20 @@ export const userPagePrefs = pgTable(
       .notNull()
       .references(() => pages.id, { onDelete: 'cascade' }),
     favorite: boolean('favorite').notNull().default(false),
+    /** Legacy v0.6-era column; v0.8 P17 writes to `position` instead. */
     favoriteOrder: integer('favorite_order'),
+    /**
+     * Canonical favorite ordering, dense from 0 within (userId, workspaceId,
+     * favorite=true). Written by `reorderFavorites(...)` in one tx.
+     */
+    position: integer('position').notNull().default(0),
     lastVisitedAt: timestamp('last_visited_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex('user_page_prefs_user_page_unique').on(t.userId, t.pageId),
-    index('user_page_prefs_favorites_idx').on(t.userId, t.workspaceId, t.favorite, t.favoriteOrder),
+    index('user_page_prefs_favorites_idx').on(t.userId, t.workspaceId, t.favorite, t.position),
     index('user_page_prefs_recents_idx').on(t.userId, t.workspaceId, t.lastVisitedAt),
   ],
 );

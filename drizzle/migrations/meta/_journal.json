@@ -218,6 +218,13 @@
       "when": 1779715002109,
       "tag": "0030_inbox_capture",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1779731495792,
+      "tag": "0031_favorites_position",
+      "breakpoints": true
     }
   ]
 }
