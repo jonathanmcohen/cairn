@@ -106,8 +106,10 @@ sweep evicts idle sessions every 60 seconds.
 All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`,
 `postgres-pgvector-image.yml`) run on **self-hosted runners**:
 
-- amd64: `[self-hosted, linux, x64]`
-- arm64 (release matrix only): `[self-hosted, linux, arm64]`
+- amd64: `[self-hosted, linux, x64]` (Linux box w/ Docker)
+- arm64 (release matrix only): `[self-hosted, macOS, arm64]` (Apple
+  Silicon Mac w/ Docker Desktop — Docker Desktop's Linux VM still
+  produces real `linux/arm64` image layers)
 
 Runners must have Docker + recent `pnpm`/`node` available. Required labels
 match the values above verbatim. The arm64 runner is used only by the

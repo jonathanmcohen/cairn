@@ -20,7 +20,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: ${{ matrix.arch == 'amd64' && fromJSON('["self-hosted", "linux", "x64"]') || fromJSON('["self-hosted", "linux", "arm64"]') }}
+    # amd64 runs on the Linux x64 self-hosted runner; arm64 runs on the
+    # macOS arm64 self-hosted runner (Apple Silicon w/ Docker Desktop —
+    # Docker Desktop's Linux VM produces real linux/arm64 layers despite
+    # the macOS host OS).
+    runs-on: ${{ matrix.arch == 'amd64' && fromJSON('["self-hosted", "linux", "x64"]') || fromJSON('["self-hosted", "macOS", "arm64"]') }}
     strategy:
       fail-fast: false
       matrix:
