@@ -1,9 +1,10 @@
 'use client';
 
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { MCP_TOOL_IDS } from '@/lib/auth/mcp-tool-ids';
 
 export type MintResult = {
@@ -95,12 +96,29 @@ export function MintTokenDialog({
 }) {
   const nameId = useId();
   const expiryId = useId();
+  const titleId = useId();
+  // Trap focus inside the dialog while it's open and restore focus to the
+  // previously-focused element (the "Mint new token" trigger) on close. The
+  // hook also focuses the first focusable child on mount.
+  const dialogRef = useFocusTrap<HTMLDivElement>(true);
   const [name, setName] = useState('');
   const [scopes, setScopes] = useState<string[]>(PRESETS['Read-only'] as string[]);
   const [mcpTools, setMcpTools] = useState<string[]>([]);
   const [expiresInDays, setExpiresInDays] = useState('90');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Esc key closes the dialog (matches the share/page-actions dialog UX).
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') {
+        e.stopPropagation();
+        onClose();
+      }
+    }
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [onClose]);
 
   const showMcpTools = scopes.some((s) => s.startsWith('mcp:'));
 
@@ -145,8 +163,16 @@ export function MintTokenDialog({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="w-full max-w-lg space-y-4 rounded-lg bg-background p-6">
-        <h2 className="font-medium text-lg">Mint a new token</h2>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        className="w-full max-w-lg space-y-4 rounded-lg bg-background p-6"
+      >
+        <h2 id={titleId} className="font-medium text-lg">
+          Mint a new token
+        </h2>
         <div>
           <Label htmlFor={nameId}>Name</Label>
           <Input

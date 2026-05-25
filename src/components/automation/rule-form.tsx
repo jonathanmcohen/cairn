@@ -3,7 +3,7 @@
 import { useId, useState } from 'react';
 import type { RuleListRow } from '@/components/automation/rule-list';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type * as schema from '@/db/schema';
@@ -198,7 +198,10 @@ export function RuleForm(props: Props) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        {/* a11y P14: render the card title as a real <h2> so the inline form
+            has a semantic heading the AT can land on (CardTitle by itself is a
+            non-semantic <div>). */}
+        <h2 className="font-semibold leading-none tracking-tight">{title}</h2>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={(e) => void submit(e)}>

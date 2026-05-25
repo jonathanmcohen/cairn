@@ -146,29 +146,24 @@ test.describe('v0.7 modal / form focus management', () => {
     await expect(trigger).toBeVisible();
     await trigger.click();
 
-    // The dialog renders a heading "Mint a new token" — wait on it as a proxy
-    // until Task 5 adds role="dialog" + an accessible name.
-    const heading = page.getByRole('heading', { name: /mint a new token/i });
-    await expect(heading).toBeVisible();
+    // P14: the dialog has role="dialog" + aria-modal + aria-labelledby pointing
+    // at the "Mint a new token" heading, so the accessible-name regex resolves
+    // through the standard ARIA name computation.
+    const dialog = page.getByRole('dialog', { name: /mint a new token/i });
+    await expect(dialog).toBeVisible();
 
     await expectNoA11yViolations(page, 'MintTokenDialog');
 
-    // Focus must be inside the dialog surface — locate the overlay container by
-    // the heading's ancestor and assert document.activeElement is contained.
+    // Focus must be inside the dialog surface (useFocusTrap focuses the first
+    // focusable child on mount).
     const focusInside = await page.evaluate(() => {
-      // The overlay is the nearest ancestor with class "fixed inset-0".
-      const headingEl = document.querySelector('h2');
-      let node: HTMLElement | null = headingEl as HTMLElement | null;
-      while (node && !(node.className && /fixed.*inset-0/.test(node.className))) {
-        node = node.parentElement;
-      }
-      if (!node) return false;
-      return node.contains(document.activeElement);
+      const dlg = document.querySelector('[role="dialog"]');
+      return dlg ? dlg.contains(document.activeElement) : false;
     });
     expect(focusInside, 'MintTokenDialog: focus did not move inside on open').toBe(true);
 
     await page.keyboard.press('Escape');
-    await expect(heading).toBeHidden();
+    await expect(dialog).toBeHidden();
     await expect(trigger).toBeFocused();
   });
 
