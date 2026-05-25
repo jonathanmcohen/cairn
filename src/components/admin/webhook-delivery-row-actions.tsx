@@ -83,10 +83,19 @@ export function WebhookDeliveryRowActions({
         size="sm"
         onClick={() => void onReplay()}
         disabled={replaying}
+        // WCAG 2.5.5: enforce ≥44px touch target on mobile.
+        className="min-h-11"
       >
         {replaying ? 'Replaying…' : replayed ? 'Enqueued' : 'Replay'}
       </Button>
-      <Button type="button" variant="ghost" size="sm" onClick={onCopyCurl}>
+      <Button
+        type="button"
+        variant="ghost"
+        size="sm"
+        onClick={onCopyCurl}
+        // WCAG 2.5.5: enforce ≥44px touch target on mobile.
+        className="min-h-11"
+      >
         {copied ? 'Copied!' : 'Copy as curl'}
       </Button>
       {error ? <span className="text-xs text-destructive">{error}</span> : null}

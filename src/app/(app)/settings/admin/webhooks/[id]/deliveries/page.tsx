@@ -67,15 +67,23 @@ export default async function WebhookDeliveriesPage({ params }: { params: Promis
 
   return (
     <div>
-      <nav className="mb-2 text-sm text-muted-foreground">
-        <a className="hover:underline" href="/settings/admin">
+      <nav className="mb-2 flex items-center gap-1 text-sm text-muted-foreground">
+        {/* WCAG 2.5.5: each breadcrumb link gets a ≥44px touch target. */}
+        <a
+          className="inline-flex min-h-11 items-center px-1 hover:underline"
+          href="/settings/admin"
+        >
           ← Admin
-        </a>{' '}
-        /{' '}
-        <a className="hover:underline" href="/settings/admin/webhooks">
+        </a>
+        <span aria-hidden="true">/</span>
+        <a
+          className="inline-flex min-h-11 items-center px-1 hover:underline"
+          href="/settings/admin/webhooks"
+        >
           Webhooks
-        </a>{' '}
-        / Deliveries
+        </a>
+        <span aria-hidden="true">/</span>
+        <span className="inline-flex min-h-11 items-center px-1">Deliveries</span>
       </nav>
       <h1 className="mb-1 text-2xl font-semibold">Deliveries</h1>
       <p className="mb-6 text-sm text-muted-foreground">
