@@ -5,6 +5,60 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-05-24
+
+> Experience + 1.0-readiness release. Ten new bands on top of v0.7: full Yjs-over-IndexedDB sync + mobile gesture polish (G1), performance pass with virtualization + bundle code-split + Lighthouse CI budget (G2), quick-capture + PWA `share_target` + onboarding wizard (G3), expanded command palette + settings-hub restructure + microcopy polish (G4), a11y v0.7 new-route sweep (G5), notification center + favorites reorder + backlinks delta (G6), per-user themes + page covers + page-icon polish (G7), embed allowlist expansion + rich unfurls + new block types (G8), opt-in server-side native PDF via Playwright (G9), and the cross-feature release smoke + docs (G10). Migrations `0029`–`0033`. Built area-by-area (plans P1–P26); entries below are grouped by group.
+
+### Added (v0.8.0 P26 — Combined smoke & release)
+- Combined cross-feature docker-compose smoke (`scripts/smoke-v0.8.0.sh`) exercising every v0.8 delta band against a live boot: `/api/health` reports `0.8.0`, inbox capture (anon → 401; PAT → 201), notification bell unread-count shape, native PDF magic-bytes (skipped if `CAIRN_NATIVE_PDF` unset), page cover save+restore, theme apply (data-accent on `/p/` render), PWA `share_target` manifest entry, and cross-workspace inbox capture existence-non-leak.
+- Lighthouse + axe gates skipped in P26 plan execution; covered by existing CI on every PR (G2 P7 + G5 P14).
+- README "v0.8.0 features" overview (10 groups; 16 features) + extended "Security & operations caveats" (Playwright runtime, Unsplash key, offline-doc IndexedDB cap, PWA `share_target` browser support gaps, new CSP `frame-src` entries).
+- SECURITY.md `v0.8.0 additions` section: Unsplash key handling, Playwright runtime opt-in surface, IndexedDB client-side persistence, embed CSP allowlist additions, `share_target` manifest entry.
+- Bumped version to 0.8.0; reused the existing GHA-hosted release workflow to publish `ghcr.io/jonathanmcohen/cairn:0.8.0`.
+
+### Added (v0.8.0 G1 — PWA + mobile polish)
+- **P1** Full Yjs-over-IndexedDB sync: every opened page is mirrored to IndexedDB for the workspace session; offline edits land in the local Yjs doc and CRDT-merge with the server on reconnect via the existing Hocuspocus provider. Per-workspace `doc-index` helper + FIFO eviction at `CAIRN_OFFLINE_DOC_LIMIT_MB` / `NEXT_PUBLIC_CAIRN_OFFLINE_DOC_LIMIT_MB` (default 256MB); `src/lib/offline/{doc-index,evict}.ts` unit-tested against `fake-indexeddb`.
+- **P2** Mobile gesture polish: `useSwipeBack` hook + edge-swipe-back on page detail routes; `<LongPress>` HOC + context-menu wiring on sidebar pages + db rows; `<PullToRefresh>` wrapper on list + timeline views. WCAG 2.5.5 touch-target audit across v0.7 surfaces with follow-up fixes on `/settings/developer` + the new settings hub.
+- **P3** Offline reconnect smoke (integration test harness): Hocuspocus stub + two-client Y.Doc setup; asserts two-client CRDT convergence + IndexedDB-survives-restart; precondition guards for Docker-up + Hocuspocus ready.
+
+### Added (v0.8.0 G2 — Performance pass)
+- **P4** Virtualized page-tree sidebar via `@tanstack/react-virtual`: `flattenedPageTree` DFS helper + `<VirtualizedPageTree>` client component swap for the recursive `<SidebarTree>` flat-list render. Sustains 10k+ row workspaces.
+- **P5** Virtualized db-table view: `<VirtualizedRowBody>` with sticky header + windowed grid rows, wired into `<TableView>` non-grouped path. Sticky-header regression guards under frozen-column + rerender.
+- **P6** Code-split heavy TipTap extensions (math, syncedBlock, embed): dynamic-import factories + schema-only static node placeholders; on-mount + on-insert lazy load; bundle-budget test asserts KaTeX stays out of the core editor chunks (≥ 200KB cut).
+- **P7** DB query audit (top 5 routes by p99) + missing indexes added; Lighthouse CI budget config (`@lhci/cli`) on `/p/<id>` — 5pt floor + 10% LCP/FCP/TTI cap — wired into CI as a dedicated workflow with an LHCI seed page + ops docs.
+
+### Added (v0.8.0 G3 — Quick capture + onboarding)
+- **P8** Inbox capture + PWA `share_target`. Migration `0030`: `pages.metadata jsonb` + `workspaces.inbox_page_id`. `ensureInboxPage` + `captureInbox` + `markInboxDone` library helpers (cross-workspace → 404). `POST /api/inbox` accepts JSON + multipart share-target POSTs; PWA manifest registers `share_target` → `/api/inbox`. `/inbox` triage UI + mark-done route.
+- **P9** Quick-capture hotkey. Module-level open/close controller, `<QuickCaptureModal>` with form submit, `Cmd+Shift+N` / `Ctrl+Shift+N` registered in the `(app)` layout.
+- **P10** Onboarding wizard. Built-in "Welcome to Cairn" template, `getOnboardingState` helper, per-workspace localStorage flag, 3-step `<OnboardingWizard>` modal + template picker, gallery preview disclosure.
+
+### Added (v0.8.0 G4 — Command palette + settings hub)
+- **P11** Palette expansion: typed action registry + `buildPaletteActions(ctx)`; expanded actions (open settings, switch workspace, create page, create db row, open recent ×10, FTS+semantic search, MCP token info); localStorage-backed recent-commands surface above search results.
+- **P12** Settings hub nav restructure: `<SettingsSidebar>` + `<SettingsBreadcrumb>` with keyboard nav; nav-sectioned layout shell + `/settings` landing redirect; settings pages moved into the hub with breadcrumbs; `resolveSettingsRedirect` helper applied in `src/proxy.ts` so old flat paths redirect.
+- **P13** Microcopy + empty-state polish: keyed string registry, base `<EmptyState>` component, 8 per-feature named variants, audit + plumbing across v0.8 surfaces.
+
+### Added (v0.8.0 G5 — A11y v0.7 new-route sweep)
+- **P14** `pnpm test:a11y` Playwright + axe suite extended to cover `/settings/developer`, `/settings/automation`, `/settings/connectors`, `/settings/admin/webhooks/[id]/deliveries`, and `/healthz`. Keyboard nav + focus management asserted on the mint-PAT dialog, automation-rule form, and connector OAuth flow. (Mobile touch-target audit shipped in G1 P2; sub-44 fixes applied across the v0.7 settings surfaces and the new settings hub.)
+
+### Added (v0.8.0 G6 — Notification center + favorites + backlinks delta)
+- **P15** Notification bell + drawer. Shared `listNotifications` + `markRead` + `markAllRead` helpers; `GET /api/notifications/unread-count` fast-count endpoint; per-id read + mark-all-read endpoints; refactored `GET /api/notifications` to delegate. SWR-polled `<NotificationBell>` with unread badge + right-side focus-trapped `<NotificationDrawer>` grouped today/this-week/older, mounted in the layout header.
+- **P16** `/notifications` full inbox page with `type[]` / `status` / `dateFrom` / `dateTo` filters + load-more pagination — shared list query with the drawer.
+- **P17** Favorites reorder. Migration `0031`: `user_page_prefs.position` for favorite ordering. `reorderFavorites` helper + `@dnd-kit/sortable` deps; `POST /api/favorites/reorder` + legacy shim; drag + keyboard reorder + remove action in the sidebar.
+- **P18** Backlinks delta. `findUnlinkedMentions` FTS + `page_links` anti-join helper; `GET /api/pages/[pageId]/preview` for transclusion popover; inline page-link hover popover via shared tippy; unlinked-mentions section in `BacklinksPanel` with its own GET endpoint.
+
+### Added (v0.8.0 G7 — Themes + page covers + icons)
+- **P19** Per-user themes. Migration `0032`: `user_theme_prefs` + presets module (accent color × 8 presets + custom hex, font family system / serif / mono, page width narrow / wide / full). `getThemePrefs` / `setThemePrefs` helpers + roundtrip test; `<ThemeProvider>` + `PATCH /api/settings/theme`; `/settings/account/theme` page; provider mounted on `(app)` and `/p/<id>`. Applied via CSS custom properties + `<html data-accent="...">` — Tailwind v4 `@theme` tokens inherit.
+- **P20** Page covers. Migration `0033`: `pages.cover jsonb`. `setPageCover` / `getPageCover` helpers + roundtrip test; `PATCH /api/pages/[pageId]/cover` route; `<CoverBanner>` 200px renderer; `<CoverPicker>` modal (color / Unsplash / upload tabs — Unsplash gated behind `CAIRN_UNSPLASH_ACCESS_KEY`, client-side search); mounted on editor + `/p/<slug>`.
+- **P21** Page-icon polish. Icon-format prefix-convention helpers; `randomDefaultIcon()` wired into `createPage`; icon-picker polish — search + recently-used + custom-upload icon path.
+
+### Added (v0.8.0 G8 — Embeds + new blocks)
+- **P22** Embed allowlist expansion. Added Loom, Codepen, Spotify, Vimeo Showcase, Excalidraw to the editor allowlist; extended CSP `frame-src` to the new hosts; Mermaid block as a lazy-loaded SVG (no iframe). Drift-test guards against accidental allowlist removal.
+- **P23** Rich unfurls. `extractOpenGraph` helper with caller-provided fetcher; `/api/unfurl` returns `imageData` (256KB cap, SSRF-guarded); bookmark card prefers inlined `imageData` over remote URL.
+- **P24** New block types. Divider, button (label + href + variant), video upload (mp4/webm) — each with a slash command. Public `/p/<slug>` re-signs video src on render.
+
+### Added (v0.8.0 G9 — Native PDF)
+- **P25** Server-side native PDF export gated behind `CAIRN_NATIVE_PDF=1`. Promoted `@playwright/test` to a runtime dep. `pageToPdf` singleton-browser helper (lazy-launched on first request, closed on `SIGTERM`/`SIGINT`). `/api/pages/[pageId]/export?format=pdf` serves native bytes when the env is set; browser-print HTML remains the default; `?format=pdf-print-html` is an explicit fallback selector. MCP `pages.export` tool surfaces md / json / pdf (base64-encoded PDF in the JSON-RPC envelope; rejects `format=pdf` with `INVALID_REQUEST` when the env is unset). README docs for `CAIRN_NATIVE_PDF` + "Server-side native PDF" section; gated magic-bytes check in tests.
+
 ## [0.7.0] - 2026-05-23
 
 > Cross-feature release adding seven new bands on top of v0.6: authz primitives (PATs + page ACLs), an MCP server (Streamable HTTP + SSE shim), observability + ops delta (`/healthz` + new metric series + webhook delivery dashboard), pgvector-backed semantic search, scheduled S3 backups + bulk import/export UI, an automation/rules engine, and two-way DB connectors (Google Sheets / Airtable / CSV). Migrations `0024`–`0028`. Built area-by-area (plans P1–P23); entries below are grouped by plan.
