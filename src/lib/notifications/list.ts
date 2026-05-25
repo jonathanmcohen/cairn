@@ -1,17 +1,21 @@
-import { and, desc, eq, isNull, lt, or, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, inArray, isNotNull, isNull, lt, or, type SQL } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
 /**
- * P16 will extend this filter shape with `type[]` + `dateFrom`/`dateTo`; P15
- * only honors the `status` slot (used by GET /api/notifications?unreadOnly=true)
- * — keeping the parameter shape stable now means P16 doesn't need a second
- * helper, and the drawer + the /notifications page share one paginated reader.
+ * Filter shape honored by `listNotifications`. P15 only wired `status: 'unread'`;
+ * P16 extends every slot — `type[]` (inArray), `status` (`read` → isNotNull,
+ * `unread` → isNull, `all` / omitted → no clause), `dateFrom` (gte, inclusive)
+ * and `dateTo` (lt, exclusive — mirrors the v0.6 P18 audit-viewer convention).
+ *
+ * Every field is optional, and an omitted field means "no clause" — that's why
+ * the drawer (which passes `{ status: 'unread' }` only) and the /notifications
+ * page (which can compose all four) share this one helper.
  */
 export type NotificationFilter = {
-  type?: string[];
+  type?: schema.NotificationType[];
   status?: 'read' | 'unread' | 'all';
   dateFrom?: Date;
   dateTo?: Date;
@@ -64,10 +68,24 @@ export async function listNotifications(
     eq(schema.notifications.workspaceId, input.workspaceId),
   ];
 
-  // P15 honors `status` only ({ status: 'unread' } from /api/notifications);
-  // P16 extends to type/date filters.
-  if (input.filter?.status === 'unread') {
+  // P16 filter clauses — each optional, omitted-means-no-clause so the drawer
+  // (P15 callsite passing nothing or { status: 'unread' }) keeps working and the
+  // /notifications page composes type+status+date ranges through the same path.
+  const filter = input.filter;
+  if (filter?.type && filter.type.length > 0) {
+    conds.push(inArray(schema.notifications.type, filter.type));
+  }
+  if (filter?.status === 'unread') {
     conds.push(isNull(schema.notifications.readAt));
+  } else if (filter?.status === 'read') {
+    conds.push(isNotNull(schema.notifications.readAt));
+  }
+  // status 'all' or omitted → no clause.
+  if (filter?.dateFrom) {
+    conds.push(gte(schema.notifications.createdAt, filter.dateFrom));
+  }
+  if (filter?.dateTo) {
+    conds.push(lt(schema.notifications.createdAt, filter.dateTo));
   }
 
   if (cursor) {
