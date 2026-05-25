@@ -40,6 +40,12 @@ const Schema = z.object({
   CAIRN_GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   CAIRN_CONNECTOR_CSV_PATH: z.string().optional(),
   NEXT_PUBLIC_CAIRN_OFFLINE_DOC_LIMIT_MB: z.coerce.number().int().positive().default(256),
+  // v0.8.0 G7 P20 — operator opt-in: when set, the build inlines this key so
+  // the <CoverPicker> can render the Unsplash tab. Leaving it unset hides the
+  // tab. The key is intentionally exposed in the browser bundle (it's an
+  // Unsplash "Client-ID" — public by design); the SERVER-side equivalent stays
+  // in FORBIDDEN_KEYS so no Cairn route ever proxies it.
+  NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY: z.string().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;
