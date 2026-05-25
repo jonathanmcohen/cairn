@@ -5,7 +5,12 @@ import { expect, signIn, test } from './fixtures';
 // WCAG 2.5.5 Target Size (Enhanced) minimum: 44×44 CSS px for any pointer-input
 // target. Mobile viewport (iPhone SE-ish) is the worst case for our v0.7
 // surfaces — dense settings tables + chip rows that often shrink below 44.
-test.use({ ...devices['iPhone SE'] });
+//
+// `iPhone SE` defaults to webkit; CI installs chromium-only (see
+// .github/workflows/ci.yml). Force chromium so the install matrix stays
+// minimal — the viewport + touch + UA bits below are what actually matter for
+// the touch-target audit.
+test.use({ ...devices['iPhone SE'], browserName: 'chromium', defaultBrowserType: 'chromium' });
 
 const V07_ROUTES_NEEDING_PARAM: Record<string, (seeded: { webhookId?: string }) => string> = {
   '/settings/admin/webhooks/:id/deliveries': (s) =>
