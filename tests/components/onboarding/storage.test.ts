@@ -34,7 +34,6 @@ describe('onboarding storage', () => {
 
   it('hasOnboarded returns false when localStorage is unavailable (SSR-style)', () => {
     const original = globalThis.localStorage;
-    // @ts-expect-error force-undefined to simulate SSR
     delete (globalThis as { localStorage?: Storage }).localStorage;
     try {
       expect(hasOnboarded('ws-1')).toBe(false);

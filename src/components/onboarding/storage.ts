@@ -40,7 +40,7 @@ export function resetOnboardingForTests(): void {
   const stale: string[] = [];
   for (let i = 0; i < localStorage.length; i++) {
     const k = localStorage.key(i);
-    if (k && k.startsWith(PREFIX)) stale.push(k);
+    if (k?.startsWith(PREFIX)) stale.push(k);
   }
   for (const k of stale) localStorage.removeItem(k);
 }

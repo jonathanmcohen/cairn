@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { type FormEvent, useEffect, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { hasOnboarded, markOnboarded } from '@/components/onboarding/storage';
 import { WelcomeTemplatePick } from '@/components/onboarding/welcome-template-pick';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,7 @@ export function OnboardingWizard({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const nameInputRef = useRef<HTMLInputElement | null>(null);
 
   // Esc closes (treated as Skip).
   useEffect(() => {
@@ -48,6 +49,14 @@ export function OnboardingWizard({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [active, workspaceId]);
+
+  // Focus the name input when we enter the name step. Using a ref + effect
+  // instead of the JSX `autoFocus` attribute (a11y/noAutofocus).
+  useEffect(() => {
+    if (active && step === 'name') {
+      nameInputRef.current?.focus();
+    }
+  }, [active, step]);
 
   function finishAndDismiss() {
     markOnboarded(workspaceId);
@@ -156,7 +165,7 @@ export function OnboardingWizard({
                 </label>
                 <input
                   id="ob-name"
-                  autoFocus
+                  ref={nameInputRef}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="mt-1 w-full rounded border bg-background px-2 py-1.5 text-sm outline-none focus:ring-2 focus:ring-ring"
@@ -178,10 +187,7 @@ export function OnboardingWizard({
               <p className="text-sm text-muted-foreground">
                 Choose a built-in template to seed your workspace, or start with a blank slate.
               </p>
-              <WelcomeTemplatePick
-                selectedId={pickedTemplateId}
-                onPick={setPickedTemplateId}
-              />
+              <WelcomeTemplatePick selectedId={pickedTemplateId} onPick={setPickedTemplateId} />
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               <div className="flex justify-end gap-2">
                 <Button

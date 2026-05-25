@@ -15,6 +15,12 @@ export type TemplateCard = {
 
 type InstantiateResponse = { rootPageId: string | null; rootDatabaseId: string | null };
 
+const BUILT_IN_DESCRIPTIONS: Record<string, string> = {
+  'Welcome to Cairn': 'A small starter set: a home page, a tasks page, and a notes scratchpad.',
+  'Meeting notes': 'A blank meeting page with attendees, agenda, and action-items sections.',
+  'Weekly planner': 'A week-at-a-glance page with this-week, goals, and follow-ups headers.',
+};
+
 export function TemplatesGallery({ initialTemplates }: { initialTemplates: TemplateCard[] }) {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateCard[]>(initialTemplates);
@@ -90,27 +96,35 @@ export function TemplatesGallery({ initialTemplates }: { initialTemplates: Templ
                 ) : null}
               </div>
             </CardHeader>
-            <CardContent className="mt-auto flex gap-2">
-              <Button
-                type="button"
-                size="sm"
-                disabled={busy === t.id}
-                onClick={() => void onUse(t.id)}
-              >
-                {busy === t.id ? 'Working…' : 'Use template'}
-              </Button>
-              {t.builtIn ? null : (
+            <CardContent className="mt-auto flex flex-col gap-2">
+              {t.builtIn && BUILT_IN_DESCRIPTIONS[t.name] ? (
+                <details className="text-xs text-muted-foreground">
+                  <summary className="cursor-pointer select-none">Preview</summary>
+                  <p className="mt-1">{BUILT_IN_DESCRIPTIONS[t.name]}</p>
+                </details>
+              ) : null}
+              <div className="flex gap-2">
                 <Button
                   type="button"
-                  variant="ghost"
                   size="sm"
-                  className="text-destructive hover:text-destructive"
                   disabled={busy === t.id}
-                  onClick={() => void onDelete(t.id)}
+                  onClick={() => void onUse(t.id)}
                 >
-                  Delete
+                  {busy === t.id ? 'Working…' : 'Use template'}
                 </Button>
-              )}
+                {t.builtIn ? null : (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="text-destructive hover:text-destructive"
+                    disabled={busy === t.id}
+                    onClick={() => void onDelete(t.id)}
+                  >
+                    Delete
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         ))}

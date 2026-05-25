@@ -78,9 +78,7 @@ export function WelcomeTemplatePick({
 
   return (
     <div className="space-y-2">
-      {error ? (
-        <p className="text-xs text-muted-foreground">{error} (showing fallback)</p>
-      ) : null}
+      {error ? <p className="text-xs text-muted-foreground">{error} (showing fallback)</p> : null}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {templates.map((t) => {
           const active = selectedId === t.id;

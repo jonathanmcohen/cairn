@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { LiveRegionProvider } from '@/components/a11y/live-region';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { NoWorkspace } from '@/components/no-workspace';
+import { OnboardingWizard } from '@/components/onboarding/wizard';
 import { OfflineProvider } from '@/components/pwa/offline-context';
 import { OfflineIndicator } from '@/components/pwa/offline-indicator';
 import { RegisterSw } from '@/components/pwa/register-sw';
@@ -19,6 +20,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { isTwoFactorEnabled, userHasWorkspaceRequiring2fa } from '@/lib/auth/two-factor';
+import { getOnboardingState } from '@/lib/onboarding/state';
 import { listUserWorkspaces } from '@/lib/workspaces/list';
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -44,6 +46,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     }
   }
   const workspaces = await listUserWorkspaces(getDb(), ctx.userId);
+  const onboardingState = await getOnboardingState(getDb(), {
+    workspaceId: ctx.workspaceId,
+    userId: ctx.userId,
+  });
   return (
     <OfflineProvider>
       <LiveRegionProvider>
@@ -54,6 +60,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
             <SearchPalette />
             <ShortcutSheet />
             <QuickCaptureModal />
+            <OnboardingWizard workspaceId={ctx.workspaceId} initialState={onboardingState} />
             <Sidebar workspaceId={ctx.workspaceId} />
             <SidebarDrawer>
               <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />

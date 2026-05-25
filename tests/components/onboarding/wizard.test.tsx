@@ -1,10 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  hasOnboarded,
-  resetOnboardingForTests,
-} from '@/components/onboarding/storage';
+import { hasOnboarded, resetOnboardingForTests } from '@/components/onboarding/storage';
 import { OnboardingWizard } from '@/components/onboarding/wizard';
 
 // Stub next/navigation — the wizard uses useRouter for router.push/refresh
@@ -27,18 +24,15 @@ beforeEach(() => {
     if (typeof url === 'string' && url === '/api/templates') {
       return new Response(
         JSON.stringify({
-          templates: [
-            { id: 't-welcome', name: 'Welcome to Cairn', kind: 'page', builtIn: true },
-          ],
+          templates: [{ id: 't-welcome', name: 'Welcome to Cairn', kind: 'page', builtIn: true }],
         }),
         { status: 200 },
       );
     }
     if (typeof url === 'string' && url.endsWith('/instantiate') && init?.method === 'POST') {
-      return new Response(
-        JSON.stringify({ rootPageId: 'new-page-id', rootDatabaseId: null }),
-        { status: 200 },
-      );
+      return new Response(JSON.stringify({ rootPageId: 'new-page-id', rootDatabaseId: null }), {
+        status: 200,
+      });
     }
     return new Response('{}', { status: 200 });
   });
@@ -79,9 +73,7 @@ describe('<OnboardingWizard>', () => {
         initialState={{ hasAnyUserPages: false, workspaceName: 'My WS' }}
       />,
     );
-    expect(
-      await screen.findByRole('dialog', { name: /welcome to cairn/i }),
-    ).toBeTruthy();
+    expect(await screen.findByRole('dialog', { name: /welcome to cairn/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /get started/i })).toBeTruthy();
   });
 
@@ -135,7 +127,7 @@ describe('<OnboardingWizard>', () => {
         (c) => typeof c[0] === 'string' && (c[0] as string).endsWith('/instantiate'),
       );
       expect(instantiateCalls.length).toBe(1);
-      expect((instantiateCalls[0]![1] as RequestInit).method).toBe('POST');
+      expect((instantiateCalls[0]?.[1] as RequestInit).method).toBe('POST');
     });
     expect(hasOnboarded('ws-1')).toBe(true);
   });
