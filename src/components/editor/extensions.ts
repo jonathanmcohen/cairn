@@ -10,9 +10,9 @@ import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
 import { Bookmark } from './blocks/bookmark';
 import { Column, ColumnList } from './blocks/columns';
-import { Embed } from './blocks/embed';
-import { MathBlock } from './blocks/math';
-import { SyncedBlock } from './blocks/synced-block';
+import { EmbedNode } from './blocks/embed-node';
+import { MathBlockNode } from './blocks/math-node';
+import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { Callout } from './callout-extension';
@@ -55,10 +55,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     FileAttachment,
     DatabaseNode,
     TableOfContents,
-    Embed,
+    EmbedNode,
     Bookmark,
-    MathBlock,
-    SyncedBlock,
+    MathBlockNode,
+    SyncedBlockNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
