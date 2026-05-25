@@ -9,6 +9,7 @@ import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
 import { Bookmark } from './blocks/bookmark';
+import { ButtonBlock } from './blocks/button';
 import { Column, ColumnList } from './blocks/columns';
 import { DividerNode } from './blocks/divider-node';
 import { EmbedNode } from './blocks/embed-node';
@@ -63,6 +64,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     SyncedBlockNode,
     MermaidNode,
     DividerNode,
+    ButtonBlock,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
@@ -142,6 +144,10 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     renderHTML, no node-view/node-local state.                 SAFE
  *  - Divider        — block atom, NO attrs + NO node-view; static renderHTML
  *                     emits a styled `<hr>`. v0.8.0 P24.                          SAFE
+ *  - ButtonBlock    — block atom, attrs `{ label, href, variant }` only; the
+ *                     React node-view is a label/href/variant editor that writes
+ *                     EVERY edit back to attrs via `updateAttributes` (no node-
+ *                     local persistence). v0.8.0 P24.                            SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

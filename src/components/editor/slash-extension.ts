@@ -225,6 +225,11 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setBookmark('').run(),
   },
   {
+    title: 'Button',
+    description: 'Inline CTA with optional URL',
+    command: (editor) => editor.chain().focus().setButton().run(),
+  },
+  {
     title: 'Equation',
     description: 'Block math rendered with KaTeX',
     command: (editor) => {
