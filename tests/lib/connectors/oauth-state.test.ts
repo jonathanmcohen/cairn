@@ -22,7 +22,14 @@ describe('connectors/oauth-state', () => {
     const { signOAuthState, verifyOAuthState } = await import('@/lib/connectors/oauth-state');
     const signed = signOAuthState({ workspaceId: 'ws-1', databaseId: 'db-1' });
     const [body, sig] = signed.split('.');
-    const bad = `${body}.${sig?.slice(0, -2)}aa`;
+    if (!sig) throw new Error('signed value missing signature segment');
+    // Deterministic mutation: flip the first byte to a value the original
+    // definitely was not. Replacing the LAST 2 chars with 'aa' was probabilistic
+    // — when the original sig already ended in 'aa' (~1/4096 base64url
+    // suffixes) the "tamper" was a no-op and the test fooled itself.
+    const firstChar = sig.charAt(0);
+    const tamperedFirst = firstChar === 'A' ? 'B' : 'A';
+    const bad = `${body}.${tamperedFirst}${sig.slice(1)}`;
     expect(verifyOAuthState(bad)).toBeNull();
   });
 
