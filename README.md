@@ -15,6 +15,91 @@ audit log + observability, per-workspace storage quotas, scheduled backups,
 import/export, search-filter + saved searches, reminders, and bulk page ops
 — without sending your content to anyone else.
 
+## v0.8.0 features
+
+**PWA + mobile polish (G1).** Full Yjs-over-IndexedDB sync: every page the
+user opens is mirrored to IndexedDB for the workspace session; offline edits
+land in the local Yjs doc and CRDT-merge with the server on reconnect via the
+existing Hocuspocus provider. FIFO eviction at `CAIRN_OFFLINE_DOC_LIMIT_MB`
+(default 256MB). Mobile gesture polish: swipe-back on detail pages,
+long-press → context menu on db rows + sidebar pages, pull-to-refresh on
+list/timeline views. WCAG 2.5.5 touch-target audit across v0.7 surfaces.
+
+**Performance pass (G2).** Virtualized page-tree sidebar +
+virtualized db-table view (both via `@tanstack/react-virtual`) sustain 10k+
+row workspaces. Code-split heavy editor extensions (TipTap math, syncedBlock,
+embeds) cut the initial editor bundle by ≥ 200 KB. DB query audit covers the
+top 5 routes by p99 latency; Lighthouse CI budget on `/p/<id>` (`@lhci/cli`)
+fails the build if performance score drops > 5 points or LCP/FCP/TTI
+regress > 10%.
+
+**Quick capture + onboarding (G3).** In-tab hotkey `Cmd+Shift+N` /
+`Ctrl+Shift+N` opens an "Add to inbox" modal from anywhere. PWA
+`share_target` manifest entry registers Cairn as an OS-level share
+destination (Chromium PWA-only; Firefox/Safari do not support `share_target`
+as of v0.8.0). `POST /api/inbox` captures the payload as a child of the
+workspace's lazily-created inbox page (`workspaces.inbox_page_id`). First-run
+onboarding seeds a workspace from a bundled `welcome.zip` template (4 sample
+pages + 1 sample database) on opt-in.
+
+**Command palette + settings hub (G4).** Expanded cmdk action set: open
+settings, switch workspace, create page, create database row, open recent
+(× 10), search across workspace (FTS+semantic), MCP token info. Recent
+commands surface above search results (localStorage-backed). Settings hub
+restructured under a sidebar-nav layout (Account / Workspace / Admin /
+Developer / Notifications / Security) with redirects from the old flat
+paths. Microcopy + empty-state polish across every feature surface.
+
+**A11y v0.7 new-route sweep (G5).** `pnpm test:a11y` Playwright + axe suite
+extended to cover `/settings/developer`, `/settings/automation`,
+`/settings/connectors`, `/settings/admin/webhooks/[id]/deliveries`, and
+`/healthz`. Keyboard nav + focus management asserted on the mint-PAT
+dialog, automation-rule form, and connector OAuth flow.
+
+**Notification center + favorites + backlinks delta (G6).** Global-header
+`<NotificationBell>` with unread badge + right-side `<NotificationDrawer>`
+(focus-trapped, grouped today/this-week/older, per-row deep link, mark
+read, see-all link). Full `/notifications` inbox page with filters
+(type / date / status) and keyset pagination — shared list query with the
+drawer. Favorites: drag-to-reorder via `@dnd-kit/sortable`
+(migration `0030` adds `favorites.position`) plus arrow-key + Enter
+keyboard nav. Backlinks delta: inline transclusion preview popover on
+`[[page-link]]` hovers + unlinked-mentions sidebar section (FTS across
+the workspace, deduped against existing linked references).
+
+**Themes + page covers + icons (G7).** Per-user theme prefs
+(migration `0032`: `user_theme_prefs` table) — accent color (8 presets +
+custom hex), font family (system / serif / mono), page width
+(narrow / wide / full). Applied via CSS custom properties on
+`<html data-accent="...">` — Tailwind v4 `@theme` tokens inherit. Page
+covers (migration `0033`: `pages.cover jsonb`): solid color (16 presets),
+Unsplash (gated behind `CAIRN_UNSPLASH_ACCESS_KEY`, client-side search),
+upload (reuses file-upload path). Page-icon polish: emoji-picker search +
+recently-used row, custom-upload icon path, default-icon randomizer for new
+pages.
+
+**Embeds + new blocks (G8).** Embed allowlist expansion — Loom, Codepen,
+Spotify, Vimeo Showcase, Mermaid (lazy-loaded `mermaid.js`), Excalidraw
+(iframe to `excalidraw.com/embed?...`). CSP `frame-src` updated; drift-test
+guards against accidental allowlist removal. Richer link unfurls extract
+OpenGraph image + description from the existing v0.6 `/api/unfurl` (256KB
+image fetch cap; SSRF guard inherited). New block types: `divider`,
+`button` (CTA with optional URL action), `video` (uploaded MP4/WebM via
+the existing file-upload path).
+
+**Native PDF (G9).** Server-side native PDF export gated behind
+`CAIRN_NATIVE_PDF=1`. Promotes `@playwright/test` to a runtime dep; a
+singleton headless-Chromium browser per process renders the existing
+`pageToPdfHtml(page)` to real `application/pdf` bytes. Browser-print HTML
+remains the default; `?format=pdf-print-html` is an explicit fallback
+selector. MCP `pages.export` tool surfaces the same path with base64-encoded
+PDF bytes inside the JSON-RPC resource envelope.
+
+**Release (G10).** Combined cross-feature smoke
+(`scripts/smoke-v0.8.0.sh`) exercises every v0.8 delta band against a live
+boot. README + SECURITY.md + CHANGELOG v0.8.0 promote; image published to
+`ghcr.io/jonathanmcohen/cairn:0.8.0`.
+
 ## v0.7.0 features
 
 **Authz primitives.** Per-user **Personal Access Tokens** (`cairn_pat_*`)
@@ -422,6 +507,46 @@ the live docker stack (headers, CSP-renders-the-app, anon denial, forged tokens)
 See [SECURITY.md](SECURITY.md) for the STRIDE-lite threat model, the
 trust-boundary→control table, residual risks, and the vulnerability-reporting
 process.
+
+### v0.8.0 security & operations caveats (additions)
+
+- **Playwright runtime surface (`CAIRN_NATIVE_PDF`).** As of v0.8.0,
+  `@playwright/test` is a runtime dependency. The Chromium binary it bundles
+  is large (~150MB image growth); the binary is downloaded only when
+  `CAIRN_NATIVE_PDF=1` is set — the path is otherwise dormant. The PDF route
+  holds a singleton `Browser` instance per process (lazy-launched on first
+  PDF request; closed on `SIGTERM`/`SIGINT` for clean container exit). The
+  MCP `pages.export` tool rejects `format=pdf` with `INVALID_REQUEST` when
+  the env is unset rather than falling back silently to HTML.
+- **Unsplash key handling (`CAIRN_UNSPLASH_ACCESS_KEY`).** Cover-picker
+  Unsplash search is client-side; the key is added to `FORBIDDEN_KEYS`
+  (secret-leak suite) and to `pino`'s redact list. The configuration API
+  never returns the key. If the env is unset, the cover picker degrades to
+  show only the color + upload tabs (no broken Unsplash UI).
+- **Offline-doc IndexedDB cap (`CAIRN_OFFLINE_DOC_LIMIT_MB`,
+  default 256MB).** Every page the user opens is mirrored to IndexedDB for
+  the workspace session. FIFO eviction kicks in when the per-workspace total
+  exceeds the cap (G1 P1). This is client-side state only — no new
+  server-side secrets, no quota impact on the server. Operators who want
+  larger offline windows raise the env; users who want smaller can do
+  nothing (the cap is build-time-baked because `NEXT_PUBLIC_*` env vars are
+  inlined at build time per Next 16 convention).
+- **PWA `share_target` browser support gaps.** Chromium-based PWAs honor
+  the manifest entry (Android share sheet, ChromeOS, Windows/macOS
+  Chromium). Firefox and Safari do not implement `share_target` as of
+  v0.8.0. The hotkey path (`Cmd+Shift+N`) covers every browser; documented
+  in the onboarding wizard so users on unsupported browsers see a tip
+  instead of broken expectations.
+- **CSP `frame-src` additions (G8 P22).** The embed allowlist now includes
+  Loom, Codepen, Spotify, Vimeo Showcase, Mermaid (data-URL), and
+  Excalidraw. Each provider's domain is added to the route-level CSP
+  `frame-src` directive and asserted by the drift test
+  (`tests/lib/security/embed-allowlist.test.ts`) so accidental removal
+  fails the build.
+- **Single-instance ceiling — unchanged.** v0.8 does not add any new
+  in-process schedulers; the ceiling documented in v0.6 / v0.7
+  (backup/reminders/digest tickers + cron_schedules + automation
+  event-subscriber + connector sync orchestrator) is the full set.
 
 ### v0.7.0 security & operations caveats (additions)
 
