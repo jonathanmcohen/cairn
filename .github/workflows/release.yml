@@ -132,6 +132,19 @@ jobs:
           echo "major=${major}" >> "$GITHUB_OUTPUT"
           echo "majorminor=${major}.${minor}" >> "$GITHUB_OUTPUT"
 
+      # Self-hosted Linux runner may not ship jq. The manifest-merge step
+      # uses jq to parse DOCKER_METADATA_OUTPUT_JSON into `-t <tag>` args
+      # for `docker buildx imagetools create`. Drop in a static jq binary
+      # if the runner's PATH doesn't already have one.
+      - name: Ensure jq
+        run: |
+          if ! command -v jq >/dev/null 2>&1; then
+            curl -sSL https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64 \
+              -o "$RUNNER_TEMP/jq"
+            chmod +x "$RUNNER_TEMP/jq"
+            echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
+          fi
+
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
