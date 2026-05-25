@@ -1,5 +1,6 @@
 'use client';
 
+import { PullToRefresh } from '@/components/mobile/pull-to-refresh';
 import { dayKey } from '@/lib/databases/calendar-grid';
 import type { ViewProps } from './table-view';
 
@@ -10,7 +11,7 @@ function toMs(value: unknown): number | null {
   return key === null ? null : new Date(`${key}T00:00:00.000Z`).getTime();
 }
 
-export function TimelineView({ meta, rows, view }: ViewProps) {
+export function TimelineView({ meta, rows, view, onChange }: ViewProps) {
   const config = (view.config ?? {}) as {
     dateProperty?: string | null;
     startProperty?: string | null;
@@ -59,31 +60,33 @@ export function TimelineView({ meta, rows, view }: ViewProps) {
   const span = Math.max(max - min, DAY_MS);
 
   return (
-    <div className="overflow-x-auto p-3">
-      <div className="min-w-[640px] space-y-1">
-        <div className="mb-2 flex justify-between text-[10px] text-muted-foreground">
-          <span>{new Date(min).toISOString().slice(0, 10)}</span>
-          <span>{new Date(max).toISOString().slice(0, 10)}</span>
-        </div>
-        {bars.map((b) => {
-          const left = ((b.start - min) / span) * 100;
-          const width = Math.max(((b.end - b.start) / span) * 100, 2);
-          return (
-            <div key={b.id} className="relative h-7 rounded bg-muted/30">
-              <div
-                className="absolute top-0 flex h-7 items-center overflow-hidden rounded bg-primary/20 px-2 text-xs"
-                style={{ left: `${left}%`, width: `${width}%` }}
-                title={b.title}
-              >
-                <span className="truncate">{b.title}</span>
+    <PullToRefresh onRefresh={async () => onChange()}>
+      <div className="overflow-x-auto p-3">
+        <div className="min-w-[640px] space-y-1">
+          <div className="mb-2 flex justify-between text-[10px] text-muted-foreground">
+            <span>{new Date(min).toISOString().slice(0, 10)}</span>
+            <span>{new Date(max).toISOString().slice(0, 10)}</span>
+          </div>
+          {bars.map((b) => {
+            const left = ((b.start - min) / span) * 100;
+            const width = Math.max(((b.end - b.start) / span) * 100, 2);
+            return (
+              <div key={b.id} className="relative h-7 rounded bg-muted/30">
+                <div
+                  className="absolute top-0 flex h-7 items-center overflow-hidden rounded bg-primary/20 px-2 text-xs"
+                  style={{ left: `${left}%`, width: `${width}%` }}
+                  title={b.title}
+                >
+                  <span className="truncate">{b.title}</span>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
+        <p className="mt-3 text-[11px] text-muted-foreground">
+          Drag-to-reschedule is not available in this version (read-only timeline).
+        </p>
       </div>
-      <p className="mt-3 text-[11px] text-muted-foreground">
-        Drag-to-reschedule is not available in this version (read-only timeline).
-      </p>
-    </div>
+    </PullToRefresh>
   );
 }

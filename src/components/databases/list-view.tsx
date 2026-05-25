@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PullToRefresh } from '@/components/mobile/pull-to-refresh';
 import { type CalcFn, type CalcResult, computeCalcFooter } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
 import { patchCalcFooter } from './calc-footer-row';
@@ -182,29 +183,31 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
       (groupByProp.config as { options?: { id: string; name: string }[] })?.options ?? [];
     const groups = groupRows(rows, groupByProp.id, options);
     return (
-      <div className="flex flex-col gap-4 p-3">
-        {groups.map((g) => (
-          <div key={g.id || 'uncategorized'} className="flex flex-col gap-1">
-            <div className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              {g.name} · {g.rows.length}
+      <PullToRefresh onRefresh={async () => onChange()}>
+        <div className="flex flex-col gap-4 p-3">
+          {groups.map((g) => (
+            <div key={g.id || 'uncategorized'} className="flex flex-col gap-1">
+              <div className="px-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                {g.name} · {g.rows.length}
+              </div>
+              <div className="flex flex-col gap-1">
+                {g.rows.map((r) => (
+                  <Row key={r.row.id} cells={r.cells} />
+                ))}
+              </div>
+              <button
+                type="button"
+                disabled={adding}
+                onClick={() => void addRow({ groupValue: g.id || undefined })}
+                className="self-start rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+              >
+                + Add
+              </button>
             </div>
-            <div className="flex flex-col gap-1">
-              {g.rows.map((r) => (
-                <Row key={r.row.id} cells={r.cells} />
-              ))}
-            </div>
-            <button
-              type="button"
-              disabled={adding}
-              onClick={() => void addRow({ groupValue: g.id || undefined })}
-              className="self-start rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-            >
-              + Add
-            </button>
-          </div>
-        ))}
-        <ListCalcFooter />
-      </div>
+          ))}
+          <ListCalcFooter />
+        </div>
+      </PullToRefresh>
     );
   }
 
@@ -215,35 +218,37 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
   const visible = flattenVisible(forest, collapsed);
 
   return (
-    <div className="flex flex-col gap-1 p-3">
-      {visible.map((node) => {
-        const item = rowById.get(node.row.id);
-        if (!item) return null;
-        return (
-          <Row
-            key={node.row.id}
-            cells={item.cells}
-            depth={node.depth}
-            hasChildren={node.hasChildren}
-            isCollapsed={collapsed.has(node.row.id)}
-            rowId={node.row.id}
-            onToggle={() => toggle(node.row.id)}
-            onAddSub={() => void addRow({ parentRowId: node.row.id })}
-          />
-        );
-      })}
-      {rows.length === 0 && (
-        <div className="px-1 py-4 text-sm text-muted-foreground">No rows yet.</div>
-      )}
-      <button
-        type="button"
-        disabled={adding}
-        onClick={() => void addRow()}
-        className="self-start rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-      >
-        + Add
-      </button>
-      <ListCalcFooter />
-    </div>
+    <PullToRefresh onRefresh={async () => onChange()}>
+      <div className="flex flex-col gap-1 p-3">
+        {visible.map((node) => {
+          const item = rowById.get(node.row.id);
+          if (!item) return null;
+          return (
+            <Row
+              key={node.row.id}
+              cells={item.cells}
+              depth={node.depth}
+              hasChildren={node.hasChildren}
+              isCollapsed={collapsed.has(node.row.id)}
+              rowId={node.row.id}
+              onToggle={() => toggle(node.row.id)}
+              onAddSub={() => void addRow({ parentRowId: node.row.id })}
+            />
+          );
+        })}
+        {rows.length === 0 && (
+          <div className="px-1 py-4 text-sm text-muted-foreground">No rows yet.</div>
+        )}
+        <button
+          type="button"
+          disabled={adding}
+          onClick={() => void addRow()}
+          className="self-start rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+        >
+          + Add
+        </button>
+        <ListCalcFooter />
+      </div>
+    </PullToRefresh>
   );
 }
