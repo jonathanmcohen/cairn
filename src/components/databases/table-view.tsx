@@ -11,6 +11,7 @@ import { CellEditor } from './cell-editor';
 import { columnLayout } from './column-ergonomics';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { DatabaseMeta, RowData } from './use-database-data';
+import { VirtualizedRowBody } from './virtualized-row-body';
 
 export type ViewProps = {
   databaseId: string;
@@ -217,143 +218,108 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
       rows.map((r) => ({ id: r.row.id, parentRowId: r.row.parentRowId })),
     );
     const visible = flattenVisible(forest, collapsed);
+    // The non-grouped path delegates to <VirtualizedRowBody>, which renders its
+    // own sticky header + windowed rows. Cell rendering, frozen-column logic,
+    // and per-row toggle/add-child handlers map 1:1 from the previous <tbody>
+    // (see virtualized-row-body.tsx). The grouped path is unchanged because
+    // groups are usually < 100 rows — virtualization isn't worth the complexity.
     body = (
-      <tbody>
-        {visible.map((node) => {
-          const item = rowById.get(node.row.id);
-          if (!item) return null;
-          const isCollapsed = collapsed.has(node.row.id);
-          return (
-            <LongPressRow
-              key={node.row.id}
-              databaseId={databaseId}
-              rowId={node.row.id}
-              onChange={onChange}
-              className="border-b hover:bg-accent/40"
-            >
-              {columns.map((c, i) => {
-                const stickyStyle =
-                  c.frozen && c.insetInlineStart !== null
-                    ? {
-                        position: 'sticky' as const,
-                        insetInlineStart: `${c.insetInlineStart}px`,
-                        zIndex: 1,
-                      }
-                    : undefined;
-                return (
-                  <td
-                    key={c.id}
-                    style={stickyStyle}
-                    className={c.frozen ? 'bg-card px-3 py-2.5' : 'px-3 py-2.5'}
-                  >
-                    {i === 0 ? (
-                      <span
-                        style={{ paddingInlineStart: `${node.depth * 1.25}rem` }}
-                        className="inline-flex items-center gap-1"
-                      >
-                        {node.hasChildren ? (
-                          <button
-                            type="button"
-                            aria-label={isCollapsed ? 'Expand row' : 'Collapse row'}
-                            aria-expanded={!isCollapsed}
-                            onClick={() => toggle(node.row.id)}
-                            className="size-4 shrink-0 text-muted-foreground"
-                          >
-                            {isCollapsed ? '▸' : '▾'}
-                          </button>
-                        ) : (
-                          <span className="size-4 shrink-0" aria-hidden="true" />
-                        )}
-                        <CellEditor
-                          databaseId={databaseId}
-                          rowId={item.row.id}
-                          property={c.prop}
-                          value={item.cells[c.id]}
-                          onSaved={onChange}
-                        />
-                        <button
-                          type="button"
-                          aria-label="Add sub-item"
-                          disabled={adding}
-                          onClick={() => void addRow(node.row.id)}
-                          className="ml-1 shrink-0 text-xs text-muted-foreground opacity-0 hover:bg-accent focus:opacity-100 group-hover:opacity-100"
-                        >
-                          +
-                        </button>
-                      </span>
-                    ) : (
-                      <CellEditor
-                        databaseId={databaseId}
-                        rowId={item.row.id}
-                        property={c.prop}
-                        value={item.cells[c.id]}
-                        onSaved={onChange}
-                      />
-                    )}
-                  </td>
-                );
-              })}
-            </LongPressRow>
-          );
-        })}
-        {rows.length === 0 && (
-          <tr>
-            <td colSpan={columns.length} className="px-3 py-4 text-center text-muted-foreground">
-              No rows yet.
-            </td>
-          </tr>
-        )}
-      </tbody>
+      <VirtualizedRowBody
+        columns={columns}
+        visible={visible}
+        rowDataById={rowById}
+        collapsed={collapsed}
+        databaseId={databaseId}
+        onToggle={toggle}
+        onChange={onChange}
+        onAddChild={(parentId) => void addRow(parentId)}
+        adding={adding}
+      />
     );
   }
 
+  // The grouped path keeps the original <table>/<thead>/<tbody>/<tfoot> shape
+  // because <CalcFooterRow> is a <tfoot> and must live inside a <table>. The
+  // non-grouped path renders <VirtualizedRowBody> (which contains its own
+  // header) plus a separate single-row <table> just for the calc footer — this
+  // way windowed rows don't fight table layout, but the footer still works.
   return (
-    <div className="-mx-1 overflow-x-auto sm:mx-0">
-      <table className="w-full min-w-[640px] border-collapse text-sm">
-        <colgroup>
-          {columns.map((c) => (
-            <col key={c.id} style={{ width: `${c.width}px` }} />
-          ))}
-        </colgroup>
-        <thead>
-          <tr className="border-b">
-            {columns.map((c) => {
-              const stickyStyle =
-                c.frozen && c.insetInlineStart !== null
-                  ? {
-                      position: 'sticky' as const,
-                      insetInlineStart: `${c.insetInlineStart}px`,
-                      zIndex: 1,
-                    }
-                  : undefined;
-              return (
-                <th
-                  key={c.id}
-                  scope="col"
-                  style={stickyStyle}
-                  className={
-                    c.frozen
-                      ? 'bg-card px-3 py-2 text-left font-medium'
-                      : 'px-3 py-2 text-left font-medium'
-                  }
-                >
-                  {c.prop.name}
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-        {body}
-        <CalcFooterRow
-          databaseId={databaseId}
-          viewId={view.id}
-          viewConfig={view.config}
-          meta={meta}
-          rows={rows}
-          calcFooter={calcFooter}
-          onChange={onChange}
-        />
-      </table>
+    <div className="-mx-1 sm:mx-0">
+      {grouped ? (
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] border-collapse text-sm">
+            <colgroup>
+              {columns.map((c) => (
+                <col key={c.id} style={{ width: `${c.width}px` }} />
+              ))}
+            </colgroup>
+            <thead>
+              <tr className="border-b">
+                {columns.map((c) => {
+                  const stickyStyle =
+                    c.frozen && c.insetInlineStart !== null
+                      ? {
+                          position: 'sticky' as const,
+                          insetInlineStart: `${c.insetInlineStart}px`,
+                          zIndex: 1,
+                        }
+                      : undefined;
+                  return (
+                    <th
+                      key={c.id}
+                      scope="col"
+                      style={stickyStyle}
+                      className={
+                        c.frozen
+                          ? 'bg-card px-3 py-2 text-left font-medium'
+                          : 'px-3 py-2 text-left font-medium'
+                      }
+                    >
+                      {c.prop.name}
+                    </th>
+                  );
+                })}
+              </tr>
+            </thead>
+            {body}
+            <CalcFooterRow
+              databaseId={databaseId}
+              viewId={view.id}
+              viewConfig={view.config}
+              meta={meta}
+              rows={rows}
+              calcFooter={calcFooter}
+              onChange={onChange}
+            />
+          </table>
+        </div>
+      ) : (
+        <>
+          {rows.length === 0 ? (
+            <div className="px-3 py-4 text-center text-sm text-muted-foreground">No rows yet.</div>
+          ) : (
+            <div className="h-[600px] min-h-0">{body}</div>
+          )}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] border-collapse text-sm">
+              <colgroup>
+                {columns.map((c) => (
+                  <col key={c.id} style={{ width: `${c.width}px` }} />
+                ))}
+              </colgroup>
+              <CalcFooterRow
+                databaseId={databaseId}
+                viewId={view.id}
+                viewConfig={view.config}
+                meta={meta}
+                rows={rows}
+                calcFooter={calcFooter}
+                onChange={onChange}
+              />
+            </table>
+          </div>
+        </>
+      )}
       <div className="flex items-center">
         <button
           type="button"
