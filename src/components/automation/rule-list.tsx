@@ -97,7 +97,12 @@ export function RuleList({
       {canMutate ? (
         <div className="flex justify-end">
           {creating ? null : (
-            <Button type="button" onClick={() => setCreating(true)}>
+            <Button
+              type="button"
+              onClick={() => setCreating(true)}
+              // WCAG 2.5.5: enforce a 44px-tall touch target on the page CTA.
+              className="min-h-11"
+            >
               New rule
             </Button>
           )}

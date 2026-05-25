@@ -29,6 +29,8 @@ export default async function ConnectorsPage() {
         <Button
           disabled
           title="Adapter wiring lands in v0.7.0 P20 (Sheets) / P21 (Airtable) / P22 (CSV)."
+          // WCAG 2.5.5: enforce a 44px-tall touch target on the page CTA.
+          className="min-h-11"
         >
           Add connector
         </Button>

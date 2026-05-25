@@ -18,7 +18,8 @@ export function LocaleSwitcher() {
       <select
         value={locale}
         onChange={(e) => setLocale(e.target.value as Locale)}
-        className="rounded border bg-background px-2 py-1 text-sm"
+        // WCAG 2.5.5: enforce ≥44×44 touch target on the locale picker.
+        className="min-h-11 min-w-11 rounded border bg-background px-3 py-2 text-sm"
       >
         {LOCALES.map((loc) => (
           <option key={loc} value={loc}>

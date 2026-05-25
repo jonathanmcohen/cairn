@@ -42,7 +42,13 @@ export function TokenList({ initialTokens }: { initialTokens: DevTokenRow[] }) {
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle>Personal access tokens</CardTitle>
-        <Button onClick={() => setMinting(true)}>Mint new token</Button>
+        <Button
+          onClick={() => setMinting(true)}
+          // WCAG 2.5.5: enforce a 44px-tall touch target on the page CTA.
+          className="min-h-11"
+        >
+          Mint new token
+        </Button>
       </CardHeader>
       <CardContent>
         {tokens.length === 0 ? (

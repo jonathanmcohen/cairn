@@ -33,6 +33,8 @@ export function SidebarDrawer({ children }: { children: ReactNode }) {
           aria-label="Open navigation"
           aria-expanded={open}
           onClick={() => setOpen(true)}
+          // WCAG 2.5.5: enforce a 44×44 touch target on the mobile drawer trigger.
+          className="h-11 w-11"
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -59,6 +61,8 @@ export function SidebarDrawer({ children }: { children: ReactNode }) {
                 size="icon"
                 aria-label="Close navigation"
                 onClick={() => setOpen(false)}
+                // WCAG 2.5.5: enforce a 44×44 touch target on the drawer close button.
+                className="h-11 w-11"
               >
                 <X className="h-5 w-5" />
               </Button>
