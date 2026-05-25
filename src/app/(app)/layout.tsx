@@ -57,7 +57,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
           <SkipLink />
           <div className="flex min-h-screen flex-col md:flex-row">
             <RegisterSw />
-            <SearchPalette />
+            <SearchPalette currentUserId={ctx.userId} />
             <ShortcutSheet />
             <QuickCaptureModal />
             <OnboardingWizard workspaceId={ctx.workspaceId} initialState={onboardingState} />

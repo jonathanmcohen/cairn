@@ -3,22 +3,19 @@
 import { Command } from 'cmdk';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
+import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useState } from 'react';
+import { toast } from 'sonner';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { useT } from '@/lib/i18n/provider';
-import { getShortcuts } from '@/lib/shortcuts/registry';
+import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
+import { getRecents, pushRecent } from '@/lib/palette/recents';
 
 type SearchResult = {
   id: string;
   title: string;
   snippet: string | null;
   breadcrumb: { id: string; title: string }[];
-};
-
-type PaletteAction = {
-  id: string;
-  labelKey: string;
-  run: () => void;
 };
 
 type SavedSearch = {
@@ -28,24 +25,50 @@ type SavedSearch = {
   filters: Record<string, unknown>;
 };
 
-export function SearchPalette() {
+export function SearchPalette({
+  currentUserId,
+  currentPageId = null,
+}: {
+  currentUserId: string;
+  currentPageId?: string | null;
+}) {
   const t = useT();
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [actions, setActions] = useState<PaletteAction[]>([]);
   const [saved, setSaved] = useState<SavedSearch[]>([]);
+  const [recentIds, setRecentIds] = useState<string[]>([]);
 
   useEffect(() => {
     ensureAppShortcuts();
     setActions(
-      getShortcuts('global')
-        .filter((s) => s.kind === 'action')
-        .map((s) => ({ id: s.id, labelKey: s.labelKey, run: s.run })),
+      buildPaletteActions({
+        router: {
+          push: (p: string) => router.push(p as Route),
+          refresh: () => router.refresh(),
+        },
+        currentPageId,
+        currentUserId,
+        setTheme: (next) => setTheme(next),
+        currentTheme: (theme === 'dark' ? 'dark' : theme === 'light' ? 'light' : 'system') as
+          | 'light'
+          | 'dark'
+          | 'system',
+        toast: (m) => toast(m),
+        openNotifications: () => router.push('/notifications' as Route),
+      }),
     );
-  }, []);
+  }, [router, currentPageId, currentUserId, setTheme, theme]);
+
+  // Refresh the recent ids whenever the palette opens.
+  useEffect(() => {
+    if (!open) return;
+    setRecentIds(getRecents(currentUserId).slice(0, 5));
+  }, [open, currentUserId]);
 
   const refreshSaved = useCallback(async () => {
     try {
@@ -142,6 +165,33 @@ export function SearchPalette() {
           className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         <Command.List className="max-h-80 overflow-y-auto border-t">
+          {recentIds.length > 0 && (
+            <Command.Group heading={t('palette.recent')}>
+              {recentIds
+                .map((id) => actions.find((a) => a.id === id))
+                .filter((a): a is PaletteAction => a !== undefined)
+                .map((a) => (
+                  <Command.Item
+                    key={`recent-${a.id}`}
+                    value={`recent:${a.id}`}
+                    onSelect={() => {
+                      setOpen(false);
+                      setQuery('');
+                      pushRecent(currentUserId, a.id);
+                      a.run();
+                    }}
+                    className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span>{a.label}</span>
+                      {a.shortcutKey ? (
+                        <kbd className="text-xs text-muted-foreground">{a.shortcutKey}</kbd>
+                      ) : null}
+                    </div>
+                  </Command.Item>
+                ))}
+            </Command.Group>
+          )}
           {actions.length > 0 && (
             <Command.Group heading={t('palette.actions')}>
               {actions.map((a) => (
@@ -151,11 +201,17 @@ export function SearchPalette() {
                   onSelect={() => {
                     setOpen(false);
                     setQuery('');
+                    pushRecent(currentUserId, a.id);
                     a.run();
                   }}
                   className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
                 >
-                  {t(a.labelKey)}
+                  <div className="flex items-center justify-between">
+                    <span>{a.label}</span>
+                    {a.shortcutKey ? (
+                      <kbd className="text-xs text-muted-foreground">{a.shortcutKey}</kbd>
+                    ) : null}
+                  </div>
                 </Command.Item>
               ))}
             </Command.Group>

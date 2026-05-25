@@ -72,7 +72,6 @@ describe('recents', () => {
 
   it('returns [] when localStorage is unavailable', () => {
     const original = globalThis.localStorage;
-    // @ts-expect-error force-undefined to simulate SSR
     delete (globalThis as { localStorage?: Storage }).localStorage;
     try {
       expect(getRecents('u1')).toEqual([]);
