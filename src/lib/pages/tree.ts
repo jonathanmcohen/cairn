@@ -43,3 +43,64 @@ export async function getPageTree(
   }
   return roots;
 }
+
+/**
+ * One row per visible page, in depth-first order with `depth` annotated.
+ * Used by the virtualized sidebar (v0.8 P4): the client renders a windowed
+ * flat list keyed by index, never the recursive tree, so indentation is
+ * style-only (`paddingLeft: depth * 16px`) and 10k pages don't blow out the
+ * DOM. Same row-set as `getPageTree`; only the post-processing differs.
+ *
+ * Orphans (parentId not in this workspace) become roots — same as `getPageTree`.
+ */
+export type FlatPageNode = {
+  id: string;
+  parentId: string | null;
+  title: string;
+  icon: string | null;
+  depth: number;
+};
+
+export async function flattenedPageTree(
+  db: PostgresJsDatabase<typeof schema>,
+  workspaceId: string,
+): Promise<FlatPageNode[]> {
+  const rows = await db
+    .select({
+      id: schema.pages.id,
+      parentId: schema.pages.parentId,
+      title: schema.pages.title,
+      icon: schema.pages.icon,
+    })
+    .from(schema.pages)
+    .where(and(eq(schema.pages.workspaceId, workspaceId), isNull(schema.pages.deletedAt)))
+    .orderBy(asc(schema.pages.createdAt));
+
+  // Bucket children-by-parent so the DFS doesn't re-scan rows per node.
+  const childrenByParent = new Map<string | null, typeof rows>();
+  const rowIds = new Set(rows.map((r) => r.id));
+  for (const row of rows) {
+    // Treat unknown parents as roots (parent not in workspace / deleted).
+    const key = row.parentId && rowIds.has(row.parentId) ? row.parentId : null;
+    const bucket = childrenByParent.get(key) ?? [];
+    bucket.push(row);
+    childrenByParent.set(key, bucket);
+  }
+
+  const out: FlatPageNode[] = [];
+  const visit = (parent: string | null, depth: number): void => {
+    const bucket = childrenByParent.get(parent) ?? [];
+    for (const row of bucket) {
+      out.push({
+        id: row.id,
+        parentId: row.parentId,
+        title: row.title,
+        icon: row.icon,
+        depth,
+      });
+      visit(row.id, depth + 1);
+    }
+  };
+  visit(null, 0);
+  return out;
+}
