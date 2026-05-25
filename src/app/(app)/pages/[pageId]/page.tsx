@@ -6,6 +6,7 @@ import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import { PageExportMenu } from '@/components/pages/export-menu';
+import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { VersionHistory } from '@/components/pages/version-history';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
@@ -33,7 +34,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   };
 
   return (
-    <div className="mx-auto w-full max-w-3xl px-1 sm:px-0">
+    <PageDetailShell>
       <CoverImage pageId={page.id} initial={page.coverUrl} />
       <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
         <PageIconPicker pageId={page.id} initial={page.icon} />
@@ -66,6 +67,6 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         currentUser={currentUser}
         editable={hasMinRole(ctx.role, 'editor')}
       />
-    </div>
+    </PageDetailShell>
   );
 }

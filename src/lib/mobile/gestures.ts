@@ -24,10 +24,7 @@ export type SwipeBackOptions = {
  *  - Vertical travel must stay below `maxVerticalDriftPx` (so the user's
  *    finger reads as "swipe", not "scroll").
  */
-export function useSwipeBack(
-  ref: RefObject<HTMLElement | null>,
-  options: SwipeBackOptions,
-): void {
+export function useSwipeBack(ref: RefObject<HTMLElement | null>, options: SwipeBackOptions): void {
   const thresholdPx = options.thresholdPx ?? 80;
   const edgeInsetPx = options.edgeInsetPx ?? 24;
   const maxVerticalDriftPx = options.maxVerticalDriftPx ?? 30;
