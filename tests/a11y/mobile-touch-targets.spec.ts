@@ -18,9 +18,9 @@ const V07_ROUTES_NEEDING_PARAM: Record<string, (seeded: { webhookId?: string }) 
 };
 
 const V07_ROUTES: string[] = [
-  '/settings/developer',
-  '/settings/automation',
-  '/settings/connectors',
+  '/settings/developer/api-keys',
+  '/settings/developer/automation',
+  '/settings/developer/connectors',
   '/settings/admin/webhooks/:id/deliveries',
 ];
 
