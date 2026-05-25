@@ -47,14 +47,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
       <CoverBanner cover={cover} alt={page.title} />
       {canEdit && (
         <div className="mb-2 flex justify-end">
-          <CoverPicker
-            pageId={page.id}
-            current={cover}
-            unsplashKey={unsplashKey}
-            onChange={() => {
-              /* server re-renders on next nav; soft refresh acceptable */
-            }}
-          />
+          <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
         </div>
       )}
       <CoverImage pageId={page.id} initial={page.coverUrl} />

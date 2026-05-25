@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,10 +34,17 @@ export type CoverPickerProps = {
   current: PageCover;
   /** Build-time inlined; undefined when the operator did not set the env. */
   unsplashKey?: string;
-  onChange: (cover: PageCover) => void;
+  /**
+   * Optional. Server components mount the picker without a callback —
+   * Next.js forbids passing functions from RSC → Client Component, so we
+   * fall back to `router.refresh()` to re-fetch the cover. Only Client
+   * Components with optimistic local state need to pass a function.
+   */
+  onChange?: (cover: PageCover) => void;
 };
 
 export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPickerProps) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<TabKey>('color');
   const [customHex, setCustomHex] = useState('');
@@ -48,7 +56,8 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
       body: JSON.stringify(next),
     });
     if (res.ok) {
-      onChange(next);
+      if (onChange) onChange(next);
+      else router.refresh();
       setOpen(false);
     }
   }
