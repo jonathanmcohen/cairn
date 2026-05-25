@@ -7,7 +7,13 @@ type Db = PostgresJsDatabase<typeof schema>;
 /** Max number of recent pages retained per user. Pruned on each recordVisit. */
 export const RECENTS_CAP = 20;
 
-export type PrefEntry = { pageId: string; title: string; icon: string | null };
+export type PrefEntry = {
+  /** `user_page_prefs.id` — stable row id for reorder/remove targeting. */
+  id: string;
+  pageId: string;
+  title: string;
+  icon: string | null;
+};
 
 type Scope = { userId: string; workspaceId: string };
 
@@ -163,6 +169,7 @@ export async function recordVisit(db: Db, input: Scope & { pageId: string }): Pr
 export async function listFavorites(db: Db, scope: Scope): Promise<PrefEntry[]> {
   const rows = await db
     .select({
+      id: schema.userPagePrefs.id,
       pageId: schema.userPagePrefs.pageId,
       title: schema.pages.title,
       icon: schema.pages.icon,
@@ -178,13 +185,14 @@ export async function listFavorites(db: Db, scope: Scope): Promise<PrefEntry[]> 
       ),
     )
     .orderBy(asc(schema.userPagePrefs.position), asc(schema.userPagePrefs.createdAt));
-  return rows.map((r) => ({ pageId: r.pageId, title: r.title, icon: r.icon }));
+  return rows.map((r) => ({ id: r.id, pageId: r.pageId, title: r.title, icon: r.icon }));
 }
 
 /** Most-recently-visited pages for the user, capped to RECENTS_CAP. */
 export async function listRecents(db: Db, scope: Scope): Promise<PrefEntry[]> {
   const rows = await db
     .select({
+      id: schema.userPagePrefs.id,
       pageId: schema.userPagePrefs.pageId,
       title: schema.pages.title,
       icon: schema.pages.icon,
@@ -201,5 +209,5 @@ export async function listRecents(db: Db, scope: Scope): Promise<PrefEntry[]> {
     )
     .orderBy(desc(schema.userPagePrefs.lastVisitedAt))
     .limit(RECENTS_CAP);
-  return rows.map((r) => ({ pageId: r.pageId, title: r.title, icon: r.icon }));
+  return rows.map((r) => ({ id: r.id, pageId: r.pageId, title: r.title, icon: r.icon }));
 }
