@@ -16,6 +16,17 @@ test.describe('app shell a11y (WCAG 2.1 AA)', () => {
     await page.goto('/'); // app shell (the (app) route group dashboard)
     await expect(page.getByRole('navigation').first()).toBeVisible(); // sidebar landmark
     await expect(page.getByRole('main')).toBeVisible(); // content landmark
+    // `/` redirects to `/pages/<landing>` which mounts the TipTap editor.
+    // The editor's contenteditable is mapped by axe to an implicit ARIA
+    // textbox; without its accessible-name attrs `aria-input-field-name`
+    // (serious) fires. The attrs land on the contenteditable as soon as
+    // ProseMirror mounts, but axe can race the hydration window in CI.
+    // Wait until the editor element exists AND has its `role="textbox"`
+    // before running axe so the result is deterministic.
+    await page
+      .locator('.ProseMirror[role="textbox"][aria-label="Page content"]')
+      .first()
+      .waitFor({ state: 'attached', timeout: 10_000 });
     await expectNoA11yViolations(page, 'app shell');
   });
 
