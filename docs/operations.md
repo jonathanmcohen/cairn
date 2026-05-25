@@ -103,13 +103,21 @@ sweep evicts idle sessions every 60 seconds.
 
 ## CI / Release runners
 
-Both `.github/workflows/ci.yml` and `.github/workflows/release.yml` run on
-GitHub-hosted runners — `ubuntu-latest` for CI + amd64 release build,
-`ubuntu-24.04-arm` for the arm64 release build. The arm64 runner is native
-(no QEMU emulation, which deadlocked the heavier image on x64). Multi-arch
-manifest merge + the GitHub Release step run on `ubuntu-latest`.
+All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`,
+`postgres-pgvector-image.yml`) run on **self-hosted runners**:
 
-There is no self-hosted-runner support in either workflow.
+- amd64: `[self-hosted, linux, x64]`
+- arm64 (release matrix only): `[self-hosted, linux, arm64]`
+
+Runners must have Docker + recent `pnpm`/`node` available. Required labels
+match the values above verbatim. The arm64 runner is used only by the
+release workflow's per-arch image build; everything else (CI, lighthouse,
+manifest merge, GitHub Release step, postgres-pgvector image build) runs
+on the x64 runner.
+
+GitHub-hosted runners are NOT used — workflow billing for hosted minutes
+was exhausted mid-v0.8.0, and self-hosted has been the operating
+posture since.
 
 ## Postgres image (v0.8.0)
 

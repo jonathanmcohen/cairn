@@ -21,7 +21,7 @@ env:
 
 jobs:
   ci:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     # ghcr.io/jonathanmcohen/postgres-pgvector is a private package; the
     # Testcontainers helper pulls it on `pnpm test`. `packages: read` lets
     # the docker login step exchange GITHUB_TOKEN for a pull-capable creds
@@ -75,7 +75,7 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     # gitleaks-action calls the PR REST API to scope the scan and (optionally)
     # post review comments — both require pull-requests: write on top of the
     # default contents: read. Without these, the action throws
@@ -118,7 +118,7 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     # Private GHCR image needs packages: read for the services credentials
     # block + the explicit docker login step (used by the Playwright web
     # server which spawns its own db:migrate before pnpm test:a11y).
