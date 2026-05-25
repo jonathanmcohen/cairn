@@ -83,6 +83,12 @@ jobs:
           }
           EOF
           echo "DOCKER_CONFIG=$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
+          # Docker Desktop puts its socket at ~/.docker/run/docker.sock when
+          # the "Allow default Docker socket to be used" setting is OFF.
+          # Point DOCKER_HOST at that user-scoped socket so buildx + push
+          # don't try /var/run/docker.sock (which doesn't exist on macOS
+          # without the default-socket toggle enabled).
+          echo "DOCKER_HOST=unix://$HOME/.docker/run/docker.sock" >> "$GITHUB_ENV"
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
