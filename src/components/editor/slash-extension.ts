@@ -208,7 +208,7 @@ const items: SlashItem[] = [
   },
   {
     title: 'Embed',
-    description: 'Embed a YouTube, Vimeo, Figma, gist, or CodeSandbox URL',
+    description: 'Embed a YouTube/Vimeo/Loom/Figma/gist/CodeSandbox/Codepen/Spotify/Excalidraw URL',
     command: (editor) => {
       void ensureLazyExtension(editor, 'embed').then(() => {
         editor
@@ -239,6 +239,15 @@ const items: SlashItem[] = [
     command: (editor) => {
       void ensureLazyExtension(editor, 'syncedBlock').then(() => {
         editor.chain().focus().setSyncedBlock().run();
+      });
+    },
+  },
+  {
+    title: 'Mermaid diagram',
+    description: 'Render a Mermaid diagram (flowchart, sequence, ER) as SVG',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'mermaid').then(() => {
+        editor.chain().focus().setMermaid().run();
       });
     },
   },

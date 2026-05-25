@@ -12,6 +12,7 @@ import { Bookmark } from './blocks/bookmark';
 import { Column, ColumnList } from './blocks/columns';
 import { EmbedNode } from './blocks/embed-node';
 import { MathBlockNode } from './blocks/math-node';
+import { MermaidNode } from './blocks/mermaid-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
@@ -59,6 +60,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     Bookmark,
     MathBlockNode,
     SyncedBlockNode,
+    MermaidNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,

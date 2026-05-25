@@ -44,7 +44,7 @@ function EmbedView({ node, editor, updateAttributes }: NodeViewProps) {
         <input
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Paste a YouTube, Vimeo, Figma, gist, or CodeSandbox URL"
+          placeholder="Paste a YouTube/Vimeo/Loom/Figma/gist/CodeSandbox/Codepen/Spotify/Excalidraw URL"
           className="flex-1 rounded border bg-background px-2 py-1 text-sm"
         />
         <button

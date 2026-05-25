@@ -7,6 +7,7 @@ import { BookmarkNode } from './blocks/bookmark-node';
 import { Column, ColumnList } from './blocks/columns';
 import { EmbedNode } from './blocks/embed-node';
 import { MathBlockNode } from './blocks/math-node';
+import { MermaidNode } from './blocks/mermaid-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { ToggleNode } from './blocks/toggle-node';
@@ -56,6 +57,7 @@ export function schemaExtensions() {
     BookmarkNode,
     MathBlockNode,
     SyncedBlockNode,
+    MermaidNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
