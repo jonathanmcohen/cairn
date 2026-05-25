@@ -13,9 +13,7 @@ const JsonBody = z.object({
   url: z.url().nullable().optional().default(null),
 });
 
-type ReadResult =
-  | { ok: true; payload: InboxCapturePayload }
-  | { ok: false; status: number };
+type ReadResult = { ok: true; payload: InboxCapturePayload } | { ok: false; status: number };
 
 async function readPayload(req: Request): Promise<ReadResult> {
   const contentType = req.headers.get('content-type') ?? '';

@@ -46,10 +46,7 @@ describe('ensureInboxPage', () => {
       .where(eq(schema.workspaces.id, u.workspaceId));
     expect(afterRow[0]?.inboxPageId).toBe(pageId);
 
-    const inboxPage = await db
-      .select()
-      .from(schema.pages)
-      .where(eq(schema.pages.id, pageId));
+    const inboxPage = await db.select().from(schema.pages).where(eq(schema.pages.id, pageId));
     expect(inboxPage[0]?.title).toBe('Inbox');
     expect(inboxPage[0]?.parentId).toBeNull();
   });
