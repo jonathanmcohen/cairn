@@ -185,3 +185,67 @@ describe('<VirtualizedRowBody>', () => {
     expect(performance.now() - start).toBeLessThan(200);
   });
 });
+
+describe('<VirtualizedRowBody> — sticky-header regressions', () => {
+  it('keeps the header sticky when the first column is frozen', () => {
+    const cols = [col('c1', 'Title', true, 0), col('c2', 'Status')];
+    const visible = Array.from({ length: 500 }, (_, i) => row(`r-${i}`));
+    const rowDataById = new Map(visible.map((v) => [v.row.id, rowData(v.row.id)]));
+    const { container } = render(
+      <VirtualizedRowBody
+        columns={cols}
+        visible={visible}
+        rowDataById={rowDataById}
+        collapsed={new Set()}
+        databaseId="db1"
+        onToggle={() => {}}
+        onChange={() => {}}
+        onAddChild={() => {}}
+        adding={false}
+      />,
+    );
+    const header = container.querySelector('[data-virtual-header]') as HTMLElement;
+    expect(header.style.position).toBe('sticky');
+    expect(header.style.top).toBe('0px');
+    // The frozen column header keeps its own sticky-inline-start (zIndex must
+    // outrank the row-body sticky-inline-start so the corner cell wins both axes).
+    const frozenColHeader = header.querySelector('[role="columnheader"]') as HTMLElement;
+    expect(frozenColHeader.style.position).toBe('sticky');
+    expect(Number(frozenColHeader.style.zIndex)).toBeGreaterThan(0);
+  });
+
+  it('header stays mounted even when the windowed body re-renders rows', () => {
+    const visible = Array.from({ length: 1000 }, (_, i) => row(`r-${i}`));
+    const rowDataById = new Map(visible.map((v) => [v.row.id, rowData(v.row.id)]));
+    const { container, rerender } = render(
+      <VirtualizedRowBody
+        columns={COLUMNS}
+        visible={visible}
+        rowDataById={rowDataById}
+        collapsed={new Set()}
+        databaseId="db1"
+        onToggle={() => {}}
+        onChange={() => {}}
+        onAddChild={() => {}}
+        adding={false}
+      />,
+    );
+    const firstHeader = container.querySelector('[data-virtual-header]');
+    rerender(
+      <VirtualizedRowBody
+        columns={COLUMNS}
+        visible={visible.slice(0, 500)}
+        rowDataById={rowDataById}
+        collapsed={new Set()}
+        databaseId="db1"
+        onToggle={() => {}}
+        onChange={() => {}}
+        onAddChild={() => {}}
+        adding={false}
+      />,
+    );
+    const secondHeader = container.querySelector('[data-virtual-header]');
+    // The header element should be the same DOM node (preserved across re-renders).
+    expect(secondHeader).toBe(firstHeader);
+  });
+});
