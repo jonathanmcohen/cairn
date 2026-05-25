@@ -17,6 +17,11 @@ const EMBED_FRAME_HOSTS = [
   'https://www.figma.com',
   'https://gist.github.com',
   'https://codesandbox.io',
+  'https://www.loom.com',
+  'https://codepen.io',
+  'https://open.spotify.com',
+  'https://vimeo.com',
+  'https://excalidraw.com',
 ] as const;
 
 export type CspOptions = {
