@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { observeHttp } from '@/lib/observability/metrics';
 import { routeTemplate } from '@/lib/observability/route-template';
 import { buildCsp } from '@/lib/security/headers';
+import { resolveSettingsRedirect } from '@/lib/settings/redirects';
 
 const PUBLIC_PATHS = [
   '/login',
@@ -63,6 +64,18 @@ export function proxy(req: NextRequest) {
     isProd: process.env.NODE_ENV === 'production',
     publicPath: pathname.startsWith('/p/'),
   });
+
+  // v0.8.0 G4 P12 — settings hub restructure. Legacy paths 308-redirect to
+  // the new sectioned home; non-settings paths pass through. Runs BEFORE the
+  // auth gate so logged-out hits get the new path baked into `?next=`.
+  const settingsRedirect = resolveSettingsRedirect(pathname);
+  if (settingsRedirect) {
+    const dest = req.nextUrl.clone();
+    dest.pathname = settingsRedirect;
+    const res = NextResponse.redirect(dest, 308);
+    res.headers.set('Content-Security-Policy', csp);
+    return record(res, start, method, pathname);
+  }
 
   if (!hasSession && !isPublic) {
     const url = req.nextUrl.clone();
