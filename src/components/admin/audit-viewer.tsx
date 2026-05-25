@@ -62,6 +62,9 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'page_acl.created': 'Page ACL granted',
   'page_acl.changed': 'Page ACL permission changed',
   'page_acl.removed': 'Page ACL removed',
+  // v0.8.0 G3 P8 — quick-capture inbox events.
+  'inbox.captured': 'Inbox capture saved',
+  'inbox.triaged': 'Inbox item triaged',
 };
 
 function actionLabel(action: string): string {

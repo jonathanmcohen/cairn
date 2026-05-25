@@ -40,6 +40,10 @@ export const pages = pgTable(
         type: 'doc',
         content: [{ type: 'paragraph' }],
       }),
+    // v0.8.0 G3 P8 — free-form per-page metadata (inbox flags, capturedAt,
+    // sourceUrl, systemPage marker, etc). Defaults to {} so existing rows
+    // and inserts that don't set it remain valid.
+    metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
     contentText: text('content_text').notNull().default(''),
     contentTsv: tsvector('content_tsv'),
     createdBy: uuid('created_by')
