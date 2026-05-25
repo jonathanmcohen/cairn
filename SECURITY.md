@@ -37,6 +37,67 @@ Cairn is a single Next.js container + Postgres for homelab/small-team deployment
 | Audit log (v0.6.0) | Repudiation, Info-disclosure | Sensitive actions write an `audit_log` row in the same transaction; `assertAuditMetadataClean` redaction guard rejects metadata containing secrets; admin viewer at `/settings/admin/audit` (admin+) |
 | Supply chain | Tampering | `pnpm audit --audit-level=high` (time-boxed reviewed ignore list); lockfile; release SLSA provenance/SBOM on public deploys |
 
+## v0.8.0 additions
+
+### New secret class — Unsplash access key
+- **`CAIRN_UNSPLASH_ACCESS_KEY`** is added to `FORBIDDEN_KEYS` (the v0.7
+  secret-leak suite asserts the key never appears in any API response,
+  audit metadata, token-usage log, or workspace-archive export). The same
+  key is added to `pino`'s redact list. The cover picker uses the key
+  client-side ONLY via a search-flow that hits Unsplash directly; the
+  server never proxies the search. The configuration API never returns the
+  key (explicit assertion).
+- If the env is unset, the cover picker degrades to color + upload tabs
+  only — no broken UI surface, no key-leak failure mode.
+
+### New runtime surface — Playwright + Chromium (opt-in)
+- **`@playwright/test`** moves from dev-dep to runtime dep in v0.8.0
+  (G9 P25). The Chromium binary it bundles adds ~150MB to the image when
+  `CAIRN_NATIVE_PDF=1` is used; the binary is otherwise dormant.
+- The native PDF route holds a singleton `Browser` instance per process
+  (lazy-launched on first request, closed on `SIGTERM`/`SIGINT`). The
+  `pageToPdf` helper does not accept arbitrary URLs — it renders the
+  in-process `pageToPdfHtml(page)` string via `page.setContent(...)`, so
+  there is no SSRF surface from this path.
+- The MCP `pages.export` tool with `format=pdf` rejects with
+  `INVALID_REQUEST` when `CAIRN_NATIVE_PDF` is unset (does not silently
+  fall back to HTML — the MCP envelope cannot deliver a "Save as PDF"
+  HTML page).
+
+### New client-side persistence — Yjs over IndexedDB
+- Every opened page is mirrored to IndexedDB for the workspace session
+  (G1 P1). This is **client-side state only** — no new server-side
+  secrets, no quota impact on the server.
+- FIFO eviction at `CAIRN_OFFLINE_DOC_LIMIT_MB` (default 256MB) keeps the
+  browser's storage from growing without bound. The per-workspace index
+  + eviction job live in `src/lib/offline/{doc-index,evict}.ts` and are
+  unit-tested against `fake-indexeddb`.
+- IndexedDB is per-browser-tab — no cross-instance synchronization
+  concern. If a user opens the workspace in two tabs, each maintains its
+  own mirror; Yjs CRDT reconciles edits when both tabs reconnect.
+
+### New CSP `frame-src` entries (G8 P22)
+- The embed allowlist adds: Loom (`*.loom.com`), Codepen
+  (`*.codepen.io`), Spotify (`*.spotify.com`), Vimeo Showcase
+  (`*.vimeo.com`), Mermaid (rendered as a data-URL iframe — no
+  third-party origin), Excalidraw (`excalidraw.com`). Each addition is
+  reflected in the per-route CSP `frame-src` directive and asserted by
+  `tests/lib/security/embed-allowlist.test.ts` so accidental removal
+  fails the build.
+
+### New manifest entry — `share_target`
+- The PWA `manifest.webmanifest` declares a `share_target` accepting
+  title + text + URL POSTed to `/api/inbox`. Browser support is
+  Chromium-only as of v0.8.0; Firefox + Safari ignore the entry. The
+  route enforces the same PAT / session gate as every other `/api/...`
+  surface — no anonymous capture path.
+
+### Operational ceilings — unchanged
+- No new in-process schedulers in v0.8.0. The single-instance ceiling
+  documented in v0.7 (cron_schedules + automation event-subscriber +
+  connector sync orchestrator, on top of the v0.6 backup/reminders/digest
+  tickers) is the full set.
+
 ## v0.7.0 additions
 
 ### New token class
