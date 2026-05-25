@@ -98,6 +98,31 @@ describe('resignDocumentImages', () => {
     expect(parsed.exp).toBeGreaterThan(Math.floor(Date.now() / 1000));
   });
 
+  // v0.8.0 P24: the video upload node carries a `fileId` + `mimeType` and a
+  // transient `src` override that the public-render path fills with a fresh
+  // signed `/api/files/<id>?sig=&exp=` URL. The editor's renderHTML prefers
+  // that override over the bare `/api/files/<id>` fallback.
+  it("re-signs a video node's src from its fileId", () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        {
+          type: 'video',
+          attrs: { fileId: 'vid', mimeType: 'video/mp4', src: null },
+        },
+      ],
+    };
+    const out = resignDocumentImages(doc, SECRET) as {
+      content: Array<{ attrs?: { src?: string | null } }>;
+    };
+    const src = out.content[0]?.attrs?.src as unknown as string;
+    const parsed = parseSignedUrl(src);
+    expect(parsed.id).toBe('vid');
+    expect(
+      verifyFileUrl({ fileId: 'vid', expiresAt: parsed.exp, sig: parsed.sig, secret: SECRET }),
+    ).toBe(true);
+  });
+
   it("re-signs a fileAttachment node's href from its fileId", () => {
     const doc = {
       type: 'doc',

@@ -42,10 +42,15 @@ function signedUrlFor(fileId: string, secret: string): string {
 }
 
 /**
- * Return a deep copy of `doc` with every cairnImage/fileAttachment node's URL
- * attribute (src / href) re-minted as a fresh 1-hour signed `/api/files/<id>` URL
- * derived from the node's `fileId`. Nodes without a `fileId` are left untouched.
- * Pure: the input document is not mutated.
+ * Return a deep copy of `doc` with every file-bearing node's URL attribute
+ * re-minted as a fresh 1-hour signed `/api/files/<id>` URL derived from the
+ * node's `fileId`:
+ *   - `cairnImage` → `src`
+ *   - `fileAttachment` → `href`
+ *   - `video` (v0.8.0 P24) → `src` (transient public-render override read by
+ *     `VideoNode.renderHTML`; never persisted into the editing surface)
+ * Nodes without a `fileId` are left untouched. Pure: the input document is
+ * not mutated.
  */
 export function resignDocumentImages(doc: unknown, secret: string): unknown {
   function walk(node: ProseNode): ProseNode {
@@ -56,6 +61,8 @@ export function resignDocumentImages(doc: unknown, secret: string): unknown {
         next.attrs = { ...next.attrs, src: signedUrlFor(fileId, secret) };
       } else if (next.type === 'fileAttachment') {
         next.attrs = { ...next.attrs, href: signedUrlFor(fileId, secret) };
+      } else if (next.type === 'video') {
+        next.attrs = { ...next.attrs, src: signedUrlFor(fileId, secret) };
       }
     }
     if (Array.isArray(next.content)) {
