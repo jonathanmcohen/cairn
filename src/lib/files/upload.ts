@@ -16,6 +16,11 @@ const ALLOWED = new Set([
   'text/plain',
   'text/markdown',
   'application/zip',
+  // v0.8.0 P24: video upload block (mp4/webm). Quota enforcement (v0.6.0 P21)
+  // already applies to every storeUpload call regardless of MIME — extending
+  // the allowlist is the only change needed here.
+  'video/mp4',
+  'video/webm',
 ]);
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60;

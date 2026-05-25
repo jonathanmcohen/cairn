@@ -230,6 +230,11 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setButton().run(),
   },
   {
+    title: 'Video',
+    description: 'Upload an MP4 or WebM video',
+    command: (editor) => editor.chain().focus().setVideo().run(),
+  },
+  {
     title: 'Equation',
     description: 'Block math rendered with KaTeX',
     command: (editor) => {

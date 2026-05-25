@@ -69,4 +69,23 @@ describe('storeUpload', () => {
       }),
     ).rejects.toThrow(/mime/i);
   });
+
+  // v0.8.0 P24: the video upload block (mp4/webm) added these two MIME types
+  // to the allowlist. Quota enforcement (v0.6.0 P21) already applies to every
+  // upload regardless of MIME, so no extra plumbing is needed here.
+  it.each(['video/mp4', 'video/webm'])('accepts %s as an allowed MIME type', async (mime) => {
+    const u = await createTestWorkspaceWithUser(db);
+    const store = new LocalDiskStorage(root);
+    const result = await storeUpload({
+      db,
+      storage: store,
+      secret: SECRET,
+      workspaceId: u.workspaceId,
+      uploadedBy: u.userId,
+      filename: mime === 'video/mp4' ? 'clip.mp4' : 'clip.webm',
+      mimeType: mime,
+      body: Buffer.from('FAKEVIDEO'),
+    });
+    expect(result.file.mimeType).toBe(mime);
+  });
 });

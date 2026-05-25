@@ -18,6 +18,7 @@ import { MermaidNode } from './blocks/mermaid-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
+import { VideoBlock } from './blocks/video';
 import { Callout } from './callout-extension';
 import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
@@ -65,6 +66,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     MermaidNode,
     DividerNode,
     ButtonBlock,
+    VideoBlock,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
@@ -148,6 +150,14 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     React node-view is a label/href/variant editor that writes
  *                     EVERY edit back to attrs via `updateAttributes` (no node-
  *                     local persistence). v0.8.0 P24.                            SAFE
+ *  - VideoBlock     — block atom, attrs `{ fileId, mimeType, src }` only. The
+ *                     React node-view shows a file picker until `fileId` lands,
+ *                     then renders `<video controls>` whose `<source src>` is
+ *                     the `src` override (set by `resignDocumentImages` on the
+ *                     public render path) or `/api/files/<fileId>` otherwise.
+ *                     `src` is a transient post-resign attr; peer collaborators
+ *                     can carry it but each re-derives a signed URL at view
+ *                     time. No node-local mutable state. v0.8.0 P24.            SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {
