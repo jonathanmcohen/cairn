@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatIcon, parseIcon, type ParsedIcon } from '@/lib/pages/icon-format';
+import { formatIcon, type ParsedIcon, parseIcon } from '@/lib/pages/icon-format';
 
 describe('parseIcon', () => {
   it('returns null for null/empty', () => {

@@ -11,12 +11,9 @@
  * will fail to load it as an image, the user will simply see no icon, no crash.
  */
 
-const UUID_RE =
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
-export type ParsedIcon =
-  | { kind: 'emoji'; value: string }
-  | { kind: 'file'; value: string };
+export type ParsedIcon = { kind: 'emoji'; value: string } | { kind: 'file'; value: string };
 
 export function parseIcon(stored: string | null): ParsedIcon | null {
   if (!stored) return null;

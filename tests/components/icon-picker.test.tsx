@@ -1,0 +1,51 @@
+// @vitest-environment jsdom
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { IconPicker } from '@/components/icon-picker';
+
+// vitest config does not enable `globals`, so @testing-library/react cannot
+// auto-register its afterEach cleanup. Without it, repeated render() calls
+// accumulate in document.body across tests.
+
+beforeEach(() => {
+  window.localStorage.clear();
+});
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+describe('IconPicker', () => {
+  it('renders the current emoji on the trigger button', () => {
+    render(<IconPicker value="emoji::🪨" onChange={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Change icon' }).textContent).toContain('🪨');
+  });
+
+  it('opens the popover when the trigger is clicked + shows the search input', () => {
+    render(<IconPicker value={null} onChange={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
+    expect(screen.getByLabelText('Search emoji')).toBeTruthy();
+  });
+
+  it('writes recently-used to localStorage when an emoji is picked from the recently-used row', () => {
+    // Pre-seed recent with a couple emoji so the row renders.
+    window.localStorage.setItem('cairn:recent-emojis', JSON.stringify(['🪨', '📌']));
+    const onChange = vi.fn();
+    render(<IconPicker value={null} onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use 📌' }));
+    expect(onChange).toHaveBeenCalledWith('emoji::📌');
+    // Picking 📌 moves it to the front of recents.
+    const after = JSON.parse(window.localStorage.getItem('cairn:recent-emojis') ?? '[]');
+    expect(after[0]).toBe('📌');
+  });
+
+  it('"Remove" clears the icon', () => {
+    const onChange = vi.fn();
+    render(<IconPicker value="emoji::🪨" onChange={onChange} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
+    expect(onChange).toHaveBeenCalledWith(null);
+  });
+});
