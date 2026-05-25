@@ -95,6 +95,7 @@
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
     "@biomejs/biome": "^2.4.15",
+    "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.60.0",
     "@serwist/cli": "^9.5.11",
     "@serwist/next": "^9.5.11",
