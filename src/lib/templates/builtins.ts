@@ -68,6 +68,62 @@ const BUILTINS: { name: string; kind: 'page' | 'database'; payload: TemplatePayl
     },
   },
   {
+    name: 'Welcome to Cairn',
+    kind: 'page',
+    payload: {
+      kind: 'page',
+      rootPageId: 'wel-root',
+      pages: [
+        {
+          id: 'wel-root',
+          parentId: null,
+          title: 'Welcome to Cairn',
+          icon: '👋',
+          content: doc(
+            heading('Welcome to your new workspace'),
+            para(
+              'Cairn is a self-hosted, block-based notes app. This welcome page is a starting point — drag, edit, and delete anything you see.',
+            ),
+            heading('What to try next'),
+            para('• Press / inside any page to insert a block (heading, list, image, database).'),
+            para('• Press Cmd+K to search across pages.'),
+            para('• Press Cmd+Shift+N to capture a quick thought to your inbox.'),
+          ),
+        },
+        {
+          id: 'wel-home',
+          parentId: 'wel-root',
+          title: 'Home',
+          icon: '🏠',
+          content: doc(
+            heading('Pinned pages'),
+            para('Use this page as your daily landing spot. Add links to the pages you open most.'),
+          ),
+        },
+        {
+          id: 'wel-tasks',
+          parentId: 'wel-root',
+          title: 'Tasks',
+          icon: '✅',
+          content: doc(heading('Today'), para(), heading('This week'), para()),
+        },
+        {
+          id: 'wel-notes',
+          parentId: 'wel-root',
+          title: 'Notes & ideas',
+          icon: '💡',
+          content: doc(
+            heading('Quick thoughts'),
+            para(
+              'Drop unsorted thoughts here. Move them into folders later — or capture from anywhere with Cmd+Shift+N.',
+            ),
+          ),
+        },
+      ],
+      databases: [],
+    },
+  },
+  {
     name: 'Project tracker',
     kind: 'database',
     payload: {
