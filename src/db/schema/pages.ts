@@ -28,6 +28,9 @@ export const pages = pgTable(
     title: text('title').notNull().default('Untitled'),
     icon: text('icon'),
     coverUrl: text('cover_url'),
+    // v0.8.0 G7 P20 — richer cover descriptor (color | unsplash | upload).
+    // `{}` means "no banner"; renderer prefers this over legacy `coverUrl`.
+    cover: jsonb('cover').$type<unknown>().notNull().default({}),
     published: boolean('published').notNull().default(false),
     publicSlug: text('public_slug').unique(),
     linkPasswordHash: text('link_password_hash'),

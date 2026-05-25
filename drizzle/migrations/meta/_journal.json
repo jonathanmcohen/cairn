@@ -232,6 +232,13 @@
       "when": 1779733996346,
       "tag": "0032_tiresome_korath",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1779734986473,
+      "tag": "0033_quick_klaw",
+      "breakpoints": true
     }
   ]
 }

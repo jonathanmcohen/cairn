@@ -1,0 +1,1 @@
+ALTER TABLE "pages" ADD COLUMN "cover" jsonb DEFAULT '{}'::jsonb NOT NULL;
