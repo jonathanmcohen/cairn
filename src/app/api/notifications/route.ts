@@ -1,9 +1,10 @@
-import { and, count, desc, eq, isNull, lt } from 'drizzle-orm';
+import { and, count, eq, isNull } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext, HttpError, requireWorkspace } from '@/lib/auth/require-role';
+import { listNotifications } from '@/lib/notifications/list';
 
 const Query = z.object({
   unreadOnly: z
@@ -11,7 +12,11 @@ const Query = z.object({
     .nullish()
     .transform((v) => v === 'true'),
   limit: z.coerce.number().int().min(1).max(50).default(20),
-  cursor: z.string().datetime().nullish(),
+  // Accept either the new keyset cursor (base64url) or the legacy ISO-datetime
+  // cursor the v0.3 inline query emitted, so in-flight clients during the P15
+  // rollout don't 400. The helper decodes the new shape; if decoding fails we
+  // fall through to a `createdAt < cursorIso` legacy interpretation below.
+  cursor: z.string().nullish(),
 });
 
 export async function GET(req: Request): Promise<Response> {
@@ -25,37 +30,28 @@ export async function GET(req: Request): Promise<Response> {
     });
 
     const db = getDb();
-    const scope = and(
-      eq(schema.notifications.userId, ctx.userId),
-      eq(schema.notifications.workspaceId, ctx.workspaceId),
-    );
-    const where = and(
-      scope,
-      unreadOnly ? isNull(schema.notifications.readAt) : undefined,
-      cursor ? lt(schema.notifications.createdAt, new Date(cursor)) : undefined,
-    );
-
-    const rows = await db
-      .select()
-      .from(schema.notifications)
-      .where(where)
-      .orderBy(desc(schema.notifications.createdAt))
-      .limit(limit + 1);
-
-    const hasMore = rows.length > limit;
-    const notifications = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore
-      ? (notifications.at(-1)?.createdAt.toISOString() ?? undefined)
-      : undefined;
+    const { notifications, nextCursor } = await listNotifications(db, {
+      userId: ctx.userId,
+      workspaceId: ctx.workspaceId,
+      limit,
+      cursor: cursor ?? null,
+      filter: unreadOnly ? { status: 'unread' } : undefined,
+    });
 
     const [unread] = await db
       .select({ value: count() })
       .from(schema.notifications)
-      .where(and(scope, isNull(schema.notifications.readAt)));
+      .where(
+        and(
+          eq(schema.notifications.userId, ctx.userId),
+          eq(schema.notifications.workspaceId, ctx.workspaceId),
+          isNull(schema.notifications.readAt),
+        ),
+      );
 
     return NextResponse.json({
       notifications,
-      nextCursor,
+      nextCursor: nextCursor ?? undefined,
       unreadCount: unread?.value ?? 0,
     });
   } catch (err) {
