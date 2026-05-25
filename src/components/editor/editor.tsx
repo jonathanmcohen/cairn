@@ -11,6 +11,7 @@ import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { DragHandle } from './drag-handle';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
+import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { SuggestionToolbar } from './suggestion-toolbar';
@@ -183,6 +184,31 @@ export function Editor({
       (editor.storage as { cairn?: { pageId: string } }).cairn = { pageId };
     }
   }, [editor, pageId]);
+
+  // Lazy-load heavy editor extensions (math/syncedBlock/embed) only when the
+  // initial doc actually contains them. The static `baseExtensions()` carries
+  // only the schema-only `*Node` variants — enough for ProseMirror to parse the
+  // doc — and we merge in the full extension (with React node-views + CSS) via
+  // `setOptions({ extensions })` once we know it's needed. Inserts also trigger
+  // the load (see slash-extension.ts) so users typing `/math` get the view.
+  // TipTap dedupes by node name, so re-merging the same extension is a no-op.
+  useEffect(() => {
+    if (!editor) return;
+    const initial = editor.getJSON();
+    const lazy = nodeNamesInDoc(initial);
+    if (lazy.length === 0) return;
+    let cancelled = false;
+    void (async () => {
+      const loaded = await Promise.all(lazy.map((name) => loadEditorExtension(name)));
+      if (cancelled || editor.isDestroyed) return;
+      editor.setOptions({
+        extensions: [...editor.extensionManager.extensions, ...loaded],
+      });
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editor]);
 
   // Empty-doc seeding (Plan 1 did not seed server-side): a brand-new page has
   // no Yjs state. The first client to finish syncing seeds the shared doc from

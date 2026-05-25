@@ -3,9 +3,28 @@ import type { Editor } from '@tiptap/react';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
+import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
 import { type SlashItem, SlashMenu, type SlashMenuRef } from './slash-menu';
+
+/**
+ * Ensure a lazy editor extension (math/syncedBlock/embed) is registered on
+ * the editor instance before issuing its `setXxx` command. The slash menu
+ * delete-range-then-call sequence (`SlashCommand.suggestion.command`) means by
+ * the time `then` fires the caret is at the right spot for insertion. We use
+ * `extensionManager.extensions.some(...)` to make the merge idempotent —
+ * TipTap dedupes by name internally too, but the early-return keeps the
+ * happy path allocation-free after the first load.
+ */
+function ensureLazyExtension(editor: Editor, name: LazyEditorNodeName): Promise<void> {
+  return loadEditorExtension(name).then((ext) => {
+    if (editor.isDestroyed) return;
+    if (!editor.extensionManager.extensions.some((e) => e.name === ext.name)) {
+      editor.setOptions({ extensions: [...editor.extensionManager.extensions, ext] });
+    }
+  });
+}
 
 /**
  * Open a transient page-picker popup at the current selection, reusing the
@@ -190,12 +209,15 @@ const items: SlashItem[] = [
   {
     title: 'Embed',
     description: 'Embed a YouTube, Vimeo, Figma, gist, or CodeSandbox URL',
-    command: (editor) =>
-      editor
-        .chain()
-        .focus()
-        .insertContent({ type: 'embed', attrs: { provider: null, src: null } })
-        .run(),
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'embed').then(() => {
+        editor
+          .chain()
+          .focus()
+          .insertContent({ type: 'embed', attrs: { provider: null, src: null } })
+          .run();
+      });
+    },
   },
   {
     title: 'Bookmark',
@@ -205,12 +227,20 @@ const items: SlashItem[] = [
   {
     title: 'Equation',
     description: 'Block math rendered with KaTeX',
-    command: (editor) => editor.chain().focus().setMath({ latex: '', display: true }).run(),
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'math').then(() => {
+        editor.chain().focus().setMath({ latex: '', display: true }).run();
+      });
+    },
   },
   {
     title: 'Synced block',
     description: 'Reusable block mirrored elsewhere on this page',
-    command: (editor) => editor.chain().focus().setSyncedBlock().run(),
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'syncedBlock').then(() => {
+        editor.chain().focus().setSyncedBlock().run();
+      });
+    },
   },
   {
     title: 'Table of contents',
