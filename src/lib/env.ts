@@ -39,6 +39,7 @@ const Schema = z.object({
   CAIRN_GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
   CAIRN_GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   CAIRN_CONNECTOR_CSV_PATH: z.string().optional(),
+  NEXT_PUBLIC_CAIRN_OFFLINE_DOC_LIMIT_MB: z.coerce.number().int().positive().default(256),
 });
 
 export type Env = z.infer<typeof Schema>;

@@ -1,8 +1,4 @@
-import {
-  getDocIndexEntries,
-  removeDocFromIndex,
-  totalIndexedBytes,
-} from './doc-index';
+import { getDocIndexEntries, removeDocFromIndex, totalIndexedBytes } from './doc-index';
 
 /**
  * y-indexeddb stores each Yjs doc under a database named for the doc-name

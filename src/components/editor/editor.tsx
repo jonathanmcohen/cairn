@@ -18,6 +18,12 @@ import { useCollabDoc } from './use-collab-doc';
 
 export type EditorProps = {
   pageId: string;
+  /**
+   * Workspace owning this page. Used to scope the offline IndexedDB doc-index
+   * and FIFO eviction by workspace (multi-workspace users keep separate
+   * offline caches per workspace).
+   */
+  workspaceId: string;
   initialContent: unknown;
   /**
    * Retained for metadata PATCH callers (title/icon/cover live in sibling
@@ -41,8 +47,14 @@ const STATUS_LABEL = {
   error: 'Offline',
 } as const;
 
-export function Editor({ pageId, initialContent, currentUser, editable }: EditorProps) {
-  const { ydoc, provider, status } = useCollabDoc(pageId);
+export function Editor({
+  pageId,
+  workspaceId,
+  initialContent,
+  currentUser,
+  editable,
+}: EditorProps) {
+  const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
   const announce = useAnnounce();
 

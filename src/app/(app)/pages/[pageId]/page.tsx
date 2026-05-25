@@ -60,6 +60,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
       </div>
       <Editor
         pageId={page.id}
+        workspaceId={page.workspaceId}
         initialContent={page.content}
         initialUpdatedAt={page.updatedAt.toISOString()}
         currentUser={currentUser}
