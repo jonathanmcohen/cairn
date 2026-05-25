@@ -2,7 +2,9 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
+import { randomDefaultIcon } from './default-icon';
 import { emptyDocument } from './empty-document';
+import { formatIcon } from './icon-format';
 
 export type CreatePageInput = {
   workspaceId: string;
@@ -35,7 +37,7 @@ export async function createPage(
         workspaceId: input.workspaceId,
         parentId: input.parentId ?? null,
         title: input.title ?? 'Untitled',
-        icon: input.icon ?? null,
+        icon: input.icon ?? formatIcon({ kind: 'emoji', value: randomDefaultIcon() }),
         content: emptyDocument(),
         createdBy: input.createdBy,
       })
