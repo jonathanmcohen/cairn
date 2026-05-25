@@ -27,6 +27,7 @@ export * from './system-meta';
 export * from './templates';
 export * from './token-usage-log';
 export * from './user-page-prefs';
+export * from './user-theme-prefs';
 export * from './user-totp';
 export * from './users';
 export * from './webhooks';
