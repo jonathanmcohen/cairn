@@ -22,7 +22,7 @@ import { CairnImage } from './image-extension';
 import { SuggestionDelete } from './marks/suggestion-delete';
 import { SuggestionInsert } from './marks/suggestion-insert';
 import { MentionExtension } from './mention-extension';
-import { PageEmbed, PageLink, PageMention } from './page-link-extension';
+import { PageEmbed, PageLink, PageLinkHover, PageMention } from './page-link-extension';
 import { PageLinkSuggestion } from './page-link-suggestion';
 import { SlashCommand } from './slash-extension';
 import { SuggestionBlock } from './suggestion-block';
@@ -68,6 +68,8 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     PageMention,
     PageEmbed,
     PageLinkSuggestion,
+    // v0.8 P18: inline transclusion preview popover for [[page-link]] nodes.
+    PageLinkHover,
     Placeholder.configure({
       placeholder: ({ node }) => {
         if (node.type.name === 'heading') return 'Heading';
