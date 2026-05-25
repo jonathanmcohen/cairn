@@ -4,6 +4,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRef } from 'react';
+import { EmptyPageTree } from '@/components/empty-state/variants';
 import type { FlatPageNode } from '@/lib/pages/tree';
 
 const ROW_HEIGHT_PX = 32; // Matches the existing sidebar row.
@@ -36,7 +37,11 @@ export function VirtualizedPageTree({ initial }: { initial: FlatPageNode[] }) {
   });
 
   if (initial.length === 0) {
-    return <p className="px-2 py-4 text-sm text-muted-foreground">No pages yet.</p>;
+    return (
+      <div className="px-2 py-4">
+        <EmptyPageTree />
+      </div>
+    );
   }
 
   return (

@@ -5,6 +5,7 @@ import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { hasOnboarded, markOnboarded } from '@/components/onboarding/storage';
 import { WelcomeTemplatePick } from '@/components/onboarding/welcome-template-pick';
 import { Button } from '@/components/ui/button';
+import { copy } from '@/lib/copy/messages';
 
 export type WizardInitialState = {
   hasAnyUserPages: boolean;
@@ -127,24 +128,21 @@ export function OnboardingWizard({
       <div aria-hidden="true" className="fixed inset-0 bg-black/40" />
       <div
         role="dialog"
-        aria-label="Welcome to Cairn"
+        aria-label={copy('wizard.welcome.headline')}
         aria-modal="true"
         className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
       >
         <div className="space-y-4 p-6">
           {step === 'welcome' ? (
             <>
-              <h2 className="text-xl font-semibold">Welcome to Cairn</h2>
-              <p className="text-sm text-muted-foreground">
-                Cairn is your self-hosted, block-based notes app. This quick setup will name your
-                workspace and seed a starter page so you have something to work from.
-              </p>
+              <h2 className="text-xl font-semibold">{copy('wizard.welcome.headline')}</h2>
+              <p className="text-sm text-muted-foreground">{copy('wizard.welcome.guidance')}</p>
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={finishAndDismiss}>
-                  Skip for now
+                  {copy('wizard.welcome.skip')}
                 </Button>
                 <Button type="button" onClick={() => setStep('name')}>
-                  Get started
+                  {copy('wizard.welcome.cta')}
                 </Button>
               </div>
             </>
@@ -152,10 +150,8 @@ export function OnboardingWizard({
 
           {step === 'name' ? (
             <form onSubmit={(e) => void onConfirmName(e)} className="space-y-3">
-              <h2 className="text-xl font-semibold">Name your workspace</h2>
-              <p className="text-sm text-muted-foreground">
-                This is what shows up in the sidebar. You can change it later in Settings.
-              </p>
+              <h2 className="text-xl font-semibold">{copy('wizard.name.headline')}</h2>
+              <p className="text-sm text-muted-foreground">{copy('wizard.name.guidance')}</p>
               <div>
                 <label
                   htmlFor="ob-name"
@@ -174,19 +170,17 @@ export function OnboardingWizard({
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="ghost" onClick={() => setStep('welcome')}>
-                  Back
+                  {copy('wizard.name.back')}
                 </Button>
-                <Button type="submit">Continue</Button>
+                <Button type="submit">{copy('wizard.name.cta')}</Button>
               </div>
             </form>
           ) : null}
 
           {step === 'pick' ? (
             <div className="space-y-3">
-              <h2 className="text-xl font-semibold">Pick a starter</h2>
-              <p className="text-sm text-muted-foreground">
-                Choose a built-in template to seed your workspace, or start with a blank slate.
-              </p>
+              <h2 className="text-xl font-semibold">{copy('wizard.pick.headline')}</h2>
+              <p className="text-sm text-muted-foreground">{copy('wizard.pick.guidance')}</p>
               <WelcomeTemplatePick selectedId={pickedTemplateId} onPick={setPickedTemplateId} />
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               <div className="flex justify-end gap-2">
@@ -199,14 +193,14 @@ export function OnboardingWizard({
                   }}
                   disabled={submitting}
                 >
-                  Start blank
+                  {copy('wizard.pick.ctaSecondary')}
                 </Button>
                 <Button
                   type="button"
                   onClick={() => void onSetUp()}
                   disabled={submitting || !pickedTemplateId}
                 >
-                  {submitting ? 'Setting up…' : 'Set up workspace'}
+                  {submitting ? copy('wizard.pick.submitting') : copy('wizard.pick.ctaPrimary')}
                 </Button>
               </div>
             </div>

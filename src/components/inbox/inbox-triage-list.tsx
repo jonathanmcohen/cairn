@@ -4,7 +4,9 @@ import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import type React from 'react';
 import { useState } from 'react';
+import { EmptyInbox } from '@/components/empty-state/variants';
 import { Button } from '@/components/ui/button';
+import { copy } from '@/lib/copy/messages';
 
 export type InboxItem = {
   id: string;
@@ -19,12 +21,7 @@ export function InboxTriageList({ items }: { items: InboxItem[] }) {
   const [error, setError] = useState<string | null>(null);
 
   if (items.length === 0) {
-    return (
-      <div className="rounded border bg-muted/30 p-8 text-center text-sm text-muted-foreground">
-        Your inbox is empty. Press <kbd>Cmd+Shift+N</kbd> to capture a thought, or share to Cairn
-        from your OS share sheet.
-      </div>
-    );
+    return <EmptyInbox />;
   }
 
   async function onDone(id: string): Promise<void> {
@@ -80,7 +77,7 @@ export function InboxTriageList({ items }: { items: InboxItem[] }) {
               disabled={busy === it.id}
               onClick={() => void onDone(it.id)}
             >
-              {busy === it.id ? 'Working…' : 'Mark done'}
+              {busy === it.id ? copy('inboxTriage.markingDone') : copy('inboxTriage.markDone')}
             </Button>
           </li>
         ))}

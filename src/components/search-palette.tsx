@@ -7,6 +7,7 @@ import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
+import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
 import { getRecents, pushRecent } from '@/lib/palette/recents';
@@ -232,7 +233,10 @@ export function SearchPalette({
           )}
           {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}
           {!loading && query && results.length === 0 && (
-            <div className="px-4 py-2 text-sm text-muted-foreground">No results.</div>
+            <div className="px-4 py-3 text-sm text-muted-foreground">
+              <div className="font-medium text-foreground">{copy('empty.search.headline')}</div>
+              <div className="mt-1">{copy('empty.search.guidance')}</div>
+            </div>
           )}
           {results.map((r) => (
             <Command.Item

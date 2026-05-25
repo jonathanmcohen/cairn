@@ -4,6 +4,7 @@ import { Command } from 'cmdk';
 import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { subscribeQuickCapture } from '@/components/quick-capture/controller';
 import { Button } from '@/components/ui/button';
+import { copy } from '@/lib/copy/messages';
 
 type Payload = {
   title: string;
@@ -104,7 +105,7 @@ export function QuickCaptureModal() {
       />
       <Command
         role="dialog"
-        aria-label="Quick capture"
+        aria-label={copy('quickCapture.title')}
         className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
       >
         <form onSubmit={(e) => void onSubmit(e)} className="space-y-3 p-4">
@@ -154,10 +155,10 @@ export function QuickCaptureModal() {
               onClick={() => setOpen(false)}
               disabled={submitting}
             >
-              Cancel
+              {copy('quickCapture.cancel')}
             </Button>
             <Button type="submit" disabled={submitting}>
-              {submitting ? 'Saving…' : 'Save to inbox'}
+              {submitting ? copy('quickCapture.submitting') : copy('quickCapture.cta')}
             </Button>
           </div>
         </form>
