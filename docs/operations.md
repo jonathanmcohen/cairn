@@ -135,3 +135,26 @@ Drizzle schema files (`src/db/schema/databases.ts`) carry matching
 
 `EXPLAIN ANALYZE` raw plans are not committed; they're re-runnable from the
 seed in `tests/a11y/seed.ts` + `scripts/seed-lhci.ts`.
+
+## Lighthouse CI budget
+
+A `.github/workflows/lighthouse.yml` workflow runs after the `CI` workflow
+succeeds on `main`. It builds the app, applies migrations, seeds a fixed
+published page (`/p/v08-lhci-seed-slug` via `scripts/seed-lhci.ts`), and
+runs `lhci autorun` with `numberOfRuns=3` (median).
+
+Budget (`.lighthouserc.json`):
+- Performance score floor: 0.85 (warn).
+- Largest Contentful Paint: ≤ 2500 ms median (warn).
+- First Contentful Paint: ≤ 1800 ms median (warn).
+- Time-to-Interactive: ≤ 3800 ms median (warn).
+
+Severity is `warn` for the initial landing — promote to `error` after one
+merged run establishes a stable baseline. LHCI writes each run report to
+`.lighthouseci/` (filesystem upload target); the workflow's
+`actions/upload-artifact` step preserves the directory as a 14-day-retained
+artifact, so regressions are inspectable from the GitHub Actions run page.
+
+> Deviation from the plan: the upload target is `filesystem` (not
+> `temporary-public-storage`) so reports stay inside CI artifacts rather
+> than an externally-hosted public URL.
