@@ -9,12 +9,17 @@ import { Button } from '@/components/ui/button';
 type LinkKind = 'link' | 'mention' | 'embed';
 
 type Backlink = { sourcePageId: string; kind: LinkKind };
-type UnlinkedMention = { id: string; title: string };
+// v0.6 P10 backlinks-route shape — kept for backwards-compat decoding.
+type BareUnlinkedMention = { id: string; title: string };
+// v0.8 P18 unlinked-mentions route shape — adds a ts_headline snippet.
+type UnlinkedMention = { id: string; title: string; snippet: string };
 
 type BacklinksResponse = {
   backlinks: Backlink[];
-  unlinkedMentions: UnlinkedMention[];
+  unlinkedMentions: BareUnlinkedMention[];
 };
+
+type UnlinkedMentionsResponse = { mentions: UnlinkedMention[] };
 
 type BacklinksPanelProps = {
   pageId: string;
@@ -38,14 +43,23 @@ export function BacklinksPanel({ pageId, open, onClose }: BacklinksPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   const refetch = useCallback(async () => {
-    const res = await fetch(`/api/pages/${pageId}/backlinks`);
-    if (!res.ok) {
+    // Fetch both endpoints in parallel: the v0.6 P10 backlinks route gives
+    // us linked references; the v0.8 P18 unlinked-mentions route adds the
+    // ts_headline snippet for each unlinked mention. The backlinks route
+    // still returns `unlinkedMentions` (without snippets) — we ignore that
+    // shape here and prefer the richer v0.8 payload.
+    const [linkedRes, unlinkedRes] = await Promise.all([
+      fetch(`/api/pages/${pageId}/backlinks`),
+      fetch(`/api/pages/${pageId}/unlinked-mentions`),
+    ]);
+    if (!linkedRes.ok || !unlinkedRes.ok) {
       setError('Failed to load backlinks');
       return;
     }
-    const data = (await res.json()) as BacklinksResponse;
-    setBacklinks(data.backlinks);
-    setUnlinked(data.unlinkedMentions);
+    const linkedData = (await linkedRes.json()) as BacklinksResponse;
+    const unlinkedData = (await unlinkedRes.json()) as UnlinkedMentionsResponse;
+    setBacklinks(linkedData.backlinks);
+    setUnlinked(unlinkedData.mentions);
     setError(null);
   }, [pageId]);
 
@@ -104,23 +118,35 @@ export function BacklinksPanel({ pageId, open, onClose }: BacklinksPanelProps) {
           ) : (
             <ul className="space-y-1">
               {unlinked.map((m) => (
-                <li
-                  key={m.id}
-                  className="flex items-center justify-between gap-2 rounded-md border p-2 text-sm"
-                >
-                  <Link
-                    href={pageHref(m.id)}
-                    className="text-primary truncate underline hover:no-underline"
-                  >
-                    {m.title || 'Untitled'}
-                  </Link>
-                  <span
-                    className="text-muted-foreground inline-flex shrink-0 items-center gap-1 text-[10px]"
-                    title="Mentions this page in text"
-                  >
-                    <Link2 className="h-3 w-3" />
-                    Link
-                  </span>
+                <li key={m.id} className="space-y-1 rounded-md border p-2 text-sm">
+                  <div className="flex items-center justify-between gap-2">
+                    <Link
+                      href={pageHref(m.id)}
+                      className="text-primary truncate underline hover:no-underline"
+                    >
+                      {m.title || 'Untitled'}
+                    </Link>
+                    <span
+                      className="text-muted-foreground inline-flex shrink-0 items-center gap-1 text-[10px]"
+                      title="Mentions this page in text"
+                    >
+                      <Link2 className="h-3 w-3" />
+                      Link
+                    </span>
+                  </div>
+                  {m.snippet && (
+                    <p
+                      className="text-muted-foreground text-xs"
+                      // The snippet is `ts_headline` output over the mentioning
+                      // page's body — that page is in the caller's workspace
+                      // and the requirePageAccess(viewer) gate on the route
+                      // already confirmed access, so rendering Postgres-
+                      // generated `<b>` emphasis is safe.
+                      //
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: trusted ts_headline output
+                      dangerouslySetInnerHTML={{ __html: m.snippet }}
+                    />
+                  )}
                 </li>
               ))}
             </ul>
