@@ -14,7 +14,9 @@ type Scope = { userId: string; workspaceId: string };
 /**
  * Toggle a page's favorite flag for a user. Creates the prefs row if absent.
  * Returns the new favorite state. When turning favorite ON, assigns the next
- * `favorite_order` (max + 1) so the list is stably ordered.
+ * slot (max(position) + 1) so the list is stably ordered. v0.8 P17 writes both
+ * `position` (canonical) and `favorite_order` (v0.6-era column kept for
+ * back-compat) so callers reading either column see the same result.
  */
 export async function toggleFavorite(db: Db, input: Scope & { pageId: string }): Promise<boolean> {
   return db.transaction(async (tx) => {
@@ -31,10 +33,10 @@ export async function toggleFavorite(db: Db, input: Scope & { pageId: string }):
 
     const nextFav = !(existing?.favorite ?? false);
 
-    let order: number | null = null;
+    let order = 0;
     if (nextFav) {
       const [maxRow] = await tx
-        .select({ max: sql<number | null>`max(${schema.userPagePrefs.favoriteOrder})` })
+        .select({ max: sql<number | null>`max(${schema.userPagePrefs.position})` })
         .from(schema.userPagePrefs)
         .where(
           and(
@@ -52,6 +54,7 @@ export async function toggleFavorite(db: Db, input: Scope & { pageId: string }):
         .set({
           favorite: nextFav,
           favoriteOrder: nextFav ? order : null,
+          position: nextFav ? order : 0,
           updatedAt: new Date(),
         })
         .where(eq(schema.userPagePrefs.id, existing.id));
@@ -61,7 +64,8 @@ export async function toggleFavorite(db: Db, input: Scope & { pageId: string }):
         workspaceId: input.workspaceId,
         pageId: input.pageId,
         favorite: nextFav,
-        favoriteOrder: order,
+        favoriteOrder: nextFav ? order : null,
+        position: order,
       });
     }
     return nextFav;
@@ -69,8 +73,12 @@ export async function toggleFavorite(db: Db, input: Scope & { pageId: string }):
 }
 
 /**
- * Rewrite favorite_order for the user to match `orderedPageIds`. Page ids not
- * currently favorited by the user are ignored (no row is created).
+ * Rewrite favorite ordering for the user to match `orderedPageIds`. Page ids
+ * not currently favorited by the user are ignored (no row is created). v0.8
+ * P17 writes both `position` (canonical) and `favorite_order` (v0.6 column,
+ * kept for back-compat) so legacy callers and the new sidebar see the same
+ * ordering. New code should prefer `@/lib/favorites/reorder#reorderFavorites`
+ * which uses `user_page_prefs.id` (not pageId) for stronger ownership scoping.
  */
 export async function reorderFavorites(
   db: Db,
@@ -93,7 +101,7 @@ export async function reorderFavorites(
       if (!favIds.has(pageId)) continue;
       await tx
         .update(schema.userPagePrefs)
-        .set({ favoriteOrder: order, updatedAt: new Date() })
+        .set({ favoriteOrder: order, position: order, updatedAt: new Date() })
         .where(
           and(
             eq(schema.userPagePrefs.userId, input.userId),
@@ -169,10 +177,7 @@ export async function listFavorites(db: Db, scope: Scope): Promise<PrefEntry[]> 
         sql`${schema.pages.deletedAt} is null`,
       ),
     )
-    .orderBy(
-      sql`${schema.userPagePrefs.favoriteOrder} asc nulls last`,
-      asc(schema.userPagePrefs.createdAt),
-    );
+    .orderBy(asc(schema.userPagePrefs.position), asc(schema.userPagePrefs.createdAt));
   return rows.map((r) => ({ pageId: r.pageId, title: r.title, icon: r.icon }));
 }
 
