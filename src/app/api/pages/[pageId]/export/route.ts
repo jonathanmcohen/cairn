@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError } from '@/lib/auth/require-role';
 import { pageToPdfHtml } from '@/lib/export/pdf';
+import { pageToPdf } from '@/lib/export/pdf-native';
 import { pageToJson, pageToMarkdown } from '@/lib/export/renderers';
 import { streamSubtreeZip } from '@/lib/markdown/export-subtree';
 import { requirePageAccess } from '@/lib/pages/access';
@@ -42,11 +43,34 @@ export async function GET(
       });
     }
 
-    if (format === 'pdf') {
+    // Explicit HTML-print fallback selector. Always returns the v0.6 P21
+    // browser-print HTML, regardless of CAIRN_NATIVE_PDF. Lets callers force
+    // the no-Chromium path when the env is set.
+    if (format === 'pdf-print-html') {
       return new NextResponse(pageToPdfHtml(page), {
         headers: {
           'content-type': 'text/html; charset=utf-8',
-          // Inline so the browser renders the print dialog; users save as PDF.
+          'content-disposition': `inline; filename="${safeName}.html"`,
+        },
+      });
+    }
+
+    if (format === 'pdf') {
+      if (process.env.CAIRN_NATIVE_PDF === '1') {
+        const pdf = await pageToPdf(page);
+        // @ts-expect-error: Node Buffer → web Response works at runtime in Next 16
+        return new NextResponse(pdf, {
+          headers: {
+            'content-type': 'application/pdf',
+            'content-disposition': `attachment; filename="${safeName}.pdf"`,
+          },
+        });
+      }
+      // Default v0.6 P21 behaviour — return print-HTML; users save via the
+      // browser print dialog.
+      return new NextResponse(pageToPdfHtml(page), {
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
           'content-disposition': `inline; filename="${safeName}.html"`,
         },
       });
