@@ -1,6 +1,8 @@
 import { desc, eq } from 'drizzle-orm';
+import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 import { type ApiKeyRow, ApiKeysManager } from '@/components/settings/api-keys-manager';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext, hasMinRole } from '@/lib/auth/require-role';
@@ -38,6 +40,10 @@ export default async function ApiKeysSettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <SettingsBreadcrumb
+        section={{ label: 'Developer', href: '/settings/developer' as Route }}
+        page="API keys"
+      />
       <h1 className="mb-2 text-3xl font-semibold">API keys</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         Keys authenticate requests to the <code>/api/v1</code> HTTP API via{' '}

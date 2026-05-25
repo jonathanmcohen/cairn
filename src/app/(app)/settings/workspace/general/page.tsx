@@ -1,9 +1,11 @@
 import { eq } from 'drizzle-orm';
+import type { Route } from 'next';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { requireRole } from '@/lib/auth/require-role';
 import { searchWorkspacePages } from '@/lib/workspaces/pages';
-import { SettingsForm } from '../settings-form';
+import { SettingsForm } from './settings-form';
 
 export default async function AdminSettingsPage() {
   const ctx = await requireRole('admin');
@@ -24,7 +26,11 @@ export default async function AdminSettingsPage() {
   });
   return (
     <section>
-      <h1 className="mb-4 text-xl font-semibold">Settings</h1>
+      <SettingsBreadcrumb
+        section={{ label: 'Workspace', href: '/settings/workspace' as Route }}
+        page="General"
+      />
+      <h1 className="mb-4 text-xl font-semibold">General</h1>
       <SettingsForm
         workspaceId={ctx.workspaceId}
         initial={{

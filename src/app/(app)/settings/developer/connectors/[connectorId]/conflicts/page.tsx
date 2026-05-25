@@ -15,7 +15,7 @@ export default async function ConflictInboxPage({
   const { connectorId } = await params;
   const ctx = await getAuthContext();
   if (!ctx?.workspaceId || !ctx.role) redirect('/login');
-  if (!hasMinRole(ctx.role, 'admin')) redirect('/settings/connectors');
+  if (!hasMinRole(ctx.role, 'admin')) redirect('/settings/developer/connectors');
 
   const db = getDb();
   const [connector] = await db

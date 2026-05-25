@@ -1,4 +1,6 @@
+import type { Route } from 'next';
 import { redirect } from 'next/navigation';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { NotificationPrefs } from '@/components/settings/notification-prefs';
 import { getAuthContext } from '@/lib/auth/require-role';
 
@@ -9,6 +11,10 @@ export default async function NotificationSettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <SettingsBreadcrumb
+        section={{ label: 'Notifications', href: '/settings/notifications' as Route }}
+        page="Preferences"
+      />
       <h1 className="mb-2 text-3xl font-semibold">Notifications</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         Choose how you&apos;re notified per event type in this workspace. In-app notifications

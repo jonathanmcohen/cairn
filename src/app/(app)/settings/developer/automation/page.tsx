@@ -1,6 +1,8 @@
 import { sql as rawSql } from 'drizzle-orm';
+import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 import { RuleList, type RuleListRow } from '@/components/automation/rule-list';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
 import { getAuthContext, hasMinRole } from '@/lib/auth/require-role';
@@ -61,6 +63,10 @@ export default async function AutomationSettingsPage() {
 
   return (
     <div className="mx-auto max-w-4xl">
+      <SettingsBreadcrumb
+        section={{ label: 'Developer', href: '/settings/developer' as Route }}
+        page="Automation"
+      />
       <h1 className="mb-2 text-3xl font-semibold">Automation</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         Run actions when events fire in this workspace. Rules evaluate trigger payloads against

@@ -1,6 +1,8 @@
 import { desc, eq } from 'drizzle-orm';
+import type { Route } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { Button } from '@/components/ui/button';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
@@ -24,6 +26,10 @@ export default async function ConnectorsPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
+      <SettingsBreadcrumb
+        section={{ label: 'Developer', href: '/settings/developer' as Route }}
+        page="Connectors"
+      />
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Connectors</h1>
         <Button
@@ -56,7 +62,10 @@ export default async function ConnectorsPage() {
                 >
                   {c.enabled ? 'enabled' : 'disabled'}
                 </span>
-                <Link href={`/settings/connectors/${c.id}/conflicts`} className="text-sm underline">
+                <Link
+                  href={`/settings/developer/connectors/${c.id}/conflicts`}
+                  className="text-sm underline"
+                >
                   Conflicts
                 </Link>
               </div>

@@ -1,4 +1,6 @@
 import { eq } from 'drizzle-orm';
+import type { Route } from 'next';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { requireRole } from '@/lib/auth/require-role';
@@ -6,13 +8,17 @@ import { listWorkspaceMembers } from '@/lib/workspaces/admin-members';
 import { DangerZone } from './danger-zone';
 
 export default async function DangerPage() {
-  // Admin gate first (matches the rest of /settings/admin); we then narrow
+  // Admin gate first (matches the rest of /settings/workspace); we then narrow
   // to owner-only and render a friendly message for non-owners so the link in
   // the nav doesn't dead-end at a redirect.
   const ctx = await requireRole('admin');
   if (ctx.role !== 'owner') {
     return (
       <section>
+        <SettingsBreadcrumb
+          section={{ label: 'Workspace', href: '/settings/workspace' as Route }}
+          page="Danger zone"
+        />
         <h1 className="mb-4 text-xl font-semibold">Danger zone</h1>
         <p className="text-sm text-muted-foreground">
           Only the workspace owner can transfer ownership or delete this workspace.
@@ -28,6 +34,10 @@ export default async function DangerPage() {
   const members = await listWorkspaceMembers(db, ctx.workspaceId);
   return (
     <section>
+      <SettingsBreadcrumb
+        section={{ label: 'Workspace', href: '/settings/workspace' as Route }}
+        page="Danger zone"
+      />
       <h1 className="mb-4 text-xl font-semibold">Danger zone</h1>
       <DangerZone
         workspaceId={ctx.workspaceId}

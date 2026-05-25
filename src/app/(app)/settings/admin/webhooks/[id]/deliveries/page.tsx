@@ -72,7 +72,7 @@ export default async function WebhookDeliveriesPage({ params }: { params: Promis
           ← Admin
         </a>{' '}
         /{' '}
-        <a className="hover:underline" href="/settings/webhooks">
+        <a className="hover:underline" href="/settings/admin/webhooks">
           Webhooks
         </a>{' '}
         / Deliveries

@@ -1,7 +1,9 @@
+import type { Route } from 'next';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { listPendingInvites } from '@/lib/workspaces/invites';
-import { InvitesManager } from '../invites-manager';
+import { InvitesManager } from './invites-manager';
 
 export default async function AdminInvitesPage() {
   const ctx = await requireRole('admin');
@@ -17,6 +19,10 @@ export default async function AdminInvitesPage() {
   }));
   return (
     <section>
+      <SettingsBreadcrumb
+        section={{ label: 'Workspace', href: '/settings/workspace' as Route }}
+        page="Invites"
+      />
       <h1 className="mb-4 text-xl font-semibold">Invites</h1>
       <InvitesManager workspaceId={ctx.workspaceId} invites={serialized} />
     </section>

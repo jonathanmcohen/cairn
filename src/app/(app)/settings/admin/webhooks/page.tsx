@@ -1,5 +1,7 @@
 import { desc, eq } from 'drizzle-orm';
+import type { Route } from 'next';
 import { redirect } from 'next/navigation';
+import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import {
   type DeliveryRow,
   type WebhookRow,
@@ -66,6 +68,10 @@ export default async function WebhooksSettingsPage() {
 
   return (
     <div className="mx-auto max-w-3xl">
+      <SettingsBreadcrumb
+        section={{ label: 'Admin', href: '/settings/admin' as Route }}
+        page="Webhooks"
+      />
       <h1 className="mb-2 text-3xl font-semibold">Webhooks</h1>
       <p className="mb-6 text-sm text-muted-foreground">
         Webhooks POST a JSON payload to your endpoint when subscribed events occur. Each request is

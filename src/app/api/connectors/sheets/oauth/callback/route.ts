@@ -65,7 +65,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     }
 
     return NextResponse.redirect(
-      new URL(`/settings/connectors?databaseId=${state.databaseId}`, url),
+      new URL(`/settings/developer/connectors?databaseId=${state.databaseId}`, url),
     );
   } catch (err) {
     if (err instanceof HttpError)
