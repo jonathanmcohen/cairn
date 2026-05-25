@@ -120,3 +120,63 @@
 .comment-anchor-flash {
   animation: comment-anchor-flash 1.5s ease-out;
 }
+
+/* v0.8.0 — per-user theme: page-width + font + accent custom properties.
+   Defaults live here; <ThemeProvider> overrides them inline on <html>. */
+:root {
+  --cairn-accent: #0f172a;
+  --cairn-font-family:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --cairn-page-width-max: 960px;
+}
+
+/* Named accents — each block remaps the shadcn primary + ring tokens to the
+   accent hex. Other UI surfaces inherit via the existing token chain. */
+html[data-accent="default"] {
+  --cairn-accent: #0f172a;
+}
+html[data-accent="blue"] {
+  --cairn-accent: #2563eb;
+  --primary: 217 91% 60%;
+  --ring: 217 91% 60%;
+}
+html[data-accent="indigo"] {
+  --cairn-accent: #4f46e5;
+  --primary: 239 84% 67%;
+  --ring: 239 84% 67%;
+}
+html[data-accent="violet"] {
+  --cairn-accent: #7c3aed;
+  --primary: 262 83% 58%;
+  --ring: 262 83% 58%;
+}
+html[data-accent="rose"] {
+  --cairn-accent: #e11d48;
+  --primary: 347 77% 50%;
+  --ring: 347 77% 50%;
+}
+html[data-accent="amber"] {
+  --cairn-accent: #d97706;
+  --primary: 32 95% 44%;
+  --ring: 32 95% 44%;
+}
+html[data-accent="emerald"] {
+  --cairn-accent: #059669;
+  --primary: 160 84% 39%;
+  --ring: 160 84% 39%;
+}
+html[data-accent="slate"] {
+  --cairn-accent: #475569;
+  --primary: 215 19% 35%;
+  --ring: 215 19% 35%;
+}
+/* html[data-accent="custom"] uses the inline --cairn-accent value the provider sets. */
+
+body {
+  font-family: var(--cairn-font-family);
+}
+
+.cairn-page-container {
+  max-width: var(--cairn-page-width-max);
+  margin-inline: auto;
+}
