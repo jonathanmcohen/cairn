@@ -1,6 +1,6 @@
 import { eq, inArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '@/db/schema';
+import type * as schema from '@/db/schema';
 import { userKeypairs, workspaceEncryptionKeys, workspaceMembers } from '@/db/schema';
 
 type Db = PostgresJsDatabase<typeof schema>;

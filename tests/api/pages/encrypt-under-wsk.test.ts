@@ -97,10 +97,7 @@ describe('POST /api/pages/[pageId]/encrypt-under-wsk', () => {
     const res = await post(page.id, { contentEncrypted: ct.toString('base64') });
     expect(res.status).toBe(200);
 
-    const [after] = await getDb()
-      .select()
-      .from(schema.pages)
-      .where(eq(schema.pages.id, page.id));
+    const [after] = await getDb().select().from(schema.pages).where(eq(schema.pages.id, page.id));
     expect(after?.encrypted).toBe(true);
     expect(after?.encryptedUnderWsk).toBe(true);
     expect(after?.contentText).toBe('');

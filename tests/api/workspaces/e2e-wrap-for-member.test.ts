@@ -77,16 +77,12 @@ async function addMember(workspaceId: string, email: string, role: schema.Member
     .values({ email, passwordHash: 'h', name: email })
     .returning();
   if (!u) throw new Error('user insert failed');
-  await getDb()
-    .insert(schema.workspaceMembers)
-    .values({ workspaceId, userId: u.id, role });
+  await getDb().insert(schema.workspaceMembers).values({ workspaceId, userId: u.id, role });
   return u.id;
 }
 
 async function post(workspaceId: string, body: unknown) {
-  const { POST } = await import(
-    '@/app/api/workspaces/[workspaceId]/e2e/wrap-for-member/route'
-  );
+  const { POST } = await import('@/app/api/workspaces/[workspaceId]/e2e/wrap-for-member/route');
   return POST(
     new Request('http://localhost/x', {
       method: 'POST',

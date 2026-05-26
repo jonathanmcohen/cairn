@@ -2,12 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
-import {
-  userKeypairs,
-  workspaceEncryptionKeys,
-  workspaceMembers,
-  workspaces,
-} from '@/db/schema';
+import { userKeypairs, workspaceEncryptionKeys, workspaceMembers, workspaces } from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { getCurrentKeyVersion } from '@/lib/e2e/wsk-server';

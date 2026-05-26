@@ -220,9 +220,7 @@ describe('POST /api/workspaces/[workspaceId]/e2e/rekey', () => {
     await setSession(otherId);
 
     const res = await post(owner.workspaceId, {
-      wrapped: [
-        { memberUserId: owner.userId, wrappedWsk: Buffer.alloc(92).toString('base64') },
-      ],
+      wrapped: [{ memberUserId: owner.userId, wrappedWsk: Buffer.alloc(92).toString('base64') }],
       pageBundles: [],
       removedMemberId: null,
     });
@@ -239,9 +237,7 @@ describe('POST /api/workspaces/[workspaceId]/e2e/rekey', () => {
 
     const res = await post(owner.workspaceId, {
       // Only owner — missing otherId.
-      wrapped: [
-        { memberUserId: owner.userId, wrappedWsk: Buffer.alloc(92).toString('base64') },
-      ],
+      wrapped: [{ memberUserId: owner.userId, wrappedWsk: Buffer.alloc(92).toString('base64') }],
       pageBundles: [],
       removedMemberId: null,
     });
@@ -254,9 +250,7 @@ describe('POST /api/workspaces/[workspaceId]/e2e/rekey', () => {
     await setSession(owner.userId);
 
     const res = await post(owner.workspaceId, {
-      wrapped: [
-        { memberUserId: owner.userId, wrappedWsk: Buffer.alloc(92).toString('base64') },
-      ],
+      wrapped: [{ memberUserId: owner.userId, wrappedWsk: Buffer.alloc(92).toString('base64') }],
       pageBundles: [],
       removedMemberId: null,
     });
