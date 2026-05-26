@@ -118,6 +118,55 @@ describe('admin SAML CRUD', () => {
     expect(res.status).toBe(403);
   });
 
+  it('admin PATCH without x509Cert preserves the existing cert', async () => {
+    const u = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    await actAs(u.userId, u.workspaceId);
+    const [idp] = await db
+      .insert(schema.idpConfigurations)
+      .values({
+        workspaceId: u.workspaceId,
+        type: 'saml',
+        name: 'orig',
+        metadata: {
+          sp: {},
+          idp: {
+            entityId: 'urn:orig',
+            ssoUrl: 'https://orig.example/sso',
+            x509Cert: 'KEEP-ME-BASE64',
+          },
+        },
+        attributeMap: {},
+        enabled: true,
+      })
+      .returning({ id: schema.idpConfigurations.id });
+    const { PATCH } = await import('@/app/api/admin/sso/saml/[idpId]/route');
+    const res = await PATCH(
+      new Request(`http://localhost/api/admin/sso/saml/${idp!.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          idp: {
+            entityId: 'urn:new',
+            ssoUrl: 'https://new.example/sso',
+            // x509Cert intentionally omitted — should preserve prior value
+          },
+        }),
+      }),
+      { params: Promise.resolve({ idpId: idp!.id }) },
+    );
+    expect(res.status).toBe(200);
+    const row = (
+      await db
+        .select()
+        .from(schema.idpConfigurations)
+        .where(eq(schema.idpConfigurations.id, idp!.id))
+    )[0]!;
+    const meta = row.metadata as { idp: { entityId: string; ssoUrl: string; x509Cert: string } };
+    expect(meta.idp.entityId).toBe('urn:new');
+    expect(meta.idp.ssoUrl).toBe('https://new.example/sso');
+    expect(meta.idp.x509Cert).toBe('KEEP-ME-BASE64');
+  });
+
   it('admin DELETE removes the SAML config + writes sso.idp.deleted', async () => {
     const u = await createTestWorkspaceWithUser(db, { role: 'admin' });
     await actAs(u.userId, u.workspaceId);

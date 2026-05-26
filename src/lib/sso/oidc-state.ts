@@ -1,4 +1,4 @@
-import { jwtVerify, SignJWT } from 'jose';
+import { signStateJwt, verifyStateJwt } from '@/lib/sso/state-jwt';
 
 /**
  * State cookie payload signed with AUTH_SECRET (HS256). Carries the IdP id so
@@ -12,34 +12,24 @@ export type OidcStatePayload = {
   returnTo: string;
 };
 
-function key(): Uint8Array {
-  const secret = process.env.AUTH_SECRET;
-  if (!secret || secret.length < 32) {
-    throw new Error('AUTH_SECRET missing or too short (need >=32 chars)');
-  }
-  return new TextEncoder().encode(secret);
-}
-
 export async function signOidcState(
   input: OidcStatePayload & { ttlSeconds?: number },
 ): Promise<string> {
-  const ttl = input.ttlSeconds ?? 600;
-  return new SignJWT({
-    idpId: input.idpId,
-    nonce: input.nonce,
-    returnTo: input.returnTo,
-  })
-    .setProtectedHeader({ alg: 'HS256' })
-    .setIssuedAt()
-    .setExpirationTime(`${ttl}s`)
-    .sign(key());
+  return signStateJwt(
+    {
+      idpId: input.idpId,
+      nonce: input.nonce,
+      returnTo: input.returnTo,
+    },
+    { ttlSeconds: input.ttlSeconds },
+  );
 }
 
 export async function verifyOidcState(
   value: string,
   expectedIdpId: string,
 ): Promise<OidcStatePayload> {
-  const { payload } = await jwtVerify(value, key(), { algorithms: ['HS256'] });
+  const payload = await verifyStateJwt(value);
   const idpId = payload.idpId;
   const nonce = payload.nonce;
   const returnTo = payload.returnTo;

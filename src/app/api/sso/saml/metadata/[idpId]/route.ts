@@ -21,6 +21,6 @@ export async function GET(
   const xml = getSpMetadataXml(idp);
   return new Response(xml, {
     status: 200,
-    headers: { 'content-type': 'application/samlmetadata+xml; charset=utf-8' },
+    headers: { 'content-type': 'application/xml; charset=utf-8' },
   });
 }

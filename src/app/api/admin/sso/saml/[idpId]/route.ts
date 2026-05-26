@@ -14,7 +14,7 @@ const PatchBody = z.object({
     .object({
       entityId: z.string().min(1),
       ssoUrl: z.url(),
-      x509Cert: z.string().min(1),
+      x509Cert: z.string().optional(),
     })
     .optional(),
   attributeMap: z.record(z.string(), z.string()).optional(),
@@ -52,13 +52,28 @@ export async function PATCH(
   const parsed = PatchBody.safeParse(json);
   if (!parsed.success) return NextResponse.json({ error: 'Invalid body' }, { status: 400 });
 
-  const existingMeta = (existing.metadata ?? {}) as { sp?: unknown; idp?: unknown };
+  const existingMeta = (existing.metadata ?? {}) as {
+    sp?: unknown;
+    idp?: { entityId?: string; ssoUrl?: string; x509Cert?: string };
+  };
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (parsed.data.name !== undefined) updates.name = parsed.data.name;
   if (parsed.data.attributeMap !== undefined) updates.attributeMap = parsed.data.attributeMap;
   if (parsed.data.enabled !== undefined) updates.enabled = parsed.data.enabled;
   if (parsed.data.idp !== undefined) {
-    updates.metadata = { ...existingMeta, idp: parsed.data.idp };
+    // Preserve existing x509Cert when the admin form leaves it blank on edit
+    // (same pattern as OIDC PATCH clientSecret merge).
+    const priorIdp = existingMeta.idp ?? {};
+    const incoming = parsed.data.idp;
+    const mergedIdp = {
+      entityId: incoming.entityId,
+      ssoUrl: incoming.ssoUrl,
+      x509Cert:
+        incoming.x509Cert === undefined || incoming.x509Cert === ''
+          ? (priorIdp.x509Cert ?? '')
+          : incoming.x509Cert,
+    };
+    updates.metadata = { ...existingMeta, idp: mergedIdp };
   }
 
   const db = getDb();

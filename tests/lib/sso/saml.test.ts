@@ -138,5 +138,7 @@ describe('SAML wrapper round-trip', () => {
     const u = new URL(result.url);
     expect(u.origin + u.pathname).toBe('http://idp.example/sso');
     expect(u.searchParams.get('SAMLRequest')).not.toBeNull();
+    expect(typeof result.requestId).toBe('string');
+    expect(result.requestId.length).toBeGreaterThan(0);
   });
 });

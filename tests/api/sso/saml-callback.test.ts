@@ -7,6 +7,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { generateSamlSpKeypair } from '@/lib/sso/saml-keypair';
+import { signSamlState } from '@/lib/sso/saml-state';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 
 vi.mock('next/headers', () => {
@@ -49,12 +50,16 @@ beforeEach(async () => {
   h.__store.clear();
 });
 
-async function setupAndMintResponse(opts: { existingUserEmail?: string }): Promise<{
+async function setupAndMintResponse(opts: {
+  existingUserEmail?: string;
+  requestId?: string;
+}): Promise<{
   idpId: string;
   workspaceId: string;
   samlResponseB64: string;
   existingUserId: string | null;
   emailUsed: string;
+  requestId: string;
 }> {
   const spKp = await generateSamlSpKeypair({
     entityId: 'http://localhost:3000/api/sso/saml/metadata/X',
@@ -134,9 +139,10 @@ async function setupAndMintResponse(opts: { existingUserEmail?: string }): Promi
     ],
   });
   const email = opts.existingUserEmail ?? 'bob@example.com';
+  const requestId = opts.requestId ?? '_fake-req-id_42abcd';
   const synthetic = await signingIdp.createLoginResponse(
     wrapperSp,
-    { extract: { request: { id: '_fake-req-id_42abcd' } } } as never,
+    { extract: { request: { id: requestId } } } as never,
     'post',
     { email, name: 'User', nameID: email } as never,
   );
@@ -147,12 +153,25 @@ async function setupAndMintResponse(opts: { existingUserEmail?: string }): Promi
     samlResponseB64: (synthetic as { context: string }).context,
     existingUserId,
     emailUsed: email,
+    requestId,
   };
+}
+
+async function seedSamlStateCookie(idpId: string, requestId: string): Promise<void> {
+  const h = (await import('next/headers')) as unknown as {
+    __store: Map<string, { name: string; value: string }>;
+  };
+  const value = await signSamlState({ idpId, requestId, returnTo: '/' });
+  h.__store.set(`cairn_saml_state_${idpId}`, {
+    name: `cairn_saml_state_${idpId}`,
+    value,
+  });
 }
 
 describe('POST /api/sso/saml/callback/[idpId]', () => {
   it('parses SAMLResponse, links existing user, mints session cookie', async () => {
     const setup = await setupAndMintResponse({ existingUserEmail: 'alice@example.com' });
+    await seedSamlStateCookie(setup.idpId, setup.requestId);
     const body = new URLSearchParams();
     body.set('SAMLResponse', setup.samlResponseB64);
 
@@ -182,6 +201,7 @@ describe('POST /api/sso/saml/callback/[idpId]', () => {
 
   it('provisions new user when no email match', async () => {
     const setup = await setupAndMintResponse({});
+    await seedSamlStateCookie(setup.idpId, setup.requestId);
     const body = new URLSearchParams();
     body.set('SAMLResponse', setup.samlResponseB64);
     const { POST } = await import('@/app/api/sso/saml/callback/[idpId]/route');
@@ -203,12 +223,49 @@ describe('POST /api/sso/saml/callback/[idpId]', () => {
 
   it('returns 400 on missing SAMLResponse', async () => {
     const setup = await setupAndMintResponse({});
+    await seedSamlStateCookie(setup.idpId, setup.requestId);
     const { POST } = await import('@/app/api/sso/saml/callback/[idpId]/route');
     const res = await POST(
       new Request(`http://localhost:3000/api/sso/saml/callback/${setup.idpId}`, {
         method: 'POST',
         headers: { 'content-type': 'application/x-www-form-urlencoded' },
         body: '',
+      }),
+      { params: Promise.resolve({ idpId: setup.idpId }) },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when InResponseTo does not match the init-time AuthnRequest id', async () => {
+    const setup = await setupAndMintResponse({ requestId: '_response-says-this-id_' });
+    // Seed a state cookie whose requestId is DIFFERENT from the one baked
+    // into the synthetic SAMLResponse → callback must reject.
+    await seedSamlStateCookie(setup.idpId, '_init-time-different-id_');
+    const body = new URLSearchParams();
+    body.set('SAMLResponse', setup.samlResponseB64);
+    const { POST } = await import('@/app/api/sso/saml/callback/[idpId]/route');
+    const res = await POST(
+      new Request(`http://localhost:3000/api/sso/saml/callback/${setup.idpId}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
+      }),
+      { params: Promise.resolve({ idpId: setup.idpId }) },
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('returns 400 when state cookie is missing', async () => {
+    const setup = await setupAndMintResponse({});
+    // No seedSamlStateCookie call — cookie absent.
+    const body = new URLSearchParams();
+    body.set('SAMLResponse', setup.samlResponseB64);
+    const { POST } = await import('@/app/api/sso/saml/callback/[idpId]/route');
+    const res = await POST(
+      new Request(`http://localhost:3000/api/sso/saml/callback/${setup.idpId}`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/x-www-form-urlencoded' },
+        body: body.toString(),
       }),
       { params: Promise.resolve({ idpId: setup.idpId }) },
     );

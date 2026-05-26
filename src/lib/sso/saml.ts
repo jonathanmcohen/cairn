@@ -57,22 +57,27 @@ export function getIdentityProvider(idpConfig: IdpConfiguration): samlify.Identi
   });
 }
 
-export async function buildLoginRequest(idpConfig: IdpConfiguration): Promise<{ url: string }> {
+export async function buildLoginRequest(
+  idpConfig: IdpConfiguration,
+): Promise<{ requestId: string; url: string }> {
   const sp = getServiceProvider(idpConfig);
   const idp = getIdentityProvider(idpConfig);
   const result = sp.createLoginRequest(idp, 'redirect');
   // samlify's redirect-binding result has shape `{ id, context }` where
-  // `context` is the full URL (with SAMLRequest query param).
+  // `context` is the full URL (with SAMLRequest query param) and `id` is
+  // the AuthnRequest ID we must validate against the IdP's `InResponseTo`.
   const ctx = (result as { context?: unknown }).context;
-  if (typeof ctx !== 'string') {
+  const id = (result as { id?: unknown }).id;
+  if (typeof ctx !== 'string' || typeof id !== 'string') {
     throw new Error('samlify createLoginRequest returned unexpected shape');
   }
-  return { url: ctx };
+  return { requestId: id, url: ctx };
 }
 
 export type SamlParseResult = {
   nameId: string;
   attributes: Record<string, string>;
+  inResponseTo: string | null;
 };
 
 export async function parseLoginResponse(
@@ -96,7 +101,13 @@ export async function parseLoginResponse(
     if (typeof v === 'string') attributes[k] = v;
     else if (Array.isArray(v) && typeof v[0] === 'string') attributes[k] = v[0];
   }
-  return { nameId, attributes };
+  // samlify lowercases attribute names; `response.inResponseTo` is the
+  // <Response InResponseTo="..."> attribute from the IdP. Required for
+  // replay protection (P3 review fix).
+  const response = (extract.response as Record<string, unknown> | undefined) ?? {};
+  const irt = response.inResponseTo;
+  const inResponseTo = typeof irt === 'string' && irt.length > 0 ? irt : null;
+  return { nameId, attributes, inResponseTo };
 }
 
 /** Returns the SP metadata XML for this IdP config (served by the SP-metadata route). */

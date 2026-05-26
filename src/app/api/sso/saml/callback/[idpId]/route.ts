@@ -1,8 +1,10 @@
 import { and, eq } from 'drizzle-orm';
+import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { parseLoginResponse } from '@/lib/sso/saml';
+import { verifySamlState } from '@/lib/sso/saml-state';
 import { mintSessionCookieForUser } from '@/lib/sso/session-mint';
 
 export const dynamic = 'force-dynamic';
@@ -47,13 +49,34 @@ export async function handleSamlResponse(
     .limit(1);
   if (!idp) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  let parsed: { nameId: string; attributes: Record<string, string> };
+  // Read & verify the init-time state cookie (carries the AuthnRequest id
+  // and post-login returnTo). Missing/invalid state → 400 generic.
+  const jar = await cookies();
+  const cookieName = `cairn_saml_state_${idpId}`;
+  const cookieState = jar.get(cookieName)?.value;
+  if (!cookieState) {
+    return NextResponse.json({ error: 'Invalid SAMLResponse' }, { status: 400 });
+  }
+  let statePayload: { idpId: string; requestId: string; returnTo: string };
+  try {
+    statePayload = await verifySamlState(cookieState, idpId);
+  } catch {
+    return NextResponse.json({ error: 'Invalid SAMLResponse' }, { status: 400 });
+  }
+
+  let parsed: { nameId: string; attributes: Record<string, string>; inResponseTo: string | null };
   try {
     parsed = await parseLoginResponse(idp, body);
   } catch (err) {
     // Log the underlying samlify error server-side for ops debuggability,
     // but return a generic 400 to the IdP/browser.
     console.error('SAML parseLoginResponse failed', err);
+    return NextResponse.json({ error: 'Invalid SAMLResponse' }, { status: 400 });
+  }
+
+  // Replay protection: the IdP MUST echo our AuthnRequest id back as
+  // <Response InResponseTo="..."/>. Mismatch → 400 generic.
+  if (parsed.inResponseTo !== statePayload.requestId) {
     return NextResponse.json({ error: 'Invalid SAMLResponse' }, { status: 400 });
   }
 
@@ -65,83 +88,96 @@ export async function handleSamlResponse(
     return NextResponse.json({ error: 'IdP did not return a valid email' }, { status: 400 });
   }
 
-  // (1) Existing link?
-  const [existingLink] = await db
-    .select()
-    .from(schema.externalIdentities)
-    .where(
-      and(
-        eq(schema.externalIdentities.idpConfigId, idpId),
-        eq(schema.externalIdentities.externalId, parsed.nameId),
-      ),
-    )
-    .limit(1);
-
-  let userId: string;
-  if (existingLink) {
-    userId = existingLink.userId;
-    await db
-      .update(schema.externalIdentities)
-      .set({ lastSeenAt: new Date(), rawAttrs: parsed.attributes })
-      .where(eq(schema.externalIdentities.id, existingLink.id));
-  } else {
-    const [existingUser] = await db
+  // All four DB ops (link lookup, user lookup/provision, membership insert,
+  // external_identities upsert) run inside a single transaction so a
+  // partial failure cannot leave inconsistent state.
+  const { userId } = await db.transaction(async (tx) => {
+    const [existingLink] = await tx
       .select()
-      .from(schema.users)
-      .where(eq(schema.users.email, email))
+      .from(schema.externalIdentities)
+      .where(
+        and(
+          eq(schema.externalIdentities.idpConfigId, idpId),
+          eq(schema.externalIdentities.externalId, parsed.nameId),
+        ),
+      )
       .limit(1);
-    if (existingUser) {
-      userId = existingUser.id;
-      const [membership] = await db
+
+    let userId: string;
+    if (existingLink) {
+      userId = existingLink.userId;
+      await tx
+        .update(schema.externalIdentities)
+        .set({ lastSeenAt: new Date(), rawAttrs: parsed.attributes })
+        .where(eq(schema.externalIdentities.id, existingLink.id));
+    } else {
+      const [existingUser] = await tx
         .select()
-        .from(schema.workspaceMembers)
-        .where(
-          and(
-            eq(schema.workspaceMembers.workspaceId, idp.workspaceId),
-            eq(schema.workspaceMembers.userId, userId),
-          ),
-        )
+        .from(schema.users)
+        .where(eq(schema.users.email, email))
         .limit(1);
-      if (!membership) {
-        await db
+      if (existingUser) {
+        userId = existingUser.id;
+        const [membership] = await tx
+          .select()
+          .from(schema.workspaceMembers)
+          .where(
+            and(
+              eq(schema.workspaceMembers.workspaceId, idp.workspaceId),
+              eq(schema.workspaceMembers.userId, userId),
+            ),
+          )
+          .limit(1);
+        if (!membership) {
+          await tx
+            .insert(schema.workspaceMembers)
+            .values({ workspaceId: idp.workspaceId, userId, role: 'editor' });
+        }
+      } else {
+        const [provisionedUser] = await tx
+          .insert(schema.users)
+          .values({ email, name, passwordHash: 'sso:no-password' })
+          .returning({ id: schema.users.id });
+        userId = provisionedUser!.id;
+        await tx
           .insert(schema.workspaceMembers)
           .values({ workspaceId: idp.workspaceId, userId, role: 'editor' });
       }
-    } else {
-      const [provisionedUser] = await db
-        .insert(schema.users)
-        .values({ email, name, passwordHash: 'sso:no-password' })
-        .returning({ id: schema.users.id });
-      userId = provisionedUser!.id;
-      await db
-        .insert(schema.workspaceMembers)
-        .values({ workspaceId: idp.workspaceId, userId, role: 'editor' });
-    }
-    // Idempotent upsert keyed by (idpConfigId, externalId) — matches the unique
-    // index `external_identities_idp_external_uq`. Mirrors the OIDC route's
-    // P2 security-review fix.
-    await db
-      .insert(schema.externalIdentities)
-      .values({
-        userId,
-        idpConfigId: idpId,
-        externalId: parsed.nameId,
-        rawAttrs: parsed.attributes,
-      })
-      .onConflictDoUpdate({
-        target: [schema.externalIdentities.idpConfigId, schema.externalIdentities.externalId],
-        set: {
+      // Idempotent upsert keyed by (idpConfigId, externalId) — matches the unique
+      // index `external_identities_idp_external_uq`. Mirrors the OIDC route's
+      // P2 security-review fix.
+      await tx
+        .insert(schema.externalIdentities)
+        .values({
           userId,
-          lastSeenAt: new Date(),
+          idpConfigId: idpId,
+          externalId: parsed.nameId,
           rawAttrs: parsed.attributes,
-        },
-      });
-  }
+        })
+        .onConflictDoUpdate({
+          target: [schema.externalIdentities.idpConfigId, schema.externalIdentities.externalId],
+          set: {
+            userId,
+            lastSeenAt: new Date(),
+            rawAttrs: parsed.attributes,
+          },
+        });
+    }
+    return { userId };
+  });
 
+  // Session mint happens AFTER the transaction commits — never mint a
+  // cookie for a half-written linkage.
   await mintSessionCookieForUser({ userId, email, name });
+  jar.delete(cookieName);
 
-  // Anti-open-redirect: only honor RelayState when it's a same-origin path.
-  const returnTo = body.RelayState && body.RelayState.startsWith('/') ? body.RelayState : '/';
+  // Anti-open-redirect: prefer the signed state's returnTo (set at init).
+  // Fall back to RelayState only when it's a same-origin path.
+  const returnTo = statePayload.returnTo.startsWith('/')
+    ? statePayload.returnTo
+    : body.RelayState && body.RelayState.startsWith('/')
+      ? body.RelayState
+      : '/';
   const origin = process.env.NEXTAUTH_URL ?? 'http://localhost:3000';
   return NextResponse.redirect(new URL(returnTo, origin), 302);
 }
