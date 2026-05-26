@@ -103,6 +103,13 @@ jobs:
           pnpm audit --audit-level=high --json > audit.json || true
           node scripts/check-audit.mjs audit.json audit-ci-ignore.json
 
+      # gitleaks-action downloads the gitleaks binary to /tmp/gitleaks.tmp
+      # before unpacking. /tmp on self-hosted runners persists between
+      # jobs, so a leftover from a prior failed run trips the action's
+      # download-destination-exists guard. Clean it before invoking.
+      - name: Clean stale gitleaks download (self-hosted /tmp persists)
+        run: rm -f /tmp/gitleaks.tmp
+
       - name: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
