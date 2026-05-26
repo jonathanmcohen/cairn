@@ -1,7 +1,10 @@
 services:
   cairn:
-    build: .
-    image: cairn:dev
+    # Published by .github/workflows/release.yml on every `v*.*.*` tag.
+    # Multi-arch (linux/amd64 + linux/arm64) manifest list. Pin via
+    # CAIRN_VERSION in .env (e.g. CAIRN_VERSION=0.8.0); defaults to
+    # `latest` for unpinned dev/preview deploys.
+    image: ghcr.io/jonathanmcohen/cairn:${CAIRN_VERSION:-latest}
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -24,10 +27,10 @@ services:
         condition: service_healthy
 
   cairn-collab:
-    build:
-      context: .
-      dockerfile: Dockerfile.collab
-    image: cairn-collab:dev
+    # Sister image built from Dockerfile.collab in the same release
+    # workflow. Version-locked to cairn via the shared CAIRN_VERSION
+    # env so the two services never drift across major bumps.
+    image: ghcr.io/jonathanmcohen/cairn-collab:${CAIRN_VERSION:-latest}
     restart: unless-stopped
     ports:
       - "${COLLAB_PORT:-1234}:1234"
