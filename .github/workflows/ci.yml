@@ -3,13 +3,71 @@ name: CI
 on:
   pull_request:
     paths-ignore:
+      # Pure docs / markdown / legal — no app or test behavior touches.
       - 'docs/**'
       - '**/*.md'
+      - LICENSE
+      # Dev-environment dotfiles — IDE, git plumbing, node-version pin
+      # (CI sets node-version explicitly via setup-node, so .nvmrc is
+      # advisory only).
+      - .editorconfig
+      - .gitignore
+      - .gitattributes
+      - .nvmrc
+      - .dockerignore
+      # Compose stack used for local + production deploy, not CI.
+      - docker-compose.yml
+      # Lighthouse CI config — read by .github/workflows/lighthouse.yml,
+      # which runs on workflow_run after CI. Editing the config doesn't
+      # need to re-trigger CI.
+      - .lighthouserc.json
+      # Postgres-pgvector base image lives behind its own publish
+      # workflow at .github/workflows/postgres-pgvector-image.yml.
+      - 'docker/postgres-pgvector/**'
+      # Other GH metadata.
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/dependabot.yml'
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      # Sibling workflows that don't influence CI behavior.
+      - '.github/workflows/lighthouse.yml'
+      - '.github/workflows/postgres-pgvector-image.yml'
+      - '.github/workflows/release.yml'
   push:
     branches: [main]
     paths-ignore:
+      # Pure docs / markdown / legal — no app or test behavior touches.
       - 'docs/**'
       - '**/*.md'
+      - LICENSE
+      # Dev-environment dotfiles — IDE, git plumbing, node-version pin
+      # (CI sets node-version explicitly via setup-node, so .nvmrc is
+      # advisory only).
+      - .editorconfig
+      - .gitignore
+      - .gitattributes
+      - .nvmrc
+      - .dockerignore
+      # Compose stack used for local + production deploy, not CI.
+      - docker-compose.yml
+      # Lighthouse CI config — read by .github/workflows/lighthouse.yml,
+      # which runs on workflow_run after CI. Editing the config doesn't
+      # need to re-trigger CI.
+      - .lighthouserc.json
+      # Postgres-pgvector base image lives behind its own publish
+      # workflow at .github/workflows/postgres-pgvector-image.yml.
+      - 'docker/postgres-pgvector/**'
+      # Other GH metadata.
+      - '.github/ISSUE_TEMPLATE/**'
+      - '.github/PULL_REQUEST_TEMPLATE.md'
+      - '.github/dependabot.yml'
+      - '.github/CODEOWNERS'
+      - '.github/FUNDING.yml'
+      # Sibling workflows that don't influence CI behavior.
+      - '.github/workflows/lighthouse.yml'
+      - '.github/workflows/postgres-pgvector-image.yml'
+      - '.github/workflows/release.yml'
 
 # Workflow-wide heap bump for Node steps. v0.7.0 codebase trips Node's default
 # ~2 GB old-space limit on multiple steps (tsc, Next build via Turbopack/SWC,
