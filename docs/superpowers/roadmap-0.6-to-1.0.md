@@ -88,6 +88,74 @@ Two releases remain to 1.0.
 
 **Rough size:** 10 plan groups, 26 numbered plans. Migrations `0029`–`0032` (four additive).
 
+**SHIPPED 2026-05-26.** Image at `ghcr.io/jonathanmcohen/cairn:0.8.0` + `cairn-collab:0.8.0` (multi-arch).
+
+---
+
+## v0.9.0 — Power features & 1.0-readiness (single large release)
+
+**Theme:** finish every remaining feature on the pre-1.0 roadmap *except* the AI cluster (set aside for the third time). After v0.9.0, v1.0.0 is pure stabilization with one open question (ship AI or drop permanently).
+
+**Scope:** 38 features. Single release. Single `release/v0.9.0` branch (no direct-to-main commits — per the v0.7-v0.8 retrospective). 43 numbered plans across 9 groups (G1-G9). 15 migrations (`0034`-`0048`).
+
+| # | Feature | Group | Notes / risk |
+|---|---|---|---|
+| 1 | Tasks hub ("My Tasks") | G4 | Aggregator over existing task-list blocks. **Low.** |
+| 2 | SSO bundle (SAML + OIDC + SCIM) | G1 | `samlify`, Auth.js OIDC, SCIM 2.0 endpoint. 4 plans. **Medium-high — IdP interop matrix.** |
+| 3 | i18n framework + en + es | G6 | Framework polish + es translations only; other languages community-PR. **Medium.** |
+| 4 | E2E encryption — per-page | G1 | Per-user X25519 keypair + per-page DEK wrapped under member pubkeys. **High — touches every page-content consumer.** |
+| 5 | E2E encryption — workspace-wide | G1 | Same crypto core as #4; workspace key wraps all pages. **High.** |
+| 6 | Diagram blocks (PlantUML + drawio) | G3 | Extends v0.8 Mermaid. PlantUML WASM + drawio iframe. **Low.** |
+| 7 | Spaces (project grouping + per-space ACLs) | G2 | Flat (no nesting). New tables + permission chain. **Medium.** |
+| 8 | Page approval / sign-off | G4 | HMAC-signed audit entry on `pages.status='review'`. Couples with #29. **Low-medium.** |
+| 9 | Image gallery + lightbox | G3 | TipTap gallery node + portal modal. **Low.** |
+| 10 | PDF annotation + inline viewer | G3 | `pdfjs-dist` + per-user annotation overlay (no Yjs sync in v0.9). **Medium.** |
+| 11 | Citation / footnote blocks | G3 | Footnote anchor + bibliography aggregator. Pairs with #34. **Low.** |
+| 12 | "See also" related pages | G5 | Reuses v0.7 pgvector embeddings. Skips encrypted pages. **Low.** |
+| 13 | Static-site export (MkDocs + Docusaurus) | G7 | 2 plans (shared pipeline + per-format target). CLI + admin UI. **Medium.** |
+| 14 | Slack + Discord two-way bridge | G7 | 2 plans (outbound app + inbound + slash commands + channel↔page sync). **Medium-high.** |
+| 15 | API rate-limit + per-PAT quotas + admin dashboard | G1 | Extends v0.7 PATs. **Low-medium.** |
+| 16 | Page outline / TOC sidebar | G6 | Sticky right-rail + per-user pref; v0.6 P6 inline TOC coexists. **Low.** |
+| 17 | Side-by-side version diff | G6 | Block-level ProseMirror diff between any two v0.5 snapshots. **Low-medium.** |
+| 18 | Trash retention + auto-purge admin | G2 | `workspaces.trash_retention_days` + admin UI + manual purge button. **Low.** |
+| 19 | Parallel-translation pages | G4 | `pages.translation_of_page_id` self-FK; folded into #29's plan. **Low.** |
+| 20 | MFA — WebAuthn + step-up + admin enforce | G1 | Complements v0.6 P19 TOTP. `@simplewebauthn/server`. **Medium.** |
+| 21 | Audit log → SIEM forwarder | G8 | 2 plans (syslog + HTTP webhook core; native Splunk HEC + Datadog Logs + S3 archive). **Medium.** |
+| 22 | Flashcards block (SM-2) | G3 | Persistent reviews + due-queue + notifications + email digest. **Low-medium.** |
+| 23 | Page lock / freeze (full + audit + auto-unlock) | G2 | Refuses ALL writes when locked. Auto-unlock via `locked_until` cron. **Low.** |
+| 24 | Self-hosted upgrade tooling | G8 | 2 plans (CLI + compose orchestration; release-watch + admin UI). **Medium-high — operates on production data.** |
+| 25 | Bulk file drag-drop | G3 | Folded with #36 (multi-file upload UX). **Low.** |
+| 26 | Encrypted workspace backups | G8 | AES-256-GCM envelope around v0.5 S3 pipeline. Separate from #4/#5. **Low-medium.** |
+| 27 | OpenAPI spec + Swagger UI | G7 | `zod-to-openapi` generator + `/openapi.json` + `/api-docs`. **Low.** |
+| 28 | "Save as template" UI + sharing controls | G4 | Template-from-page + visibility (private/workspace/public). **Low.** |
+| 29 | Draft / publish / review / archived lifecycle | G4 | New `pages.status` enum; couples with #8 + #19. **Medium — migration backfill.** |
+| 30 | Focus / reader mode | G6 | Folded with #35. Two states (focus + reader). **Low.** |
+| 31 | Date/time block with timezone | G3 | `luxon`. First-class TZ-aware block. **Low.** |
+| 32 | Search operators + chip UI + saved templates | G5 | Parser + chip builder + named templates. **Low-medium.** |
+| 33 | Federated multi-workspace + cross-instance search | G5 | Membership scope + admin cross-ws + peer-instance federation. **Medium-high — new trust surface.** |
+| 34 | DOI / PubMed citation lookup | G3 | Server-side fetcher + APA/MLA/Chicago formatters. Pairs with #11. **Low.** |
+| 35 | Public-share password protection | G6 | Wires existing `link_password_hash` column. Folded with #30. **Low.** |
+| 36 | Inline video / audio player block | G3 | Audio block + extend v0.8 video allowlist. Folded with #25. **Low.** |
+| 37 | Markdown export with YAML frontmatter | G7 | Folded into #13's per-format profiles. **Low.** |
+| 38 | Workspace-pinned pages | G2 | Separate `workspace_pins` table; distinct from v0.8 favorites. **Low.** |
+
+**Plan group structure:**
+- G1 — Security + identity (10 plans): SSO (4), E2E (3), MFA (1), PAT quotas (2)
+- G2 — Workspace structure (4 plans): Spaces, workspace-pins, trash purge, page lock
+- G3 — New blocks (8 plans)
+- G4 — Content lifecycle (4 plans): tasks hub, approval, save-template, status lifecycle (incl. translations)
+- G5 — Search + discovery (4 plans): see also, TOC sidebar, search operators, federated search
+- G6 — Polish + UX (3 plans): i18n, version diff, focus+reader+share-password
+- G7 — Export + interop (5 plans): static export ×2, chat bridge ×2, OpenAPI
+- G8 — Operations + observability (4 plans): SIEM ×2, upgrade tooling ×2, encrypted backups
+- G9 — Combined smoke + release (1 plan)
+
+**Open design points settled in brainstorm:** branch discipline = `release/v0.9.0` branch (single PR to main at release time); E2E key model = per-user X25519 keypair + workspace-key wrapping; SSO = 4-plan bundle (no JIT); spaces = flat + per-space ACLs (no nesting); chat bridge = notifications + slash commands + channel-page sync; static export = CLI + UI button (no scheduled push); upgrade tooling = CLI + compose + release-watch; i18n = framework + en + es (defer rest); SIEM = all 4 targets (syslog + HTTP + Splunk/Datadog + S3); flashcards = persistent SM-2 + notifications + digest.
+
+**Constraints:** every v0.6/v0.7/v0.8 overlap ships as a *delta*, no rebuilds. Every new env var documented in `docs/operations.md`. Encrypted pages skip search / embeddings / public-share / template-instantiation (explicit refuse). Plan-review subagent dispatched between plan write + implementer dispatch (retrospective rule).
+
+**Rough size:** 9 plan groups, 43 numbered plans. Migrations `0034`–`0048` (15 additive). Largest release in the line.
+
 ---
 
 ## v1.0.0 — Stabilization, API stability, docs & polish
@@ -113,13 +181,9 @@ Two releases remain to 1.0.
 
 - **Native mobile apps** (iOS/Android) — the PWA covers mobile for 1.0.
 - **Cross-page synced blocks** — same-page only in v0.6.0; cross-page needs a shared sub-document model.
-- **End-to-end encryption** — revisit for a 2.0 "private" track.
 - **Desktop Electron app** — the installable PWA covers desktop.
-- **SSO/SAML/SCIM, enterprise directory sync** — OAuth covers 1.0; enterprise auth is a post-1.0 track.
-- **WebAuthn / passkeys** — TOTP 2FA covers 1.0.
-- **True per-block ACLs** — per-page sharing covers 1.0.
+- **True per-block ACLs** — per-page sharing + spaces (v0.9 #7) cover 1.0.
 - **Graph view, recurring tasks, comment reactions, guest access** — post-1.0.
-- **Semantic / embeddings search** — opt-in generative assist only for 1.0.
 - **Horizontal scaling** of the collab service (multi-replica + Redis) — single-instance ceiling stays for homelab scale.
 - **Plugin / marketplace system** — post-1.0.
 
@@ -129,8 +193,9 @@ Two releases remain to 1.0.
 
 1. **v0.6.0 (combined) — SHIPPED.** Executed its 23 plans area-by-area; image published at `ghcr.io/jonathanmcohen/cairn:0.6.0`.
 2. **v0.7.0 (extensibility/automation) — SHIPPED.** Headline = MCP server. Image published at `ghcr.io/jonathanmcohen/cairn:0.7.0`.
-3. **v0.8.0 (experience + 1.0-readiness)** — single large release; 26 plans area-by-area (PWA-offline + mobile → performance → quick capture + onboarding → palette + settings hub → a11y → notifications + favorites + backlinks → themes + covers → embeds + new blocks → native PDF → smoke + release).
-4. **v1.0.0 (stabilize)** — freeze the API (after expanding it), performance, docs, opt-in AI, final review; declare SemVer. **Must come last** — it freezes everything before it.
+3. **v0.8.0 (experience + 1.0-readiness) — SHIPPED.** 26 plans. Image at `ghcr.io/jonathanmcohen/cairn:0.8.0`.
+4. **v0.9.0 (power features + 1.0-readiness)** — single large release; 43 plans across 9 groups. Lands every remaining pre-1.0 feature except the AI cluster. Branch-disciplined under `release/v0.9.0` (no direct-to-main commits, per the v0.7-v0.8 retrospective).
+5. **v1.0.0 (stabilize)** — pure stabilization sweep. NO new features. Decides AI cluster (ship or drop permanently), freezes the API, performance audit, docs site, security audit, SemVer commitment. **Must come last** — it freezes everything before it.
 
 ---
 
