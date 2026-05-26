@@ -9,6 +9,9 @@ type Db = PostgresJsDatabase<typeof schema>;
 export type EmbedPageResult =
   | { status: 'embedded'; pageId: string }
   | { status: 'skipped'; pageId: string }
+  // v0.9.0 G1 P6 — page is E2E-encrypted, plaintext is unavailable
+  // server-side so we cannot embed. Fail-closed: never write a row.
+  | { status: 'skipped-encrypted'; pageId: string }
   | { status: 'missing'; pageId: string };
 
 /**
@@ -30,10 +33,14 @@ export async function embedPage(db: Db, pageId: string): Promise<EmbedPageResult
       id: schema.pages.id,
       workspaceId: schema.pages.workspaceId,
       contentText: schema.pages.contentText,
+      encrypted: schema.pages.encrypted,
     })
     .from(schema.pages)
     .where(eq(schema.pages.id, pageId));
   if (!page) return { status: 'missing', pageId };
+  // Fail-closed: any truthy `encrypted` value short-circuits before reading
+  // contentText (which is blanked on encrypt anyway).
+  if (page.encrypted) return { status: 'skipped-encrypted', pageId };
 
   const text = page.contentText ?? '';
   const hash = createHash('sha256').update(text).digest('hex');
