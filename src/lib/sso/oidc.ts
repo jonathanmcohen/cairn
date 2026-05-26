@@ -100,7 +100,11 @@ export async function exchangeCode(
   });
   if (!tokenRes.ok) {
     const body = await tokenRes.text().catch(() => '');
-    throw new Error(`OIDC token exchange failed (${tokenRes.status}): ${body.slice(0, 200)}`);
+    console.error('OIDC token exchange failed', {
+      status: tokenRes.status,
+      body: body.slice(0, 500),
+    });
+    throw new Error(`OIDC token exchange failed (${tokenRes.status})`);
   }
   const tokenBody = (await tokenRes.json()) as { id_token?: string; access_token?: string };
   if (typeof tokenBody.id_token !== 'string') {

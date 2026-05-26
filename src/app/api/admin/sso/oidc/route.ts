@@ -33,7 +33,21 @@ export async function GET(): Promise<Response> {
       ),
     )
     .orderBy(desc(schema.idpConfigurations.createdAt));
-  return NextResponse.json({ items: rows });
+  const items = rows.map((r) => {
+    const meta = (r.metadata ?? {}) as Record<string, unknown>;
+    const { clientSecret, ...safeMeta } = meta as { clientSecret?: unknown } & Record<
+      string,
+      unknown
+    >;
+    return {
+      ...r,
+      metadata: {
+        ...safeMeta,
+        hasClientSecret: typeof clientSecret === 'string' && clientSecret.length > 0,
+      },
+    };
+  });
+  return NextResponse.json({ items });
 }
 
 export async function POST(req: Request): Promise<Response> {

@@ -48,10 +48,16 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  const exchange = await exchangeCode(idp, {
-    code,
-    redirectUri: redirectUriFor(idpId),
-  });
+  let exchange: Awaited<ReturnType<typeof exchangeCode>>;
+  try {
+    exchange = await exchangeCode(idp, {
+      code,
+      redirectUri: redirectUriFor(idpId),
+    });
+  } catch (err) {
+    console.error('OIDC exchange failed', err);
+    return NextResponse.json({ error: 'OIDC exchange failed' }, { status: 400 });
+  }
 
   const attrMap = (idp.attributeMap as Record<string, string> | null) ?? {};
   const claimEmailKey = attrMap.email ?? 'email';
@@ -120,12 +126,22 @@ export async function GET(
         .insert(schema.workspaceMembers)
         .values({ workspaceId: idp.workspaceId, userId, role: 'editor' });
     }
-    await db.insert(schema.externalIdentities).values({
-      userId,
-      idpConfigId: idpId,
-      externalId: exchange.sub,
-      rawAttrs: claims as Record<string, unknown>,
-    });
+    await db
+      .insert(schema.externalIdentities)
+      .values({
+        userId,
+        idpConfigId: idpId,
+        externalId: exchange.sub,
+        rawAttrs: claims as Record<string, unknown>,
+      })
+      .onConflictDoUpdate({
+        target: [schema.externalIdentities.idpConfigId, schema.externalIdentities.externalId],
+        set: {
+          userId,
+          lastSeenAt: new Date(),
+          rawAttrs: claims as Record<string, unknown>,
+        },
+      });
   }
 
   await mintSessionCookieForUser({ userId, email, name });
