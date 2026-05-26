@@ -167,7 +167,7 @@ Two releases remain to 1.0.
 - [x] G1 P7 — E2E workspace-wide mode (migration `0037`)
 - [x] G1 P8 — MFA WebAuthn + step-up + admin enforce (migration `0038`)
 - [x] G1 P9 — PAT quotas (migration `0039`) + scope rate-limits
-- [ ] G1 P10 — PAT quota admin dashboard
+- [x] G1 P10 — PAT quota admin dashboard
 - [ ] G2 P11 — Spaces (migration `0039`) + sidebar grouping + ACL chain
 - [ ] G2 P12 — Workspace-pinned (migration `0040`) + admin UI
 - [ ] G2 P13 — Trash retention (migration `0041`) + admin UI + cron + audit
