@@ -51,7 +51,10 @@ const Schema = z.object({
   // workspace has flipped on encryption, page-level crypto operations continue
   // to function regardless — this gates only the opt-in surface for fresh
   // self-host adopters.
-  CAIRN_ENABLE_E2E_ENCRYPTION: z.coerce.boolean().default(false),
+  CAIRN_ENABLE_E2E_ENCRYPTION: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof Schema>;

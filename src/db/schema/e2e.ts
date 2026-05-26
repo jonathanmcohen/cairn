@@ -81,3 +81,10 @@ export const workspaceEncryptionKeys = pgTable(
     pk: primaryKey({ columns: [t.workspaceId, t.memberUserId] }),
   }),
 );
+
+export type UserKeypair = typeof userKeypairs.$inferSelect;
+export type NewUserKeypair = typeof userKeypairs.$inferInsert;
+export type PageEncryptionKey = typeof pageEncryptionKeys.$inferSelect;
+export type NewPageEncryptionKey = typeof pageEncryptionKeys.$inferInsert;
+export type WorkspaceEncryptionKey = typeof workspaceEncryptionKeys.$inferSelect;
+export type NewWorkspaceEncryptionKey = typeof workspaceEncryptionKeys.$inferInsert;
