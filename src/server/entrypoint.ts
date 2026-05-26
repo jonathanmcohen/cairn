@@ -12,6 +12,32 @@ async function main() {
   // biome-ignore lint/suspicious/noConsole: cli startup
   console.log('Migrations complete.');
 
+  // MFA / WebAuthn RP-ID sanity check (v0.9.0 G1 P8, retro §3 risk #5).
+  // Mismatch between CAIRN_RP_ORIGIN and NEXTAUTH_URL invalidates every enrolled
+  // credential permanently — detect early and warn loudly. Don't crash (admins
+  // may run a tooling-only image without NEXTAUTH_URL set), but log a
+  // structured warning the operator will see in every container start.
+  try {
+    const rpOriginRaw = process.env.CAIRN_RP_ORIGIN;
+    const nextRaw = process.env.NEXTAUTH_URL;
+    if (rpOriginRaw && nextRaw) {
+      const rpOrigin = new URL(rpOriginRaw);
+      const next = new URL(nextRaw);
+      if (rpOrigin.origin !== next.origin) {
+        console.warn(
+          JSON.stringify({
+            level: 'warn',
+            msg: 'CAIRN_RP_ORIGIN does not match NEXTAUTH_URL origin — WebAuthn registrations will be incompatible across these URLs',
+            rpOrigin: rpOrigin.origin,
+            nextAuthOrigin: next.origin,
+          }),
+        );
+      }
+    }
+  } catch {
+    // Either env var missing or unparseable — leave validation to runtime env() callers.
+  }
+
   // NOTE: the webhook startup sweep (recovering pending/failed deliveries left
   // by a previous process) runs from `src/instrumentation.ts#register()` inside
   // the Next app, NOT here. The entrypoint stays a minimal ESM orchestrator with

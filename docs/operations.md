@@ -238,3 +238,51 @@ returns the PDF base64-encoded inside a JSON-RPC resource envelope. The
 tool rejects `format=pdf` with `INVALID_REQUEST` when `CAIRN_NATIVE_PDF`
 is unset (to keep the tool truthful — there is no MCP shape that can
 deliver an HTML "save as" dialog).
+
+## WebAuthn / passkeys (v0.9.0 G1 P8)
+
+Cairn supports passkeys (WebAuthn FIDO2 credentials) as a complement to the
+v0.6 P19 TOTP authenticator. Users can enroll either, both, or neither —
+subject to the per-workspace MFA policy (see Admin enforce below).
+
+**Required env vars (only when WebAuthn is exposed):**
+
+- `CAIRN_RP_ID` — the **registrable domain** of your deployment. Host only,
+  no scheme or port (e.g. `cairn.example.com`). Credentials bind to this
+  value forever; **changing it after enrollment invalidates every passkey**.
+- `CAIRN_RP_ORIGIN` — the **full origin** (scheme + host + port) that the
+  browser sends in the WebAuthn ceremony (e.g. `https://cairn.example.com`).
+  **Must match the origin of `NEXTAUTH_URL`.** A mismatch causes the same
+  permanent invalidation as changing `CAIRN_RP_ID`.
+- `CAIRN_RP_NAME` — human-readable name shown in the authenticator prompt
+  during enrollment. Defaults to `Cairn`.
+
+Leaving these unset is supported and means the `/api/webauthn/*` routes
+respond with 503 — the enrollment page at `/settings/security/passkeys`
+likewise short-circuits to an "operator has not enabled WebAuthn" banner.
+
+**Startup sanity check:** `src/server/entrypoint.ts` parses
+`CAIRN_RP_ORIGIN` and `NEXTAUTH_URL` at container start and logs a
+structured warning to stderr if the origins disagree. Inspect every fresh
+container's log line zero for the warning before letting users enroll.
+
+**Recommended values for the default docker-compose deployment:**
+
+```
+CAIRN_RP_ID=cairn.example.com         # NOT https://...., NOT a port
+CAIRN_RP_NAME=Cairn
+CAIRN_RP_ORIGIN=https://cairn.example.com
+NEXTAUTH_URL=https://cairn.example.com
+```
+
+**Admin-enforce policy:** workspace admins can require MFA enrollment for
+all members via `PUT /api/admin/workspaces/<workspaceId>/mfa-policy`
+(surfaced at `/settings/admin/mfa`). When enabled, sign-in for a member
+without any enrolled MFA method (TOTP or WebAuthn) returns
+403 `mfa-enrollment-required` and the login screen links them to the
+enrollment page.
+
+**Step-up:** the workspace-delete admin action (and any future
+opt-in destructive surface) requires a fresh WebAuthn assertion (within
+5 minutes). Missing / stale returns 403 `stepup-required`; the UI triggers
+the assertion inline and retries the request on success.

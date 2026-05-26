@@ -41,6 +41,8 @@
     "@playwright/test": "^1.60.0",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-slot": "^1.2.4",
+    "@simplewebauthn/browser": "^13.3.0",
+    "@simplewebauthn/server": "^13.3.0",
     "@tanstack/react-virtual": "^3.13.25",
     "@tiptap/core": "^3.23.5",
     "@tiptap/extension-code-block-lowlight": "^3.23.5",

@@ -63,6 +63,15 @@ const Schema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
+  // v0.9.0 G1 P8 — WebAuthn relying-party identifiers.
+  // CAIRN_RP_ID is the REGISTRABLE DOMAIN (e.g. "cairn.example.com"); credentials
+  // bind to this value forever, so changing it after enrollment invalidates EVERY
+  // passkey. CAIRN_RP_ORIGIN is the full origin (scheme + host + port). They are
+  // optional at parse time so dev/tooling builds without WebAuthn still validate;
+  // the WebAuthn ceremonies enforce presence at call time (`requireRpEnv`).
+  CAIRN_RP_ID: z.string().min(1).optional(),
+  CAIRN_RP_NAME: z.string().default('Cairn'),
+  CAIRN_RP_ORIGIN: z.url().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;
