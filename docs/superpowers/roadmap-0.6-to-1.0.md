@@ -161,7 +161,7 @@ Two releases remain to 1.0.
 - [x] G1 P1 — SSO migration `0034` + Drizzle tables (`idp_configurations`, `external_identities`, `scim_tokens`)
 - [x] G1 P2 — OIDC adapter
 - [x] G1 P3 — SAML adapter
-- [ ] G1 P4 — SCIM 2.0 endpoint + admin IdP-config UI
+- [x] G1 P4 — SCIM 2.0 endpoint + admin IdP-config UI
 - [ ] G1 P5 — E2E migration `0035` + crypto core (X25519 + key-wrap)
 - [ ] G1 P6 — E2E per-page mode
 - [ ] G1 P7 — E2E workspace-wide mode

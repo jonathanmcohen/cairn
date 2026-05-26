@@ -8,6 +8,7 @@ import {
   scimError,
   serializeGroupForScim,
 } from '@/lib/sso/scim';
+import type { VerifiedScimToken } from '@/lib/sso/scim-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,7 +21,7 @@ function originFor(req: Request): string {
 
 export async function GET(req: Request): Promise<Response> {
   const db = getDb();
-  let token;
+  let token: VerifiedScimToken;
   try {
     token = await requireScimBearer(req, db);
   } catch (err) {

@@ -9,6 +9,7 @@ import {
   scimError,
   serializeGroupForScim,
 } from '@/lib/sso/scim';
+import type { VerifiedScimToken } from '@/lib/sso/scim-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -43,7 +44,7 @@ export async function GET(
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const db = getDb();
-  let token;
+  let token: VerifiedScimToken;
   try {
     token = await requireScimBearer(req, db);
   } catch (err) {
@@ -87,7 +88,7 @@ export async function PATCH(
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
   const db = getDb();
-  let token;
+  let token: VerifiedScimToken;
   try {
     token = await requireScimBearer(req, db);
   } catch (err) {

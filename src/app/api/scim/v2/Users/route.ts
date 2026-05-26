@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import {
+  type ParsedScimFilter,
   parseScimFilter,
   requireScimBearer,
   requireScope,
@@ -11,6 +12,7 @@ import {
   scimError,
   serializeUserForScim,
 } from '@/lib/sso/scim';
+import type { VerifiedScimToken } from '@/lib/sso/scim-token';
 
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +33,7 @@ function originFor(req: Request): string {
 
 export async function GET(req: Request): Promise<Response> {
   const db = getDb();
-  let token;
+  let token: VerifiedScimToken;
   try {
     token = await requireScimBearer(req, db);
   } catch (err) {
@@ -46,7 +48,7 @@ export async function GET(req: Request): Promise<Response> {
   }
 
   const url = new URL(req.url);
-  let filter;
+  let filter: ParsedScimFilter | null;
   try {
     filter = parseScimFilter(url.searchParams.get('filter'));
   } catch (err) {
@@ -113,7 +115,7 @@ export async function GET(req: Request): Promise<Response> {
 
 export async function POST(req: Request): Promise<Response> {
   const db = getDb();
-  let token;
+  let token: VerifiedScimToken;
   try {
     token = await requireScimBearer(req, db);
   } catch (err) {
