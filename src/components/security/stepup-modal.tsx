@@ -1,6 +1,7 @@
 'use client';
 
 import { startAuthentication } from '@simplewebauthn/browser';
+import { useSession } from 'next-auth/react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 
@@ -10,16 +11,37 @@ import { Button } from '@/components/ui/button';
  * Renders inline when a sensitive-op fetch returns 403 + code 'stepup-required'.
  * Drives the WebAuthn assertion ceremony, then resolves so the caller can
  * retry the original request with the fresh stepUpAt claim.
+ *
+ * Dual-path refresh after a successful assertion:
+ *   1. The `cairn_stepup` cookie set by `/api/webauthn/assert` covers the
+ *      immediate same-request retry (e.g. workspace-delete) on servers that
+ *      honor the cookie alongside the JWT claim.
+ *   2. `session.update({ stepUpAt })` round-trips the NextAuth JWT so any
+ *      subsequent server request that reads `stepUpAt` from the token sees
+ *      the fresh timestamp. If `<SessionProvider>` is absent the call is a
+ *      no-op and path (1) still keeps the retry working.
  */
 export function StepUpModal({
+  open,
+  onOpenChange,
   onComplete,
   onCancel,
 }: {
-  onComplete: () => void;
-  onCancel: () => void;
-}): React.JSX.Element {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  onComplete: () => void | Promise<void>;
+  onCancel?: () => void;
+}): React.JSX.Element | null {
+  const { update } = useSession();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+
+  if (open === false) return null;
+
+  function cancel() {
+    onOpenChange?.(false);
+    onCancel?.();
+  }
 
   async function run() {
     setBusy(true);
@@ -43,7 +65,8 @@ export function StepUpModal({
         const body = (await r.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? `assert failed: ${r.status}`);
       }
-      onComplete();
+      await update({ stepUpAt: Date.now() });
+      await onComplete();
     } catch (e) {
       setErr((e as Error).message);
     } finally {
@@ -66,7 +89,7 @@ export function StepUpModal({
           This action requires a recent passkey assertion (within 5 minutes).
         </p>
         <div className="flex justify-end gap-2">
-          <Button variant="ghost" onClick={onCancel} disabled={busy}>
+          <Button variant="ghost" onClick={cancel} disabled={busy}>
             Cancel
           </Button>
           <Button onClick={run} disabled={busy}>
