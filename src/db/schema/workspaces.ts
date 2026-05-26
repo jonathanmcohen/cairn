@@ -17,6 +17,10 @@ export const workspaces = pgTable('workspaces', {
   // circular-FK situation as homePageId — FK constraint added by hand in the
   // generated migration SQL.
   inboxPageId: uuid('inbox_page_id'),
+  // v0.9.0 G1 P7 — workspace-wide E2E encryption mode discriminator.
+  // 'off' | 'per_page' | 'workspace_wide'; no DB-level CHECK — API rejects
+  // unknown values. Set to 'workspace_wide' by /api/workspaces/[id]/e2e/enable.
+  e2eMode: text('e2e_mode').notNull().default('off'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

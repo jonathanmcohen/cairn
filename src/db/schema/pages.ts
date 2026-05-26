@@ -45,6 +45,11 @@ export const pages = pgTable(
     // v0.9.0 G1 P6 — ciphertext of TipTap doc JSON when encrypted=true.
     // Envelope: iv(12) || ct || tag(16). Null when encrypted=false.
     contentEncrypted: bytea('content_encrypted'),
+    // v0.9.0 G1 P7 — workspace-wide mode discriminator. When true, the page's
+    // DEK is the workspace WSK (see workspace_encryption_keys.wrapped_wsk);
+    // when false but encrypted=true, the page uses per-page DEKs from
+    // page_encryption_keys (P6 selective mode). Always false when encrypted=false.
+    encryptedUnderWsk: boolean('encrypted_under_wsk').notNull().default(false),
     publicSlug: text('public_slug').unique(),
     linkPasswordHash: text('link_password_hash'),
     expiresAt: timestamp('expires_at', { withTimezone: true }),

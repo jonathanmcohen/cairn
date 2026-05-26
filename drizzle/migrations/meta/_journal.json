@@ -260,6 +260,13 @@
       "when": 1779823370811,
       "tag": "0036_pages_content_encrypted",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1779830907000,
+      "tag": "0037_workspace_e2e_mode",
+      "breakpoints": true
     }
   ]
 }
