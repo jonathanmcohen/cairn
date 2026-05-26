@@ -112,7 +112,68 @@ export async function unlockUserKeypair(
   return { publicKey: sealed.publicKey, privateKey: privRaw };
 }
 
-// --- DEK / wrap-unwrap helpers land in Task 4 of this plan ---
+// --- DEK / wrap-unwrap helpers (Task 4) ---
+
+const DEK_BYTES = 32;
+const EPHEMERAL_PUB_BYTES = 32;
+const HKDF_INFO = Buffer.from('cairn-e2e-dek-wrap-v1', 'utf8');
+
+export function generateDek(): Buffer {
+  return randomBytes(DEK_BYTES);
+}
+
+function deriveWrapKey(sharedSecret: Buffer, ephemeralPub: Buffer, recipientPub: Buffer): Buffer {
+  // HKDF salt = ephemeral_pub || recipient_pub binds the derived key to the
+  // exact handshake (prevents key reuse across recipients / mistaken IDs).
+  const salt = Buffer.concat([ephemeralPub, recipientPub]);
+  const okm = hkdfSync('sha256', sharedSecret, salt, HKDF_INFO, 32);
+  return Buffer.from(okm);
+}
+
+export function wrapDek(dek: Buffer, recipientPublicKey: Buffer): Buffer {
+  if (dek.byteLength !== DEK_BYTES) {
+    throw new Error(`DEK must be ${DEK_BYTES} bytes, got ${dek.byteLength}`);
+  }
+  if (recipientPublicKey.byteLength !== 32) {
+    throw new Error('recipient public key must be 32 bytes (X25519)');
+  }
+  // Ephemeral keypair for this wrap.
+  const { publicKey: ephPubObj, privateKey: ephPrivObj } = generateKeyPairSync('x25519');
+  const ephPub = rawX25519Public(ephPubObj);
+
+  const recipientPubObj = importX25519PublicFromRaw(recipientPublicKey);
+  const shared = diffieHellman({ publicKey: recipientPubObj, privateKey: ephPrivObj });
+
+  const kek = deriveWrapKey(shared, ephPub, recipientPublicKey);
+  const iv = randomBytes(IV_BYTES);
+  const cipher = createCipheriv('aes-256-gcm', kek, iv);
+  const ct = Buffer.concat([cipher.update(dek), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([ephPub, iv, ct, tag]);
+}
+
+export function unwrapDek(wrapped: Buffer, recipientPrivateKey: Buffer): Buffer {
+  const expectedLen = EPHEMERAL_PUB_BYTES + IV_BYTES + DEK_BYTES + TAG_BYTES;
+  if (wrapped.byteLength !== expectedLen) {
+    throw new Error(`wrapped DEK must be ${expectedLen} bytes, got ${wrapped.byteLength}`);
+  }
+  const ephPub = wrapped.subarray(0, EPHEMERAL_PUB_BYTES);
+  const iv = wrapped.subarray(EPHEMERAL_PUB_BYTES, EPHEMERAL_PUB_BYTES + IV_BYTES);
+  const tag = wrapped.subarray(wrapped.length - TAG_BYTES);
+  const ct = wrapped.subarray(EPHEMERAL_PUB_BYTES + IV_BYTES, wrapped.length - TAG_BYTES);
+
+  const ephPubObj = importX25519PublicFromRaw(ephPub);
+  const recipientPrivObj = importX25519PrivateFromRaw(recipientPrivateKey);
+  const shared = diffieHellman({ publicKey: ephPubObj, privateKey: recipientPrivObj });
+
+  // Derive the recipient's public key on the fly for the HKDF salt binding.
+  const recipientPubRaw = rawX25519Public(createPublicKey(recipientPrivObj));
+
+  const kek = deriveWrapKey(shared, ephPub, recipientPubRaw);
+  const decipher = createDecipheriv('aes-256-gcm', kek, iv);
+  decipher.setAuthTag(tag);
+  return Buffer.concat([decipher.update(ct), decipher.final()]);
+}
 
 export const __internal = {
   importX25519PublicFromRaw,
