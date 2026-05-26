@@ -29,6 +29,13 @@ export const AUDIT_ACTIONS = [
   // v0.8.0 G3 P8 — quick-capture inbox events (spec §5.5).
   'inbox.captured',
   'inbox.triaged',
+  // v0.9.0 G1 P1 — SSO bundle (OIDC + SAML config CRUD + SCIM token lifecycle).
+  // Consumers: P2 (OIDC adapter), P3 (SAML adapter), P4 (SCIM endpoint + admin UI).
+  'sso.idp.created',
+  'sso.idp.updated',
+  'sso.idp.deleted',
+  'sso.scim.token.minted',
+  'sso.scim.token.revoked',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

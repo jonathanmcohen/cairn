@@ -65,6 +65,12 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.8.0 G3 P8 — quick-capture inbox events.
   'inbox.captured': 'Inbox capture saved',
   'inbox.triaged': 'Inbox item triaged',
+  // v0.9.0 G1 P1 — SSO bundle events.
+  'sso.idp.created': 'SSO identity provider created',
+  'sso.idp.updated': 'SSO identity provider updated',
+  'sso.idp.deleted': 'SSO identity provider deleted',
+  'sso.scim.token.minted': 'SCIM token minted',
+  'sso.scim.token.revoked': 'SCIM token revoked',
 };
 
 function actionLabel(action: string): string {
