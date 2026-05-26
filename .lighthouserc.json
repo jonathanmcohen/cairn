@@ -1,7 +1,7 @@
 {
   "ci": {
     "collect": {
-      "startServerCommand": "pnpm start",
+      "startServerCommand": "rm -rf .next/standalone/.next/static && cp -R .next/static .next/standalone/.next/static && cp -R public .next/standalone/public && node .next/standalone/server.js",
       "startServerReadyPattern": "Ready in",
       "url": ["http://localhost:3000/p/v08-lhci-seed-slug"],
       "numberOfRuns": 3,
