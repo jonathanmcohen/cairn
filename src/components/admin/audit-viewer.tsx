@@ -75,6 +75,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'e2e.keypair.created': 'E2E keypair created',
   'e2e.page.encrypted': 'Page encrypted (E2E)',
   'e2e.workspace.encrypted': 'Workspace encrypted (E2E)',
+  'e2e.workspace.member_added': 'E2E workspace member added',
+  'e2e.workspace.member_removed': 'E2E workspace member removed',
+  'e2e.workspace.rekey_started': 'E2E workspace rekey started',
+  'e2e.workspace.rekey_completed': 'E2E workspace rekey completed',
 };
 
 function actionLabel(action: string): string {

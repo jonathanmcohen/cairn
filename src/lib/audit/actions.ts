@@ -40,6 +40,11 @@ export const AUDIT_ACTIONS = [
   'e2e.keypair.created',
   'e2e.page.encrypted',
   'e2e.workspace.encrypted',
+  // v0.9.0 G1 P7 — workspace-wide WSK roster + rekey lifecycle.
+  'e2e.workspace.member_added',
+  'e2e.workspace.member_removed',
+  'e2e.workspace.rekey_started',
+  'e2e.workspace.rekey_completed',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
