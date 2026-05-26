@@ -36,6 +36,10 @@ export const AUDIT_ACTIONS = [
   'sso.idp.deleted',
   'sso.scim.token.minted',
   'sso.scim.token.revoked',
+  // v0.9.0 G1 P5-P7 — E2E encryption lifecycle.
+  'e2e.keypair.created',
+  'e2e.page.encrypted',
+  'e2e.workspace.encrypted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

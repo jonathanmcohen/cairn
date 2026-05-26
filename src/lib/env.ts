@@ -46,6 +46,12 @@ const Schema = z.object({
   // Unsplash "Client-ID" — public by design); the SERVER-side equivalent stays
   // in FORBIDDEN_KEYS so no Cairn route ever proxies it.
   NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY: z.string().optional(),
+  // v0.9.0 G1 P5 — server-side deploy guard for E2E encryption (G1 P5-P7).
+  // When false (default), admin UIs (P6/P7) hide the encryption toggle. Once a
+  // workspace has flipped on encryption, page-level crypto operations continue
+  // to function regardless — this gates only the opt-in surface for fresh
+  // self-host adopters.
+  CAIRN_ENABLE_E2E_ENCRYPTION: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof Schema>;

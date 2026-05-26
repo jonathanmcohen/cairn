@@ -71,6 +71,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'sso.idp.deleted': 'SSO identity provider deleted',
   'sso.scim.token.minted': 'SCIM token minted',
   'sso.scim.token.revoked': 'SCIM token revoked',
+  // v0.9.0 G1 P5-P7 — E2E encryption lifecycle events.
+  'e2e.keypair.created': 'E2E keypair created',
+  'e2e.page.encrypted': 'Page encrypted (E2E)',
+  'e2e.workspace.encrypted': 'Workspace encrypted (E2E)',
 };
 
 function actionLabel(action: string): string {
