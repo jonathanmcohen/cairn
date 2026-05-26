@@ -96,7 +96,7 @@ Two releases remain to 1.0.
 
 **Theme:** finish every remaining feature on the pre-1.0 roadmap *except* the AI cluster (set aside for the third time). After v0.9.0, v1.0.0 is pure stabilization with one open question (ship AI or drop permanently).
 
-**Scope:** 38 features. Single release. Single `release/v0.9.0` branch (no direct-to-main commits — per the v0.7-v0.8 retrospective). 43 numbered plans across 9 groups (G1-G9). 15 migrations (`0034`-`0048`).
+**Scope:** 38 features. Single release. Single `release/v0.9.0` branch (no direct-to-main commits — per the v0.7-v0.8 retrospective). 44 numbered plans across 9 groups (G1-G9). 15 migrations (`0034`-`0048`).
 
 | # | Feature | Group | Notes / risk |
 |---|---|---|---|
@@ -154,7 +154,54 @@ Two releases remain to 1.0.
 
 **Constraints:** every v0.6/v0.7/v0.8 overlap ships as a *delta*, no rebuilds. Every new env var documented in `docs/operations.md`. Encrypted pages skip search / embeddings / public-share / template-instantiation (explicit refuse). Plan-review subagent dispatched between plan write + implementer dispatch (retrospective rule).
 
-**Rough size:** 9 plan groups, 43 numbered plans. Migrations `0034`–`0048` (15 additive). Largest release in the line.
+**Rough size:** 9 plan groups, 44 numbered plans. Migrations `0034`–`0048` (15 additive). Largest release in the line.
+
+**Per-plan progress** (tick as plans land on `release/v0.9.0`):
+
+- [x] G1 P1 — SSO migration `0034` + Drizzle tables (`idp_configurations`, `external_identities`, `scim_tokens`)
+- [ ] G1 P2 — OIDC adapter
+- [ ] G1 P3 — SAML adapter
+- [ ] G1 P4 — SCIM 2.0 endpoint + admin IdP-config UI
+- [ ] G1 P5 — E2E migration `0035` + crypto core (X25519 + key-wrap)
+- [ ] G1 P6 — E2E per-page mode
+- [ ] G1 P7 — E2E workspace-wide mode
+- [ ] G1 P8 — MFA WebAuthn + step-up + admin enforce (migration `0036`)
+- [ ] G1 P9 — PAT quotas (migration `0037`) + scope rate-limits
+- [ ] G1 P10 — PAT quota admin dashboard
+- [ ] G2 P11 — Spaces (migration `0038`) + sidebar grouping + ACL chain
+- [ ] G2 P12 — Workspace-pinned (migration `0039`) + admin UI
+- [ ] G2 P13 — Trash retention (migration `0040`) + admin UI + cron + audit
+- [ ] G2 P14 — Page lock (migration `0041`) + audit + auto-unlock
+- [ ] G3 P15 — Diagram blocks expansion (PlantUML + drawio)
+- [ ] G3 P16 — Image gallery + lightbox
+- [ ] G3 P17 — PDF viewer + annotation (migration `0042`)
+- [ ] G3 P18 — Citation + footnote blocks + bibliography aggregator
+- [ ] G3 P19 — Flashcards (migration `0043`) + SM-2 + due-queue + notifs + digest
+- [ ] G3 P20 — Date/time block with timezone
+- [ ] G3 P21 — DOI / PubMed citation lookup
+- [ ] G3 P22 — Bulk file drag-drop + audio block + MIME allowlist
+- [ ] G4 P23 — Tasks hub (`/my-tasks` aggregator)
+- [ ] G4 P24 — Page approval + signed audit (migration `0045`)
+- [ ] G4 P25 — Save-as-template + sharing controls
+- [ ] G4 P26 — Page lifecycle status + translations (migration `0044`)
+- [ ] G5 P27 — "See also" related-pages panel
+- [ ] G5 P28 — TOC sidebar
+- [ ] G5 P29 — Search operators parser + chip UI + saved templates
+- [ ] G5 P30 — Federated multi-workspace + cross-instance search (migration `0046`)
+- [ ] G6 P31 — i18n framework polish + Biome rule + es translations
+- [ ] G6 P32 — Side-by-side version diff
+- [ ] G6 P33 — Focus mode + reader mode + share-password verify
+- [ ] G7 P34 — Static export pipeline + CLI + UI + MkDocs target
+- [ ] G7 P35 — Static export Docusaurus target + per-format frontmatter
+- [ ] G7 P36 — Chat bridge outbound + inbound (Slack + Discord)
+- [ ] G7 P37 — Chat bridge slash commands + channel↔page sync (migration `0047`)
+- [ ] G7 P38 — OpenAPI generator + `/openapi.json` + Swagger UI
+- [ ] G8 P39 — SIEM forwarder (migration `0048`) + syslog + HTTP webhook
+- [ ] G8 P40 — SIEM native Splunk HEC + Datadog Logs + S3 NDJSON archive
+- [ ] G8 P41 — `cairn-upgrade` CLI + compose orchestration
+- [ ] G8 P42 — Release-watch daemon + admin upgrade UI
+- [ ] G8 P43 — Encrypted workspace backups (AES-256-GCM envelope)
+- [ ] G9 P44 — Combined smoke + release (single PR `release/v0.9.0 → main` + tag)
 
 ---
 
