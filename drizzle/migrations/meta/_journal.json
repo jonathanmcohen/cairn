@@ -267,6 +267,13 @@
       "when": 1779830907000,
       "tag": "0037_workspace_e2e_mode",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1779833234258,
+      "tag": "0038_mfa_webauthn",
+      "breakpoints": true
     }
   ]
 }
