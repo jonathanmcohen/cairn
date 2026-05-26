@@ -22,6 +22,7 @@ export * from './pages';
 export * from './personal-access-tokens';
 export * from './reminders';
 export * from './saved-searches';
+export * from './sso';
 export * from './suggestions';
 export * from './system-meta';
 export * from './templates';
