@@ -45,6 +45,12 @@ export const AUDIT_ACTIONS = [
   'e2e.workspace.member_removed',
   'e2e.workspace.rekey_started',
   'e2e.workspace.rekey_completed',
+  // v0.9.0 G1 P8 — WebAuthn passkey + step-up + admin-enforce events.
+  'mfa.passkey_added',
+  'mfa.passkey_removed',
+  'mfa.passkey_used',
+  'mfa.stepup_required',
+  'mfa.policy_changed',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -60,4 +66,7 @@ export type AuditTargetType =
   | 'template'
   // v0.7.0 G1 P5 — new target types for PATs + ACL rows.
   | 'personal_access_token'
-  | 'page_acl';
+  | 'page_acl'
+  // v0.9.0 G1 P8 — passkey credential rows + workspace MFA policy rows.
+  | 'webauthn_credential'
+  | 'mfa_policy';

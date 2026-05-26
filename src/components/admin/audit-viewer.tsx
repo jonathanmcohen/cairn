@@ -32,6 +32,8 @@ const TARGET_TYPES: AuditTargetType[] = [
   'template',
   'personal_access_token',
   'page_acl',
+  'webauthn_credential',
+  'mfa_policy',
 ];
 
 // Human-readable labels for the documented action vocabulary (spec §2.27, §3 G1).
@@ -79,6 +81,12 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'e2e.workspace.member_removed': 'E2E workspace member removed',
   'e2e.workspace.rekey_started': 'E2E workspace rekey started',
   'e2e.workspace.rekey_completed': 'E2E workspace rekey completed',
+  // v0.9.0 G1 P8 — WebAuthn + step-up + admin-enforce events.
+  'mfa.passkey_added': 'Passkey added',
+  'mfa.passkey_removed': 'Passkey removed',
+  'mfa.passkey_used': 'Passkey used',
+  'mfa.stepup_required': 'Step-up required',
+  'mfa.policy_changed': 'MFA policy changed',
 };
 
 function actionLabel(action: string): string {
