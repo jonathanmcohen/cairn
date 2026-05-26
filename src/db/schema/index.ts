@@ -9,6 +9,7 @@ export * from './connector-row-map';
 export * from './cron-schedules';
 export * from './database-connectors';
 export * from './databases';
+export * from './e2e';
 export * from './files';
 export * from './import-jobs';
 export * from './invite-tokens';

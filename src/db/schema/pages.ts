@@ -32,6 +32,10 @@ export const pages = pgTable(
     // `{}` means "no banner"; renderer prefers this over legacy `coverUrl`.
     cover: jsonb('cover').$type<unknown>().notNull().default({}),
     published: boolean('published').notNull().default(false),
+    // v0.9.0 G1 P5 — load-bearing flag every page-content consumer (FTS,
+    // embeddings, public share, webhooks, federated search) checks before
+    // exposing `content_text` / `content`. Stays false for unencrypted pages.
+    encrypted: boolean('encrypted').notNull().default(false),
     publicSlug: text('public_slug').unique(),
     linkPasswordHash: text('link_password_hash'),
     expiresAt: timestamp('expires_at', { withTimezone: true }),
