@@ -1,6 +1,7 @@
 import { and, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 import {
   dayWindowStart,
   monthWindowStart,
@@ -16,18 +17,22 @@ import { consumeScopeBucket } from './pat-scope-bucket';
  */
 export type QuotaResult = { allowed: true } | { allowed: false; retryAfterSec: number };
 
-type TokenLimits = {
+type TokenContext = {
+  workspaceId: string;
+  userId: string;
   dailyRequestLimit: number | null;
   monthlyRequestLimit: number | null;
   scopeRateLimits: Record<string, { perMinute: number }> | null;
 };
 
-async function loadLimits(
+async function loadContext(
   db: PostgresJsDatabase<typeof schema>,
   tokenId: string,
-): Promise<TokenLimits | null> {
+): Promise<TokenContext | null> {
   const [row] = await db
     .select({
+      workspaceId: schema.personalAccessTokens.workspaceId,
+      userId: schema.personalAccessTokens.userId,
       dailyRequestLimit: schema.personalAccessTokens.dailyRequestLimit,
       monthlyRequestLimit: schema.personalAccessTokens.monthlyRequestLimit,
       scopeRateLimits: schema.personalAccessTokens.scopeRateLimits,
@@ -80,6 +85,51 @@ async function bumpUsage(
 }
 
 /**
+ * In-process throttle for `pat.quota_exceeded` audit rows: a misbehaving
+ * client that retries thousands of times against an exhausted quota must not
+ * flood the audit log. Emit at most once per minute per (token, reason).
+ */
+const auditThrottle = new Map<string, number>();
+const AUDIT_THROTTLE_MS = 60_000;
+
+function shouldRecordAudit(tokenId: string, reason: string, nowMs: number): boolean {
+  const key = `${tokenId}::${reason}`;
+  const last = auditThrottle.get(key) ?? 0;
+  if (nowMs - last < AUDIT_THROTTLE_MS) return false;
+  auditThrottle.set(key, nowMs);
+  return true;
+}
+
+/** Test-only: clear the audit throttle map between tests. */
+export function resetQuotaAuditThrottleForTests(): void {
+  auditThrottle.clear();
+}
+
+async function auditCap(
+  db: PostgresJsDatabase<typeof schema>,
+  ctx: TokenContext,
+  tokenId: string,
+  scopeId: string,
+  reason: 'day' | 'month' | 'scope',
+  nowMs: number,
+): Promise<void> {
+  if (!shouldRecordAudit(tokenId, reason, nowMs)) return;
+  // Metadata MUST NOT carry the PAT secret / hash / prefix — only ids + the
+  // reason enum (assertAuditMetadataClean is defense-in-depth).
+  await recordAudit(db, {
+    workspaceId: ctx.workspaceId,
+    actorUserId: ctx.userId,
+    action: 'pat.quota_exceeded',
+    targetType: 'personal_access_token',
+    targetId: tokenId,
+    metadata: { scope: scopeId, reason },
+  }).catch(() => {
+    // Audit failure must not block the 429 response. Swallow silently — admin
+    // dashboards still surface the rollup counters.
+  });
+}
+
+/**
  * Check + atomically bump the quota for `tokenId` on `scopeId`. Returns
  * `{allowed: true}` and increments the rollup on success; returns
  * `{allowed: false, retryAfterSec}` and does NOT increment on cap hit.
@@ -88,6 +138,10 @@ async function bumpUsage(
  *   1) in-process scope bucket (perMinute) — no DB round-trip
  *   2) DB-backed daily cap
  *   3) DB-backed monthly cap
+ *
+ * On any cap hit, records a `pat.quota_exceeded` audit row (throttled to at
+ * most once per minute per (token, reason) to keep the audit log
+ * proportional to a misbehaving client's actual concerning behavior).
  *
  * `now` is injectable so window-boundary tests can pin time without
  * `vi.useFakeTimers` (which deadlocks postgres-js).
@@ -100,27 +154,31 @@ export async function checkQuota(
   scopeId: string,
   now: Date = new Date(),
 ): Promise<QuotaResult> {
-  const limits = await loadLimits(db, tokenId);
-  if (!limits) return { allowed: true }; // token gone — caller will 401 separately
+  const ctx = await loadContext(db, tokenId);
+  if (!ctx) return { allowed: true }; // token gone — caller will 401 separately
+  const nowMs = now.getTime();
 
-  const scopeLimit = limits.scopeRateLimits?.[scopeId];
-  const bucket = consumeScopeBucket(tokenId, scopeId, scopeLimit, now.getTime());
+  const scopeLimit = ctx.scopeRateLimits?.[scopeId];
+  const bucket = consumeScopeBucket(tokenId, scopeId, scopeLimit, nowMs);
   if (!bucket.allowed) {
+    await auditCap(db, ctx, tokenId, scopeId, 'scope', nowMs);
     return { allowed: false, retryAfterSec: bucket.retryAfterSec };
   }
 
   const dayStart = dayWindowStart(now);
   const monthStart = monthWindowStart(now);
 
-  if (limits.dailyRequestLimit !== null) {
+  if (ctx.dailyRequestLimit !== null) {
     const used = await readUsage(db, tokenId, 'day', dayStart);
-    if (used >= limits.dailyRequestLimit) {
+    if (used >= ctx.dailyRequestLimit) {
+      await auditCap(db, ctx, tokenId, scopeId, 'day', nowMs);
       return { allowed: false, retryAfterSec: nextDayBoundarySec(now) };
     }
   }
-  if (limits.monthlyRequestLimit !== null) {
+  if (ctx.monthlyRequestLimit !== null) {
     const used = await readUsage(db, tokenId, 'month', monthStart);
-    if (used >= limits.monthlyRequestLimit) {
+    if (used >= ctx.monthlyRequestLimit) {
+      await auditCap(db, ctx, tokenId, scopeId, 'month', nowMs);
       return { allowed: false, retryAfterSec: nextMonthBoundarySec(now) };
     }
   }

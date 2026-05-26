@@ -35,7 +35,10 @@ const MintSchema = z.object({
   dailyRequestLimit: z.number().int().positive().max(10_000_000).nullable().optional(),
   monthlyRequestLimit: z.number().int().positive().max(100_000_000).nullable().optional(),
   scopeRateLimits: z
-    .record(z.string().min(1).max(120), z.object({ perMinute: z.number().int().positive().max(10_000) }))
+    .record(
+      z.string().min(1).max(120),
+      z.object({ perMinute: z.number().int().positive().max(10_000) }),
+    )
     .nullable()
     .optional(),
 });

@@ -61,6 +61,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'pat.created': 'Personal access token created',
   'pat.revoked': 'Personal access token revoked',
   'pat.expired': 'Personal access token expired',
+  // v0.9.0 G1 P9 — PAT quota events.
+  'pat.quota_exceeded': 'Personal access token quota exceeded',
   'page_acl.created': 'Page ACL granted',
   'page_acl.changed': 'Page ACL permission changed',
   'page_acl.removed': 'Page ACL removed',

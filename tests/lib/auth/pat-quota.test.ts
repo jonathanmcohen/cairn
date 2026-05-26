@@ -5,7 +5,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { mintPat } from '@/lib/auth/pat';
-import { checkQuota } from '@/lib/auth/pat-quota';
+import { checkQuota, resetQuotaAuditThrottleForTests } from '@/lib/auth/pat-quota';
 import { resetScopeBucketsForTests } from '@/lib/auth/pat-scope-bucket';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
@@ -28,6 +28,7 @@ afterAll(async () => {
 beforeEach(async () => {
   await sql`TRUNCATE pat_quota_usage, personal_access_tokens, audit_log, workspace_members, workspaces, users RESTART IDENTITY CASCADE`;
   resetScopeBucketsForTests();
+  resetQuotaAuditThrottleForTests();
 });
 
 async function seedTokenWithLimits(args: {
@@ -150,5 +151,38 @@ describe('checkQuota', () => {
   it('returns allowed=true for an unknown tokenId (caller will 401 separately)', async () => {
     const r = await checkQuota(db, '00000000-0000-0000-0000-000000000000', 'pages:read');
     expect(r.allowed).toBe(true);
+  });
+
+  it('records pat.quota_exceeded audit on 429 (daily cap)', async () => {
+    const tokenId = await seedTokenWithLimits({ daily: 1 });
+    await checkQuota(db, tokenId, 'pages:read'); // allowed
+    await checkQuota(db, tokenId, 'pages:read'); // 429 → audit
+    const audits = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.action, 'pat.quota_exceeded'));
+    expect(audits.length).toBe(1);
+    const audit = audits[0];
+    expect(audit?.targetType).toBe('personal_access_token');
+    expect(audit?.targetId).toBe(tokenId);
+    const meta = audit?.metadata as Record<string, unknown>;
+    expect(meta.scope).toBe('pages:read');
+    expect(meta.reason).toBe('day');
+    // PAT secrets must never appear in audit metadata.
+    expect(JSON.stringify(meta)).not.toContain('cairn_pat_');
+  });
+
+  it('throttles audit rows to at most one per minute per (token, reason)', async () => {
+    const tokenId = await seedTokenWithLimits({ daily: 1 });
+    await checkQuota(db, tokenId, 'pages:read');
+    // Three more 429 calls in quick succession → only one audit row.
+    await checkQuota(db, tokenId, 'pages:read');
+    await checkQuota(db, tokenId, 'pages:read');
+    await checkQuota(db, tokenId, 'pages:read');
+    const audits = await db
+      .select()
+      .from(schema.auditLog)
+      .where(eq(schema.auditLog.action, 'pat.quota_exceeded'));
+    expect(audits.length).toBe(1);
   });
 });

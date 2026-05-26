@@ -23,6 +23,8 @@ export const AUDIT_ACTIONS = [
   'pat.created',
   'pat.revoked',
   'pat.expired',
+  // v0.9.0 G1 P9 — PAT quota exceeded (daily / monthly / per-scope per-minute).
+  'pat.quota_exceeded',
   'page_acl.created',
   'page_acl.changed',
   'page_acl.removed',

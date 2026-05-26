@@ -156,7 +156,14 @@ export type DispatchPatInput = {
 };
 
 export type DispatchPatResult =
-  | { kind: 'ok'; tokenId: string; userId: string; workspaceId: string; scopes: string[]; mcpTools: string[] }
+  | {
+      kind: 'ok';
+      tokenId: string;
+      userId: string;
+      workspaceId: string;
+      scopes: string[];
+      mcpTools: string[];
+    }
   | { kind: 'invalid' }
   | { kind: 'rate-limited'; response: Response };
 
