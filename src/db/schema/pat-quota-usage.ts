@@ -2,7 +2,6 @@ import { sql } from 'drizzle-orm';
 import {
   bigint,
   check,
-  index,
   integer,
   pgTable,
   primaryKey,
@@ -32,9 +31,11 @@ export const patQuotaUsage = pgTable(
     bytes: bigint('bytes', { mode: 'number' }).notNull().default(0),
   },
   (t) => ({
+    // Composite PK (token_id, window_start, window_kind) already covers
+    // (token_id) and (token_id, window_start) prefix lookups — no separate
+    // (token_id, window_kind) index needed (v0.9.0 G1 P9 review).
     pk: primaryKey({ columns: [t.tokenId, t.windowStart, t.windowKind] }),
     kindCheck: check('pat_quota_usage_window_kind_chk', sql`${t.windowKind} IN ('day', 'month')`),
-    tokenKindIdx: index('pat_quota_usage_token_kind_idx').on(t.tokenId, t.windowKind),
   }),
 );
 

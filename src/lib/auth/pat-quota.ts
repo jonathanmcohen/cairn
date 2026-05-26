@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
@@ -42,46 +42,46 @@ async function loadContext(
   return row ?? null;
 }
 
-async function readUsage(
+/**
+ * Atomic insert-or-conditionally-bump. Returns the new `requests` count if the
+ * write happened (within `limit`); returns `null` if the row already existed
+ * with `requests >= limit` (the `WHERE` in the conflict update suppressed it).
+ *
+ * Closes the read-then-check-then-write race: two concurrent requests at
+ * usage=99/limit=100 cannot both observe usage<limit and both bump to 101.
+ * Drizzle's `onConflictDoUpdate` has no `setWhere` so we go via raw SQL.
+ *
+ * If `limit` is null the cap is unbounded — degenerate to an unconditional
+ * upsert (still atomic, just no rejection branch).
+ */
+async function tryBumpUsage(
   db: PostgresJsDatabase<typeof schema>,
   tokenId: string,
   windowKind: 'day' | 'month',
   windowStart: Date,
-): Promise<number> {
-  const [row] = await db
-    .select({ requests: schema.patQuotaUsage.requests })
-    .from(schema.patQuotaUsage)
-    .where(
-      and(
-        eq(schema.patQuotaUsage.tokenId, tokenId),
-        eq(schema.patQuotaUsage.windowKind, windowKind),
-        eq(schema.patQuotaUsage.windowStart, windowStart),
-      ),
-    );
-  return row?.requests ?? 0;
-}
-
-async function bumpUsage(
-  db: PostgresJsDatabase<typeof schema>,
-  tokenId: string,
-  windowKind: 'day' | 'month',
-  windowStart: Date,
-): Promise<void> {
-  // Atomic upsert: insert with requests=1 or increment if the (token, window)
-  // row exists. The composite PK (token_id, window_start, window_kind) is the
-  // conflict target — guards against the read-then-write race when two
-  // concurrent requests both find usage<cap and race the increment.
-  await db
-    .insert(schema.patQuotaUsage)
-    .values({ tokenId, windowKind, windowStart, requests: 1, bytes: 0 })
-    .onConflictDoUpdate({
-      target: [
-        schema.patQuotaUsage.tokenId,
-        schema.patQuotaUsage.windowStart,
-        schema.patQuotaUsage.windowKind,
-      ],
-      set: { requests: sql`${schema.patQuotaUsage.requests} + 1` },
-    });
+  limit: number | null,
+): Promise<number | null> {
+  const conflictUpdate =
+    limit === null
+      ? sql`ON CONFLICT ("token_id", "window_start", "window_kind") DO UPDATE
+             SET requests = pat_quota_usage.requests + 1`
+      : sql`ON CONFLICT ("token_id", "window_start", "window_kind") DO UPDATE
+             SET requests = pat_quota_usage.requests + 1
+             WHERE pat_quota_usage.requests < ${limit}`;
+  // postgres-js bind: Drizzle's `sql` tag passes Date objects through unchanged,
+  // but postgres-js@3.4 refuses non-string args on raw query parameters
+  // (`TypeError: The "string" argument must be of type string ...`). Serialize
+  // to ISO string explicitly; the column is `timestamptz`, which accepts ISO.
+  const windowStartIso = windowStart.toISOString();
+  const result = await db.execute(sql`
+    INSERT INTO pat_quota_usage ("token_id", "window_start", "window_kind", "requests", "bytes")
+    VALUES (${tokenId}, ${windowStartIso}, ${windowKind}, 1, 0)
+    ${conflictUpdate}
+    RETURNING requests
+  `);
+  const rows = result as unknown as Array<{ requests: number }>;
+  if (rows.length === 0) return null;
+  return rows[0]?.requests ?? null;
 }
 
 /**
@@ -168,25 +168,19 @@ export async function checkQuota(
   const dayStart = dayWindowStart(now);
   const monthStart = monthWindowStart(now);
 
-  if (ctx.dailyRequestLimit !== null) {
-    const used = await readUsage(db, tokenId, 'day', dayStart);
-    if (used >= ctx.dailyRequestLimit) {
-      await auditCap(db, ctx, tokenId, scopeId, 'day', nowMs);
-      return { allowed: false, retryAfterSec: nextDayBoundarySec(now) };
-    }
+  // Each window is independently atomic. If the day cap is hit we reject
+  // without touching the month rollup; if the day bump succeeds but the month
+  // cap is hit we reject with month — the (now-consumed) day tick is fine,
+  // future calls in the same day will hit the day cap first anyway.
+  const dayBumped = await tryBumpUsage(db, tokenId, 'day', dayStart, ctx.dailyRequestLimit);
+  if (dayBumped === null) {
+    await auditCap(db, ctx, tokenId, scopeId, 'day', nowMs);
+    return { allowed: false, retryAfterSec: nextDayBoundarySec(now) };
   }
-  if (ctx.monthlyRequestLimit !== null) {
-    const used = await readUsage(db, tokenId, 'month', monthStart);
-    if (used >= ctx.monthlyRequestLimit) {
-      await auditCap(db, ctx, tokenId, scopeId, 'month', nowMs);
-      return { allowed: false, retryAfterSec: nextMonthBoundarySec(now) };
-    }
+  const monthBumped = await tryBumpUsage(db, tokenId, 'month', monthStart, ctx.monthlyRequestLimit);
+  if (monthBumped === null) {
+    await auditCap(db, ctx, tokenId, scopeId, 'month', nowMs);
+    return { allowed: false, retryAfterSec: nextMonthBoundarySec(now) };
   }
-
-  // All caps cleared — bump both window rollups so future calls see the
-  // latest counts. Two upserts; both share the composite PK so there is no
-  // cross-row conflict.
-  await bumpUsage(db, tokenId, 'day', dayStart);
-  await bumpUsage(db, tokenId, 'month', monthStart);
   return { allowed: true };
 }

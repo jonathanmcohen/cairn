@@ -172,6 +172,27 @@ describe('checkQuota', () => {
     expect(JSON.stringify(meta)).not.toContain('cairn_pat_');
   });
 
+  it('atomically rejects over-limit under concurrent checkQuota calls', async () => {
+    // Race: 10 concurrent calls against limit=5. Read-then-check-then-write
+    // would let several requests observe usage<5 and all bump → final usage>5.
+    // The atomic upsert (INSERT ... ON CONFLICT DO UPDATE ... WHERE
+    // requests<limit) guarantees exactly 5 allowed and 5 rejected.
+    const tokenId = await seedTokenWithLimits({ daily: 5 });
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () => checkQuota(db, tokenId, 'pages:read')),
+    );
+    const allowed = results.filter((r) => r.allowed).length;
+    const rejected = results.length - allowed;
+    expect(allowed).toBe(5);
+    expect(rejected).toBe(5);
+    const usage = await db
+      .select()
+      .from(schema.patQuotaUsage)
+      .where(eq(schema.patQuotaUsage.tokenId, tokenId));
+    const dayRow = usage.find((u) => u.windowKind === 'day');
+    expect(dayRow?.requests).toBe(5);
+  });
+
   it('throttles audit rows to at most one per minute per (token, reason)', async () => {
     const tokenId = await seedTokenWithLimits({ daily: 1 });
     await checkQuota(db, tokenId, 'pages:read');

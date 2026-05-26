@@ -20,6 +20,3 @@ CREATE TABLE "pat_quota_usage" (
 ALTER TABLE "pat_quota_usage"
   ADD CONSTRAINT "pat_quota_usage_token_id_fk"
   FOREIGN KEY ("token_id") REFERENCES "personal_access_tokens"("id") ON DELETE CASCADE;
---> statement-breakpoint
-CREATE INDEX "pat_quota_usage_token_kind_idx"
-  ON "pat_quota_usage" ("token_id", "window_kind");
