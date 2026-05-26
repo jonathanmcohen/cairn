@@ -5,6 +5,7 @@ import { getDb } from '@/db/client';
 import { pageEncryptionKeys, pages, userKeypairs, workspaceMembers } from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
 import { HttpError } from '@/lib/auth/require-role';
+import { logger } from '@/lib/observability/logger';
 import { requirePageAccess } from '@/lib/pages/access';
 
 /**
@@ -156,8 +157,10 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
     }
     // Don't leak internals (P5/P6 retrospective: external/parser errors get
     // generic 400; log details server-side for debugging).
-    // biome-ignore lint/suspicious/noConsole: server-side error log
-    console.error('[e2e.encrypt] unhandled error', err);
+    logger.error(
+      { err: err instanceof Error ? { message: err.message, name: err.name } : err },
+      '[e2e.encrypt] unhandled error',
+    );
     return NextResponse.json({ error: 'invalid request' }, { status: 400 });
   }
 }

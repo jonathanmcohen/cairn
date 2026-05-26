@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
+import { buildPageWebhookPayload } from '@/lib/webhooks/payload';
 import { randomDefaultIcon } from './default-icon';
 import { emptyDocument } from './empty-document';
 import { formatIcon } from './icon-format';
@@ -46,7 +47,16 @@ export async function createPage(
     return page;
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
-  void emit('page.created', page.workspaceId, { id: page.id, title: page.title });
+  // Newly created pages are never encrypted (the create path bypasses E2E),
+  // but the payload builder normalizes the shape for downstream consumers.
+  void emit(
+    'page.created',
+    page.workspaceId,
+    buildPageWebhookPayload({
+      event: 'page.created',
+      page: { id: page.id, title: page.title, encrypted: page.encrypted },
+    }),
+  );
   // Fire-and-forget: regenerate the embedding off the request path. Never
   // blocks the create; errors logged but never thrown. (v0.7.0 G4 P12.)
   // The CAIRN_DISABLE_EMBED_HOOK escape hatch mirrors update.ts — see

@@ -3,6 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { reindexPageLinks } from '@/lib/pages/page-links';
 import { emit } from '@/lib/webhooks/dispatch';
+import { buildPageWebhookPayload } from '@/lib/webhooks/payload';
 
 export class PageConflictError extends Error {
   constructor(message = 'Page has been modified since you last read it') {
@@ -68,7 +69,21 @@ export async function updatePage(
     return updated;
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
-  void emit('page.updated', updated.workspaceId, { id: updated.id, title: updated.title });
+  // The payload builder fails-closed: encrypted pages get body:null +
+  // page.encrypted=true so downstream consumers never see ciphertext or
+  // stale plaintext (v0.9.0 G1 P6).
+  void emit(
+    'page.updated',
+    updated.workspaceId,
+    buildPageWebhookPayload({
+      event: 'page.updated',
+      page: {
+        id: updated.id,
+        title: updated.title,
+        encrypted: updated.encrypted,
+      },
+    }),
+  );
   // Fire-and-forget: regenerate the embedding off the request path. Never
   // blocks the update; errors logged but never thrown. (v0.7.0 G4 P12.)
   // The CAIRN_DISABLE_EMBED_HOOK escape hatch is set in tests/setup.ts so

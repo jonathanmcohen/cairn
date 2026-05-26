@@ -81,10 +81,7 @@ describe('public share — encrypted refusal', () => {
     let access = await requirePublicPageAccess(getDb(), 'flip-slug-789', false);
     expect(access.ok).toBe(true);
 
-    await getDb()
-      .update(schema.pages)
-      .set({ encrypted: true })
-      .where(eq(schema.pages.id, page.id));
+    await getDb().update(schema.pages).set({ encrypted: true }).where(eq(schema.pages.id, page.id));
 
     access = await requirePublicPageAccess(getDb(), 'flip-slug-789', false);
     expect(access.ok).toBe(false);

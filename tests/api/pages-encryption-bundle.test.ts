@@ -80,7 +80,10 @@ describe('GET /api/pages/[pageId]/encryption-bundle', () => {
 
     const res = await getBundle(page.id);
     expect(res.status).toBe(200);
-    const body = (await res.json()) as { contentEncrypted: string | null; wrappedDekForMe: string | null };
+    const body = (await res.json()) as {
+      contentEncrypted: string | null;
+      wrappedDekForMe: string | null;
+    };
     expect(body.contentEncrypted).toBeNull();
     expect(body.wrappedDekForMe).toBeNull();
   });
@@ -136,4 +139,3 @@ describe('GET /api/pages/[pageId]/encryption-bundle', () => {
     expect(res.status).toBe(404);
   });
 });
-

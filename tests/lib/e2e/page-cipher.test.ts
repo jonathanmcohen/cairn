@@ -25,7 +25,8 @@ describe('page-cipher', () => {
   it('tampering with the ciphertext is rejected', () => {
     const dek = generateDek();
     const ct = Buffer.from(encryptPageContent(doc, dek));
-    ct[20] ^= 0x01;
+    const at = ct[20] ?? 0;
+    ct[20] = at ^ 0x01;
     expect(() => decryptPageContent(ct, dek)).toThrow();
   });
 

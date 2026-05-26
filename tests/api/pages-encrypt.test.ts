@@ -75,9 +75,7 @@ async function addMember(
     .values({ email, passwordHash: 'h', name: email })
     .returning();
   if (!u) throw new Error('user insert failed');
-  await getDb()
-    .insert(schema.workspaceMembers)
-    .values({ workspaceId, userId: u.id, role });
+  await getDb().insert(schema.workspaceMembers).values({ workspaceId, userId: u.id, role });
   return u.id;
 }
 

@@ -114,7 +114,12 @@ describe('v0.5.0 cross-feature smoke', () => {
     for (const d of deliveries) {
       expect(d.event).toBe('page.created');
       expect(['pending', 'success', 'failed']).toContain(d.status);
-      expect((d.payload as { id: string }).id).toBe(page.id);
+      // Accept both the legacy `{id, title}` shape (used by the explicit emit
+      // above) and the v0.9.0 G1 P6 redaction-aware `{page: {id, ...}, body}`
+      // shape (used by createPage's fire-and-forget emit).
+      const p = d.payload as { id?: string; page?: { id: string } };
+      const idFromPayload = p.id ?? p.page?.id;
+      expect(idFromPayload).toBe(page.id);
     }
 
     // --- 3. Versions: snapshot the page content, then list it back.

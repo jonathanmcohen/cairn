@@ -55,6 +55,14 @@ const Schema = z.object({
     .enum(['true', 'false'])
     .default('false')
     .transform((v) => v === 'true'),
+  // v0.9.0 G1 P6 — public mirror of CAIRN_ENABLE_E2E_ENCRYPTION, inlined into
+  // the client bundle so the page-action menu can conditionally render the
+  // "Encrypt page" item without a round-trip. The SERVER-side value above
+  // stays the source of truth; this is purely a build-time UI toggle.
+  NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION: z
+    .enum(['true', 'false'])
+    .default('false')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof Schema>;

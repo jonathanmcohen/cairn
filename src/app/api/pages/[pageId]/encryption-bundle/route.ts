@@ -38,17 +38,11 @@ export async function GET(_req: Request, { params }: RouteCtx): Promise<Response
       .select()
       .from(pageEncryptionKeys)
       .where(
-        and(
-          eq(pageEncryptionKeys.pageId, pageId),
-          eq(pageEncryptionKeys.memberUserId, ctx.userId),
-        ),
+        and(eq(pageEncryptionKeys.pageId, pageId), eq(pageEncryptionKeys.memberUserId, ctx.userId)),
       );
 
     if (!row) {
-      return NextResponse.json(
-        { error: 'no wrapped DEK for caller' },
-        { status: 403 },
-      );
+      return NextResponse.json({ error: 'no wrapped DEK for caller' }, { status: 403 });
     }
 
     return NextResponse.json({

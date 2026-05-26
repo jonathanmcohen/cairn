@@ -7,6 +7,7 @@ import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { CoverPicker } from '@/components/pages/cover-picker';
+import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
 import { PageExportMenu } from '@/components/pages/export-menu';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { VersionHistory } from '@/components/pages/version-history';
@@ -41,6 +42,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   const cover = await getPageCover(getDb(), page.id, ctx.workspaceId);
   const canEdit = hasMinRole(ctx.role, 'editor');
   const unsplashKey = env().NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY;
+  // v0.9.0 G1 P6 — E2E "Encrypt page" affordance gates on the public mirror
+  // of CAIRN_ENABLE_E2E_ENCRYPTION. Already-encrypted pages don't render
+  // the action (re-encrypt is a separate flow not in this plan).
+  const showEncryptAction =
+    env().NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION && canEdit && !page.encrypted;
 
   return (
     <PageDetailShell>
@@ -64,6 +70,13 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         />
         <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
         <PageExportMenu pageId={page.id} />
+        {showEncryptAction && (
+          <EncryptPageAction
+            pageId={page.id}
+            workspaceId={page.workspaceId}
+            currentDoc={page.content}
+          />
+        )}
         <PageMenu
           pageId={page.id}
           initialPublished={page.published}
