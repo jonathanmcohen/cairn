@@ -3,6 +3,7 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { checkQuota } from './pat-quota';
 
 const TOKEN_PREFIX = 'cairn_pat_';
 const SECRET_BYTES = 32; // 32 random bytes → 43-char base64url → ample entropy
@@ -29,6 +30,10 @@ export type MintPatInput = {
   scopes: string[];
   mcpTools: string[];
   expiresAt: Date | null;
+  // v0.9.0 G1 P9 — optional per-token quotas. `null`/omitted = no cap.
+  dailyRequestLimit?: number | null;
+  monthlyRequestLimit?: number | null;
+  scopeRateLimits?: Record<string, { perMinute: number }> | null;
 };
 
 /**
@@ -63,6 +68,9 @@ export async function mintPat(
         scopes: input.scopes,
         mcpTools: input.mcpTools,
         expiresAt: input.expiresAt,
+        dailyRequestLimit: input.dailyRequestLimit ?? null,
+        monthlyRequestLimit: input.monthlyRequestLimit ?? null,
+        scopeRateLimits: input.scopeRateLimits ?? null,
       })
       .returning();
     if (!row) throw new Error('mintPat: insert returned no row');
@@ -137,5 +145,60 @@ export async function verifyPatToken(
     workspaceId: row.workspaceId,
     scopes: row.scopes,
     mcpTools: row.mcpTools,
+  };
+}
+
+export type DispatchPatInput = {
+  db: PostgresJsDatabase<typeof schema>;
+  token: string;
+  /** Canonical scope string e.g. `pages:read` — must match a value in `personal_access_tokens.scopes`. */
+  scope: string;
+};
+
+export type DispatchPatResult =
+  | { kind: 'ok'; tokenId: string; userId: string; workspaceId: string; scopes: string[]; mcpTools: string[] }
+  | { kind: 'invalid' }
+  | { kind: 'rate-limited'; response: Response };
+
+/**
+ * v0.9.0 G1 P9 — high-level PAT request dispatcher. Validates a `cairn_pat_*`
+ * bearer token, enforces its scope, then runs the PAT quota check. Returns:
+ *   - `{kind:'ok', ...}` when verified + scope OK + under quota.
+ *   - `{kind:'invalid'}` when the token is unknown / revoked / expired / lacks the scope.
+ *   - `{kind:'rate-limited', response}` with a 429 + `Retry-After` Response when
+ *     the daily, monthly, or per-scope per-minute cap is hit.
+ *
+ * Routes should return `result.response` directly on `rate-limited` so the
+ * client gets the standard 429. The response body is intentionally
+ * `{error:'rate_limited', retryAfterSec}` — NEVER echo the configured cap.
+ */
+export async function dispatchPat(input: DispatchPatInput): Promise<DispatchPatResult> {
+  const verified = await verifyPatToken(input.db, input.token);
+  if (!verified) return { kind: 'invalid' };
+  // Admin acts as a superset over per-scope checks (mirrors token.ts requireScope).
+  const hasScope = verified.scopes.includes('admin') || verified.scopes.includes(input.scope);
+  if (!hasScope) return { kind: 'invalid' };
+
+  const quota = await checkQuota(input.db, verified.tokenId, input.scope);
+  if (!quota.allowed) {
+    const response = new Response(
+      JSON.stringify({ error: 'rate_limited', retryAfterSec: quota.retryAfterSec }),
+      {
+        status: 429,
+        headers: {
+          'Content-Type': 'application/json',
+          'Retry-After': String(quota.retryAfterSec),
+        },
+      },
+    );
+    return { kind: 'rate-limited', response };
+  }
+  return {
+    kind: 'ok',
+    tokenId: verified.tokenId,
+    userId: verified.userId,
+    workspaceId: verified.workspaceId,
+    scopes: verified.scopes,
+    mcpTools: verified.mcpTools,
   };
 }
