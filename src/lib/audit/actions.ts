@@ -25,6 +25,8 @@ export const AUDIT_ACTIONS = [
   'pat.expired',
   // v0.9.0 G1 P9 — PAT quota exceeded (daily / monthly / per-scope per-minute).
   'pat.quota_exceeded',
+  // v0.9.0 G1 P10 — admin cleared a PAT's day+month rollup rows.
+  'pat.quota_reset',
   'page_acl.created',
   'page_acl.changed',
   'page_acl.removed',
