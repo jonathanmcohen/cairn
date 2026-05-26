@@ -79,7 +79,7 @@ env:
 
 jobs:
   ci:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     # ghcr.io/jonathanmcohen/postgres-pgvector is a private package; the
     # Testcontainers helper pulls it on `pnpm test`. `packages: read` lets
     # the docker login step exchange GITHUB_TOKEN for a pull-capable creds
@@ -133,7 +133,7 @@ jobs:
         run: pnpm build
 
   security:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     # gitleaks-action calls the PR REST API to scope the scan and (optionally)
     # post review comments — both require pull-requests: write on top of the
     # default contents: read. Without these, the action throws
@@ -161,13 +161,6 @@ jobs:
           pnpm audit --audit-level=high --json > audit.json || true
           node scripts/check-audit.mjs audit.json audit-ci-ignore.json
 
-      # gitleaks-action downloads the gitleaks binary to /tmp/gitleaks.tmp
-      # before unpacking. /tmp on self-hosted runners persists between
-      # jobs, so a leftover from a prior failed run trips the action's
-      # download-destination-exists guard. Clean it before invoking.
-      - name: Clean stale gitleaks download (self-hosted /tmp persists)
-        run: rm -f /tmp/gitleaks.tmp
-
       - name: gitleaks
         uses: gitleaks/gitleaks-action@v2
         env:
@@ -183,7 +176,7 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     # Private GHCR image needs packages: read for the services credentials
     # block + the explicit docker login step (used by the Playwright web
     # server which spawns its own db:migrate before pnpm test:a11y).

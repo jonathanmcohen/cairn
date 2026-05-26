@@ -20,11 +20,9 @@ permissions:
 
 jobs:
   build:
-    # amd64 runs on the Linux x64 self-hosted runner; arm64 runs on the
-    # macOS arm64 self-hosted runner (Apple Silicon w/ Docker Desktop —
-    # Docker Desktop's Linux VM produces real linux/arm64 layers despite
-    # the macOS host OS).
-    runs-on: ${{ matrix.arch == 'amd64' && fromJSON('["self-hosted", "linux", "x64"]') || fromJSON('["self-hosted", "macOS", "arm64"]') }}
+    # amd64 on GHA's ubuntu-latest, arm64 on GHA's native arm64 runner
+    # (ubuntu-24.04-arm) — no QEMU emulation, no Docker Desktop creds.
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       fail-fast: false
       matrix:
@@ -54,47 +52,10 @@ jobs:
         id: ver
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      # macOS self-hosted runner: Docker Desktop persistently rewrites
-      # `~/.docker/config.json` with `credsStore: "desktop"` (or
-      # `osxkeychain`), which routes auth through a helper that needs an
-      # interactive session — fails when the runner runs headless. Even
-      # toggling Desktop's "Use credential helper" setting isn't exposed
-      # in all Desktop versions, and Desktop re-adds the line on launch.
-      #
-      # Bypass entirely: redirect DOCKER_CONFIG to a per-run temp dir
-      # with a hand-written `auths` block (plain base64 of user:token).
-      # buildx + build-push-action read creds from this config, no helper
-      # invocation, no keychain. Skip docker/login-action on macOS since
-      # the creds are already in place.
-      - name: Pre-write GHCR auth to DOCKER_CONFIG (macOS runner only)
-        if: runner.os == 'macOS'
-        env:
-          GH_USERNAME: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/docker-config"
-          AUTH=$(printf '%s:%s' "$GH_USERNAME" "$GH_TOKEN" | base64)
-          cat > "$RUNNER_TEMP/docker-config/config.json" <<EOF
-          {
-            "auths": {
-              "ghcr.io": { "auth": "$AUTH" }
-            }
-          }
-          EOF
-          echo "DOCKER_CONFIG=$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
-          # Docker Desktop puts its socket at ~/.docker/run/docker.sock when
-          # the "Allow default Docker socket to be used" setting is OFF.
-          # Point DOCKER_HOST at that user-scoped socket so buildx + push
-          # don't try /var/run/docker.sock (which doesn't exist on macOS
-          # without the default-socket toggle enabled).
-          echo "DOCKER_HOST=unix://$HOME/.docker/run/docker.sock" >> "$GITHUB_ENV"
-
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Log in to ghcr.io
-        if: runner.os != 'macOS'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -116,7 +77,7 @@ jobs:
 
   merge:
     needs: build
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         image: [cairn, cairn-collab]
@@ -131,19 +92,6 @@ jobs:
           minor="${rest%%.*}"
           echo "major=${major}" >> "$GITHUB_OUTPUT"
           echo "majorminor=${major}.${minor}" >> "$GITHUB_OUTPUT"
-
-      # Self-hosted Linux runner may not ship jq. The manifest-merge step
-      # uses jq to parse DOCKER_METADATA_OUTPUT_JSON into `-t <tag>` args
-      # for `docker buildx imagetools create`. Drop in a static jq binary
-      # if the runner's PATH doesn't already have one.
-      - name: Ensure jq
-        run: |
-          if ! command -v jq >/dev/null 2>&1; then
-            curl -sSL https://github.com/jqlang/jq/releases/latest/download/jq-linux-amd64 \
-              -o "$RUNNER_TEMP/jq"
-            chmod +x "$RUNNER_TEMP/jq"
-            echo "$RUNNER_TEMP" >> "$GITHUB_PATH"
-          fi
 
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
@@ -197,7 +145,7 @@ jobs:
 
   release:
     needs: merge
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - name: Extract version from tag
         id: ver

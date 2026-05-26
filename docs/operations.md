@@ -104,22 +104,21 @@ sweep evicts idle sessions every 60 seconds.
 ## CI / Release runners
 
 All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`,
-`postgres-pgvector-image.yml`) run on **self-hosted runners**:
+`postgres-pgvector-image.yml`) run on **GitHub-hosted runners**:
 
-- amd64: `[self-hosted, linux, x64]` (Linux box w/ Docker)
-- arm64 (release matrix only): `[self-hosted, macOS, arm64]` (Apple
-  Silicon Mac w/ Docker Desktop — Docker Desktop's Linux VM still
-  produces real `linux/arm64` image layers)
+- amd64: `ubuntu-latest`
+- arm64 (release matrix only): `ubuntu-24.04-arm` (GHA native arm64,
+  no QEMU emulation)
 
-Runners must have Docker + recent `pnpm`/`node` available. Required labels
-match the values above verbatim. The arm64 runner is used only by the
-release workflow's per-arch image build; everything else (CI, lighthouse,
-manifest merge, GitHub Release step, postgres-pgvector image build) runs
-on the x64 runner.
+The arm64 runner is used only by the release workflow's per-arch image
+build; everything else (CI, lighthouse, manifest merge, GitHub Release
+step, postgres-pgvector image build) runs on `ubuntu-latest`.
 
-GitHub-hosted runners are NOT used — workflow billing for hosted minutes
-was exhausted mid-v0.8.0, and self-hosted has been the operating
-posture since.
+History note: this project moved to self-hosted runners briefly in
+mid-v0.8.0 when GHA-hosted minutes were exhausted, then back to
+GHA-hosted after usage reset. Self-hosted may return if usage becomes
+a concern again; the `[self-hosted, linux, x64]` + `[self-hosted, macOS,
+arm64]` labels are documented for that scenario in git history.
 
 ## Postgres image (v0.8.0)
 
