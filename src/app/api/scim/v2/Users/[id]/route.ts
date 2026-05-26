@@ -25,7 +25,7 @@ const PatchBody = z.object({
   Operations: z.array(PatchOp).min(1),
 });
 
-const ROLES = ['admin', 'editor', 'viewer'] as const;
+const ROLES = ['owner', 'admin', 'editor', 'viewer'] as const;
 
 function originFor(req: Request): string {
   return process.env.NEXTAUTH_URL ?? new URL(req.url).origin;

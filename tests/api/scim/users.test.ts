@@ -114,6 +114,45 @@ describe('SCIM /Users', () => {
     expect(members).toHaveLength(1);
   });
 
+  it('POST with groups=[{value:"owner"}] succeeds and assigns owner role', async () => {
+    const t = await seedTokenAndWorkspace(['users:read', 'users:write']);
+    const { POST } = await import('@/app/api/scim/v2/Users/route');
+    const res = await POST(
+      new Request('http://localhost/api/scim/v2/Users', {
+        method: 'POST',
+        headers: {
+          authorization: `Bearer ${t.raw}`,
+          'content-type': 'application/scim+json',
+        },
+        body: JSON.stringify({
+          schemas: ['urn:ietf:params:scim:schemas:core:2.0:User'],
+          userName: 'owner@example.com',
+          displayName: 'Owner',
+          emails: [{ value: 'owner@example.com', primary: true }],
+          active: true,
+          groups: [{ value: 'owner' }],
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const users = await db
+      .select()
+      .from(schema.users)
+      .where(eq(schema.users.email, 'owner@example.com'));
+    expect(users).toHaveLength(1);
+    const members = await db
+      .select()
+      .from(schema.workspaceMembers)
+      .where(
+        and(
+          eq(schema.workspaceMembers.workspaceId, t.workspaceId),
+          eq(schema.workspaceMembers.userId, users[0]!.id),
+        ),
+      );
+    expect(members).toHaveLength(1);
+    expect(members[0]!.role).toBe('owner');
+  });
+
   it('POST 403 when token missing users:write scope', async () => {
     const t = await seedTokenAndWorkspace(['users:read']);
     const { POST } = await import('@/app/api/scim/v2/Users/route');

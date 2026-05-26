@@ -87,7 +87,7 @@ describe('SCIM /Groups', () => {
       Resources: Array<{ id: string; displayName: string; members: unknown[] }>;
     };
     const ids = body.Resources.map((r) => r.id).sort();
-    expect(ids).toEqual(['admin', 'editor', 'viewer']);
+    expect(ids).toEqual(['admin', 'editor', 'owner', 'viewer']);
   });
 
   it('GET /editor returns just the editor-role members', async () => {

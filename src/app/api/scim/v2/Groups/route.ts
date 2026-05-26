@@ -12,7 +12,7 @@ import type { VerifiedScimToken } from '@/lib/sso/scim-token';
 
 export const dynamic = 'force-dynamic';
 
-const ROLES = ['admin', 'editor', 'viewer'] as const;
+const ROLES = ['owner', 'admin', 'editor', 'viewer'] as const;
 type Role = (typeof ROLES)[number];
 
 function originFor(req: Request): string {

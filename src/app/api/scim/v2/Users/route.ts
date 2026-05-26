@@ -25,7 +25,7 @@ const CreateBody = z.object({
   groups: z.array(z.object({ value: z.string() })).optional(),
 });
 
-const ROLES = ['admin', 'editor', 'viewer'] as const;
+const ROLES = ['owner', 'admin', 'editor', 'viewer'] as const;
 
 function originFor(req: Request): string {
   return process.env.NEXTAUTH_URL ?? new URL(req.url).origin;
