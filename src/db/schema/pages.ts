@@ -17,6 +17,12 @@ const tsvector = customType<{ data: string }>({
   },
 });
 
+const bytea = customType<{ data: Buffer | null; default: false; notNull: false }>({
+  dataType() {
+    return 'bytea';
+  },
+});
+
 export const pages = pgTable(
   'pages',
   {
@@ -36,6 +42,9 @@ export const pages = pgTable(
     // embeddings, public share, webhooks, federated search) checks before
     // exposing `content_text` / `content`. Stays false for unencrypted pages.
     encrypted: boolean('encrypted').notNull().default(false),
+    // v0.9.0 G1 P6 — ciphertext of TipTap doc JSON when encrypted=true.
+    // Envelope: iv(12) || ct || tag(16). Null when encrypted=false.
+    contentEncrypted: bytea('content_encrypted'),
     publicSlug: text('public_slug').unique(),
     linkPasswordHash: text('link_password_hash'),
     expiresAt: timestamp('expires_at', { withTimezone: true }),

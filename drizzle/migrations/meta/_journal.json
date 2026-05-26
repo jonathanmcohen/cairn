@@ -253,6 +253,13 @@
       "when": 1779821528525,
       "tag": "0035_e2e_crypto",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1779823370811,
+      "tag": "0036_pages_content_encrypted",
+      "breakpoints": true
     }
   ]
 }
