@@ -37,23 +37,26 @@ export type ConsumeResult = { allowed: true } | { allowed: false; retryAfterSec:
  * remaining seconds until the bucket boundary. NEVER includes the limit in
  * the result — caller emits a generic 429 + Retry-After so other tokens'
  * configs are not leaked through error responses.
+ *
+ * `nowMs` is injectable for deterministic tests (avoids `vi.useFakeTimers`
+ * which breaks postgres-js's internal `setImmediate`/`setTimeout` usage).
  */
 export function consumeScopeBucket(
   tokenId: string,
   scopeId: string,
   limit: ScopeLimit,
+  nowMs: number = Date.now(),
 ): ConsumeResult {
   if (!limit || limit.perMinute <= 0) return { allowed: true };
-  const now = Date.now();
-  const windowStart = minuteStartMs(now);
+  const windowStart = minuteStartMs(nowMs);
   const key = keyFor(tokenId, scopeId);
   let b = buckets.get(key);
-  if (!b || b.resetAt <= now) {
+  if (!b || b.resetAt <= nowMs) {
     b = { count: 0, resetAt: windowStart + 60_000 };
     buckets.set(key, b);
   }
   if (b.count >= limit.perMinute) {
-    return { allowed: false, retryAfterSec: Math.max(1, Math.ceil((b.resetAt - now) / 1000)) };
+    return { allowed: false, retryAfterSec: Math.max(1, Math.ceil((b.resetAt - nowMs) / 1000)) };
   }
   b.count += 1;
   return { allowed: true };
