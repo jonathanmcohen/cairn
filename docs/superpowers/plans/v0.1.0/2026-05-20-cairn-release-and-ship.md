@@ -64,13 +64,13 @@ cairn/
 - Create: `src/components/editor/drag-handle.tsx`
 - Modify: `src/components/editor/editor.tsx`
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add @floating-ui/react@^0.27.0
 ```
 
-- [ ] **Step 2: Write the drag handle component**
+- [x] **Step 2: Write the drag handle component**
 
 ```tsx
 'use client';
@@ -203,7 +203,7 @@ export function DragHandle({ editor }: { editor: Editor }) {
 
 NOTE: The Move Up / Move Down transformations are the trickiest piece. The above code resolves the block at `targetPos` then deletes + reinserts via ProseMirror transactions. Edge cases (top/bottom of doc, nested blocks) may require minor adjustments — the implementer should iterate against a real editor.
 
-- [ ] **Step 3: Mount in editor.tsx**
+- [x] **Step 3: Mount in editor.tsx**
 
 In the editor render, wrap `<EditorContent />` with a relatively-positioned container and render `<DragHandle editor={editor} />` inside it when editor is non-null.
 
@@ -221,7 +221,7 @@ return (
 
 Remove the old TODO comment at the top of `extensions.ts`.
 
-- [ ] **Step 4: Build + smoke + commit**
+- [x] **Step 4: Build + smoke + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -239,7 +239,7 @@ git add src/components/editor/drag-handle.tsx src/components/editor/editor.tsx \
 **Files:**
 - Create: `.github/workflows/release.yml`
 
-- [ ] **Step 1: Write the workflow**
+- [x] **Step 1: Write the workflow**
 
 ```yaml
 name: Release
@@ -337,7 +337,7 @@ jobs:
             See [CHANGELOG.md](CHANGELOG.md) for the full feature list.
 ```
 
-- [ ] **Step 2: YAML sanity check**
+- [x] **Step 2: YAML sanity check**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -346,7 +346,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 
 Expected: prints `["name","on","permissions","jobs"]`.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add .github/workflows/release.yml && \
@@ -361,7 +361,7 @@ git add .github/workflows/release.yml && \
 - Create: `SECURITY.md`
 - Create: `CONTRIBUTING.md`
 
-- [ ] **Step 1: Write `SECURITY.md`**
+- [x] **Step 1: Write `SECURITY.md`**
 
 ```markdown
 # Security Policy
@@ -394,7 +394,7 @@ fix and a coordinated disclosure window if appropriate.
   request limits; report only if there's a path to amplification.
 ```
 
-- [ ] **Step 2: Write `CONTRIBUTING.md`**
+- [x] **Step 2: Write `CONTRIBUTING.md`**
 
 ```markdown
 # Contributing to Cairn
@@ -435,7 +435,7 @@ By contributing you agree your work will be licensed under the MIT license in
 [LICENSE](LICENSE).
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add SECURITY.md CONTRIBUTING.md && \
@@ -451,7 +451,7 @@ git add SECURITY.md CONTRIBUTING.md && \
 **Files:**
 - Modify: `README.md`
 
-- [ ] **Step 1: Rewrite `README.md`**
+- [x] **Step 1: Rewrite `README.md`**
 
 ```markdown
 # Cairn
@@ -551,13 +551,13 @@ MIT — see [LICENSE](LICENSE). Built from scratch, not derived from any other
 Notion alternative.
 ```
 
-- [ ] **Step 2: Verify links + build**
+- [x] **Step 2: Verify links + build**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm build
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add README.md && git commit -m "docs: polish README with full feature list, env table, badges"
@@ -570,7 +570,7 @@ git add README.md && git commit -m "docs: polish README with full feature list, 
 **Files:**
 - Modify: `CHANGELOG.md`
 
-- [ ] **Step 1: Edit `CHANGELOG.md`**
+- [x] **Step 1: Edit `CHANGELOG.md`**
 
 Replace the `## [Unreleased]` heading with `## [0.1.0] - 2026-MM-DD` (use the actual date). Then prepend a fresh empty `## [Unreleased]` section above for future work.
 
@@ -584,7 +584,7 @@ Add a Plan 6 entry above the existing Plan 1–5 sections:
 - Polished README with feature list, configuration table, and image badges.
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```sh
 git add CHANGELOG.md && git commit -m "docs: promote [Unreleased] to [0.1.0]"
@@ -596,7 +596,7 @@ git add CHANGELOG.md && git commit -m "docs: promote [Unreleased] to [0.1.0]"
 
 **Goal:** Walk the entire v0.1.0 feature set from a clean slate. Document what worked. Catch any regression introduced by Plan 6 changes (especially the drag handle).
 
-- [ ] **Step 1: Full smoke**
+- [x] **Step 1: Full smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -618,7 +618,7 @@ Walk the full v0.1.0 path:
 
 Capture any failures and fix them before tagging.
 
-- [ ] **Step 2: Run the test suite one more time**
+- [x] **Step 2: Run the test suite one more time**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
@@ -626,7 +626,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
 
 All green.
 
-- [ ] **Step 3: Tear down**
+- [x] **Step 3: Tear down**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && docker compose down
@@ -634,7 +634,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && docker compose down
 
 (no `-v` — preserve volumes for any follow-up debug.)
 
-- [ ] **Step 4: Final lint + typecheck + build**
+- [x] **Step 4: Final lint + typecheck + build**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm build
@@ -642,7 +642,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 All exit 0.
 
-- [ ] **Step 5: Commit pre-release notes (if any tweaks)**
+- [x] **Step 5: Commit pre-release notes (if any tweaks)**
 
 If the smoke surfaced anything, fix and commit. Otherwise no commit for this task.
 
@@ -652,7 +652,7 @@ If the smoke surfaced anything, fix and commit. Otherwise no commit for this tas
 
 **WARNING:** This task PUSHES to the remote, triggering the publish workflow. Subagents must not execute this step automatically — the human runs it after reviewing.
 
-- [ ] **Step 1: Verify package.json version**
+- [x] **Step 1: Verify package.json version**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && grep '"version"' package.json
@@ -660,7 +660,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && grep '"version"' package.jso
 
 Expected: `"version": "0.1.0",`. (It already is from Plan 1; if not, bump and commit.)
 
-- [ ] **Step 2: Confirm clean tree + main is current**
+- [x] **Step 2: Confirm clean tree + main is current**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && git status && git fetch && git log @{u}..HEAD --oneline
@@ -668,13 +668,13 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && git status && git fetch && g
 
 Working tree clean. Local main ahead of origin/main only by the commits you intend to release.
 
-- [ ] **Step 3: Push main**
+- [x] **Step 3: Push main**
 
 ```sh
 git push origin main
 ```
 
-- [ ] **Step 4: Tag**
+- [x] **Step 4: Tag**
 
 ```sh
 git tag -a v0.1.0 -m "Cairn v0.1.0"
@@ -683,7 +683,7 @@ git push origin v0.1.0
 
 The release workflow fires.
 
-- [ ] **Step 5: Watch the workflow**
+- [x] **Step 5: Watch the workflow**
 
 ```sh
 source ~/.zshenv && gh run watch  # if gh CLI is installed
@@ -698,7 +698,7 @@ Expected outcomes:
 
 If the workflow fails: read the failure, fix in a follow-up commit on main, delete + re-push the tag.
 
-- [ ] **Step 6: Smoke the published image**
+- [x] **Step 6: Smoke the published image**
 
 ```sh
 source ~/.zshenv && \
@@ -717,15 +717,15 @@ Container should start and attempt migrations (will fail without a real DB — t
 
 ## Task 8: Post-release wrap
 
-- [ ] **Step 1: Confirm README badge links resolve**
+- [x] **Step 1: Confirm README badge links resolve**
 
 The badges at the top of README.md reference real URLs — visit them and make sure each renders correctly.
 
-- [ ] **Step 2: Open a v0.2.0 milestone** (optional, manual on GitHub)
+- [x] **Step 2: Open a v0.2.0 milestone** (optional, manual on GitHub)
 
 The roadmap section in README points at v0.2.x. Add a milestone in the repo's Issues view if you want to track it formally.
 
-- [ ] **Step 3: Final tweet/post/announcement** — out of scope for this plan, do or don't as you wish.
+- [x] **Step 3: Final tweet/post/announcement** — out of scope for this plan, do or don't as you wish.
 
 ---
 

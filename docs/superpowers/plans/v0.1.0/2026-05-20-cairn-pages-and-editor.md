@@ -136,7 +136,7 @@ cairn/
 - Modify: `src/lib/auth/require-role.ts`
 - Modify: `next.config.mjs`
 
-- [ ] **Step 1: Wrap `getAuthContext` in React `cache()`**
+- [x] **Step 1: Wrap `getAuthContext` in React `cache()`**
 
 Read the current file. Add `import { cache } from 'react';` and wrap the body:
 
@@ -161,7 +161,7 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
 
 Note: `cache()` is a Next.js / React Server Components helper. It dedupes calls within the same request. Multiple server components calling `getAuthContext()` in one render now share a single DB hit.
 
-- [ ] **Step 2: Verify tests still pass**
+- [x] **Step 2: Verify tests still pass**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
@@ -169,7 +169,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
 
 Expected: 32/32 still passing. `getAuthContext` is exercised indirectly by `require-role` unit tests and integration tests; the cache wrapper is transparent.
 
-- [ ] **Step 3: Fix `next.config.mjs` typedRoutes deprecation**
+- [x] **Step 3: Fix `next.config.mjs` typedRoutes deprecation**
 
 Replace:
 ```js
@@ -184,7 +184,7 @@ typedRoutes: true,
 
 (Remove the `experimental` block entirely if it has no other keys.)
 
-- [ ] **Step 4: Verify build is warning-free**
+- [x] **Step 4: Verify build is warning-free**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm build 2>&1 | grep -i typedRoutes
@@ -192,7 +192,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm build 2>&1 | grep -i ty
 
 Expected: no output. (Previously it warned `experimental.typedRoutes has been moved to typedRoutes`.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -209,7 +209,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 **Files:**
 - Create: `tests/helpers/fixtures.ts`
 
-- [ ] **Step 1: Write `tests/helpers/fixtures.ts`**
+- [x] **Step 1: Write `tests/helpers/fixtures.ts`**
 
 ```ts
 import { randomBytes } from 'node:crypto';
@@ -255,7 +255,7 @@ export async function createTestWorkspaceWithUser(
 }
 ```
 
-- [ ] **Step 2: Verify the helper compiles and lints**
+- [x] **Step 2: Verify the helper compiles and lints**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck
@@ -263,7 +263,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck
 
 Both clean.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -283,7 +283,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `tests/db/pages-schema.test.ts`
 - Generate: `drizzle/migrations/0003_*.sql` (filename varies by drizzle-kit)
 
-- [ ] **Step 1: Write failing test `tests/db/pages-schema.test.ts`**
+- [x] **Step 1: Write failing test `tests/db/pages-schema.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -372,7 +372,7 @@ describe('pages schema', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/pages-schema.test.ts
@@ -380,7 +380,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/pages-sch
 
 Expected: FAIL — `schema.pages` undefined.
 
-- [ ] **Step 3: Write `src/db/schema/pages.ts`**
+- [x] **Step 3: Write `src/db/schema/pages.ts`**
 
 ```ts
 import {
@@ -439,7 +439,7 @@ export type NewPage = typeof pages.$inferInsert;
 
 Note: `parentId` references `pages.id` recursively — Drizzle doesn't currently model self-FKs cleanly in the table-config callback, so we add the FK constraint manually in the migration step below.
 
-- [ ] **Step 4: Update `src/db/schema/index.ts`**
+- [x] **Step 4: Update `src/db/schema/index.ts`**
 
 ```ts
 export * from './workspaces';
@@ -450,7 +450,7 @@ export * from './auth';
 export * from './pages';
 ```
 
-- [ ] **Step 5: Generate migration**
+- [x] **Step 5: Generate migration**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -459,7 +459,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 
 A new `0003_*.sql` file is created. Open it.
 
-- [ ] **Step 6: Append the self-FK + trigger + plain-text extraction function to the migration**
+- [x] **Step 6: Append the self-FK + trigger + plain-text extraction function to the migration**
 
 Edit the new `drizzle/migrations/0003_*.sql` file. AFTER all the `CREATE TABLE` / `CREATE INDEX` statements that drizzle-kit produced, append:
 
@@ -515,7 +515,7 @@ CREATE TRIGGER pages_search_sync_trigger
 
 Note: `pages_extract_text` uses a recursive `jsonb_path_query` to find every `text` field at any depth. This is the canonical Postgres pattern for walking ProseMirror JSON.
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/pages-schema.test.ts
@@ -527,7 +527,7 @@ If the trigger SQL has a syntax error, the migration will fail at apply time. Re
 - `jsonb_path_query` requires Postgres 12+ (we use 16, so fine).
 - `setweight(to_tsvector('english', ...), 'A')` — `to_tsvector` requires the dictionary name as the first arg; ours is 'english' which is built-in.
 
-- [ ] **Step 8: Lint + typecheck + full test suite**
+- [x] **Step 8: Lint + typecheck + full test suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -535,7 +535,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 All exit 0. Existing 32 tests still pass; new 3 added → 35.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -553,7 +553,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/access.ts`
 - Create: `tests/lib/pages/access.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -667,13 +667,13 @@ describe('requirePageAccess', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/access.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/access.ts`**
+- [x] **Step 3: Write `src/lib/pages/access.ts`**
 
 ```ts
 import { eq } from 'drizzle-orm';
@@ -705,7 +705,7 @@ export async function requirePageAccess(pageId: string, required: MemberRole): P
 }
 ```
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/access.test.ts
@@ -713,13 +713,13 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/ac
 
 Expected: 5 passed.
 
-- [ ] **Step 5: Lint + typecheck**
+- [x] **Step 5: Lint + typecheck**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -738,7 +738,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/create.ts`
 - Create: `tests/lib/pages/create.test.ts`
 
-- [ ] **Step 1: Write `src/lib/pages/empty-document.ts`**
+- [x] **Step 1: Write `src/lib/pages/empty-document.ts`**
 
 ```ts
 // Minimal valid ProseMirror document for a fresh page.
@@ -752,7 +752,7 @@ export function emptyDocument(): ProseMirrorDoc {
 }
 ```
 
-- [ ] **Step 2: Write failing test `tests/lib/pages/create.test.ts`**
+- [x] **Step 2: Write failing test `tests/lib/pages/create.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -824,13 +824,13 @@ describe('createPage', () => {
 });
 ```
 
-- [ ] **Step 3: Verify failure**
+- [x] **Step 3: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/create.test.ts
 ```
 
-- [ ] **Step 4: Write `src/lib/pages/create.ts`**
+- [x] **Step 4: Write `src/lib/pages/create.ts`**
 
 ```ts
 import { and, eq } from 'drizzle-orm';
@@ -878,7 +878,7 @@ export async function createPage(
 }
 ```
 
-- [ ] **Step 5: Run tests, verify pass**
+- [x] **Step 5: Run tests, verify pass**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/create.test.ts
@@ -886,7 +886,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/cr
 
 Expected: 3 passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -906,7 +906,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `tests/lib/pages/get.test.ts`
 - Create: `tests/lib/pages/tree.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/pages/get.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/pages/get.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -964,7 +964,7 @@ describe('getPage', () => {
 });
 ```
 
-- [ ] **Step 2: Write failing test `tests/lib/pages/tree.test.ts`**
+- [x] **Step 2: Write failing test `tests/lib/pages/tree.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1033,13 +1033,13 @@ describe('getPageTree', () => {
 });
 ```
 
-- [ ] **Step 3: Verify failure**
+- [x] **Step 3: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/get.test.ts tests/lib/pages/tree.test.ts
 ```
 
-- [ ] **Step 4: Write `src/lib/pages/get.ts`**
+- [x] **Step 4: Write `src/lib/pages/get.ts`**
 
 ```ts
 import { and, eq, isNull } from 'drizzle-orm';
@@ -1065,7 +1065,7 @@ export async function getPage(
 }
 ```
 
-- [ ] **Step 5: Write `src/lib/pages/tree.ts`**
+- [x] **Step 5: Write `src/lib/pages/tree.ts`**
 
 ```ts
 import { and, asc, eq, isNull } from 'drizzle-orm';
@@ -1115,7 +1115,7 @@ export async function getPageTree(
 }
 ```
 
-- [ ] **Step 6: Run tests, verify pass**
+- [x] **Step 6: Run tests, verify pass**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/
@@ -1123,7 +1123,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/
 
 Expected: 3 + 4 = 7 passed in these files.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1141,7 +1141,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/update.ts`
 - Create: `tests/lib/pages/update.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1246,13 +1246,13 @@ describe('updatePage', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/update.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/update.ts`**
+- [x] **Step 3: Write `src/lib/pages/update.ts`**
 
 ```ts
 import { and, eq, isNull } from 'drizzle-orm';
@@ -1314,7 +1314,7 @@ export async function updatePage(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/update.test.ts
@@ -1322,7 +1322,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/up
 
 Expected: 5 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1340,7 +1340,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/delete.ts`
 - Create: `tests/lib/pages/delete.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1424,13 +1424,13 @@ describe('softDeletePage', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/delete.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/delete.ts`**
+- [x] **Step 3: Write `src/lib/pages/delete.ts`**
 
 ```ts
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
@@ -1475,7 +1475,7 @@ export async function softDeletePage(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/delete.test.ts
@@ -1483,7 +1483,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/de
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1503,7 +1503,7 @@ For v0.1.0 we use creation-order for sibling ordering — explicit reordering UI
 - Create: `src/lib/pages/move.ts`
 - Create: `tests/lib/pages/move.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1594,13 +1594,13 @@ describe('movePage', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/move.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/move.ts`**
+- [x] **Step 3: Write `src/lib/pages/move.ts`**
 
 ```ts
 import { and, eq, isNull } from 'drizzle-orm';
@@ -1672,7 +1672,7 @@ export async function movePage(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/move.test.ts
@@ -1680,7 +1680,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/mo
 
 Expected: 5 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1698,7 +1698,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/app/api/pages/route.ts`
 - Create: `tests/api/pages-create.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/api/pages-create.test.ts`**
+- [x] **Step 1: Write failing test `tests/api/pages-create.test.ts`**
 
 Use the `vi.mock('@/lib/auth/config', ...)` pattern from Plan 1's invites test. Two test cases: editor can create; viewer cannot.
 
@@ -1793,13 +1793,13 @@ describe('POST /api/pages', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-create.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/pages/route.ts`**
+- [x] **Step 3: Write `src/app/api/pages/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -1842,7 +1842,7 @@ export async function POST(req: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-create.test.ts
@@ -1850,7 +1850,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-cr
 
 Expected: 4 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1868,7 +1868,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/app/api/pages/[pageId]/route.ts`
 - Create: `tests/api/pages-rud.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -1993,13 +1993,13 @@ describe('/api/pages/[pageId]', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-rud.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/pages/[pageId]/route.ts`**
+- [x] **Step 3: Write `src/app/api/pages/[pageId]/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -2076,7 +2076,7 @@ function errorToResponse(err: unknown): Response {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-rud.test.ts
@@ -2084,7 +2084,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-ru
 
 Expected: 7 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2100,7 +2100,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/app/api/pages/[pageId]/move/route.ts`
 - Create: `tests/api/pages-move.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -2191,13 +2191,13 @@ describe('POST /api/pages/[pageId]/move', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-move.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/pages/[pageId]/move/route.ts`**
+- [x] **Step 3: Write `src/app/api/pages/[pageId]/move/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -2234,7 +2234,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ pageId:
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-move.test.ts
@@ -2242,7 +2242,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-mo
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2260,7 +2260,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/components/sidebar-tree.tsx`
 - Modify: `src/components/sidebar.tsx`
 
-- [ ] **Step 1: Write `src/components/sidebar-tree.tsx`**
+- [x] **Step 1: Write `src/components/sidebar-tree.tsx`**
 
 ```tsx
 import Link from 'next/link';
@@ -2304,7 +2304,7 @@ function TreeItem({ node, depth }: { node: PageTreeNode; depth: number }) {
 }
 ```
 
-- [ ] **Step 2: Modify `src/components/sidebar.tsx`**
+- [x] **Step 2: Modify `src/components/sidebar.tsx`**
 
 Replace the existing `<nav>` content's placeholder text with the new SidebarTree. Read the current file first; the relevant section is the `<nav>` block.
 
@@ -2339,11 +2339,11 @@ import { SidebarTree } from './sidebar-tree';
 
 `NewPageButton` is created in Task 14. The sidebar component won't typecheck until Task 14 lands. Acceptable to commit Task 13 + Task 14 together if cleaner.
 
-- [ ] **Step 3: Skip typecheck temporarily**
+- [x] **Step 3: Skip typecheck temporarily**
 
 Don't run typecheck yet (NewPageButton doesn't exist). Continue to Task 14, then run typecheck at the end of Task 14.
 
-- [ ] **Step 4: Do NOT commit yet — wait for Task 14**
+- [x] **Step 4: Do NOT commit yet — wait for Task 14**
 
 ---
 
@@ -2355,7 +2355,7 @@ Don't run typecheck yet (NewPageButton doesn't exist). Continue to Task 14, then
 - Create: `src/components/new-page-button.tsx`
 - Modify: `src/app/(app)/page.tsx`
 
-- [ ] **Step 1: Write `src/components/new-page-button.tsx`**
+- [x] **Step 1: Write `src/components/new-page-button.tsx`**
 
 ```tsx
 'use client';
@@ -2401,7 +2401,7 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
 }
 ```
 
-- [ ] **Step 2: Modify `src/app/(app)/page.tsx`**
+- [x] **Step 2: Modify `src/app/(app)/page.tsx`**
 
 Replace the placeholder body with:
 
@@ -2437,7 +2437,7 @@ export default async function DashboardPage() {
 }
 ```
 
-- [ ] **Step 3: Verify Sidebar + NewPageButton compile together**
+- [x] **Step 3: Verify Sidebar + NewPageButton compile together**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint
@@ -2445,7 +2445,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint
 
 Both must exit 0. Fix import order or missing types if Biome complains.
 
-- [ ] **Step 4: Build smoke**
+- [x] **Step 4: Build smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm build
@@ -2453,7 +2453,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm build
 
 Must succeed.
 
-- [ ] **Step 5: Run all tests**
+- [x] **Step 5: Run all tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
@@ -2461,7 +2461,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
 
 Existing + new should all pass.
 
-- [ ] **Step 6: Commit (combined Task 13 + 14)**
+- [x] **Step 6: Commit (combined Task 13 + 14)**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2481,7 +2481,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/app/(app)/pages/[pageId]/not-found.tsx`
 - Create: `src/components/editor/editor.tsx` (placeholder shell only)
 
-- [ ] **Step 1: Write `src/app/(app)/pages/[pageId]/not-found.tsx`**
+- [x] **Step 1: Write `src/app/(app)/pages/[pageId]/not-found.tsx`**
 
 ```tsx
 import Link from 'next/link';
@@ -2501,7 +2501,7 @@ export default function NotFound() {
 }
 ```
 
-- [ ] **Step 2: Write `src/components/editor/editor.tsx` (placeholder)**
+- [x] **Step 2: Write `src/components/editor/editor.tsx` (placeholder)**
 
 ```tsx
 'use client';
@@ -2529,7 +2529,7 @@ export function Editor({ initialContent }: EditorProps) {
 }
 ```
 
-- [ ] **Step 3: Write `src/app/(app)/pages/[pageId]/page.tsx`**
+- [x] **Step 3: Write `src/app/(app)/pages/[pageId]/page.tsx`**
 
 ```tsx
 import { notFound } from 'next/navigation';
@@ -2563,7 +2563,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 }
 ```
 
-- [ ] **Step 4: Verify build + smoke**
+- [x] **Step 4: Verify build + smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build
@@ -2571,11 +2571,11 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 All clean.
 
-- [ ] **Step 5: Manual smoke (if Docker is up)**
+- [x] **Step 5: Manual smoke (if Docker is up)**
 
 Optional but useful: `docker compose up -d --build`, sign up, click the new-page button, verify the placeholder editor shows the empty doc JSON. Then `docker compose down`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2594,7 +2594,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/components/icon-picker.tsx`
 - Modify: `src/app/(app)/pages/[pageId]/page.tsx`
 
-- [ ] **Step 1: Install emoji-picker-element**
+- [x] **Step 1: Install emoji-picker-element**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add emoji-picker-element@^1.21.0
@@ -2602,7 +2602,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add emoji-picker-elemen
 
 Note: `emoji-picker-element` is a web component. We'll wrap it in a tiny React shim because it doesn't ship React typings.
 
-- [ ] **Step 2: Write `src/components/icon-picker.tsx`**
+- [x] **Step 2: Write `src/components/icon-picker.tsx`**
 
 ```tsx
 'use client';
@@ -2664,7 +2664,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 }
 ```
 
-- [ ] **Step 3: Write `src/components/page-title-input.tsx`**
+- [x] **Step 3: Write `src/components/page-title-input.tsx`**
 
 ```tsx
 'use client';
@@ -2706,7 +2706,7 @@ export function PageTitleInput({ pageId, initial }: PageTitleInputProps) {
 }
 ```
 
-- [ ] **Step 4: Write `src/components/page-icon-picker.tsx` (client wrapper that wires save)**
+- [x] **Step 4: Write `src/components/page-icon-picker.tsx` (client wrapper that wires save)**
 
 ```tsx
 'use client';
@@ -2730,7 +2730,7 @@ export function PageIconPicker({ pageId, initial }: { pageId: string; initial: s
 }
 ```
 
-- [ ] **Step 5: Modify `src/app/(app)/pages/[pageId]/page.tsx`**
+- [x] **Step 5: Modify `src/app/(app)/pages/[pageId]/page.tsx`**
 
 Replace the static `<h1>` + emoji span with the two new components:
 
@@ -2768,7 +2768,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 }
 ```
 
-- [ ] **Step 6: Verify build + smoke**
+- [x] **Step 6: Verify build + smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -2776,7 +2776,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 All exit 0.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2795,7 +2795,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 **Files:**
 - Modify: `package.json`, `pnpm-lock.yaml`
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2813,13 +2813,13 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
     tippy.js@^6.3.7
 ```
 
-- [ ] **Step 2: Verify typecheck still passes**
+- [x] **Step 2: Verify typecheck still passes**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2837,7 +2837,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/components/editor/extensions.ts`
 - Modify: `src/components/editor/editor.tsx`
 
-- [ ] **Step 1: Write `src/components/editor/extensions.ts`**
+- [x] **Step 1: Write `src/components/editor/extensions.ts`**
 
 ```ts
 import StarterKit from '@tiptap/starter-kit';
@@ -2864,7 +2864,7 @@ export function baseExtensions() {
 }
 ```
 
-- [ ] **Step 2: Rewrite `src/components/editor/editor.tsx`**
+- [x] **Step 2: Rewrite `src/components/editor/editor.tsx`**
 
 ```tsx
 'use client';
@@ -2952,7 +2952,7 @@ export function Editor({ pageId, initialContent, initialUpdatedAt }: EditorProps
 }
 ```
 
-- [ ] **Step 3: Add prose typography support**
+- [x] **Step 3: Add prose typography support**
 
 shadcn/ui doesn't ship `prose` classes by default. Install the Tailwind typography plugin:
 
@@ -2968,7 +2968,7 @@ import typography from '@tailwindcss/typography';
   plugins: [animate, typography],
 ```
 
-- [ ] **Step 4: Build + test**
+- [x] **Step 4: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -2976,7 +2976,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 All clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2993,7 +2993,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 **Files:**
 - Modify: `src/components/editor/extensions.ts`
 
-- [ ] **Step 1: Update `src/components/editor/extensions.ts`**
+- [x] **Step 1: Update `src/components/editor/extensions.ts`**
 
 ```ts
 import StarterKit from '@tiptap/starter-kit';
@@ -3023,13 +3023,13 @@ export function baseExtensions() {
 
 (StarterKit's default options re-enable bulletList, orderedList, blockquote, horizontalRule. We dropped the per-extension disables.)
 
-- [ ] **Step 2: Build + test**
+- [x] **Step 2: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3048,7 +3048,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/components/editor/code-highlight.css`
 - Modify: `src/app/(app)/pages/[pageId]/page.tsx` (import the CSS or attach via global)
 
-- [ ] **Step 1: Update `extensions.ts`**
+- [x] **Step 1: Update `extensions.ts`**
 
 ```ts
 import StarterKit from '@tiptap/starter-kit';
@@ -3081,7 +3081,7 @@ export function baseExtensions() {
 }
 ```
 
-- [ ] **Step 2: Add syntax-highlight CSS**
+- [x] **Step 2: Add syntax-highlight CSS**
 
 Create `src/components/editor/code-highlight.css` using the standard highlight.js token classes (subset):
 
@@ -3132,13 +3132,13 @@ Import this CSS in `src/app/globals.css` by appending:
 @import '../components/editor/code-highlight.css';
 ```
 
-- [ ] **Step 3: Build + test**
+- [x] **Step 3: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3157,7 +3157,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Modify: `src/components/editor/extensions.ts`
 - Modify: `src/components/editor/code-highlight.css` (add `.callout-*` styles) — OR a new `callout.css`
 
-- [ ] **Step 1: Write `src/components/editor/callout-extension.ts`**
+- [x] **Step 1: Write `src/components/editor/callout-extension.ts`**
 
 ```ts
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -3219,7 +3219,7 @@ declare module '@tiptap/core' {
 }
 ```
 
-- [ ] **Step 2: Add Callout to extensions list**
+- [x] **Step 2: Add Callout to extensions list**
 
 In `src/components/editor/extensions.ts`, import and append:
 
@@ -3237,7 +3237,7 @@ return [
 ];
 ```
 
-- [ ] **Step 3: Add callout CSS to `src/components/editor/code-highlight.css`**
+- [x] **Step 3: Add callout CSS to `src/components/editor/code-highlight.css`**
 
 Append:
 
@@ -3272,13 +3272,13 @@ Append:
 }
 ```
 
-- [ ] **Step 4: Build + test**
+- [x] **Step 4: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3297,7 +3297,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/components/editor/slash-extension.ts`
 - Modify: `src/components/editor/extensions.ts`
 
-- [ ] **Step 1: Write `src/components/editor/slash-menu.tsx`**
+- [x] **Step 1: Write `src/components/editor/slash-menu.tsx`**
 
 ```tsx
 'use client';
@@ -3375,7 +3375,7 @@ export const SlashMenu = forwardRef<
 });
 ```
 
-- [ ] **Step 2: Write `src/components/editor/slash-extension.ts`**
+- [x] **Step 2: Write `src/components/editor/slash-extension.ts`**
 
 ```ts
 import { Extension } from '@tiptap/core';
@@ -3497,7 +3497,7 @@ export const SlashCommand = Extension.create({
 });
 ```
 
-- [ ] **Step 3: Add SlashCommand to extensions**
+- [x] **Step 3: Add SlashCommand to extensions**
 
 In `src/components/editor/extensions.ts`:
 
@@ -3510,7 +3510,7 @@ return [
 ];
 ```
 
-- [ ] **Step 4: Add tippy CSS**
+- [x] **Step 4: Add tippy CSS**
 
 Append to `src/components/editor/code-highlight.css`:
 
@@ -3526,7 +3526,7 @@ import 'tippy.js/dist/tippy.css';
 
 (Adjacent to the other CSS imports.)
 
-- [ ] **Step 5: Build + test**
+- [x] **Step 5: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -3534,7 +3534,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 If typecheck complains about Suggestion's generic typing, add `as never` casts where needed or `// @ts-expect-error` with a comment.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3553,7 +3553,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 **Files:**
 - Modify: `src/components/editor/extensions.ts` (one comment, no behavior change)
 
-- [ ] **Step 1: Add a TODO at the top of `extensions.ts`**
+- [x] **Step 1: Add a TODO at the top of `extensions.ts`**
 
 Prepend the file with:
 
@@ -3564,7 +3564,7 @@ Prepend the file with:
 // the extension list below.
 ```
 
-- [ ] **Step 2: Verify nothing else regressed**
+- [x] **Step 2: Verify nothing else regressed**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -3572,7 +3572,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 All clean.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3592,7 +3592,7 @@ The ⌘/ slash menu and ⌘B/I/U formatting come from TipTap/StarterKit by defau
 - Create: `src/components/keyboard-shortcuts.tsx`
 - Modify: `src/app/(app)/layout.tsx`
 
-- [ ] **Step 1: Write `src/components/keyboard-shortcuts.tsx`**
+- [x] **Step 1: Write `src/components/keyboard-shortcuts.tsx`**
 
 ```tsx
 'use client';
@@ -3631,7 +3631,7 @@ export function KeyboardShortcuts() {
 }
 ```
 
-- [ ] **Step 2: Mount in `src/app/(app)/layout.tsx`**
+- [x] **Step 2: Mount in `src/app/(app)/layout.tsx`**
 
 Add inside the `<div>` returned by AppLayout:
 
@@ -3645,13 +3645,13 @@ import { KeyboardShortcuts } from '@/components/keyboard-shortcuts';
 </div>
 ```
 
-- [ ] **Step 3: Build + test**
+- [x] **Step 3: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3666,7 +3666,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 **Files:**
 - Modify: `CHANGELOG.md`
 
-- [ ] **Step 1: Full E2E smoke**
+- [x] **Step 1: Full E2E smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -3695,13 +3695,13 @@ If any step fails, debug. Common gotchas:
 - Slash menu doesn't pop: tippy.js CSS may not be loaded. Verify `import 'tippy.js/dist/tippy.css';` in `src/app/layout.tsx`.
 - Autosave 409 forever: the conflict-detection compares ISO strings; ensure server returns the new `updatedAt` and the client stores it.
 
-- [ ] **Step 2: Tear down**
+- [x] **Step 2: Tear down**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && docker compose down
 ```
 
-- [ ] **Step 3: Update `CHANGELOG.md`**
+- [x] **Step 3: Update `CHANGELOG.md`**
 
 Append the new entries under `[Unreleased]`:
 
@@ -3735,7 +3735,7 @@ Append the new entries under `[Unreleased]`:
 - Repository scaffolding: Biome (lint/format), Vitest with testcontainers, Drizzle ORM with migrations applied at startup.
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \

@@ -109,7 +109,7 @@ cairn/
 - Generate: `drizzle/migrations/0006_*.sql`
 - Create: `tests/db/databases-schema.test.ts`
 
-- [ ] **Step 1: Write `src/db/schema/databases.ts`**
+- [x] **Step 1: Write `src/db/schema/databases.ts`**
 
 ```ts
 import { boolean, integer, jsonb, pgEnum, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
@@ -178,11 +178,11 @@ export type PropertyType = (typeof propertyType.enumValues)[number];
 export type ViewType = (typeof viewType.enumValues)[number];
 ```
 
-- [ ] **Step 2: Index, generate migration, write test**
+- [x] **Step 2: Index, generate migration, write test**
 
 Update `src/db/schema/index.ts` with `export * from './databases';`. Generate migration. Write a small schema test (analogous to Plan 4 Task 1) verifying inserts work for each table and FK cascades behave.
 
-- [ ] **Step 3: Run + commit**
+- [x] **Step 3: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -203,7 +203,7 @@ git add src/db/schema/ drizzle/ tests/db/databases-schema.test.ts && \
 - Create: `src/lib/databases/create.ts`, `src/lib/databases/get.ts`, `src/lib/databases/update.ts`
 - Create: `tests/lib/databases/create.test.ts`
 
-- [ ] **Step 1: Write `src/lib/databases/create.ts`**
+- [x] **Step 1: Write `src/lib/databases/create.ts`**
 
 ```ts
 import { and, eq } from 'drizzle-orm';
@@ -259,7 +259,7 @@ export async function createDatabase(
 }
 ```
 
-- [ ] **Step 2: Write get + update helpers**
+- [x] **Step 2: Write get + update helpers**
 
 `src/lib/databases/get.ts`:
 
@@ -295,11 +295,11 @@ export async function getDatabaseWithMeta(
 }
 ```
 
-- [ ] **Step 3: Test cases**
+- [x] **Step 3: Test cases**
 
 5 tests for `create`: success, parent page in different workspace rejected, seed property exists, seed view exists, default name applied. Plus 3 tests for `getDatabaseWithMeta`: returns null when wrong workspace; returns properties ordered; returns views.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/databases/create.test.ts
@@ -320,7 +320,7 @@ Type-specific config validation (e.g., select needs `options: string[]`).
 - Create: `src/lib/databases/properties.ts`
 - Create: `tests/lib/databases/properties.test.ts`
 
-- [ ] **Step 1: Property helpers**
+- [x] **Step 1: Property helpers**
 
 ```ts
 import { and, asc, eq } from 'drizzle-orm';
@@ -425,11 +425,11 @@ export async function deleteProperty(
 }
 ```
 
-- [ ] **Step 2: Tests**
+- [x] **Step 2: Tests**
 
 Cases: create+default position, type-specific config validation (select requires options), cross-database rejection, delete cascades cells, update enforces config validation.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/databases/properties.test.ts
@@ -448,7 +448,7 @@ git add src/lib/databases/properties.ts tests/lib/databases/properties.test.ts &
 - Create: `src/lib/databases/rows.ts`
 - Create: `tests/lib/databases/rows.test.ts`
 
-- [ ] **Step 1: Row + cell helpers**
+- [x] **Step 1: Row + cell helpers**
 
 ```ts
 import { and, eq, inArray, isNull } from 'drizzle-orm';
@@ -616,11 +616,11 @@ export async function listRows(
 }
 ```
 
-- [ ] **Step 2: Tests**
+- [x] **Step 2: Tests**
 
 8 cases covering: row create with no cells; create with cells (coerced); cell update overwrites; numeric coercion of strings; archived rows excluded from list; cross-db row update rejected; cross-workspace cell update rejected; listRows pagination.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/databases/rows.test.ts
@@ -647,7 +647,7 @@ Supported ops by type:
 - Create: `src/lib/databases/filter.ts`
 - Create: `tests/lib/databases/filter.test.ts`
 
-- [ ] **Step 1: Implement compileFilters**
+- [x] **Step 1: Implement compileFilters**
 
 Returns a SQL fragment suitable for use inside `WHERE EXISTS (SELECT 1 FROM db_cells WHERE ...)` per condition. Multiple conditions AND-ed.
 
@@ -742,9 +742,9 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
 
 NOTE: the JSON value handling has sharp edges — `dc.value::text` vs `dc.value->>0`. Tests will catch wrong shapes; iterate as needed.
 
-- [ ] **Step 2: Tests** (8+ cases across the property types and ops)
+- [x] **Step 2: Tests** (8+ cases across the property types and ops)
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/databases/filter.test.ts
@@ -763,7 +763,7 @@ git add src/lib/databases/filter.ts tests/lib/databases/filter.test.ts && \
 - Create: `src/lib/databases/sort.ts`
 - Modify: `src/lib/databases/rows.ts` — extend `listRows` to accept filters + sorts
 
-- [ ] **Step 1: Write `sort.ts`**
+- [x] **Step 1: Write `sort.ts`**
 
 ```ts
 import { sql as rawSql, type SQL } from 'drizzle-orm';
@@ -797,7 +797,7 @@ function cellExpr(type: schema.PropertyType): string {
 }
 ```
 
-- [ ] **Step 2: Apply in listRows**
+- [x] **Step 2: Apply in listRows**
 
 Update `listRows` in `rows.ts` to:
 1. Fetch properties once (for the propsById map).
@@ -806,11 +806,11 @@ Update `listRows` in `rows.ts` to:
 
 Replace the existing simple query with the parameterized version.
 
-- [ ] **Step 3: Test multi-property filter + multi-column sort**
+- [x] **Step 3: Test multi-property filter + multi-column sort**
 
 A pair of integration tests exercising filter+sort combinations.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/databases/
@@ -827,7 +827,7 @@ git add src/lib/databases/sort.ts src/lib/databases/rows.ts tests/lib/databases/
 - Create: `src/lib/databases/views.ts`
 - Create: `tests/lib/databases/views.test.ts`
 
-- [ ] **Step 1: View helpers**
+- [x] **Step 1: View helpers**
 
 `createView`, `updateView`, `deleteView`. View config Zod schema:
 
@@ -840,9 +840,9 @@ const ViewConfig = z.object({
 });
 ```
 
-- [ ] **Step 2: Tests** — 5 cases: create per type, update config validated, delete cascades, kanban requires groupBy, default view always exists.
+- [x] **Step 2: Tests** — 5 cases: create per type, update config validated, delete cascades, kanban requires groupBy, default view always exists.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add src/lib/databases/views.ts tests/lib/databases/views.test.ts && \
@@ -859,13 +859,13 @@ git add src/lib/databases/views.ts tests/lib/databases/views.test.ts && \
 
 Standard pattern: `requireRole('editor')` on writes, `requireRole('viewer')` on GET. Workspace scoping via `databases.workspace_id`.
 
-- [ ] **Step 1: Implement routes**
+- [x] **Step 1: Implement routes**
 
 Concise — follow exactly the same shape as Plan 2's `/api/pages` routes. Use `getDatabaseWithMeta` for GET.
 
-- [ ] **Step 2: Tests** — 6+ cases across the four operations and role/workspace gates.
+- [x] **Step 2: Tests** — 6+ cases across the four operations and role/workspace gates.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add 'src/app/api/databases/' tests/api/databases-routes.test.ts && \
@@ -880,13 +880,13 @@ git add 'src/app/api/databases/' tests/api/databases-routes.test.ts && \
 - Many routes under `src/app/api/databases/[databaseId]/{properties,rows,views}/...`
 - One consolidated test file `tests/api/databases-rows-filter.test.ts`
 
-- [ ] **Step 1: Implement routes**
+- [x] **Step 1: Implement routes**
 
 Pattern: each route validates the database belongs to the caller's workspace (via `requireRole` + `getDatabaseWithMeta`), then delegates to the lib helper.
 
-- [ ] **Step 2: Tests** — 12+ cases (property create, update, delete; row create with cells, update cells, archive; views CRUD; filter+sort query via `GET /api/databases/[id]/rows?filter=...&sort=...`).
+- [x] **Step 2: Tests** — 12+ cases (property create, update, delete; row create with cells, update cells, archive; views CRUD; filter+sort query via `GET /api/databases/[id]/rows?filter=...&sort=...`).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add 'src/app/api/databases/' tests/api/databases-rows-filter.test.ts && \
@@ -904,7 +904,7 @@ git add 'src/app/api/databases/' tests/api/databases-rows-filter.test.ts && \
 - Modify: `src/components/editor/extensions.ts`
 - Modify: `src/components/editor/slash-extension.ts`
 
-- [ ] **Step 1: Extension**
+- [x] **Step 1: Extension**
 
 ```ts
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -928,7 +928,7 @@ export const DatabaseNode = Node.create({
 });
 ```
 
-- [ ] **Step 2: Slash item**
+- [x] **Step 2: Slash item**
 
 ```ts
 {
@@ -953,11 +953,11 @@ export const DatabaseNode = Node.create({
 },
 ```
 
-- [ ] **Step 3: Pass pageId into editor storage**
+- [x] **Step 3: Pass pageId into editor storage**
 
 In `editor.tsx`, after `useEditor({ ... })`, set: `editor?.storage.cairn = { pageId };`.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 git add src/components/editor/ && \
@@ -972,7 +972,7 @@ git add src/components/editor/ && \
 - Create: `src/components/databases/database-block.tsx`
 - Create: `src/components/databases/use-database-data.ts`
 
-- [ ] **Step 1: Hook**
+- [x] **Step 1: Hook**
 
 ```tsx
 'use client';
@@ -1010,7 +1010,7 @@ export function useDatabaseData(databaseId: string, viewId: string | null) {
 }
 ```
 
-- [ ] **Step 2: DatabaseBlock**
+- [x] **Step 2: DatabaseBlock**
 
 ```tsx
 'use client';
@@ -1046,7 +1046,7 @@ export function DatabaseBlock({ node }: NodeViewProps) {
 }
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add src/components/databases/database-block.tsx src/components/databases/use-database-data.ts && \
@@ -1063,15 +1063,15 @@ git add src/components/databases/database-block.tsx src/components/databases/use
 - Create: `src/components/databases/table-view.tsx`
 - Create: `src/components/databases/cell-editor.tsx` (small per-type editor)
 
-- [ ] **Step 1: Cell editor (per type)**
+- [x] **Step 1: Cell editor (per type)**
 
 Switches over property type to render the right input. On blur or Enter, PATCHes `/api/databases/[id]/rows/[rowId]` with the new cell value.
 
-- [ ] **Step 2: Table view**
+- [x] **Step 2: Table view**
 
 Renders `<table>` with property columns; one `<tr>` per row. Last row is a "+ New row" inline button. Header click toggles sort direction (writes back to the view's config via PATCH).
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add src/components/databases/table-view.tsx src/components/databases/cell-editor.tsx && \
@@ -1087,13 +1087,13 @@ git add src/components/databases/table-view.tsx src/components/databases/cell-ed
 **Files:**
 - Create: `src/components/databases/kanban-view.tsx`
 
-- [ ] **Step 1: Kanban view**
+- [x] **Step 1: Kanban view**
 
 Reads `view.config.groupBy` (the select property id). Iterates options, groups rows by their cell value for that property. Native HTML5 drag-and-drop between columns updates the cell.
 
 If `groupBy` is not configured or the property type isn't `select`, render a hint to "Pick a select property to group by."
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```sh
 git add src/components/databases/kanban-view.tsx && \
@@ -1109,7 +1109,7 @@ git add src/components/databases/kanban-view.tsx && \
 
 Cards in a CSS grid. Each card shows the first text/title-ish property prominently and other visible properties below.
 
-- [ ] **Step 1: Implement + commit**
+- [x] **Step 1: Implement + commit**
 
 ```sh
 git add src/components/databases/gallery-view.tsx && \
@@ -1132,7 +1132,7 @@ PropertyPanel: collapsible drawer; shows the property list with rename/edit, "Ad
 
 FilterBuilder / SortBuilder: tiny popovers attached to view header buttons. Update the active view's `config` via PATCH.
 
-- [ ] **Step 1: Implement + commit**
+- [x] **Step 1: Implement + commit**
 
 ```sh
 git add src/components/databases/view-switcher.tsx src/components/databases/property-panel.tsx \
@@ -1144,11 +1144,11 @@ git add src/components/databases/view-switcher.tsx src/components/databases/prop
 
 ## Task 16: E2E smoke + CHANGELOG
 
-- [ ] **Step 1: Smoke**
+- [x] **Step 1: Smoke**
 
 Bring up docker compose, sign in, create a page, insert `/database`, add properties (text Title, select Status with options Todo/Doing/Done, date Due), add 3 rows, switch to Kanban grouped by Status, drag a card from Todo to Doing, switch to Gallery, add a filter Status=Doing, verify only 1 row shows.
 
-- [ ] **Step 2: CHANGELOG entry**
+- [x] **Step 2: CHANGELOG entry**
 
 ```markdown
 ### Added (Plan 5 — Databases)
@@ -1161,7 +1161,7 @@ Bring up docker compose, sign in, create a page, insert `/database`, add propert
 - View switcher, property panel, filter/sort builders.
 ```
 
-- [ ] **Step 3: Tear down + commit**
+- [x] **Step 3: Tear down + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && docker compose down

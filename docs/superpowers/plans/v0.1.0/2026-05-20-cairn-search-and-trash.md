@@ -101,7 +101,7 @@ cairn/
 - Generate + edit: `drizzle/migrations/0004_*.sql`
 - Create: `tests/db/system-meta-schema.test.ts`
 
-- [ ] **Step 1: Write `src/db/schema/system-meta.ts`**
+- [x] **Step 1: Write `src/db/schema/system-meta.ts`**
 
 ```ts
 import { pgTable, text, timestamp } from 'drizzle-orm/pg-core';
@@ -116,11 +116,11 @@ export type SystemMeta = typeof systemMeta.$inferSelect;
 export type NewSystemMeta = typeof systemMeta.$inferInsert;
 ```
 
-- [ ] **Step 2: Update `src/db/schema/index.ts`**
+- [x] **Step 2: Update `src/db/schema/index.ts`**
 
 Add `export * from './system-meta';` after the existing exports.
 
-- [ ] **Step 3: Write failing test `tests/db/system-meta-schema.test.ts`**
+- [x] **Step 3: Write failing test `tests/db/system-meta-schema.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -171,7 +171,7 @@ describe('system_meta schema + pg_trgm extension', () => {
 });
 ```
 
-- [ ] **Step 4: Verify failure**
+- [x] **Step 4: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/system-meta-schema.test.ts
@@ -179,7 +179,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/system-me
 
 Expected: FAIL — missing `system_meta` table; failing assertions on extension and index.
 
-- [ ] **Step 5: Generate the migration**
+- [x] **Step 5: Generate the migration**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -188,7 +188,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 
 A new `0004_*.sql` appears, creating only the `system_meta` table (drizzle-kit can't generate extensions or non-Drizzle indexes).
 
-- [ ] **Step 6: Append extension + trigram index to the new migration**
+- [x] **Step 6: Append extension + trigram index to the new migration**
 
 Open `drizzle/migrations/0004_*.sql`. After the `CREATE TABLE "system_meta"` block, append:
 
@@ -200,7 +200,7 @@ CREATE EXTENSION IF NOT EXISTS pg_trgm;
 CREATE INDEX IF NOT EXISTS "pages_title_trgm_idx" ON "pages" USING gin (title gin_trgm_ops);
 ```
 
-- [ ] **Step 7: Run tests**
+- [x] **Step 7: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/system-meta-schema.test.ts
@@ -208,7 +208,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/system-me
 
 Expected: 3 passed.
 
-- [ ] **Step 8: Lint + typecheck + full suite**
+- [x] **Step 8: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -216,7 +216,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 77 + 3 = 80.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -237,7 +237,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/search.ts`
 - Create: `tests/lib/pages/search.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/pages/search.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/pages/search.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -369,13 +369,13 @@ describe('getBreadcrumbs', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/search.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/search.ts`**
+- [x] **Step 3: Write `src/lib/pages/search.ts`**
 
 ```ts
 import { sql as rawSql } from 'drizzle-orm';
@@ -499,7 +499,7 @@ NOTE: the `pg_trgm` similarity operator `%` requires the `pg_trgm` extension (en
 
 NOTE: building the `ANY(ARRAY[...])` clause via string concatenation is unusual — Drizzle's `rawSql` template doesn't natively splat string arrays. The `rawSql.raw()` form bypasses parameterization. **All UUIDs in `pageIds` should already be validated as UUIDs by the API layer (Zod schema)** — but as a belt-and-suspenders, the helper could validate format. The plan assumes uppercase use only with validated input (API route layer is the boundary).
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/search.test.ts
@@ -509,7 +509,7 @@ Expected: 8 passed (6 search + 2 breadcrumb).
 
 If the typo-tolerance test fails because trigram similarity threshold is too high, lower it: add `set_limit(0.2)` via `SELECT set_limit(0.2)` per session, or use `% ANY (ARRAY[...])` with explicit threshold. Easier fix: replace `title % ${q}` with `similarity(title, ${q}) > 0.2`.
 
-- [ ] **Step 5: Lint + typecheck + full suite**
+- [x] **Step 5: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -517,7 +517,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 80 + 8 = 88.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -533,7 +533,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/app/api/search/route.ts`
 - Create: `tests/api/search.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/api/search.test.ts`**
+- [x] **Step 1: Write failing test `tests/api/search.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -616,13 +616,13 @@ describe('GET /api/search', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/search.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/search/route.ts`**
+- [x] **Step 3: Write `src/app/api/search/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -661,7 +661,7 @@ export async function GET(req: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/search.test.ts
@@ -669,7 +669,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/search.t
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Lint + typecheck + full suite**
+- [x] **Step 5: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -677,7 +677,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 88 + 3 = 91.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -696,13 +696,13 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Modify: `src/app/(app)/layout.tsx` — mount the palette
 - Install: `cmdk` (the shadcn-recommended command palette primitive)
 
-- [ ] **Step 1: Install cmdk**
+- [x] **Step 1: Install cmdk**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add cmdk@^1.0.4
 ```
 
-- [ ] **Step 2: Write `src/components/search-palette.tsx`**
+- [x] **Step 2: Write `src/components/search-palette.tsx`**
 
 ```tsx
 'use client';
@@ -826,7 +826,7 @@ export function SearchPalette() {
 
 NOTE: `dangerouslySetInnerHTML` is used for the snippet because `ts_headline` returns `<b>` markup. The DB content is user-controlled but the `ts_headline` output only contains the tags we configure plus text drawn from the page (which the same user could already paste into a paragraph). For v0.1.0 we accept this trust boundary. A future hardening would HTML-escape the headline and re-inject the `<b>` tags from a parser.
 
-- [ ] **Step 3: Mount in `src/app/(app)/layout.tsx`**
+- [x] **Step 3: Mount in `src/app/(app)/layout.tsx`**
 
 Add the import and render alongside `KeyboardShortcuts`:
 
@@ -841,7 +841,7 @@ import { SearchPalette } from '@/components/search-palette';
 </div>
 ```
 
-- [ ] **Step 4: Build + test**
+- [x] **Step 4: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -849,7 +849,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 All exit 0. Tests still 91.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -867,7 +867,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/trash.ts` (just `listTrash` for now; Task 6 + 7 add `restorePage` and `hardDeletePage`)
 - Create: `tests/lib/pages/trash.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/pages/trash.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/pages/trash.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -946,13 +946,13 @@ describe('listTrash', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/trash.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/trash.ts`**
+- [x] **Step 3: Write `src/lib/pages/trash.ts`**
 
 ```ts
 import { and, desc, eq, isNotNull } from 'drizzle-orm';
@@ -993,7 +993,7 @@ export async function listTrash(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/trash.test.ts
@@ -1001,13 +1001,13 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/tr
 
 Expected: 4 passed.
 
-- [ ] **Step 5: Lint + typecheck**
+- [x] **Step 5: Lint + typecheck**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1025,7 +1025,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Modify: `src/lib/pages/trash.ts` — add `restorePage`
 - Create: `tests/lib/pages/restore.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/pages/restore.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/pages/restore.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1111,13 +1111,13 @@ describe('restorePage', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/restore.test.ts
 ```
 
-- [ ] **Step 3: Add `restorePage` to `src/lib/pages/trash.ts`**
+- [x] **Step 3: Add `restorePage` to `src/lib/pages/trash.ts`**
 
 Append after the existing `listTrash`:
 
@@ -1166,7 +1166,7 @@ export async function restorePage(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/restore.test.ts
@@ -1174,7 +1174,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/re
 
 Expected: 4 passed.
 
-- [ ] **Step 5: Lint + typecheck + full suite**
+- [x] **Step 5: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -1182,7 +1182,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 91 + 4 = 95 (Task 5's 4 + Task 6's 4 = 8 new pages tests since the search task).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1200,7 +1200,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Modify: `src/lib/pages/trash.ts` — add `hardDeletePage`
 - Create: `tests/lib/pages/hard-delete.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1269,13 +1269,13 @@ describe('hardDeletePage', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/hard-delete.test.ts
 ```
 
-- [ ] **Step 3: Add `hardDeletePage` to `src/lib/pages/trash.ts`**
+- [x] **Step 3: Add `hardDeletePage` to `src/lib/pages/trash.ts`**
 
 Append:
 
@@ -1309,7 +1309,7 @@ export async function hardDeletePage(
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/hard-delete.test.ts
@@ -1317,7 +1317,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/ha
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Lint + typecheck + full suite**
+- [x] **Step 5: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -1325,7 +1325,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 95 + 3 = 98.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1348,7 +1348,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/app/api/pages/[pageId]/restore/route.ts`
 - Create: `tests/api/trash-routes.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/api/trash-routes.test.ts`**
+- [x] **Step 1: Write failing test `tests/api/trash-routes.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -1459,13 +1459,13 @@ describe('trash routes', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/trash-routes.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/trash/route.ts`**
+- [x] **Step 3: Write `src/app/api/trash/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -1490,7 +1490,7 @@ export async function GET(): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Write `src/app/api/trash/[pageId]/route.ts`**
+- [x] **Step 4: Write `src/app/api/trash/[pageId]/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -1520,7 +1520,7 @@ export async function DELETE(
 }
 ```
 
-- [ ] **Step 5: Write `src/app/api/pages/[pageId]/restore/route.ts`**
+- [x] **Step 5: Write `src/app/api/pages/[pageId]/restore/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -1550,7 +1550,7 @@ export async function POST(
 }
 ```
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/trash-routes.test.ts
@@ -1558,7 +1558,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/trash-ro
 
 Expected: 5 passed.
 
-- [ ] **Step 7: Lint + typecheck + full suite**
+- [x] **Step 7: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -1566,7 +1566,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 98 + 5 = 103.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1585,7 +1585,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/components/trash-list.tsx`
 - Modify: `src/components/sidebar.tsx`
 
-- [ ] **Step 1: Write `src/components/trash-list.tsx`**
+- [x] **Step 1: Write `src/components/trash-list.tsx`**
 
 ```tsx
 'use client';
@@ -1673,7 +1673,7 @@ export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
 }
 ```
 
-- [ ] **Step 2: Write `src/app/(app)/trash/page.tsx`**
+- [x] **Step 2: Write `src/app/(app)/trash/page.tsx`**
 
 ```tsx
 import { getDb } from '@/db/client';
@@ -1704,7 +1704,7 @@ export default async function TrashPage() {
 }
 ```
 
-- [ ] **Step 3: Add Trash link to sidebar**
+- [x] **Step 3: Add Trash link to sidebar**
 
 Read `src/components/sidebar.tsx`. Inside the footer section (above `Sign out`), add:
 
@@ -1721,7 +1721,7 @@ import { Trash } from 'lucide-react';
 </Link>
 ```
 
-- [ ] **Step 4: Build + test**
+- [x] **Step 4: Build + test**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -1729,7 +1729,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint 
 
 All exit 0. Tests still 103.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1747,7 +1747,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 - Create: `src/lib/pages/auto-purge.ts`
 - Create: `tests/lib/pages/auto-purge.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1825,13 +1825,13 @@ describe('autoPurge', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/auto-purge.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/pages/auto-purge.ts`**
+- [x] **Step 3: Write `src/lib/pages/auto-purge.ts`**
 
 ```ts
 import { sql as rawSql } from 'drizzle-orm';
@@ -1904,7 +1904,7 @@ NOTE: `pg_try_advisory_xact_lock` is released automatically at transaction commi
 
 NOTE: `(${input.retentionDays} * interval '1 day')` may need explicit casting if Drizzle's parameter binding inserts as text — adjust to `${input.retentionDays}::int * interval '1 day'` if the SQL errors at runtime.
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/auto-purge.test.ts
@@ -1912,7 +1912,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/pages/au
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Lint + typecheck + full suite**
+- [x] **Step 5: Lint + typecheck + full suite**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck && pnpm test
@@ -1920,7 +1920,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck 
 
 Full suite: 103 + 3 = 106.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -1941,7 +1941,7 @@ The simplest hook is at the top of the trash routes: each time the user opens tr
 - Modify: `src/app/api/pages/route.ts` — add fire-and-forget purge call
 - Optionally create a small helper `src/lib/pages/maybe-purge.ts`
 
-- [ ] **Step 1: Write `src/lib/pages/maybe-purge.ts`**
+- [x] **Step 1: Write `src/lib/pages/maybe-purge.ts`**
 
 ```ts
 import { getDb } from '@/db/client';
@@ -1957,7 +1957,7 @@ export function maybePurge(): void {
 }
 ```
 
-- [ ] **Step 2: Wire into existing routes**
+- [x] **Step 2: Wire into existing routes**
 
 In `src/app/api/trash/route.ts`, at the top of `GET`:
 
@@ -1981,7 +1981,7 @@ export async function POST(req: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 3: Run all tests**
+- [x] **Step 3: Run all tests**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
@@ -1989,13 +1989,13 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test
 
 Full suite still 106 (no new tests; existing API tests should keep passing — `maybePurge` is non-awaited and the advisory lock will release without affecting the test's main transaction).
 
-- [ ] **Step 4: Lint + typecheck**
+- [x] **Step 4: Lint + typecheck**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm lint && pnpm typecheck
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2007,7 +2007,7 @@ source ~/.zshenv && cd /Users/jon/projects/cairn && \
 
 ## Task 12: E2E smoke + CHANGELOG
 
-- [ ] **Step 1: Full E2E smoke**
+- [x] **Step 1: Full E2E smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2038,13 +2038,13 @@ If a step fails, debug. Common gotchas:
 - `pg_trgm` extension creation requires Postgres superuser inside the docker container — `postgres:16-alpine` runs `CREATE EXTENSION` with superuser by default, fine.
 - ⌘K only works in `(app)/...` routes (the layout mounts SearchPalette).
 
-- [ ] **Step 2: Tear down**
+- [x] **Step 2: Tear down**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && docker compose down
 ```
 
-- [ ] **Step 3: Update `CHANGELOG.md`**
+- [x] **Step 3: Update `CHANGELOG.md`**
 
 Add under `[Unreleased]` above the existing entries:
 
@@ -2061,7 +2061,7 @@ Add under `[Unreleased]` above the existing entries:
 - `system_meta` key/value table for cross-process flags (currently: `last_purge_at`).
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \

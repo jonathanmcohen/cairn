@@ -121,7 +121,7 @@ cairn/
 - Create: `CHANGELOG.md`
 - Modify: `README.md` (replace whatever exists or create)
 
-- [ ] **Step 1: Write `.gitignore`**
+- [x] **Step 1: Write `.gitignore`**
 
 ```gitignore
 # deps
@@ -166,7 +166,7 @@ coverage/
 drizzle/.snapshot
 ```
 
-- [ ] **Step 2: Write `.dockerignore`**
+- [x] **Step 2: Write `.dockerignore`**
 
 ```dockerignore
 node_modules
@@ -186,7 +186,7 @@ CHANGELOG.md
 LICENSE
 ```
 
-- [ ] **Step 3: Write `.editorconfig`**
+- [x] **Step 3: Write `.editorconfig`**
 
 ```ini
 root = true
@@ -203,13 +203,13 @@ insert_final_newline = true
 trim_trailing_whitespace = false
 ```
 
-- [ ] **Step 4: Write `.nvmrc`**
+- [x] **Step 4: Write `.nvmrc`**
 
 ```
 22
 ```
 
-- [ ] **Step 5: Write `LICENSE` (MIT)**
+- [x] **Step 5: Write `LICENSE` (MIT)**
 
 ```
 MIT License
@@ -235,7 +235,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
 
-- [ ] **Step 6: Write `CHANGELOG.md`**
+- [x] **Step 6: Write `CHANGELOG.md`**
 
 ```markdown
 # Changelog
@@ -249,7 +249,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Repository scaffolding: license, editorconfig, gitignore.
 ```
 
-- [ ] **Step 7: Write `README.md`**
+- [x] **Step 7: Write `README.md`**
 
 ```markdown
 # Cairn
@@ -275,7 +275,7 @@ Visit `http://localhost:3000`. The first user to sign up becomes the workspace o
 MIT — see [LICENSE](./LICENSE).
 ```
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```sh
 cd ~/projects/cairn
@@ -297,7 +297,7 @@ git commit -m "chore: bootstrap repository config files"
 - Create: `src/app/page.tsx`
 - Create: `src/app/globals.css` (will be replaced when Tailwind is added in Task 3)
 
-- [ ] **Step 1: Initialize `package.json`**
+- [x] **Step 1: Initialize `package.json`**
 
 Run:
 ```sh
@@ -330,7 +330,7 @@ cat > package.json <<'JSON'
 JSON
 ```
 
-- [ ] **Step 2: Install Next.js + React 19 (production deps)**
+- [x] **Step 2: Install Next.js + React 19 (production deps)**
 
 Run:
 ```sh
@@ -339,13 +339,13 @@ pnpm add next@^15.0.0 react@^19.0.0 react-dom@^19.0.0
 
 Expected: `node_modules/`, `pnpm-lock.yaml`, updated `package.json` with deps.
 
-- [ ] **Step 3: Install TypeScript and types (dev deps)**
+- [x] **Step 3: Install TypeScript and types (dev deps)**
 
 ```sh
 pnpm add -D typescript@^5.6.0 @types/node@^22.0.0 @types/react@^19.0.0 @types/react-dom@^19.0.0 tsx@^4.19.0
 ```
 
-- [ ] **Step 4: Write `tsconfig.json`**
+- [x] **Step 4: Write `tsconfig.json`**
 
 ```json
 {
@@ -376,7 +376,7 @@ pnpm add -D typescript@^5.6.0 @types/node@^22.0.0 @types/react@^19.0.0 @types/re
 }
 ```
 
-- [ ] **Step 5: Write `next.config.mjs`**
+- [x] **Step 5: Write `next.config.mjs`**
 
 ```js
 /** @type {import('next').NextConfig} */
@@ -392,7 +392,7 @@ const nextConfig = {
 export default nextConfig;
 ```
 
-- [ ] **Step 6: Write `src/app/layout.tsx`**
+- [x] **Step 6: Write `src/app/layout.tsx`**
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -412,7 +412,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 7: Write placeholder `src/app/page.tsx`**
+- [x] **Step 7: Write placeholder `src/app/page.tsx`**
 
 ```tsx
 export default function HomePage() {
@@ -420,14 +420,14 @@ export default function HomePage() {
 }
 ```
 
-- [ ] **Step 8: Write minimal `src/app/globals.css`**
+- [x] **Step 8: Write minimal `src/app/globals.css`**
 
 ```css
 * { box-sizing: border-box; }
 html, body { margin: 0; padding: 0; font-family: system-ui, sans-serif; }
 ```
 
-- [ ] **Step 9: Run dev server, verify boot**
+- [x] **Step 9: Run dev server, verify boot**
 
 ```sh
 pnpm dev
@@ -439,7 +439,7 @@ curl -s http://localhost:3000 | grep -o 'Cairn — coming online'
 ```
 Expected stdout: `Cairn — coming online`. Stop the dev server.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml tsconfig.json next.config.mjs src/
@@ -460,14 +460,14 @@ git commit -m "feat: scaffold Next.js 15 app with TypeScript strict"
 - Modify: `src/app/layout.tsx` (add font + class names)
 - Create: `src/lib/utils.ts`
 
-- [ ] **Step 1: Install Tailwind and shadcn deps**
+- [x] **Step 1: Install Tailwind and shadcn deps**
 
 ```sh
 pnpm add -D tailwindcss@^3.4.0 postcss@^8.4.0 autoprefixer@^10.4.0 tailwindcss-animate@^1.0.7
 pnpm add clsx@^2.1.0 tailwind-merge@^2.5.0 class-variance-authority@^0.7.0 lucide-react@^0.460.0
 ```
 
-- [ ] **Step 2: Write `tailwind.config.ts`**
+- [x] **Step 2: Write `tailwind.config.ts`**
 
 ```ts
 import type { Config } from 'tailwindcss';
@@ -500,7 +500,7 @@ export default {
 } satisfies Config;
 ```
 
-- [ ] **Step 3: Write `postcss.config.mjs`**
+- [x] **Step 3: Write `postcss.config.mjs`**
 
 ```js
 export default {
@@ -508,7 +508,7 @@ export default {
 };
 ```
 
-- [ ] **Step 4: Replace `src/app/globals.css` with Tailwind directives + tokens**
+- [x] **Step 4: Replace `src/app/globals.css` with Tailwind directives + tokens**
 
 ```css
 @tailwind base;
@@ -567,7 +567,7 @@ export default {
 }
 ```
 
-- [ ] **Step 5: Write `src/lib/utils.ts`**
+- [x] **Step 5: Write `src/lib/utils.ts`**
 
 ```ts
 import { clsx, type ClassValue } from 'clsx';
@@ -578,7 +578,7 @@ export function cn(...inputs: ClassValue[]): string {
 }
 ```
 
-- [ ] **Step 6: Write `components.json` (shadcn config)**
+- [x] **Step 6: Write `components.json` (shadcn config)**
 
 ```json
 {
@@ -603,7 +603,7 @@ export function cn(...inputs: ClassValue[]): string {
 }
 ```
 
-- [ ] **Step 7: Install initial shadcn components**
+- [x] **Step 7: Install initial shadcn components**
 
 ```sh
 pnpm dlx shadcn@latest add button input label card form sonner -y
@@ -611,7 +611,7 @@ pnpm dlx shadcn@latest add button input label card form sonner -y
 
 Expected: files under `src/components/ui/` created (button.tsx, input.tsx, etc.). If the CLI errors on missing deps, it will prompt to install them — accept.
 
-- [ ] **Step 8: Verify Tailwind renders**
+- [x] **Step 8: Verify Tailwind renders**
 
 Replace `src/app/page.tsx`:
 ```tsx
@@ -626,7 +626,7 @@ export default function HomePage() {
 
 Run `pnpm dev`, visit `http://localhost:3000`. Expected: heading centered, styled. Stop server.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml tailwind.config.ts postcss.config.mjs components.json src/
@@ -642,13 +642,13 @@ git commit -m "feat: add Tailwind CSS and shadcn/ui scaffold"
 **Files:**
 - Create: `biome.json`
 
-- [ ] **Step 1: Install Biome**
+- [x] **Step 1: Install Biome**
 
 ```sh
 pnpm add -D @biomejs/biome@^1.9.0
 ```
 
-- [ ] **Step 2: Write `biome.json`**
+- [x] **Step 2: Write `biome.json`**
 
 ```json
 {
@@ -692,7 +692,7 @@ pnpm add -D @biomejs/biome@^1.9.0
 }
 ```
 
-- [ ] **Step 3: Run lint to verify clean baseline**
+- [x] **Step 3: Run lint to verify clean baseline**
 
 ```sh
 pnpm lint
@@ -700,7 +700,7 @@ pnpm lint
 
 Expected: no errors (warnings on shadcn files are ignored by `files.ignore`).
 
-- [ ] **Step 4: Run format and verify nothing changes (or fix what does)**
+- [x] **Step 4: Run format and verify nothing changes (or fix what does)**
 
 ```sh
 pnpm format
@@ -709,7 +709,7 @@ git diff --stat
 
 If files were reformatted, accept the changes. If lint introduces failures, fix and re-run until clean.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add biome.json package.json pnpm-lock.yaml
@@ -729,13 +729,13 @@ git commit -m "feat: configure Biome for lint and format"
 - Create: `tests/helpers/db.ts`
 - Create: `tests/helpers/db.test.ts` (sanity check, deleted at end of task)
 
-- [ ] **Step 1: Install Vitest and testcontainers**
+- [x] **Step 1: Install Vitest and testcontainers**
 
 ```sh
 pnpm add -D vitest@^2.1.0 @vitest/coverage-v8@^2.1.0 @testcontainers/postgresql@^10.13.0 testcontainers@^10.13.0
 ```
 
-- [ ] **Step 2: Write `vitest.config.ts`**
+- [x] **Step 2: Write `vitest.config.ts`**
 
 ```ts
 import { defineConfig } from 'vitest/config';
@@ -756,7 +756,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: Write `tests/helpers/db.ts`**
+- [x] **Step 3: Write `tests/helpers/db.ts`**
 
 ```ts
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
@@ -781,7 +781,7 @@ export async function stopPostgres(): Promise<void> {
 }
 ```
 
-- [ ] **Step 4: Write the sanity test `tests/helpers/db.test.ts`**
+- [x] **Step 4: Write the sanity test `tests/helpers/db.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -796,7 +796,7 @@ it('starts a postgres container and returns a connection uri', () => {
 });
 ```
 
-- [ ] **Step 5: Run the test**
+- [x] **Step 5: Run the test**
 
 ```sh
 pnpm test
@@ -804,13 +804,13 @@ pnpm test
 
 Expected: 1 passed, 1 file. If Docker is not running, the test will fail — start Docker and rerun.
 
-- [ ] **Step 6: Delete the sanity test (keeps `db.ts` for later tasks)**
+- [x] **Step 6: Delete the sanity test (keeps `db.ts` for later tasks)**
 
 ```sh
 rm tests/helpers/db.test.ts
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml vitest.config.ts tests/
@@ -828,13 +828,13 @@ git commit -m "test: configure Vitest with testcontainers postgres harness"
 - Create: `tests/lib/env.test.ts`
 - Create: `.env.example`
 
-- [ ] **Step 1: Install Zod**
+- [x] **Step 1: Install Zod**
 
 ```sh
 pnpm add zod@^3.23.0
 ```
 
-- [ ] **Step 2: Write failing test `tests/lib/env.test.ts`**
+- [x] **Step 2: Write failing test `tests/lib/env.test.ts`**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -881,7 +881,7 @@ describe('parseEnv', () => {
 });
 ```
 
-- [ ] **Step 3: Run test, verify it fails**
+- [x] **Step 3: Run test, verify it fails**
 
 ```sh
 pnpm test tests/lib/env.test.ts
@@ -889,7 +889,7 @@ pnpm test tests/lib/env.test.ts
 
 Expected: FAIL — `Cannot find module '@/lib/env'`.
 
-- [ ] **Step 4: Write `src/lib/env.ts`**
+- [x] **Step 4: Write `src/lib/env.ts`**
 
 ```ts
 import { z } from 'zod';
@@ -921,7 +921,7 @@ export function env(): Env {
 }
 ```
 
-- [ ] **Step 5: Run test, verify it passes**
+- [x] **Step 5: Run test, verify it passes**
 
 ```sh
 pnpm test tests/lib/env.test.ts
@@ -929,7 +929,7 @@ pnpm test tests/lib/env.test.ts
 
 Expected: 4 passed.
 
-- [ ] **Step 6: Write `.env.example`**
+- [x] **Step 6: Write `.env.example`**
 
 ```sh
 # Database
@@ -950,7 +950,7 @@ CAIRN_LOG_LEVEL=info
 PUBLIC_URL=http://localhost:3000
 ```
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml src/lib/env.ts tests/lib/env.test.ts .env.example
@@ -968,14 +968,14 @@ git commit -m "feat: env var parsing with zod schema"
 - Create: `src/db/client.ts`
 - Create: `src/db/schema/index.ts` (empty barrel for now)
 
-- [ ] **Step 1: Install Drizzle and Postgres driver**
+- [x] **Step 1: Install Drizzle and Postgres driver**
 
 ```sh
 pnpm add drizzle-orm@^0.36.0 postgres@^3.4.5
 pnpm add -D drizzle-kit@^0.28.0
 ```
 
-- [ ] **Step 2: Write `drizzle.config.ts`**
+- [x] **Step 2: Write `drizzle.config.ts`**
 
 ```ts
 import { defineConfig } from 'drizzle-kit';
@@ -992,14 +992,14 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: Write `src/db/schema/index.ts` (empty barrel)**
+- [x] **Step 3: Write `src/db/schema/index.ts` (empty barrel)**
 
 ```ts
 // Tables will be re-exported from here as they are added.
 export {};
 ```
 
-- [ ] **Step 4: Write `src/db/client.ts`**
+- [x] **Step 4: Write `src/db/client.ts`**
 
 ```ts
 import { drizzle } from 'drizzle-orm/postgres-js';
@@ -1027,7 +1027,7 @@ export async function closeDb(): Promise<void> {
 }
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml drizzle.config.ts src/db/
@@ -1047,7 +1047,7 @@ git commit -m "feat: drizzle config and db client wiring"
 - Modify: `src/db/schema/index.ts`
 - Create: `tests/db/schema.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/db/schema.test.ts`**
+- [x] **Step 1: Write failing test `tests/db/schema.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -1103,7 +1103,7 @@ describe('workspaces / users / workspace_members', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, verify it fails**
+- [x] **Step 2: Run test, verify it fails**
 
 ```sh
 pnpm test tests/db/schema.test.ts
@@ -1111,7 +1111,7 @@ pnpm test tests/db/schema.test.ts
 
 Expected: FAIL — schema exports do not exist.
 
-- [ ] **Step 3: Write `src/db/schema/workspaces.ts`**
+- [x] **Step 3: Write `src/db/schema/workspaces.ts`**
 
 ```ts
 import { pgTable, text, uuid, timestamp } from 'drizzle-orm/pg-core';
@@ -1128,7 +1128,7 @@ export type Workspace = typeof workspaces.$inferSelect;
 export type NewWorkspace = typeof workspaces.$inferInsert;
 ```
 
-- [ ] **Step 4: Write `src/db/schema/users.ts`**
+- [x] **Step 4: Write `src/db/schema/users.ts`**
 
 ```ts
 import { pgTable, text, uuid, timestamp } from 'drizzle-orm/pg-core';
@@ -1146,7 +1146,7 @@ export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
 ```
 
-- [ ] **Step 5: Write `src/db/schema/workspace-members.ts`**
+- [x] **Step 5: Write `src/db/schema/workspace-members.ts`**
 
 ```ts
 import { pgTable, primaryKey, timestamp, uuid, pgEnum } from 'drizzle-orm/pg-core';
@@ -1175,7 +1175,7 @@ export type NewWorkspaceMember = typeof workspaceMembers.$inferInsert;
 export type MemberRole = (typeof memberRole.enumValues)[number];
 ```
 
-- [ ] **Step 6: Update `src/db/schema/index.ts`**
+- [x] **Step 6: Update `src/db/schema/index.ts`**
 
 ```ts
 export * from './workspaces';
@@ -1183,7 +1183,7 @@ export * from './users';
 export * from './workspace-members';
 ```
 
-- [ ] **Step 7: Generate the migration**
+- [x] **Step 7: Generate the migration**
 
 ```sh
 DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm db:generate
@@ -1191,7 +1191,7 @@ DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm db:generate
 
 Expected: a new file under `drizzle/migrations/0000_*.sql` is created.
 
-- [ ] **Step 8: Run the test**
+- [x] **Step 8: Run the test**
 
 ```sh
 pnpm test tests/db/schema.test.ts
@@ -1199,7 +1199,7 @@ pnpm test tests/db/schema.test.ts
 
 Expected: 2 passed.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```sh
 git add src/db/ drizzle/ tests/db/
@@ -1217,7 +1217,7 @@ git commit -m "feat: workspaces, users, workspace_members schema"
 - Modify: `src/db/schema/index.ts`
 - Modify: `tests/db/schema.test.ts` (add invite-token cases)
 
-- [ ] **Step 1: Add a new `describe` block to `tests/db/schema.test.ts`**
+- [x] **Step 1: Add a new `describe` block to `tests/db/schema.test.ts`**
 
 Append after the existing `describe('workspaces / users / workspace_members', ...)` block:
 
@@ -1247,7 +1247,7 @@ describe('invite_tokens', () => {
 });
 ```
 
-- [ ] **Step 2: Run test, verify it fails**
+- [x] **Step 2: Run test, verify it fails**
 
 ```sh
 pnpm test tests/db/schema.test.ts
@@ -1255,7 +1255,7 @@ pnpm test tests/db/schema.test.ts
 
 Expected: FAIL on `schema.inviteTokens` undefined.
 
-- [ ] **Step 3: Write `src/db/schema/invite-tokens.ts`**
+- [x] **Step 3: Write `src/db/schema/invite-tokens.ts`**
 
 ```ts
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
@@ -1279,7 +1279,7 @@ export type InviteToken = typeof inviteTokens.$inferSelect;
 export type NewInviteToken = typeof inviteTokens.$inferInsert;
 ```
 
-- [ ] **Step 4: Update `src/db/schema/index.ts`**
+- [x] **Step 4: Update `src/db/schema/index.ts`**
 
 ```ts
 export * from './workspaces';
@@ -1288,7 +1288,7 @@ export * from './workspace-members';
 export * from './invite-tokens';
 ```
 
-- [ ] **Step 5: Generate migration**
+- [x] **Step 5: Generate migration**
 
 ```sh
 DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm db:generate
@@ -1296,7 +1296,7 @@ DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm db:generate
 
 Expected: new `0001_*.sql` migration file.
 
-- [ ] **Step 6: Run tests**
+- [x] **Step 6: Run tests**
 
 ```sh
 pnpm test tests/db/schema.test.ts
@@ -1304,7 +1304,7 @@ pnpm test tests/db/schema.test.ts
 
 Expected: 3 passed.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```sh
 git add src/db/ drizzle/ tests/db/
@@ -1321,7 +1321,7 @@ git commit -m "feat: invite_tokens schema"
 - Create: `src/db/schema/auth.ts`
 - Modify: `src/db/schema/index.ts`
 
-- [ ] **Step 1: Install Auth.js + Drizzle adapter**
+- [x] **Step 1: Install Auth.js + Drizzle adapter**
 
 ```sh
 pnpm add next-auth@^5.0.0-beta.25 @auth/drizzle-adapter@^1.7.0
@@ -1329,7 +1329,7 @@ pnpm add next-auth@^5.0.0-beta.25 @auth/drizzle-adapter@^1.7.0
 
 (Pin to the latest published beta of v5; check `pnpm view next-auth versions` if installation fails.)
 
-- [ ] **Step 2: Write `src/db/schema/auth.ts`**
+- [x] **Step 2: Write `src/db/schema/auth.ts`**
 
 `userId` columns are `uuid` referencing `users.id` (Auth.js v5's Drizzle adapter supports custom user-id types):
 
@@ -1377,7 +1377,7 @@ export const verificationTokens = pgTable(
 );
 ```
 
-- [ ] **Step 3: Update `src/db/schema/index.ts`**
+- [x] **Step 3: Update `src/db/schema/index.ts`**
 
 ```ts
 export * from './workspaces';
@@ -1387,7 +1387,7 @@ export * from './invite-tokens';
 export * from './auth';
 ```
 
-- [ ] **Step 4: Generate migration**
+- [x] **Step 4: Generate migration**
 
 ```sh
 DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm db:generate
@@ -1395,7 +1395,7 @@ DATABASE_URL=postgres://cairn:cairn@localhost:5432/cairn pnpm db:generate
 
 Expected: new `0002_*.sql` migration.
 
-- [ ] **Step 5: Re-run all schema tests (they should still pass)**
+- [x] **Step 5: Re-run all schema tests (they should still pass)**
 
 ```sh
 pnpm test tests/db/
@@ -1403,7 +1403,7 @@ pnpm test tests/db/
 
 Expected: all green.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml src/db/ drizzle/
@@ -1420,7 +1420,7 @@ git commit -m "feat: auth.js drizzle schema (accounts, sessions, verification_to
 - Create: `src/db/migrate.ts`
 - Create: `tests/db/migrate.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/db/migrate.test.ts`**
+- [x] **Step 1: Write failing test `tests/db/migrate.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, expect, it } from 'vitest';
@@ -1446,7 +1446,7 @@ it('runs all migrations against an empty database', async () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 pnpm test tests/db/migrate.test.ts
@@ -1454,7 +1454,7 @@ pnpm test tests/db/migrate.test.ts
 
 Expected: FAIL — module missing.
 
-- [ ] **Step 3: Write `src/db/migrate.ts`**
+- [x] **Step 3: Write `src/db/migrate.ts`**
 
 ```ts
 import 'dotenv/config';
@@ -1490,13 +1490,13 @@ if (import.meta.url === `file://${process.argv[1]}`) {
 }
 ```
 
-- [ ] **Step 4: Install dotenv (used at top of migrate.ts)**
+- [x] **Step 4: Install dotenv (used at top of migrate.ts)**
 
 ```sh
 pnpm add dotenv@^16.4.0
 ```
 
-- [ ] **Step 5: Run test, verify pass**
+- [x] **Step 5: Run test, verify pass**
 
 ```sh
 pnpm test tests/db/migrate.test.ts
@@ -1504,7 +1504,7 @@ pnpm test tests/db/migrate.test.ts
 
 Expected: 1 passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml src/db/migrate.ts tests/db/migrate.test.ts
@@ -1519,14 +1519,14 @@ git commit -m "feat: drizzle migration runner"
 - Create: `src/lib/auth/password.ts`
 - Create: `tests/lib/auth/password.test.ts`
 
-- [ ] **Step 1: Install bcryptjs**
+- [x] **Step 1: Install bcryptjs**
 
 ```sh
 pnpm add bcryptjs@^2.4.3
 pnpm add -D @types/bcryptjs@^2.4.6
 ```
 
-- [ ] **Step 2: Write failing test `tests/lib/auth/password.test.ts`**
+- [x] **Step 2: Write failing test `tests/lib/auth/password.test.ts`**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -1550,13 +1550,13 @@ describe('password hashing', () => {
 });
 ```
 
-- [ ] **Step 3: Run, verify failure**
+- [x] **Step 3: Run, verify failure**
 
 ```sh
 pnpm test tests/lib/auth/password.test.ts
 ```
 
-- [ ] **Step 4: Write `src/lib/auth/password.ts`**
+- [x] **Step 4: Write `src/lib/auth/password.ts`**
 
 ```ts
 import bcrypt from 'bcryptjs';
@@ -1575,7 +1575,7 @@ export function verifyPassword(plain: string, hash: string): Promise<boolean> {
 }
 ```
 
-- [ ] **Step 5: Run test, verify pass**
+- [x] **Step 5: Run test, verify pass**
 
 ```sh
 pnpm test tests/lib/auth/password.test.ts
@@ -1583,7 +1583,7 @@ pnpm test tests/lib/auth/password.test.ts
 
 Expected: 3 passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml src/lib/auth/password.ts tests/lib/auth/
@@ -1600,7 +1600,7 @@ git commit -m "feat: password hashing utilities (bcryptjs, min 12 chars)"
 - Create: `src/lib/auth/signup.ts`
 - Create: `tests/lib/auth/signup.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/auth/signup.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/auth/signup.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -1750,13 +1750,13 @@ describe('signup', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 pnpm test tests/lib/auth/signup.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/auth/signup.ts`**
+- [x] **Step 3: Write `src/lib/auth/signup.ts`**
 
 ```ts
 import { and, eq } from 'drizzle-orm';
@@ -1856,7 +1856,7 @@ function slugify(name: string): string {
 }
 ```
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 ```sh
 pnpm test tests/lib/auth/signup.test.ts
@@ -1864,7 +1864,7 @@ pnpm test tests/lib/auth/signup.test.ts
 
 Expected: 5 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add src/lib/auth/signup.ts tests/lib/auth/signup.test.ts
@@ -1881,7 +1881,7 @@ git commit -m "feat: signup with workspace bootstrap and invite token flow"
 - Create: `src/lib/auth/config.ts`
 - Create: `src/app/api/auth/[...nextauth]/route.ts`
 
-- [ ] **Step 1: Write `src/lib/auth/config.ts`**
+- [x] **Step 1: Write `src/lib/auth/config.ts`**
 
 ```ts
 import NextAuth, { type NextAuthConfig } from 'next-auth';
@@ -1944,14 +1944,14 @@ export const authConfig: NextAuthConfig = {
 export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);
 ```
 
-- [ ] **Step 2: Write `src/app/api/auth/[...nextauth]/route.ts`**
+- [x] **Step 2: Write `src/app/api/auth/[...nextauth]/route.ts`**
 
 ```ts
 import { handlers } from '@/lib/auth/config';
 export const { GET, POST } = handlers;
 ```
 
-- [ ] **Step 3: Augment NextAuth types so `session.user.id` is typed**
+- [x] **Step 3: Augment NextAuth types so `session.user.id` is typed**
 
 Create `src/types/next-auth.d.ts`:
 ```ts
@@ -1963,7 +1963,7 @@ declare module 'next-auth' {
 }
 ```
 
-- [ ] **Step 4: Smoke check — typecheck and lint must pass**
+- [x] **Step 4: Smoke check — typecheck and lint must pass**
 
 ```sh
 pnpm typecheck && pnpm lint
@@ -1971,7 +1971,7 @@ pnpm typecheck && pnpm lint
 
 Fix any errors. The credentials route is exercised by Task 15's tests; this task just stages the config.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add src/lib/auth/config.ts src/app/api/auth/ src/types/
@@ -1988,7 +1988,7 @@ git commit -m "feat: auth.js v5 config with credentials provider"
 - Create: `src/app/api/auth/signup/route.ts`
 - Create: `tests/api/signup.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/api/signup.test.ts`**
+- [x] **Step 1: Write failing test `tests/api/signup.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -2063,13 +2063,13 @@ describe('POST /api/auth/signup', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 pnpm test tests/api/signup.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/auth/signup/route.ts`**
+- [x] **Step 3: Write `src/app/api/auth/signup/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -2101,7 +2101,7 @@ export async function POST(req: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 pnpm test tests/api/signup.test.ts
@@ -2109,7 +2109,7 @@ pnpm test tests/api/signup.test.ts
 
 Expected: 3 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add src/app/api/auth/signup/ tests/api/signup.test.ts
@@ -2126,7 +2126,7 @@ git commit -m "feat: signup api route with status codes for invite-required"
 - Create: `src/lib/auth/require-role.ts`
 - Create: `tests/lib/auth/require-role.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/auth/require-role.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/auth/require-role.test.ts`**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -2151,13 +2151,13 @@ describe('hasMinRole', () => {
 });
 ```
 
-- [ ] **Step 2: Verify failure**
+- [x] **Step 2: Verify failure**
 
 ```sh
 pnpm test tests/lib/auth/require-role.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/auth/require-role.ts`**
+- [x] **Step 3: Write `src/lib/auth/require-role.ts`**
 
 ```ts
 import { and, eq } from 'drizzle-orm';
@@ -2210,7 +2210,7 @@ export class HttpError extends Error {
 }
 ```
 
-- [ ] **Step 4: Run tests, verify pass**
+- [x] **Step 4: Run tests, verify pass**
 
 ```sh
 pnpm test tests/lib/auth/require-role.test.ts
@@ -2218,7 +2218,7 @@ pnpm test tests/lib/auth/require-role.test.ts
 
 Expected: 8 passed.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add src/lib/auth/require-role.ts tests/lib/auth/require-role.test.ts
@@ -2235,7 +2235,7 @@ git commit -m "feat: requireRole authorization helper"
 - Create: `src/app/api/invites/route.ts`
 - Create: `tests/api/invites.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/api/invites.test.ts`**
+- [x] **Step 1: Write failing test `tests/api/invites.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -2334,13 +2334,13 @@ describe('POST /api/invites', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 pnpm test tests/api/invites.test.ts
 ```
 
-- [ ] **Step 3: Write `src/app/api/invites/route.ts`**
+- [x] **Step 3: Write `src/app/api/invites/route.ts`**
 
 ```ts
 import { randomBytes } from 'node:crypto';
@@ -2391,7 +2391,7 @@ export async function POST(req: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [x] **Step 4: Run tests**
 
 ```sh
 pnpm test tests/api/invites.test.ts
@@ -2399,7 +2399,7 @@ pnpm test tests/api/invites.test.ts
 
 Expected: 4 passed. (`require-role.ts` imports `auth` directly from `@/lib/auth/config`, so the `vi.mock('@/lib/auth/config', ...)` in the test replaces it everywhere.)
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 git add src/app/api/invites/ tests/api/invites.test.ts
@@ -2417,7 +2417,7 @@ git commit -m "feat: POST /api/invites (admin-only invite token issuance)"
 - Create: `src/app/api/health/route.ts`
 - Create: `tests/api/health.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/api/health.test.ts`**
+- [x] **Step 1: Write failing test `tests/api/health.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -2449,13 +2449,13 @@ describe('GET /api/health', () => {
 });
 ```
 
-- [ ] **Step 2: Run, verify failure**
+- [x] **Step 2: Run, verify failure**
 
 ```sh
 pnpm test tests/api/health.test.ts
 ```
 
-- [ ] **Step 3: Write `src/lib/version.ts`**
+- [x] **Step 3: Write `src/lib/version.ts`**
 
 ```ts
 import { readFileSync } from 'node:fs';
@@ -2489,7 +2489,7 @@ export function appVersion(): string {
 }
 ```
 
-- [ ] **Step 4: Write `src/app/api/health/route.ts`**
+- [x] **Step 4: Write `src/app/api/health/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -2513,7 +2513,7 @@ export async function GET(): Promise<Response> {
 }
 ```
 
-- [ ] **Step 5: Run test**
+- [x] **Step 5: Run test**
 
 ```sh
 pnpm test tests/api/health.test.ts
@@ -2521,7 +2521,7 @@ pnpm test tests/api/health.test.ts
 
 Expected: 1 passed.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add src/lib/version.ts src/app/api/health/ tests/api/health.test.ts
@@ -2537,7 +2537,7 @@ git commit -m "feat: /api/health endpoint with db probe and version"
 **Files:**
 - Create: `src/middleware.ts`
 
-- [ ] **Step 1: Write `src/middleware.ts`**
+- [x] **Step 1: Write `src/middleware.ts`**
 
 ```ts
 import { NextResponse, type NextRequest } from 'next/server';
@@ -2569,13 +2569,13 @@ export const config = {
 };
 ```
 
-- [ ] **Step 2: Typecheck**
+- [x] **Step 2: Typecheck**
 
 ```sh
 pnpm typecheck
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add src/middleware.ts
@@ -2593,13 +2593,13 @@ git commit -m "feat: middleware to gate authed routes and bounce on public when 
 - Create: `src/components/theme-toggle.tsx`
 - Modify: `src/app/layout.tsx`
 
-- [ ] **Step 1: Install next-themes**
+- [x] **Step 1: Install next-themes**
 
 ```sh
 pnpm add next-themes@^0.4.0
 ```
 
-- [ ] **Step 2: Write `src/components/theme-provider.tsx`**
+- [x] **Step 2: Write `src/components/theme-provider.tsx`**
 
 ```tsx
 'use client';
@@ -2615,7 +2615,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 3: Write `src/components/theme-toggle.tsx`**
+- [x] **Step 3: Write `src/components/theme-toggle.tsx`**
 
 ```tsx
 'use client';
@@ -2639,7 +2639,7 @@ export function ThemeToggle() {
 }
 ```
 
-- [ ] **Step 4: Update `src/app/layout.tsx`**
+- [x] **Step 4: Update `src/app/layout.tsx`**
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -2662,14 +2662,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 5: Visual smoke**
+- [x] **Step 5: Visual smoke**
 
 ```sh
 pnpm dev
 ```
 Visit `http://localhost:3000` — the page should render. Click the theme toggle wherever it ends up rendered later. For now, just confirm no console errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add package.json pnpm-lock.yaml src/components/theme-provider.tsx src/components/theme-toggle.tsx src/app/layout.tsx
@@ -2687,7 +2687,7 @@ git commit -m "feat: theme provider with light/dark/system + toggle component"
 - Create: `src/app/(auth)/signup/page.tsx`
 - Create: `src/app/(auth)/login/page.tsx`
 
-- [ ] **Step 1: Write `src/app/(auth)/layout.tsx`**
+- [x] **Step 1: Write `src/app/(auth)/layout.tsx`**
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -2701,7 +2701,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 2: Write `src/app/(auth)/signup/page.tsx`**
+- [x] **Step 2: Write `src/app/(auth)/signup/page.tsx`**
 
 ```tsx
 'use client';
@@ -2792,7 +2792,7 @@ function Field(props: {
 }
 ```
 
-- [ ] **Step 3: Write `src/app/(auth)/login/page.tsx`**
+- [x] **Step 3: Write `src/app/(auth)/login/page.tsx`**
 
 ```tsx
 'use client';
@@ -2853,7 +2853,7 @@ export default function LoginPage() {
 }
 ```
 
-- [ ] **Step 4: Install next-auth react helpers (if not already present)**
+- [x] **Step 4: Install next-auth react helpers (if not already present)**
 
 ```sh
 pnpm add next-auth@^5.0.0-beta.25
@@ -2883,7 +2883,7 @@ import { AuthSessionProvider } from '@/components/session-provider';
 </body>
 ```
 
-- [ ] **Step 5: Smoke test**
+- [x] **Step 5: Smoke test**
 
 ```sh
 pnpm dev
@@ -2892,7 +2892,7 @@ pnpm dev
 - Sign out (cookies dev tools or call `/api/auth/signout`).
 - Visit `/login`, fill creds, submit → redirects to `/`.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add src/app/\(auth\)/ src/components/session-provider.tsx src/app/layout.tsx
@@ -2910,7 +2910,7 @@ git commit -m "feat: signup and login pages with shadcn forms"
 - Create: `src/app/(app)/page.tsx`
 - Create: `src/components/sidebar.tsx`
 
-- [ ] **Step 1: Write `src/components/sidebar.tsx`**
+- [x] **Step 1: Write `src/components/sidebar.tsx`**
 
 ```tsx
 import { eq } from 'drizzle-orm';
@@ -2955,7 +2955,7 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
 }
 ```
 
-- [ ] **Step 2: Write `src/app/(app)/layout.tsx`**
+- [x] **Step 2: Write `src/app/(app)/layout.tsx`**
 
 ```tsx
 import type { ReactNode } from 'react';
@@ -2975,7 +2975,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 }
 ```
 
-- [ ] **Step 3: Write `src/app/(app)/page.tsx`**
+- [x] **Step 3: Write `src/app/(app)/page.tsx`**
 
 ```tsx
 import { getAuthContext } from '@/lib/auth/require-role';
@@ -2996,14 +2996,14 @@ export default async function DashboardPage() {
 }
 ```
 
-- [ ] **Step 4: Delete the old root `/page.tsx`**
+- [x] **Step 4: Delete the old root `/page.tsx`**
 
 `src/app/page.tsx` now conflicts with `(app)/page.tsx`. Remove it:
 ```sh
 rm src/app/page.tsx
 ```
 
-- [ ] **Step 5: Smoke test**
+- [x] **Step 5: Smoke test**
 
 ```sh
 pnpm dev
@@ -3011,7 +3011,7 @@ pnpm dev
 - Unauthed: visit `/` → bounces to `/login`.
 - Signed-in: see sidebar with workspace name, "Welcome to Cairn", role.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add src/app/\(app\)/ src/components/sidebar.tsx
@@ -3030,7 +3030,7 @@ git commit -m "feat: authed dashboard shell with sidebar and version footer"
 - Create: `src/server/entrypoint.ts`
 - Modify: `package.json` (`start` script invokes entrypoint)
 
-- [ ] **Step 1: Write `src/server/entrypoint.ts`**
+- [x] **Step 1: Write `src/server/entrypoint.ts`**
 
 The Dockerfile lays out the runner image as:
 - `/app/server.js` (the Next.js standalone bundle entry, copied from `.next/standalone/server.js`)
@@ -3061,7 +3061,7 @@ main().catch((err) => {
 });
 ```
 
-- [ ] **Step 2: Modify `package.json` scripts**
+- [x] **Step 2: Modify `package.json` scripts**
 
 Replace the `"start"` entry with:
 ```json
@@ -3076,7 +3076,7 @@ Update the build script:
 "build": "next build && pnpm build:entrypoint"
 ```
 
-- [ ] **Step 3: Write `tsconfig.entrypoint.json`**
+- [x] **Step 3: Write `tsconfig.entrypoint.json`**
 
 ```json
 {
@@ -3093,7 +3093,7 @@ Update the build script:
 }
 ```
 
-- [ ] **Step 4: Write `Dockerfile`**
+- [x] **Step 4: Write `Dockerfile`**
 
 ```dockerfile
 # syntax=docker/dockerfile:1.7
@@ -3144,7 +3144,7 @@ HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
 CMD ["node", "dist/server/entrypoint.js"]
 ```
 
-- [ ] **Step 5: Build the image**
+- [x] **Step 5: Build the image**
 
 ```sh
 docker build -t cairn:dev .
@@ -3154,7 +3154,7 @@ Expected: image builds, final image size reported. If it fails:
 - Missing files in standalone? Ensure `next.config.mjs` has `output: 'standalone'` (yes, Task 2).
 - Module-resolution errors? Adjust the entrypoint import path; in standalone mode, the relative path to `.next/standalone/server.js` depends on copy layout.
 
-- [ ] **Step 6: Smoke run (no compose yet)**
+- [x] **Step 6: Smoke run (no compose yet)**
 
 ```sh
 docker run --rm -p 3000:3000 \
@@ -3165,7 +3165,7 @@ docker run --rm -p 3000:3000 \
 ```
 If you don't have a Postgres running locally, this will fail at the migration step — that's fine. The build itself succeeded. Task 24 wires compose to provide Postgres.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```sh
 git add Dockerfile tsconfig.entrypoint.json src/server/ package.json
@@ -3181,7 +3181,7 @@ git commit -m "feat: multi-stage Dockerfile with migration entrypoint"
 **Files:**
 - Create: `docker-compose.yml`
 
-- [ ] **Step 1: Write `docker-compose.yml`**
+- [x] **Step 1: Write `docker-compose.yml`**
 
 ```yaml
 services:
@@ -3224,14 +3224,14 @@ volumes:
   cairn_db:
 ```
 
-- [ ] **Step 2: Create local `.env` (NOT committed)**
+- [x] **Step 2: Create local `.env` (NOT committed)**
 
 ```sh
 cp .env.example .env
 # Edit .env: set DB_PASSWORD, AUTH_SECRET (32+ chars), PUBLIC_URL=http://localhost:3000
 ```
 
-- [ ] **Step 3: Bring up the stack**
+- [x] **Step 3: Bring up the stack**
 
 ```sh
 docker compose up -d --build
@@ -3243,7 +3243,7 @@ Expected:
 - `cairn` runs migrations: "Migrations complete."
 - Next.js standalone server starts on :3000.
 
-- [ ] **Step 4: Manual smoke**
+- [x] **Step 4: Manual smoke**
 
 - `curl http://localhost:3000/api/health` → `{"status":"ok","version":"0.1.0","db":"ok"}`
 - Visit `http://localhost:3000/signup` in a browser, sign up the first user with a workspace name.
@@ -3255,13 +3255,13 @@ docker compose run --rm --entrypoint sh cairn -c 'ls -la /app && ls -la /app/dis
 ```
 Expected: `/app/server.js` exists (from the standalone copy) and `/app/dist/server/entrypoint.js` exists. If `server.js` is missing, confirm `next.config.mjs` has `output: 'standalone'` (set in Task 2 Step 5) and rebuild.
 
-- [ ] **Step 5: Tear down (preserve volumes)**
+- [x] **Step 5: Tear down (preserve volumes)**
 
 ```sh
 docker compose down
 ```
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```sh
 git add docker-compose.yml
@@ -3277,7 +3277,7 @@ git commit -m "feat: docker-compose for app + postgres with healthcheck-gated st
 **Files:**
 - Create: `.github/workflows/ci.yml`
 
-- [ ] **Step 1: Write `.github/workflows/ci.yml`**
+- [x] **Step 1: Write `.github/workflows/ci.yml`**
 
 ```yaml
 name: CI
@@ -3343,7 +3343,7 @@ jobs:
 
 Note on `AUTH_SECRET`: tests inject their own (32 'x's); this env is only there in case `pnpm build` evaluates `env.ts`. The string above is intentionally ≥ 32 chars; it must NOT be reused in any real environment.
 
-- [ ] **Step 2: Verify locally that all CI steps pass**
+- [x] **Step 2: Verify locally that all CI steps pass**
 
 ```sh
 pnpm install --frozen-lockfile
@@ -3355,7 +3355,7 @@ pnpm build
 
 All must succeed before committing.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add .github/
@@ -3371,7 +3371,7 @@ git commit -m "ci: lint, typecheck, test (postgres service), build smoke"
 **Files:**
 - Modify: `CHANGELOG.md`
 
-- [ ] **Step 1: End-to-end smoke**
+- [x] **Step 1: End-to-end smoke**
 
 ```sh
 docker compose down -v   # NOTE: -v wipes volumes. Use only because this is fresh setup.
@@ -3390,7 +3390,7 @@ In a browser:
 
 If any step fails, fix and re-run until clean.
 
-- [ ] **Step 2: Update `CHANGELOG.md`**
+- [x] **Step 2: Update `CHANGELOG.md`**
 
 Replace the `[Unreleased]` section with:
 
@@ -3410,14 +3410,14 @@ Replace the `[Unreleased]` section with:
 - Repository scaffolding: Biome (lint/format), Vitest with testcontainers, Drizzle ORM with migrations applied at startup.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 git add CHANGELOG.md
 git commit -m "docs: changelog entry for foundation work"
 ```
 
-- [ ] **Step 4: Tear down**
+- [x] **Step 4: Tear down**
 
 ```sh
 docker compose down

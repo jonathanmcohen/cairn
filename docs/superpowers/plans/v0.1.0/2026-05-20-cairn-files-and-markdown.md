@@ -108,7 +108,7 @@ cairn/
 - Generate: `drizzle/migrations/0005_*.sql`
 - Create: `tests/db/files-schema.test.ts`
 
-- [ ] **Step 1: Write `src/db/schema/files.ts`**
+- [x] **Step 1: Write `src/db/schema/files.ts`**
 
 ```ts
 import { bigint, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
@@ -136,7 +136,7 @@ export type FileRow = typeof files.$inferSelect;
 export type NewFile = typeof files.$inferInsert;
 ```
 
-- [ ] **Step 2: Add `coverUrl` to `src/db/schema/pages.ts`**
+- [x] **Step 2: Add `coverUrl` to `src/db/schema/pages.ts`**
 
 Add the column inside `pgTable('pages', { ... })`, after `icon`:
 
@@ -144,9 +144,9 @@ Add the column inside `pgTable('pages', { ... })`, after `icon`:
 coverUrl: text('cover_url'),
 ```
 
-- [ ] **Step 3: Update `src/db/schema/index.ts`** — add `export * from './files';`.
+- [x] **Step 3: Update `src/db/schema/index.ts`** — add `export * from './files';`.
 
-- [ ] **Step 4: Write failing test `tests/db/files-schema.test.ts`**
+- [x] **Step 4: Write failing test `tests/db/files-schema.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -231,7 +231,7 @@ describe('files schema + pages.cover_url', () => {
 });
 ```
 
-- [ ] **Step 5: Run, verify failure, generate migration, run, lint, commit**
+- [x] **Step 5: Run, verify failure, generate migration, run, lint, commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/db/files-schema.test.ts
@@ -260,7 +260,7 @@ git add src/db/schema/ drizzle/ tests/db/files-schema.test.ts && \
 - Create: `src/lib/files/signing.ts`
 - Create: `tests/lib/files/signing.test.ts`
 
-- [ ] **Step 1: Write failing test `tests/lib/files/signing.test.ts`**
+- [x] **Step 1: Write failing test `tests/lib/files/signing.test.ts`**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -294,7 +294,7 @@ describe('signFileUrl / verifyFileUrl', () => {
 });
 ```
 
-- [ ] **Step 2: Write `src/lib/files/signing.ts`**
+- [x] **Step 2: Write `src/lib/files/signing.ts`**
 
 ```ts
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -319,7 +319,7 @@ export function verifyFileUrl(input: VerifyInput): boolean {
 }
 ```
 
-- [ ] **Step 3: Run + commit**
+- [x] **Step 3: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/files/signing.test.ts
@@ -339,7 +339,7 @@ git add src/lib/files/signing.ts tests/lib/files/signing.test.ts && \
 - Create: `src/lib/files/storage.ts`
 - Create: `tests/lib/files/storage.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
@@ -386,7 +386,7 @@ describe('LocalDiskStorage', () => {
 });
 ```
 
-- [ ] **Step 2: Write `src/lib/files/storage.ts`**
+- [x] **Step 2: Write `src/lib/files/storage.ts`**
 
 ```ts
 import { createReadStream } from 'node:fs';
@@ -436,7 +436,7 @@ export class LocalDiskStorage implements FileStorage {
 }
 ```
 
-- [ ] **Step 3: Run + commit**
+- [x] **Step 3: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/files/storage.test.ts
@@ -455,7 +455,7 @@ git add src/lib/files/storage.ts tests/lib/files/storage.test.ts && \
 - Create: `src/lib/files/upload.ts`
 - Create: `tests/lib/files/upload.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -532,7 +532,7 @@ describe('storeUpload', () => {
 });
 ```
 
-- [ ] **Step 2: Write `src/lib/files/upload.ts`**
+- [x] **Step 2: Write `src/lib/files/upload.ts`**
 
 ```ts
 import { extname } from 'node:path';
@@ -605,7 +605,7 @@ export async function storeUpload(input: StoreUploadInput): Promise<StoreUploadR
 }
 ```
 
-- [ ] **Step 3: Run + commit**
+- [x] **Step 3: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/files/upload.test.ts
@@ -625,7 +625,7 @@ git add src/lib/files/upload.ts tests/lib/files/upload.test.ts && \
 - Create: `tests/api/upload.test.ts`
 - Create: `src/lib/files/get-storage.ts` (factory that reads env)
 
-- [ ] **Step 1: Write `src/lib/files/get-storage.ts`**
+- [x] **Step 1: Write `src/lib/files/get-storage.ts`**
 
 ```ts
 import { LocalDiskStorage } from './storage';
@@ -644,7 +644,7 @@ export function getStorage(): FileStorage {
 
 NOTE: env var `CAIRN_UPLOAD_ROOT` not in the main `env.ts` schema — it's an internal override mainly used by tests. Production uses the Docker volume default. If you want strict env parsing, add it to `src/lib/env.ts` schema.
 
-- [ ] **Step 2: Write failing test `tests/api/upload.test.ts`**
+- [x] **Step 2: Write failing test `tests/api/upload.test.ts`**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -743,7 +743,7 @@ describe('POST /api/upload', () => {
 });
 ```
 
-- [ ] **Step 3: Write `src/app/api/upload/route.ts`**
+- [x] **Step 3: Write `src/app/api/upload/route.ts`**
 
 ```ts
 import { NextResponse } from 'next/server';
@@ -792,7 +792,7 @@ export async function POST(req: Request): Promise<Response> {
 }
 ```
 
-- [ ] **Step 4: Run + commit**
+- [x] **Step 4: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/upload.test.ts
@@ -809,7 +809,7 @@ git add src/app/api/upload/route.ts src/lib/files/get-storage.ts tests/api/uploa
 - Create: `src/app/api/files/[fileId]/route.ts`
 - Create: `tests/api/files-get.test.ts`
 
-- [ ] **Step 1: Write failing test**
+- [x] **Step 1: Write failing test**
 
 ```ts
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -901,7 +901,7 @@ describe('GET /api/files/[fileId]', () => {
 });
 ```
 
-- [ ] **Step 2: Write `src/app/api/files/[fileId]/route.ts`**
+- [x] **Step 2: Write `src/app/api/files/[fileId]/route.ts`**
 
 ```ts
 import { eq } from 'drizzle-orm';
@@ -940,7 +940,7 @@ export async function GET(
 }
 ```
 
-- [ ] **Step 3: Run + commit**
+- [x] **Step 3: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/files-get.test.ts
@@ -960,7 +960,7 @@ git add 'src/app/api/files/' tests/api/files-get.test.ts && \
 - Modify: `src/components/editor/extensions.ts`
 - Modify: `src/components/editor/slash-extension.ts` (add Image item)
 
-- [ ] **Step 1: Write the extension**
+- [x] **Step 1: Write the extension**
 
 ```ts
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -1009,9 +1009,9 @@ declare module '@tiptap/core' {
 }
 ```
 
-- [ ] **Step 2: Wire into `extensions.ts`** — import + append to array.
+- [x] **Step 2: Wire into `extensions.ts`** — import + append to array.
 
-- [ ] **Step 3: Add slash menu entry**
+- [x] **Step 3: Add slash menu entry**
 
 In `slash-extension.ts`, prepend or append a new `SlashItem`:
 
@@ -1038,7 +1038,7 @@ In `slash-extension.ts`, prepend or append a new `SlashItem`:
 },
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -1058,7 +1058,7 @@ git add src/components/editor/ && \
 - Modify: `src/components/editor/slash-extension.ts` (File item)
 - Modify: `src/components/editor/code-highlight.css` (file-block styles)
 
-- [ ] **Step 1: Write the extension**
+- [x] **Step 1: Write the extension**
 
 ```ts
 import { Node, mergeAttributes } from '@tiptap/core';
@@ -1119,7 +1119,7 @@ declare module '@tiptap/core' {
 }
 ```
 
-- [ ] **Step 2: Wire into extensions, add slash item, add CSS**
+- [x] **Step 2: Wire into extensions, add slash item, add CSS**
 
 In `code-highlight.css` append:
 
@@ -1171,7 +1171,7 @@ Slash item (in `slash-extension.ts`):
 },
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -1188,7 +1188,7 @@ git add src/components/editor/ && \
 **Files:**
 - Modify: `src/components/editor/editor.tsx`
 
-- [ ] **Step 1: Add paste/drop handlers in `editor.tsx`**
+- [x] **Step 1: Add paste/drop handlers in `editor.tsx`**
 
 Inside the `useEditor({ ... })` config, add `editorProps.handleDrop` and `editorProps.handlePaste`:
 
@@ -1232,7 +1232,7 @@ async function uploadAndInsert(files: File[], view: { dispatch: (tr: unknown) =>
 
 (Adapt the helper to the actual closure scope; `editor` is the result of `useEditor`.)
 
-- [ ] **Step 2: Build + test + commit**
+- [x] **Step 2: Build + test + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -1250,7 +1250,7 @@ git add src/components/editor/editor.tsx && \
 - Create: `src/components/cover-image.tsx`
 - Modify: `src/app/(app)/pages/[pageId]/page.tsx`
 
-- [ ] **Step 1: Write `src/components/cover-image.tsx`**
+- [x] **Step 1: Write `src/components/cover-image.tsx`**
 
 ```tsx
 'use client';
@@ -1311,13 +1311,13 @@ export function CoverImage({ pageId, initial }: { pageId: string; initial: strin
 }
 ```
 
-- [ ] **Step 2: Wire into `(app)/pages/[pageId]/page.tsx`**
+- [x] **Step 2: Wire into `(app)/pages/[pageId]/page.tsx`**
 
 Update the page view to include `<CoverImage pageId={page.id} initial={page.coverUrl} />` above the icon/title row.
 
 Also update `src/app/api/pages/[pageId]/route.ts` PATCH schema to accept `coverUrl: z.string().nullable().optional()` and pass it through to `updatePage`. And update `src/lib/pages/update.ts` to handle the `coverUrl` patch field. Both edits should be minimal.
 
-- [ ] **Step 3: Build + test + commit**
+- [x] **Step 3: Build + test + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -1337,13 +1337,13 @@ git add src/components/cover-image.tsx 'src/app/(app)/pages/[pageId]/page.tsx' \
 
 NOTE: `prosemirror-markdown` ships a `MarkdownSerializer` that knows the basic schema (paragraph, heading, bullet/ordered list, blockquote, code_block, horizontal_rule, image). We extend it with serializers for `callout`, `cairnImage`, `fileAttachment`, `taskList`, `taskItem`.
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add prosemirror-markdown@^1.13.0 prosemirror-model@^1.22.0
 ```
 
-- [ ] **Step 2: Write `src/lib/markdown/from-prose.ts`**
+- [x] **Step 2: Write `src/lib/markdown/from-prose.ts`**
 
 ```ts
 import { defaultMarkdownSerializer, MarkdownSerializer } from 'prosemirror-markdown';
@@ -1482,7 +1482,7 @@ function renderInline(node: Doc): string {
 
 This bypasses prosemirror-model entirely. Simpler.
 
-- [ ] **Step 3: Write `tests/lib/markdown/round-trip.test.ts`**
+- [x] **Step 3: Write `tests/lib/markdown/round-trip.test.ts`**
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -1562,7 +1562,7 @@ describe('proseToMarkdown', () => {
 });
 ```
 
-- [ ] **Step 4: Run + commit**
+- [x] **Step 4: Run + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/markdown/round-trip.test.ts
@@ -1582,13 +1582,13 @@ git add src/lib/markdown/ tests/lib/markdown/round-trip.test.ts package.json pnp
 - Create: `src/lib/markdown/to-prose.ts`
 - Add cases to `tests/lib/markdown/round-trip.test.ts`
 
-- [ ] **Step 1: Install**
+- [x] **Step 1: Install**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add marked@^14.1.0
 ```
 
-- [ ] **Step 2: Write `src/lib/markdown/to-prose.ts`**
+- [x] **Step 2: Write `src/lib/markdown/to-prose.ts`**
 
 Use `marked.lexer(md)` to get tokens, then convert each to our node JSON. Implementation below covers the v0.1.0 block set; mark conversion handled minimally.
 
@@ -1646,7 +1646,7 @@ function inlineFromText(text: string): Doc[] {
 
 NOTE: `inlineFromText` is intentionally minimal — Plan 4's import is "good enough to round-trip simple markdown into editable blocks." A future enhancement can parse inline tokens via `marked.lexer.inline()` and build mark spans. For v0.1.0 we accept plaintext-flatten-with-marks-stripped behavior, with the block structure preserved.
 
-- [ ] **Step 3: Add tests**
+- [x] **Step 3: Add tests**
 
 ```ts
 import { markdownToProse } from '@/lib/markdown/to-prose';
@@ -1672,7 +1672,7 @@ it('imports a bullet list', () => {
 });
 ```
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/lib/markdown/round-trip.test.ts
@@ -1693,13 +1693,13 @@ git add src/lib/markdown/to-prose.ts tests/lib/markdown/round-trip.test.ts packa
 - Create: `tests/api/pages-export.test.ts`
 - Install: `archiver`
 
-- [ ] **Step 1: Install archiver**
+- [x] **Step 1: Install archiver**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm add archiver@^7.0.1 && pnpm add -D @types/archiver
 ```
 
-- [ ] **Step 2: Write `src/lib/markdown/export-subtree.ts`**
+- [x] **Step 2: Write `src/lib/markdown/export-subtree.ts`**
 
 ```ts
 import { Readable, PassThrough } from 'node:stream';
@@ -1776,7 +1776,7 @@ const rows = (await db.execute(rawSql`
 
 That's safer and matches Plan 2's pattern.
 
-- [ ] **Step 3: Write the route**
+- [x] **Step 3: Write the route**
 
 ```ts
 // src/app/api/pages/[pageId]/export/route.ts
@@ -1829,7 +1829,7 @@ export async function GET(
 }
 ```
 
-- [ ] **Step 4: Test (subset — verify response shape)**
+- [x] **Step 4: Test (subset — verify response shape)**
 
 ```ts
 // tests/api/pages-export.test.ts
@@ -1924,7 +1924,7 @@ describe('GET /api/pages/[id]/export', () => {
 });
 ```
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-export.test.ts
@@ -1944,7 +1944,7 @@ git add src/lib/markdown/export-subtree.ts 'src/app/api/pages/[pageId]/export/' 
 - Create: `src/app/api/pages/[pageId]/import/route.ts`
 - Create: `tests/api/pages-import.test.ts`
 
-- [ ] **Step 1: Route**
+- [x] **Step 1: Route**
 
 ```ts
 // src/app/api/pages/[pageId]/import/route.ts
@@ -1981,14 +1981,14 @@ export async function POST(
 }
 ```
 
-- [ ] **Step 2: Test**
+- [x] **Step 2: Test**
 
 ```ts
 // tests/api/pages-import.test.ts (skeleton — fill in similar to pages-export.test.ts)
 // 3 cases: editor 200 + content updated; viewer 403; bad input 400
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm test tests/api/pages-import.test.ts
@@ -2008,7 +2008,7 @@ Detection: if the pasted text contains markdown-specific syntax (headings, lists
 **Files:**
 - Modify: `src/components/editor/editor.tsx` (extend `handlePaste`)
 
-- [ ] **Step 1: Add detection + conversion**
+- [x] **Step 1: Add detection + conversion**
 
 ```ts
 handlePaste(view, event) {
@@ -2035,7 +2035,7 @@ function looksLikeMarkdown(text: string): boolean {
 }
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -2053,7 +2053,7 @@ git add src/components/editor/editor.tsx && \
 - Create: `src/components/page-menu.tsx`
 - Modify: `src/app/(app)/pages/[pageId]/page.tsx`
 
-- [ ] **Step 1: Write `src/components/page-menu.tsx`**
+- [x] **Step 1: Write `src/components/page-menu.tsx`**
 
 ```tsx
 'use client';
@@ -2127,11 +2127,11 @@ export function PageMenu({ pageId, title }: { pageId: string; title: string }) {
 }
 ```
 
-- [ ] **Step 2: Add to page route**
+- [x] **Step 2: Add to page route**
 
 Mount `<PageMenu pageId={page.id} title={page.title} />` in the header row alongside title/icon.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && pnpm typecheck && pnpm lint && pnpm build && pnpm test
@@ -2143,7 +2143,7 @@ git add src/components/page-menu.tsx 'src/app/(app)/pages/[pageId]/page.tsx' && 
 
 ## Task 17: E2E smoke + CHANGELOG
 
-- [ ] **Step 1: Smoke**
+- [x] **Step 1: Smoke**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && \
@@ -2160,7 +2160,7 @@ In a browser (or via curl + a Playwright script):
 5. Click ⋯ → Import markdown… → choose a `.md` file; page content replaces with the imported blocks.
 6. Click ⋯ → Export subtree as .zip → download a zip containing every page in the subtree.
 
-- [ ] **Step 2: CHANGELOG**
+- [x] **Step 2: CHANGELOG**
 
 Add under `[Unreleased]`:
 
@@ -2174,7 +2174,7 @@ Add under `[Unreleased]`:
 - Markdown import via overflow menu and via pasting raw markdown into the editor.
 ```
 
-- [ ] **Step 3: Tear down + commit**
+- [x] **Step 3: Tear down + commit**
 
 ```sh
 source ~/.zshenv && cd /Users/jon/projects/cairn && docker compose down
