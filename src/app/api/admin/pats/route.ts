@@ -16,7 +16,7 @@ export const dynamic = 'force-dynamic';
  * or plaintext — `listWorkspacePats` strips them by selecting an explicit
  * column projection.
  */
-export async function GET(): Promise<Response> {
+export async function GET(_req: Request): Promise<Response> {
   try {
     const ctx = await requireRole('admin');
     const rows = await listWorkspacePats(getDb(), ctx.workspaceId);
