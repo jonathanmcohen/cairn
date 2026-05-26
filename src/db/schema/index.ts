@@ -20,6 +20,7 @@ export * from './page-links';
 export * from './page-versions';
 export * from './page-yjs';
 export * from './pages';
+export * from './pat-quota-usage';
 export * from './personal-access-tokens';
 export * from './reminders';
 export * from './saved-searches';

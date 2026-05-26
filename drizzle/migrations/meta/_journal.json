@@ -274,6 +274,13 @@
       "when": 1779833234258,
       "tag": "0038_mfa_webauthn",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1779840000000,
+      "tag": "0039_pat_quotas",
+      "breakpoints": true
     }
   ]
 }
