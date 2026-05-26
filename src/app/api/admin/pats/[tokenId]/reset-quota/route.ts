@@ -1,16 +1,20 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { dayWindowStart, monthWindowStart } from '@/lib/auth/pat-quota-windows';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
 export const dynamic = 'force-dynamic';
 
 /**
- * Admin-only: delete every `pat_quota_usage` row for `tokenId` (all windows
- * for both `day` and `month` kinds). The configured per-token caps in
- * `personal_access_tokens` are NOT touched.
+ * Admin-only: clear the CURRENT day-window + current month-window rollup rows
+ * for `tokenId`. The token can immediately spend its full daily + monthly cap
+ * again; the 14-day rolling sparkline history (prior days' rows) is preserved
+ * so the dashboard sparkline doesn't go blank after a reset.
+ *
+ * The configured per-token caps in `personal_access_tokens` are NOT touched.
  *
  * Cross-workspace tokens return 404 (existence-hiding pattern).
  * Delete + `pat.quota_reset` audit happen in a single transaction so the
@@ -40,8 +44,20 @@ export async function POST(
       );
     if (!row) return NextResponse.json({ error: 'not_found' }, { status: 404 });
 
+    const now = new Date();
+    const dayStart = dayWindowStart(now);
+    const monthStart = monthWindowStart(now);
     await db.transaction(async (tx) => {
-      await tx.delete(schema.patQuotaUsage).where(eq(schema.patQuotaUsage.tokenId, tokenId));
+      // Scope: only current day-window + current month-window rows. Historical
+      // rows (T-13..T-1) are preserved so the dashboard sparkline stays intact.
+      await tx
+        .delete(schema.patQuotaUsage)
+        .where(
+          and(
+            eq(schema.patQuotaUsage.tokenId, tokenId),
+            inArray(schema.patQuotaUsage.windowStart, [dayStart, monthStart]),
+          ),
+        );
       await recordAudit(tx, {
         workspaceId: auth.workspaceId,
         actorUserId: auth.userId,

@@ -104,6 +104,35 @@ describe('POST /api/admin/pats/[tokenId]/reset-quota', () => {
     expect(rows).toHaveLength(0);
   });
 
+  it('preserves historical (pre-current-window) day rows after reset', async () => {
+    const admin = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    const tokenId = await seedPat(admin.workspaceId, admin.userId);
+    // Seed a historical row 7 days ago in addition to today's current rows.
+    const sevenDaysAgo = dayWindowStart(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+    await db.insert(schema.patQuotaUsage).values({
+      tokenId,
+      windowStart: sevenDaysAgo,
+      windowKind: 'day',
+      requests: 42,
+      bytes: 0,
+    });
+    await actAs(admin.userId, admin.workspaceId);
+    const { POST } = await import('@/app/api/admin/pats/[tokenId]/reset-quota/route');
+    const res = await POST(
+      new Request(`http://localhost/api/admin/pats/${tokenId}/reset-quota`, { method: 'POST' }),
+      { params: Promise.resolve({ tokenId }) },
+    );
+    expect(res.status).toBe(204);
+    const rows = await db
+      .select()
+      .from(schema.patQuotaUsage)
+      .where(eq(schema.patQuotaUsage.tokenId, tokenId));
+    // Current day + current month deleted; historical T-7 row preserved.
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.requests).toBe(42);
+    expect(rows[0]?.windowStart.toISOString()).toBe(sevenDaysAgo.toISOString());
+  });
+
   it('404s for cross-workspace token (existence-hiding)', async () => {
     const admin = await createTestWorkspaceWithUser(db, { role: 'admin' });
     const otherAdmin = await createTestWorkspaceWithUser(db, { role: 'admin' });
