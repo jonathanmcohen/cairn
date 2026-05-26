@@ -165,7 +165,7 @@ Two releases remain to 1.0.
 - [x] G1 P5 — E2E migration `0035` + crypto core (X25519 + key-wrap)
 - [x] G1 P6 — E2E per-page mode (migration `0036`)
 - [x] G1 P7 — E2E workspace-wide mode (migration `0037`)
-- [ ] G1 P8 — MFA WebAuthn + step-up + admin enforce (migration `0038`)
+- [x] G1 P8 — MFA WebAuthn + step-up + admin enforce (migration `0038`)
 - [ ] G1 P9 — PAT quotas (migration `0039`) + scope rate-limits
 - [ ] G1 P10 — PAT quota admin dashboard
 - [ ] G2 P11 — Spaces (migration `0039`) + sidebar grouping + ACL chain

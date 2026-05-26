@@ -10,18 +10,19 @@
  * The cryptographic verifiers stay in @simplewebauthn/server — this module is
  * purely DB + env plumbing.
  */
-import {
-  generateAuthenticationOptions,
-  generateRegistrationOptions,
-  verifyAuthenticationResponse,
-  verifyRegistrationResponse,
-} from '@simplewebauthn/server';
+
 import type {
   AuthenticationResponseJSON,
   AuthenticatorTransportFuture,
   PublicKeyCredentialCreationOptionsJSON,
   PublicKeyCredentialRequestOptionsJSON,
   RegistrationResponseJSON,
+} from '@simplewebauthn/server';
+import {
+  generateAuthenticationOptions,
+  generateRegistrationOptions,
+  verifyAuthenticationResponse,
+  verifyRegistrationResponse,
 } from '@simplewebauthn/server';
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
@@ -186,9 +187,7 @@ export type FinishAssertionResult =
   | { ok: true; credentialId: string }
   | { ok: false; error: string };
 
-export async function finishAssertion(
-  input: FinishAssertionInput,
-): Promise<FinishAssertionResult> {
+export async function finishAssertion(input: FinishAssertionInput): Promise<FinishAssertionResult> {
   const { rpId, rpOrigin } = requireRpEnv();
   const db = input.db ?? getDb();
   const [cred] = await db

@@ -56,7 +56,10 @@ export async function DELETE(
         targetId: workspaceId,
         metadata: { op: 'workspace.delete' },
       });
-      return NextResponse.json({ error: stepUp.message, code: stepUp.code }, { status: stepUp.status });
+      return NextResponse.json(
+        { error: stepUp.message, code: stepUp.code },
+        { status: stepUp.status },
+      );
     }
     await deleteWorkspace(getDb(), { workspaceId, actorUserId: ctx.userId });
     return NextResponse.json({ ok: true }, { status: 200 });
