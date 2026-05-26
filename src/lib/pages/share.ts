@@ -106,6 +106,13 @@ export async function requirePublicPageAccess(
     .limit(1);
   if (!page) return { ok: false };
   if (page.expiresAt && page.expiresAt.getTime() <= Date.now()) return { ok: false };
+  // v0.9.0 G1 P6 — Public sharing of E2E-encrypted pages is REFUSED. The
+  // server has no DEK so it cannot render plaintext, and exposing ciphertext
+  // to anonymous viewers leaks ciphertext + per-page existence. Fail-closed:
+  // any truthy `encrypted` flag collapses to `{ ok: false }` → notFound() in
+  // the page route (consistent with the existing deleted/expired handling —
+  // never 403 from the public surface).
+  if (page.encrypted) return { ok: false };
   if (page.linkPasswordHash && !hasValidCookie) return { ok: 'gate', page };
   return { ok: true, page };
 }
