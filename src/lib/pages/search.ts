@@ -98,6 +98,7 @@ async function searchFts(
       FROM pages
       WHERE workspace_id = ${input.workspaceId}
         AND deleted_at IS NULL
+        AND encrypted = false
         AND content_tsv @@ websearch_to_tsquery('english', ${q})
         AND ${extra}
       ORDER BY rank DESC
@@ -112,6 +113,7 @@ async function searchFts(
       FROM pages
       WHERE workspace_id = ${input.workspaceId}
         AND deleted_at IS NULL
+        AND encrypted = false
         AND similarity(title, ${q}) > 0.2
         AND id NOT IN (SELECT id FROM fts)
         AND ${extra}
@@ -165,6 +167,7 @@ async function searchSemantic(
     JOIN pages p ON p.id = e.page_id
     WHERE e.workspace_id = ${input.workspaceId}
       AND p.deleted_at IS NULL
+      AND p.encrypted = false
     ORDER BY e.embedding <=> ${vecLiteral}::vector ASC
     LIMIT ${limit}
   `)) as unknown as { id: string; title: string; distance: number }[];
