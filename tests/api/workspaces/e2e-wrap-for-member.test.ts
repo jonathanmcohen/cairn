@@ -163,17 +163,31 @@ describe('POST /api/workspaces/[workspaceId]/e2e/wrap-for-member', () => {
     expect(res.status).toBe(403);
   });
 
-  it('refuses when target already has a WSK row (409)', async () => {
+  it('re-wrap for an existing WSK row is idempotent (200, row updated)', async () => {
     const owner = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     await seedKeypair(owner.userId);
     await enableE2E(owner.workspaceId, owner.userId);
     await setSession(owner.userId);
 
+    const newWrap = Buffer.alloc(92, 0xcc).toString('base64');
     const res = await post(owner.workspaceId, {
       memberUserId: owner.userId,
-      wrappedWsk: Buffer.alloc(92).toString('base64'),
+      wrappedWsk: newWrap,
     });
-    expect(res.status).toBe(409);
+    expect(res.status).toBe(200);
+
+    const [row] = await getDb()
+      .select()
+      .from(schema.workspaceEncryptionKeys)
+      .where(
+        and(
+          eq(schema.workspaceEncryptionKeys.workspaceId, owner.workspaceId),
+          eq(schema.workspaceEncryptionKeys.memberUserId, owner.userId),
+        ),
+      );
+    expect(
+      Buffer.from(row?.wrappedWsk ?? Buffer.alloc(0)).equals(Buffer.from(newWrap, 'base64')),
+    ).toBe(true);
   });
 
   it('refuses when target is not a workspace member (404)', async () => {

@@ -57,9 +57,9 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
     }
 
     const db = getDb();
-    const [ws] = await db.select().from(workspaces).where(eq(workspaces.id, workspaceId));
-    if (!ws) return NextResponse.json({ error: 'not found' }, { status: 404 });
-    if (ws.e2eMode !== 'off') {
+    const [wsPre] = await db.select().from(workspaces).where(eq(workspaces.id, workspaceId));
+    if (!wsPre) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    if (wsPre.e2eMode !== 'off') {
       return NextResponse.json({ error: 'workspace already has E2E enabled' }, { status: 409 });
     }
 
@@ -68,15 +68,34 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
       return NextResponse.json({ error: coverage.error }, { status: coverage.status });
     }
 
-    await db.transaction(async (tx) => {
-      await tx.insert(workspaceEncryptionKeys).values(
-        parsed.data.wrapped.map((w) => ({
-          workspaceId,
-          memberUserId: w.memberUserId,
-          wrappedWsk: Buffer.from(w.wrappedWsk, 'base64'),
-          keyVersion: 1,
-        })),
-      );
+    const txResult = await db.transaction(async (tx) => {
+      // Re-check workspace state INSIDE the tx to close the read-then-write
+      // race between the outer SELECT and the UPDATE below; a concurrent enable
+      // would otherwise be able to overwrite our roster.
+      const [ws] = await tx.select().from(workspaces).where(eq(workspaces.id, workspaceId));
+      if (!ws) return { status: 404 as const, body: { error: 'not found' } };
+      if (ws.e2eMode !== 'off') {
+        return {
+          status: 409 as const,
+          body: { error: 'workspace already has E2E enabled' },
+        };
+      }
+      for (const w of parsed.data.wrapped) {
+        const wrappedBuf = Buffer.from(w.wrappedWsk, 'base64');
+        // Idempotent: re-enable rewraps cleanly if a stale row exists.
+        await tx
+          .insert(workspaceEncryptionKeys)
+          .values({
+            workspaceId,
+            memberUserId: w.memberUserId,
+            wrappedWsk: wrappedBuf,
+            keyVersion: 1,
+          })
+          .onConflictDoUpdate({
+            target: [workspaceEncryptionKeys.workspaceId, workspaceEncryptionKeys.memberUserId],
+            set: { wrappedWsk: wrappedBuf, keyVersion: 1, createdAt: new Date() },
+          });
+      }
       await tx
         .update(workspaces)
         .set({ e2eMode: 'workspace_wide' })
@@ -89,7 +108,12 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
         targetId: workspaceId,
         metadata: { memberCount: parsed.data.wrapped.length, keyVersion: 1 },
       });
+      return { status: 200 as const, body: { ok: true } };
     });
+
+    if (txResult.status !== 200) {
+      return NextResponse.json(txResult.body, { status: txResult.status });
+    }
 
     return NextResponse.json({ ok: true });
   } catch (err) {

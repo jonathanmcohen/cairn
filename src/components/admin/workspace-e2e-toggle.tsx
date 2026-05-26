@@ -111,10 +111,21 @@ export function WorkspaceE2EToggle({
       }
       setMode('workspace_wide');
 
-      // 5. Sweep every page.
-      const pageRes = await fetch(`/api/workspaces/${workspaceId}/page-ids`);
-      if (!pageRes.ok) throw new Error('page-ids fetch failed');
-      const pageRows: PageRow[] = await pageRes.json();
+      // 5. Sweep every page. page-ids is cursor-paginated (id ASC); follow
+      // nextCursor until the server reports no more rows.
+      const pageRows: PageRow[] = [];
+      let cursor: string | null = null;
+      do {
+        const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
+        const pageRes = await fetch(`/api/workspaces/${workspaceId}/page-ids${qs}`);
+        if (!pageRes.ok) throw new Error('page-ids fetch failed');
+        const body = (await pageRes.json()) as {
+          rows: PageRow[];
+          nextCursor: string | null;
+        };
+        pageRows.push(...body.rows);
+        cursor = body.nextCursor;
+      } while (cursor);
       setProgress({ done: 0, total: pageRows.length });
       for (let i = 0; i < pageRows.length; i++) {
         const id = pageRows[i]?.id;
