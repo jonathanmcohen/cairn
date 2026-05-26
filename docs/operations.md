@@ -104,21 +104,39 @@ sweep evicts idle sessions every 60 seconds.
 ## CI / Release runners
 
 All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`,
-`postgres-pgvector-image.yml`) run on **GitHub-hosted runners**:
+`postgres-pgvector-image.yml`) run on **self-hosted runners**:
 
-- amd64: `ubuntu-latest`
-- arm64 (release matrix only): `ubuntu-24.04-arm` (GHA native arm64,
-  no QEMU emulation)
+- amd64: `[self-hosted, linux, x64]` (Linux box w/ Docker)
+- arm64 (release matrix only): `[self-hosted, macOS, arm64]` (Apple
+  Silicon Mac w/ Docker Desktop — Linux VM produces real `linux/arm64`
+  layers despite the macOS host)
 
-The arm64 runner is used only by the release workflow's per-arch image
-build; everything else (CI, lighthouse, manifest merge, GitHub Release
-step, postgres-pgvector image build) runs on `ubuntu-latest`.
+Runners must carry the labels above verbatim. Docker + recent
+`pnpm`/`node` available. The arm64 runner is used only by the release
+workflow's per-arch image build; everything else (CI, lighthouse,
+manifest merge, GitHub Release step, postgres-pgvector image build)
+runs on the x64 runner.
 
-History note: this project moved to self-hosted runners briefly in
-mid-v0.8.0 when GHA-hosted minutes were exhausted, then back to
-GHA-hosted after usage reset. Self-hosted may return if usage becomes
-a concern again; the `[self-hosted, linux, x64]` + `[self-hosted, macOS,
-arm64]` labels are documented for that scenario in git history.
+GHA-hosted runners are not used — GH Actions minute budget has hit the
+ceiling twice during 0.x development, so self-hosted is the durable
+operating posture. The workflows carry self-hosted-specific
+workarounds:
+
+- `ci.yml` security job: `rm -f /tmp/gitleaks.tmp` before the gitleaks
+  action (self-hosted `/tmp` persists between runs).
+- `release.yml` macOS arm64 build: redirects `DOCKER_CONFIG` to a
+  per-run temp dir with plain `auths` block (Docker Desktop's keychain
+  credstore can't be unlocked headless) + sets `DOCKER_HOST` at
+  `~/.docker/run/docker.sock` (the user-scoped socket when "Allow
+  default Docker socket" is OFF in Docker Desktop) + skips
+  `docker/login-action` on macOS.
+- `release.yml` merge job: self-installs `jq` from upstream releases if
+  not present (some Linux self-hosted images lack it).
+
+Switching back to GHA-hosted: swap `[self-hosted, linux, x64]` →
+`ubuntu-latest` and the release matrix expression →
+`'ubuntu-latest' || 'ubuntu-24.04-arm'`. Strip the three workarounds
+above (no-op on GHA images).
 
 ## Postgres image (v0.8.0)
 

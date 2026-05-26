@@ -14,7 +14,7 @@ jobs:
   lhci:
     # Run only when the CI workflow that triggered us actually succeeded.
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, linux, x64]
     # packages: read so the runner can pull the private GHCR
     # postgres-pgvector image declared as a service below.
     permissions:
