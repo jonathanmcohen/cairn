@@ -22,6 +22,7 @@ export * from './page-links';
 export * from './page-versions';
 export * from './page-yjs';
 export * from './pages';
+export * from './peer-instances';
 export * from './pat-quota-usage';
 export * from './pdf-annotations';
 export * from './personal-access-tokens';
