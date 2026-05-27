@@ -45,3 +45,6 @@ drizzle/.snapshot
 # PWA service worker (built by `pnpm build:sw` via @serwist/cli)
 public/sw.js
 public/sw.js.map
+
+# i18n audit per-run report (baseline IS committed; report is regenerated each run)
+i18n-audit.report.json
