@@ -10,10 +10,12 @@
 --      tier consumed by the save-as-template modal and gallery. Default is
 --      'workspace' so existing rows match their de-facto sharing tier.
 --
--- The whole sequence runs inside a single DO block so the column add + check
--- constraint apply atomically (Postgres DDL is transactional).
-
-BEGIN;
+-- The Drizzle migrator already wraps every migration file in a single
+-- session.transaction (see `drizzle-orm/pg-core/dialect.ts#migrate`), so an
+-- inner BEGIN/COMMIT here would trip postgres-js's UNSAFE_TRANSACTION guard.
+-- The whole-migration DO block + the parent transaction give us all-or-
+-- nothing semantics; the post-vs-pre count guard on templates.visibility
+-- refuses the COMMIT if the backfill miscounts (spec §5 risk #4).
 
 DO $$
 DECLARE
@@ -71,5 +73,3 @@ BEGIN
     RAISE EXCEPTION 'templates.visibility backfill miscount: pre=% post=%', pre_count, post_count;
   END IF;
 END $$;
-
-COMMIT;
