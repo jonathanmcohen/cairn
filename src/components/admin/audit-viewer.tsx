@@ -37,6 +37,11 @@ const TARGET_TYPES: AuditTargetType[] = [
   // v0.9.0 G2 P11 — Spaces target types.
   'space',
   'space_member',
+  // v0.9.0 G7 P36/P37 — chat-bridge events target either a comment (inbound),
+  // an install row (slash + outbound config), or a channel-link row (sync UI).
+  'comment',
+  'chat_install',
+  'chat_channel_link',
 ];
 
 // Human-readable labels for the documented action vocabulary (spec §2.27, §3 G1).
@@ -134,6 +139,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'chat.inbound_comment_created': 'Chat bridge — inbound reply ingested',
   'chat.signature_rejected': 'Chat bridge — invalid signature rejected',
   'chat.install_changed': 'Chat bridge — install changed',
+  // v0.9.0 G7 P37 — slash command + channel-link events.
+  'chat.slash_invoked': 'Chat bridge — slash command invoked',
+  'chat.channel_linked': 'Chat bridge — channel linked to page',
+  'chat.channel_unlinked': 'Chat bridge — channel unlinked from page',
 };
 
 function actionLabel(action: string): string {

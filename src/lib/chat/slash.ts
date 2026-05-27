@@ -114,7 +114,6 @@ export async function executeSlashCommand(
       title: cmd.title,
       content: { type: 'doc', content: [] },
       createdBy: install.installedBy,
-      updatedBy: install.installedBy,
     })
     .returning();
   if (!page) {

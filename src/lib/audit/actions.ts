@@ -118,6 +118,13 @@ export const AUDIT_ACTIONS = [
   'chat.inbound_comment_created',
   'chat.signature_rejected',
   'chat.install_changed',
+  // v0.9.0 G7 P37 — slash command invocations + channel-link CRUD. Metadata
+  // for slash carries { command, channelId } — never the raw query/title (the
+  // raw user input could contain page secrets). Channel-link events carry
+  // { platform, channelId, pageId, linkMode } and target the link row id.
+  'chat.slash_invoked',
+  'chat.channel_linked',
+  'chat.channel_unlinked',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -142,4 +149,8 @@ export type AuditTargetType =
   | 'space_member'
   // v0.9.0 G7 P36 — chat-bridge events target comments (inbound) or webhooks
   // (admin install changes).
-  | 'comment';
+  | 'comment'
+  // v0.9.0 G7 P37 — dedicated install + channel-link target types so the
+  // audit UI can render a meaningful label for slash + sync events.
+  | 'chat_install'
+  | 'chat_channel_link';
