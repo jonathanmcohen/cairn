@@ -10,6 +10,11 @@ import type { AssetRef } from './assets';
 import { extractAndRewriteAssets } from './assets';
 import type { ExportTarget } from './frontmatter';
 import { walkWorkspacePages } from './page-walk';
+import {
+  buildDocusaurusTree,
+  type DocusaurusPageInput,
+  type TranslationGroups,
+} from './targets/docusaurus';
 import { buildMkDocsTree, type RenderedPage } from './targets/mkdocs';
 
 export type ExportArgs = {
@@ -94,6 +99,7 @@ export async function exportWorkspace(
   const allAssets: Array<AssetRef & { contents: Buffer }> = [];
   const seenDest = new Set<string>();
   const rendered: RenderedPage[] = [];
+  const renderedByPageId = new Map<string, RenderedPage>();
 
   for (let i = 0; i < pages.length; i++) {
     const p = pages[i]!;
@@ -106,7 +112,7 @@ export async function exportWorkspace(
     }
     const slug = slugify(p.title, p.id);
     const markdown = proseToMarkdown(rewritten);
-    rendered.push({
+    const entry: RenderedPage = {
       id: p.id,
       parentId: p.parentId,
       title: p.title,
@@ -116,7 +122,38 @@ export async function exportWorkspace(
       // MkDocs renders sections top-to-bottom as authored.
       navOrder: i,
       markdown,
-    });
+    };
+    rendered.push(entry);
+    renderedByPageId.set(p.id, entry);
+  }
+
+  // 3b. Translation grouping: P26 added `translation_of_page_id` +
+  // `translation_locale`. If the columns don't exist yet at runtime
+  // (release-branch ordering hiccup), fall back to an empty map.
+  const translationGroups: TranslationGroups = new Map();
+  try {
+    const trRows = (await db.execute(rawSql`
+      SELECT id, translation_of_page_id, translation_locale
+      FROM pages
+      WHERE workspace_id = ${args.workspaceId}::uuid
+        AND deleted_at IS NULL
+        AND translation_of_page_id IS NOT NULL
+        AND translation_locale IS NOT NULL
+    `)) as unknown as Array<{
+      id: string;
+      translation_of_page_id: string;
+      translation_locale: string;
+    }>;
+    for (const tr of trRows) {
+      const renderedTr = renderedByPageId.get(tr.id);
+      if (!renderedTr) continue;
+      const group = translationGroups.get(tr.translation_of_page_id) ?? {};
+      group[tr.translation_locale] = renderedTr satisfies DocusaurusPageInput;
+      translationGroups.set(tr.translation_of_page_id, group);
+    }
+  } catch (err) {
+    // Column not present yet — proceed without translations.
+    void err;
   }
 
   // 4. Build target tree.
@@ -131,9 +168,23 @@ export async function exportWorkspace(
       files = tree.files;
       break;
     }
-    case 'docusaurus':
-      // P35 wires this branch.
-      throw new StaticExportError('docusaurus target not implemented in P34', 'unknown_target');
+    case 'docusaurus': {
+      // Translation pages are NOT emitted twice — exclude them from the main
+      // `rendered` array and place them only under i18n/<locale>/.
+      const isTranslation = new Set<string>();
+      for (const group of translationGroups.values()) {
+        for (const tr of Object.values(group)) isTranslation.add(tr.id);
+      }
+      const canonicalPages = rendered.filter((p) => !isTranslation.has(p.id));
+      const tree = buildDocusaurusTree({
+        workspaceName: ws.name,
+        pages: canonicalPages,
+        assets: allAssets,
+        translationGroups,
+      });
+      files = tree.files;
+      break;
+    }
     default: {
       const _exh: never = args.target;
       throw new StaticExportError(`unknown target: ${String(_exh)}`, 'unknown_target');
