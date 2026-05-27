@@ -1,6 +1,9 @@
 export * from './api-keys';
 export * from './audit-log';
 export * from './auth';
+// v0.9.0 G7 P36 — chat-bridge posted-message log (maps Slack/Discord posts
+// back to a Cairn page + parent comment so inbound replies resolve correctly).
+export * from './chat-posted-messages';
 export * from './automation-rules';
 export * from './automation-runs';
 export * from './comments';

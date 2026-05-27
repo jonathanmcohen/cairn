@@ -20,6 +20,17 @@ export const webhooks = pgTable('webhooks', {
   events: text('events').array().notNull(),
   secret: text('secret').notNull(),
   active: boolean('active').notNull().default(true),
+  // v0.9.0 G7 P36 — chat-bridge discriminator. `generic` keeps the canonical
+  // signed-body POST path (v0.5 P2 behaviour, default for every existing row).
+  // `slack`/`discord` swap the body for a translated platform-specific payload
+  // in `src/lib/webhooks/dispatch.ts` before POSTing. A CHECK constraint
+  // appended to the migration restricts the column to those three values.
+  kind: text('kind').notNull().default('generic'),
+  // Per-platform metadata: Slack stores {team_id, channel_id, signing_secret};
+  // Discord stores {application_id, channel_id, public_key, bot_token}. The
+  // server treats this jsonb as opaque; operators paste values through the
+  // admin UI. Never log it — secret-like fields live here.
+  platformMetadata: jsonb('platform_metadata').$type<Record<string, unknown>>(),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
