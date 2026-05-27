@@ -59,20 +59,25 @@ export async function compareJournalToDb<S extends Record<string, unknown>>(inpu
   journal: Journal;
   db: PostgresJsDatabase<S>;
 }): Promise<CompareResult> {
-  const tableExists = (await input.db.execute(sql`
-    SELECT EXISTS (
-      SELECT 1 FROM information_schema.tables
-      WHERE table_name = '__drizzle_migrations' AND table_schema = current_schema()
-    ) AS exists
-  `)) as unknown as Array<{ exists: boolean }>;
+  // Drizzle stores its migration metadata in the `drizzle` schema by default
+  // (`drizzle.__drizzle_migrations`). For test scenarios that hand-create the
+  // table in the current schema we also accept that location.
+  const tableLocation = (await input.db.execute(sql`
+    SELECT table_schema FROM information_schema.tables
+    WHERE table_name = '__drizzle_migrations'
+      AND table_schema IN ('drizzle', current_schema())
+    ORDER BY CASE WHEN table_schema = 'drizzle' THEN 0 ELSE 1 END
+    LIMIT 1
+  `)) as unknown as Array<{ table_schema: string }>;
 
-  if (!tableExists[0]?.exists) {
+  if (!tableLocation[0]) {
     return { applied: [], pending: [...input.journal.entries], drifted: false };
   }
 
-  const rows = (await input.db.execute(sql`
-    SELECT hash, created_at FROM __drizzle_migrations ORDER BY created_at ASC
-  `)) as unknown as Array<{ hash: string; created_at: number | string }>;
+  const schema = tableLocation[0].table_schema;
+  const rows = (await input.db.execute(
+    sql`SELECT hash, created_at FROM ${sql.identifier(schema)}.__drizzle_migrations ORDER BY created_at ASC`,
+  )) as unknown as Array<{ hash: string; created_at: number | string }>;
 
   const dbHashes = rows.map((r) => r.hash);
   const applied = input.journal.entries.slice(0, dbHashes.length);
