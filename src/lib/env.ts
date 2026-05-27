@@ -5,7 +5,8 @@ const Schema = z.object({
   AUTH_SECRET: z.string().min(32, 'AUTH_SECRET must be at least 32 chars'),
   NEXTAUTH_URL: z.url(),
   CAIRN_MAX_UPLOAD_MB: z.coerce.number().int().positive().default(25),
-  CAIRN_TRASH_RETENTION_DAYS: z.coerce.number().int().positive().default(30),
+  // 0 disables auto-purge (matches workspaces.trash_retention_days=0 semantics).
+  CAIRN_TRASH_RETENTION_DAYS: z.coerce.number().int().nonnegative().default(30),
   CAIRN_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   COLLAB_URL: z.string().default('ws://localhost:1234'),
   AUTH_GOOGLE_ID: z.string().optional(),

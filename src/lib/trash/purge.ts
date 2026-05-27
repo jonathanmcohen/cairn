@@ -40,7 +40,7 @@ export async function purgeWorkspaceTrash(
      WHERE workspace_id = ${workspaceId}
        AND deleted_at IS NOT NULL
        AND deleted_root = true
-       AND deleted_at <= now() - (${String(retentionDays)} || ' days')::interval
+       AND deleted_at < now() - (${String(retentionDays)} || ' days')::interval
   `)) as unknown as Array<{ id: string }>;
 
   if (rootRows.length === 0) {
