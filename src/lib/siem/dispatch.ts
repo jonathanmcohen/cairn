@@ -34,6 +34,7 @@ import { logger } from '@/lib/observability/logger';
 import { incSiemDelivery } from '@/lib/observability/metrics';
 import { isExhausted, nextBackoffMs } from './backoff';
 import { formatAuditEvent, type SiemEnvelope } from './format';
+import { sendDatadog } from './targets/datadog';
 import { sendHttp } from './targets/http';
 import { sendSplunkHec } from './targets/splunk-hec';
 import { sendSyslog } from './targets/syslog';
@@ -62,6 +63,7 @@ export const DEFAULT_SENDERS: Record<string, Sender> = {
   http: (f, env) => sendHttp(f, env),
   syslog: (f, env) => sendSyslog({ endpoint: f.endpoint, options: f.options }, env),
   splunk_hec: (f, env) => sendSplunkHec(f, env),
+  datadog: (f, env) => sendDatadog(f, env),
 };
 
 export type DispatchOptions = {
