@@ -180,3 +180,23 @@ body {
   max-width: var(--cairn-page-width-max);
   margin-inline: auto;
 }
+
+/*
+ * v0.9.0 G6 P33 — focus mode collapses workspace chrome to the editor only.
+ * The page-mode shell (`PageModeShell`) toggles `cairn-focus-mode` on the
+ * html root; everything carrying one of the data-cairn-* attributes below is
+ * hidden while focus is on. The editor surface remains fully editable.
+ */
+html.cairn-focus-mode [data-cairn-workspace-sidebar],
+html.cairn-focus-mode [data-cairn-workspace-topbar],
+html.cairn-focus-mode [data-cairn-comments-rail] {
+  display: none !important;
+}
+
+/*
+ * v0.9.0 G6 P33 — reader mode bumps the editor surface into typography-prose
+ * styling so the read-only view has comfortable line-length + spacing.
+ */
+[data-page-mode-shell][data-reader="true"] .ProseMirror {
+  max-width: none;
+}

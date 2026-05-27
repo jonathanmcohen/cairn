@@ -71,7 +71,10 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
                 <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
               </SidebarDrawer>
               <main id="main-content" className="flex-1 p-8">
-                <div className="mb-2 flex items-center justify-end gap-4">
+                <div
+                  data-cairn-workspace-topbar=""
+                  className="mb-2 flex items-center justify-end gap-4"
+                >
                   <NotificationBell />
                   <LocaleSwitcher />
                   <OfflineIndicator />
