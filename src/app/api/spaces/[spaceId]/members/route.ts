@@ -85,24 +85,26 @@ export async function POST(
         { status: 400 },
       );
     }
-    await getDb()
-      .insert(schema.spaceMembers)
-      .values({
-        spaceId,
-        userId: parsed.data.userId,
-        role: parsed.data.role,
-      })
-      .onConflictDoUpdate({
-        target: [schema.spaceMembers.spaceId, schema.spaceMembers.userId],
-        set: { role: parsed.data.role },
+    await getDb().transaction(async (tx) => {
+      await tx
+        .insert(schema.spaceMembers)
+        .values({
+          spaceId,
+          userId: parsed.data.userId,
+          role: parsed.data.role,
+        })
+        .onConflictDoUpdate({
+          target: [schema.spaceMembers.spaceId, schema.spaceMembers.userId],
+          set: { role: parsed.data.role },
+        });
+      await recordAudit(tx, {
+        workspaceId: gate.ctx.workspaceId,
+        actorUserId: gate.ctx.userId,
+        action: 'space.member_added',
+        targetType: 'space_member',
+        targetId: spaceId,
+        metadata: { userId: parsed.data.userId, role: parsed.data.role },
       });
-    await recordAudit(getDb(), {
-      workspaceId: gate.ctx.workspaceId,
-      actorUserId: gate.ctx.userId,
-      action: 'space.member_added',
-      targetType: 'space_member',
-      targetId: spaceId,
-      metadata: { userId: parsed.data.userId, role: parsed.data.role },
     });
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (err) {
@@ -122,16 +124,23 @@ export async function DELETE(
     if (!userId) {
       return NextResponse.json({ error: 'userId required' }, { status: 400 });
     }
-    await getDb()
-      .delete(schema.spaceMembers)
-      .where(and(eq(schema.spaceMembers.spaceId, spaceId), eq(schema.spaceMembers.userId, userId)));
-    await recordAudit(getDb(), {
-      workspaceId: gate.ctx.workspaceId,
-      actorUserId: gate.ctx.userId,
-      action: 'space.member_removed',
-      targetType: 'space_member',
-      targetId: spaceId,
-      metadata: { userId },
+    await getDb().transaction(async (tx) => {
+      const deleted = await tx
+        .delete(schema.spaceMembers)
+        .where(
+          and(eq(schema.spaceMembers.spaceId, spaceId), eq(schema.spaceMembers.userId, userId)),
+        )
+        .returning({ userId: schema.spaceMembers.userId });
+      if (deleted.length > 0) {
+        await recordAudit(tx, {
+          workspaceId: gate.ctx.workspaceId,
+          actorUserId: gate.ctx.userId,
+          action: 'space.member_removed',
+          targetType: 'space_member',
+          targetId: spaceId,
+          metadata: { userId },
+        });
+      }
     });
     return new Response(null, { status: 204 });
   } catch (err) {

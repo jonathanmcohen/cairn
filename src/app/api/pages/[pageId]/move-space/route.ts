@@ -48,17 +48,19 @@ export async function POST(
       }
     }
 
-    await getDb()
-      .update(schema.pages)
-      .set({ spaceId: parsed.data.spaceId })
-      .where(eq(schema.pages.id, pageId));
-    await recordAudit(getDb(), {
-      workspaceId: ctx.workspaceId,
-      actorUserId: ctx.userId,
-      action: 'page.moved_space',
-      targetType: 'page',
-      targetId: pageId,
-      metadata: { spaceId: parsed.data.spaceId },
+    await getDb().transaction(async (tx) => {
+      await tx
+        .update(schema.pages)
+        .set({ spaceId: parsed.data.spaceId })
+        .where(eq(schema.pages.id, pageId));
+      await recordAudit(tx, {
+        workspaceId: ctx.workspaceId,
+        actorUserId: ctx.userId,
+        action: 'page.moved_space',
+        targetType: 'page',
+        targetId: pageId,
+        metadata: { spaceId: parsed.data.spaceId },
+      });
     });
     return NextResponse.json({ ok: true });
   } catch (err) {
