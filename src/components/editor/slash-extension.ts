@@ -280,6 +280,15 @@ const items: SlashItem[] = [
     },
   },
   {
+    title: 'Image gallery',
+    description: 'Drop multiple images into a responsive grid with click-to-zoom',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'gallery').then(() => {
+        editor.chain().focus().setGallery().run();
+      });
+    },
+  },
+  {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",
     command: (editor) => editor.chain().focus().insertTableOfContents().run(),

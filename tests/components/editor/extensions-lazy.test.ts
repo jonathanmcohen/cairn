@@ -7,7 +7,7 @@ import {
 } from '@/components/editor/extensions-lazy';
 
 describe('extensions-lazy', () => {
-  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio)', () => {
+  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio/gallery)', () => {
     expect(EDITOR_NODE_NAMES).toEqual([
       'math',
       'syncedBlock',
@@ -15,6 +15,7 @@ describe('extensions-lazy', () => {
       'mermaid',
       'plantuml',
       'drawio',
+      'gallery',
     ]);
   });
 

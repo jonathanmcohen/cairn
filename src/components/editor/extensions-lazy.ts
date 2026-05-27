@@ -18,6 +18,7 @@ export const EDITOR_NODE_NAMES = [
   'mermaid',
   'plantuml',
   'drawio',
+  'gallery',
 ] as const;
 export type LazyEditorNodeName = (typeof EDITOR_NODE_NAMES)[number];
 
@@ -28,6 +29,7 @@ const FACTORIES: Record<LazyEditorNodeName, () => Promise<{ default: AnyExtensio
   mermaid: () => import('./extensions/mermaid'),
   plantuml: () => import(/* webpackChunkName: "plantuml" */ './extensions/plantuml'),
   drawio: () => import('./extensions/drawio'),
+  gallery: () => import('./extensions/gallery'),
 };
 
 /** Load one lazy extension by its TipTap node name. */

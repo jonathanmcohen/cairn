@@ -14,6 +14,7 @@ import { Column, ColumnList } from './blocks/columns';
 import { DividerNode } from './blocks/divider-node';
 import { DrawioNode } from './blocks/drawio-node';
 import { EmbedNode } from './blocks/embed-node';
+import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
 import { PlantUmlNode } from './blocks/plantuml-node';
@@ -68,6 +69,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     MermaidNode,
     PlantUmlNode,
     DrawioNode,
+    GalleryNode,
     DividerNode,
     ButtonBlock,
     VideoBlock,
