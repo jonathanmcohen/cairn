@@ -93,5 +93,8 @@ export async function listVisibleTemplates(
   const builtinPublic = and(isNull(schema.templates.workspaceId), publicCondition);
   if (builtinPublic) conditions.push(builtinPublic);
 
-  return db.select().from(schema.templates).where(or(...conditions));
+  return db
+    .select()
+    .from(schema.templates)
+    .where(or(...conditions));
 }

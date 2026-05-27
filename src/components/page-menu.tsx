@@ -3,6 +3,7 @@
 import { MoreHorizontal } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { PageActivityFeed } from '@/components/pages/activity-feed';
+import { SaveAsTemplateDialog } from '@/components/pages/save-as-template-dialog';
 import { SharePanel } from '@/components/pages/share-panel';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export function PageMenu({
   const [copied, setCopied] = useState(false);
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [saveTplOpen, setSaveTplOpen] = useState(false);
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -92,19 +94,6 @@ export function PageMenu({
     const res = await fetch(`/api/pages/${pageId}/unpublish`, { method: 'POST' });
     if (!res.ok) return;
     setPublished(false);
-  }
-
-  async function saveAsTemplate() {
-    const name = window.prompt('Template name', pageTitle || 'Untitled')?.trim();
-    if (!name) return;
-    const res = await fetch('/api/templates', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ kind: 'page', name, pageId }),
-    });
-    if (!res.ok) return;
-    setSavedAsTemplate(true);
-    setTimeout(() => setSavedAsTemplate(false), 2000);
   }
 
   function copyUrl() {
@@ -215,7 +204,10 @@ export function PageMenu({
           <button
             type="button"
             className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
-            onClick={() => void saveAsTemplate()}
+            onClick={() => {
+              setSaveTplOpen(true);
+              setOpen(false);
+            }}
           >
             {savedAsTemplate ? 'Saved to templates' : 'Save as template…'}
           </button>
@@ -235,6 +227,16 @@ export function PageMenu({
           ) : null}
         </div>
       )}
+      <SaveAsTemplateDialog
+        open={saveTplOpen}
+        pageId={pageId}
+        defaultName={pageTitle || 'Untitled'}
+        onClose={() => setSaveTplOpen(false)}
+        onSaved={() => {
+          setSavedAsTemplate(true);
+          setTimeout(() => setSavedAsTemplate(false), 2000);
+        }}
+      />
     </div>
   );
 }
