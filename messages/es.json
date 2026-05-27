@@ -1,0 +1,19 @@
+{
+  "app.title": "Cairn",
+  "shortcuts.title": "Atajos de teclado",
+  "shortcuts.close": "Cerrar atajos",
+  "shortcuts.group.global": "Globales",
+  "shortcuts.group.editor": "Editor",
+  "shortcut.newPage": "Nueva página",
+  "shortcut.toggleTheme": "Cambiar tema",
+  "shortcut.switchWorkspace": "Cambiar de espacio",
+  "shortcut.openFavorites": "Abrir favoritos",
+  "shortcut.openSheet": "Abrir atajos de teclado",
+  "palette.actions": "Acciones",
+  "palette.recent": "Recientes",
+  "palette.searchPlaceholder": "Buscar páginas…",
+  "locale.label": "Idioma",
+  "locale.en": "English",
+  "locale.ar": "العربية",
+  "locale.es": "Español"
+}

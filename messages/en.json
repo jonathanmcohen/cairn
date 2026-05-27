@@ -14,5 +14,6 @@
   "palette.searchPlaceholder": "Search pages…",
   "locale.label": "Language",
   "locale.en": "English",
-  "locale.ar": "العربية"
+  "locale.ar": "العربية",
+  "locale.es": "Spanish"
 }
