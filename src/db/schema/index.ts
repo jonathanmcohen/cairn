@@ -35,6 +35,8 @@ export * from './peer-instances';
 export * from './personal-access-tokens';
 export * from './reminders';
 export * from './saved-searches';
+// v0.9.0 G8 P39 — SIEM forwarders + per-attempt delivery log.
+export * from './siem';
 export * from './spaces';
 export * from './sso';
 export * from './suggestions';
