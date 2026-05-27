@@ -1,17 +1,13 @@
 import { and, eq } from 'drizzle-orm';
-import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { withApiKey } from '@/lib/api/rate-limit';
 import { HttpError, hasMinRole, type MemberRole, requireWorkspace } from '@/lib/auth/require-role';
 import { getDatabaseWithMeta } from '@/lib/databases/get';
 import { archiveRow, updateCells } from '@/lib/databases/rows';
+import { UpdateRowRequest } from '@/lib/schemas/databases';
 
 type Params = { params: Promise<{ databaseId: string; rowId: string }> };
-
-const PatchInput = z.object({
-  cells: z.record(z.string(), z.unknown()),
-});
 
 /** Load a row scoped to the caller's workspace + database, enforcing a minimum
  *  role. Cross-workspace (or missing) ids 404 — never leaking existence. */
@@ -53,7 +49,7 @@ export const PATCH = (req: Request, { params }: Params): Promise<Response> =>
     const ws = requireWorkspace(ctx);
     const { databaseId, rowId } = await params;
     await loadScopedRow(ws.workspaceId, ws.role, databaseId, rowId, 'editor');
-    const parsed = PatchInput.parse(await r.json().catch(() => ({})));
+    const parsed = UpdateRowRequest.parse(await r.json().catch(() => ({})));
     await updateCells(getDb(), {
       rowId,
       databaseId,

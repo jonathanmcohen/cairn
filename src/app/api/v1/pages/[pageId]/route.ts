@@ -1,18 +1,12 @@
-import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { withApiKey } from '@/lib/api/rate-limit';
 import { HttpError, hasMinRole, type MemberRole, requireWorkspace } from '@/lib/auth/require-role';
 import { softDeletePage } from '@/lib/pages/delete';
 import { getPage } from '@/lib/pages/get';
 import { updatePage } from '@/lib/pages/update';
+import { UpdatePageRequest } from '@/lib/schemas/pages';
 
 type Params = { params: Promise<{ pageId: string }> };
-
-const PatchInput = z.object({
-  title: z.string().min(1).max(200).optional(),
-  content: z.unknown().optional(),
-  icon: z.string().max(8).nullable().optional(),
-});
 
 /** Load a page scoped to the caller's workspace, enforcing a minimum role.
  *  Cross-workspace (or missing) ids 404 — never leaking existence. */
@@ -41,7 +35,7 @@ export const PATCH = (req: Request, { params }: Params): Promise<Response> =>
     const ws = requireWorkspace(ctx);
     const { pageId } = await params;
     await loadScoped(ws.workspaceId, ws.role, pageId, 'editor');
-    const parsed = PatchInput.parse(await r.json().catch(() => ({})));
+    const parsed = UpdatePageRequest.parse(await r.json().catch(() => ({})));
     const page = await updatePage(getDb(), {
       pageId,
       workspaceId: ws.workspaceId,

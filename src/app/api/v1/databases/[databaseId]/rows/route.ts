@@ -1,5 +1,4 @@
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
-import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { pageResult, parseListQuery } from '@/lib/api/pagination';
@@ -7,12 +6,9 @@ import { withApiKey } from '@/lib/api/rate-limit';
 import { HttpError, hasMinRole, type MemberRole, requireWorkspace } from '@/lib/auth/require-role';
 import { getDatabaseWithMeta } from '@/lib/databases/get';
 import { createRow } from '@/lib/databases/rows';
+import { CreateRowRequest } from '@/lib/schemas/databases';
 
 type Params = { params: Promise<{ databaseId: string }> };
-
-const CreateInput = z.object({
-  cells: z.record(z.string(), z.unknown()).optional(),
-});
 
 /** Ensure the database belongs to the caller's workspace + the role is met.
  *  Cross-workspace (or missing) ids 404 — never leaking existence. */
@@ -66,7 +62,7 @@ export const POST = (req: Request, { params }: Params): Promise<Response> =>
     const ws = requireWorkspace(ctx);
     const { databaseId } = await params;
     await requireDatabase(ws.workspaceId, ws.role, databaseId, 'editor');
-    const parsed = CreateInput.parse(await r.json().catch(() => ({})));
+    const parsed = CreateRowRequest.parse(await r.json().catch(() => ({})));
     const row = await createRow(getDb(), {
       databaseId,
       workspaceId: ws.workspaceId,
