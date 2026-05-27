@@ -321,3 +321,97 @@ v3 shape). Drafts and prereleases are filtered out; the highest
 semver-valid stable tag wins. GitHub API rate-limit responses
 (`X-RateLimit-Remaining: 0`) and non-2xx responses are surfaced as
 `feedError` on the tick result and never crash the cron.
+
+## Encrypted backup passphrase rotation
+
+Cairn's backup CLI (v0.5 P5 — see `cli backup`) optionally wraps every
+on-disk artefact in an AES-256-GCM envelope when
+`CAIRN_BACKUP_ENCRYPTION_PASSPHRASE` is set (v0.9.0 G8 P43). The dump
+(`cairn-backup-<ts>.dump`) and the uploads tar
+(`cairn-uploads-<ts>.tar.gz`) gain a `.enc` suffix; the manifest stays in
+plaintext and gains an `"encrypted": true` flag. The passphrase is the
+**only** thing that can decrypt the archives — there is no recovery path
+if you lose it. Rotation must be a planned operation.
+
+### Envelope format
+
+`[magic: 16][salt: 16][nonce: 12][ciphertext: variable][auth tag: 16]`,
+where `magic = "CAIRN-ENC-BAK-v1"`. The salt feeds Argon2id
+(`memoryCost=64 MB`, `timeCost=3`, `parallelism=1`) to derive a 256-bit
+key. The nonce is the GCM IV. The auth tag is appended at the tail and
+detects any single-bit tamper or wrong-passphrase attempt on `decrypt`.
+
+### Procedure
+
+1. **Snapshot current state.** Confirm the NEW passphrase is stored in
+   your secret manager (1Password, AWS Secrets Manager, etc.) BEFORE
+   rotating, and that the OLD passphrase is still accessible.
+2. **Run a fresh backup** with the OLD passphrase still set, and verify
+   it restores end-to-end (see "Verify" below). Don't rotate until you
+   trust the current passphrase round-trips.
+3. **Decrypt every retained archive to local plaintext.** For each
+   `<dir>/cairn-backup-<ts>.dump.enc` and matching
+   `cairn-uploads-<ts>.tar.gz.enc`:
+
+   ```sh
+   # The CLI handles this transparently on restore — but for offline
+   # re-encryption you can stream-decrypt with a one-liner:
+   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE="$OLD" \
+     node -e 'require("./dist/lib/backups/encryption.js")
+       .decryptBackup(process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE)
+       .pipe(process.stdout)' \
+     < /backups/cairn-backup-<ts>.dump.enc \
+     > /tmp/rotation/cairn-backup-<ts>.dump
+   ```
+4. **Re-encrypt with the NEW passphrase**:
+
+   ```sh
+   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE="$NEW" \
+     node -e 'process.stdin
+       .pipe(require("./dist/lib/backups/encryption.js")
+         .encryptBackup(process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE))
+       .pipe(process.stdout)' \
+     < /tmp/rotation/cairn-backup-<ts>.dump \
+     > /backups/cairn-backup-<ts>.dump.enc
+   ```
+5. **Update the env var on the Cairn host** to the new passphrase. The
+   next scheduled `cli backup` run encrypts with the new key.
+6. **Securely shred the plaintext** in `/tmp/rotation/`
+   (`shred -u` on Linux, `rm -P` on macOS) before reboot.
+
+### Verify
+
+```sh
+CAIRN_BACKUP_ENCRYPTION_PASSPHRASE="$NEW" \
+  node dist/server/cli.js restore --in /backups/cairn-backup-<ts>.dump.enc --force
+```
+
+A wrong passphrase exits non-zero with
+`decryption failed: auth tag mismatch (wrong passphrase or tampered
+ciphertext)`. No partial plaintext lands on disk.
+
+### Failure modes
+
+- **Wrong passphrase on decrypt.** The CLI exits non-zero with the
+  message above. The original `.enc` file is left intact; no partial
+  plaintext is produced.
+- **Tampered envelope.** Same failure mode — GCM's auth tag detects any
+  flipped bit in the ciphertext.
+- **Missing magic.** `envelope magic mismatch (not a CAIRN-ENC-BAK-v1
+  stream)`. You are pointing the CLI at a raw dump from before the
+  encryption env was set; restore that one without
+  `CAIRN_BACKUP_ENCRYPTION_PASSPHRASE` in the environment.
+- **`.enc` bundle, env var unset.** The restore path refuses outright
+  rather than attempt the dump: `bundle ... is encrypted (.enc) but
+  CAIRN_BACKUP_ENCRYPTION_PASSPHRASE is unset`.
+
+### Notes
+
+- The passphrase env name is in the v0.7 secret-leak `FORBIDDEN_KEYS`
+  set + the `pino` redact list — Cairn does not log or echo it via any
+  API surface.
+- This procedure is **distinct from v0.9.0 G1 P5–P7 E2E page-content
+  encryption**. Per-page encryption protects the `pages.content` jsonb
+  inside the DB; the envelope protects the entire `.dump` (which
+  contains the ciphertext rows AND every other table) at rest on disk.
+  Both can coexist for defense-in-depth.
