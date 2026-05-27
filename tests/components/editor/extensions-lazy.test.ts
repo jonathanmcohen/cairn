@@ -7,7 +7,7 @@ import {
 } from '@/components/editor/extensions-lazy';
 
 describe('extensions-lazy', () => {
-  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio/gallery/pdf/flashcard)', () => {
+  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio/gallery/pdf/flashcard/datetime)', () => {
     expect(EDITOR_NODE_NAMES).toEqual([
       'math',
       'syncedBlock',
@@ -18,6 +18,7 @@ describe('extensions-lazy', () => {
       'gallery',
       'pdf',
       'flashcard',
+      'datetime',
     ]);
   });
 
@@ -61,6 +62,12 @@ describe('extensions-lazy', () => {
     const ext = await loadEditorExtension('flashcard');
     expect(ext).toBeDefined();
     expect((ext as { name?: string }).name).toBe('flashcard');
+  });
+
+  it('loadEditorExtension("datetime") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('datetime');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('datetime');
   });
 
   it('loadEditorExtension throws on an unknown name', async () => {
