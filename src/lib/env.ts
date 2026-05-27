@@ -81,6 +81,13 @@ const Schema = z.object({
   // Operators self-hosting MUST set both to the same URL.
   CAIRN_PLANTUML_SERVER: z.url().optional(),
   NEXT_PUBLIC_CAIRN_PLANTUML_SERVER: z.url().optional(),
+  // v0.9.0 G5 P30 — federated search peer-fanout shared secret. Server-only.
+  // Empty string (default) disables cross-instance federation; the local
+  // membership + admin cross-workspace scopes still work without it.
+  // Operators set this to the SAME value on every Cairn instance that
+  // participates in the federation mesh; per-peer rotation is achieved by
+  // updating both sides simultaneously.
+  CAIRN_FEDERATION_SHARED_SECRET: z.string().default(''),
 });
 
 export type Env = z.infer<typeof Schema>;

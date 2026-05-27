@@ -3,7 +3,9 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
 import type { MemberRole } from '@/lib/auth/require-role';
+import { env } from '@/lib/env';
 import { type SearchFilters, type SearchResult, searchPages } from '@/lib/pages/search';
+import { fanOutToPeers } from './peer-fanout';
 
 /**
  * v0.9.0 G5 P30 — federated search orchestrator.
@@ -125,8 +127,19 @@ export async function federatedSearch(
     });
   }
 
+  // Scope 3: cross-instance fan-out. Skipped when the shared-secret env is
+  // empty (default for fresh installs) — the federation surface is opt-in.
+  const sharedSecret = env().CAIRN_FEDERATION_SHARED_SECRET;
+  const peer = sharedSecret
+    ? await fanOutToPeers(db, {
+        workspaceId: input.workspaceId,
+        query: input.query,
+        sharedSecret,
+      })
+    : [];
+
   return {
     local: [...memberHits, ...adminHits],
-    peer: [],
+    peer,
   };
 }
