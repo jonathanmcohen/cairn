@@ -31,7 +31,11 @@ export const notifications = pgTable(
   }),
 );
 
-export type NotificationType = 'mention' | 'comment_reply' | 'reminder';
+export type NotificationType =
+  | 'mention'
+  | 'comment_reply'
+  | 'reminder'
+  | 'flashcards_due';
 export type CommentNotificationPayload = {
   pageId: string;
   commentId: string;
@@ -44,7 +48,13 @@ export type ReminderNotificationPayload = {
   propertyId: string;
   remindAt: string;
 };
-export type NotificationPayload = CommentNotificationPayload | ReminderNotificationPayload;
+export type FlashcardsDueNotificationPayload = {
+  count: number;
+};
+export type NotificationPayload =
+  | CommentNotificationPayload
+  | ReminderNotificationPayload
+  | FlashcardsDueNotificationPayload;
 
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;

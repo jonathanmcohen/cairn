@@ -126,3 +126,57 @@ export async function registerPageAutoUnlockCron(
     nextRunAt,
   });
 }
+
+/**
+ * v0.9.0 G3 P19 — global `flashcards:notify-due` cron, daily at 09:00 UTC.
+ *
+ * One row across the deployment (`workspace_id IS NULL`); the sweep itself
+ * inserts one `flashcards_due` notification per (user, workspace) and is
+ * idempotent within a UTC day. Identified by an exact command match (no
+ * `kind` column on `cron_schedules`). Idempotent on re-register.
+ */
+const FLASHCARDS_NOTIFY_DUE_CRON = '0 9 * * *';
+const FLASHCARDS_NOTIFY_DUE_COMMAND = 'flashcards:notify-due';
+
+export async function registerFlashcardsNotifyDueCron(
+  db: PostgresJsDatabase<typeof schema>,
+): Promise<void> {
+  const nextRunAt = CronExpressionParser.parse(FLASHCARDS_NOTIFY_DUE_CRON, {
+    currentDate: new Date(),
+    tz: 'UTC',
+  })
+    .next()
+    .toDate();
+
+  const existing = await db
+    .select({ id: schema.cronSchedules.id })
+    .from(schema.cronSchedules)
+    .where(
+      and(
+        isNull(schema.cronSchedules.workspaceId),
+        eq(schema.cronSchedules.command, FLASHCARDS_NOTIFY_DUE_COMMAND),
+      ),
+    )
+    .limit(1);
+
+  if (existing[0]) {
+    await db
+      .update(schema.cronSchedules)
+      .set({
+        command: FLASHCARDS_NOTIFY_DUE_COMMAND,
+        cronSpec: FLASHCARDS_NOTIFY_DUE_CRON,
+        enabled: true,
+        nextRunAt,
+      })
+      .where(eq(schema.cronSchedules.id, existing[0].id));
+    return;
+  }
+
+  await db.insert(schema.cronSchedules).values({
+    workspaceId: null,
+    command: FLASHCARDS_NOTIFY_DUE_COMMAND,
+    cronSpec: FLASHCARDS_NOTIFY_DUE_CRON,
+    enabled: true,
+    nextRunAt,
+  });
+}

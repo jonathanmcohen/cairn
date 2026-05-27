@@ -33,7 +33,8 @@ export interface CliArgs {
     | 'reindex-embeddings'
     | 'connector:sync'
     | 'trash:purge'
-    | 'pages:auto-unlock';
+    | 'pages:auto-unlock'
+    | 'flashcards:notify-due';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -68,6 +69,10 @@ const KNOWN_COMMANDS = [
   // `locked_until` has passed. No flags; reads DATABASE_URL like every other
   // CLI subcommand.
   'pages:auto-unlock',
+  // v0.9.0 G3 P19 — global daily sweep that inserts one `flashcards_due`
+  // notification per (user, workspace) with at least one due card. Idempotent
+  // within a UTC day; no flags.
+  'flashcards:notify-due',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 

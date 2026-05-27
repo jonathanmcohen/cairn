@@ -89,7 +89,9 @@ export async function register(): Promise<void> {
     // v0.9.0 G2 P14 — register the global pages:auto-unlock cron row (every 5
     // minutes). Tied to the scheduler enable-flag because the schedule is
     // useless without a process to consume it.
-    const { registerPageAutoUnlockCron } = await import('@/server/cron-register');
+    const { registerPageAutoUnlockCron, registerFlashcardsNotifyDueCron } = await import(
+      '@/server/cron-register'
+    );
     void registerPageAutoUnlockCron(getDb())
       .then(() => {
         // biome-ignore lint/suspicious/noConsole: server startup
@@ -97,6 +99,17 @@ export async function register(): Promise<void> {
       })
       .catch((err) => {
         console.error('[pages] auto-unlock cron registration failed', err);
+      });
+
+    // v0.9.0 G3 P19 — register the global flashcards:notify-due cron row
+    // (daily at 09:00 UTC). Same scheduler-flag gating.
+    void registerFlashcardsNotifyDueCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[flashcards] notify-due cron registered (0 9 * * *)');
+      })
+      .catch((err) => {
+        console.error('[flashcards] notify-due cron registration failed', err);
       });
   }
 }

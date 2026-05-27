@@ -319,6 +319,12 @@ async function main(): Promise<void> {
     const { runAutoUnlockCli } = await import('../lib/pages/auto-unlock-cli.js');
     const summary = await runAutoUnlockCli();
     console.log(`[pages:auto-unlock] unlocked=${summary.unlockedCount}`);
+  } else if (args.command === 'flashcards:notify-due') {
+    // v0.9.0 G3 P19 — global daily sweep. Inserts one `flashcards_due`
+    // notification per (user, workspace) with at least one due card today.
+    const { runFlashcardsNotifyDueCli } = await import('../lib/flashcards/notify-due-cli.js');
+    const summary = await runFlashcardsNotifyDueCli();
+    console.log(`[flashcards:notify-due] notified=${summary.notified}`);
   }
 }
 

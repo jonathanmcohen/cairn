@@ -13,6 +13,11 @@ export type RenderedEmail = {
 const COPY: Record<string, { verb: string; subject: string }> = {
   mention: { verb: 'mentioned you', subject: 'You were mentioned' },
   comment_reply: { verb: 'replied to your comment', subject: 'New reply to your comment' },
+  // v0.9.0 G3 P19 — daily flashcards-due reminder.
+  flashcards_due: {
+    verb: 'has flashcards due for review',
+    subject: 'Flashcards due for review',
+  },
 };
 
 const FALLBACK_COPY = { verb: 'sent you a notification', subject: 'New notification' };
@@ -39,9 +44,16 @@ export function escapeHtml(value: string): string {
 export async function linkFor(n: Notification): Promise<string> {
   const p = n.payload as { pageId?: string; commentId?: string };
   const base = env().NEXTAUTH_URL.replace(/\/+$/, '');
-  const url = p.commentId
-    ? `${base}/pages/${p.pageId}#comment-${p.commentId}`
-    : `${base}/pages/${p.pageId}`;
+  // v0.9.0 G3 P19 — flashcards_due notifications have no pageId; link to the
+  // study session route instead.
+  let url: string;
+  if (n.type === 'flashcards_due') {
+    url = `${base}/flashcards/study`;
+  } else if (p.commentId) {
+    url = `${base}/pages/${p.pageId}#comment-${p.commentId}`;
+  } else {
+    url = `${base}/pages/${p.pageId}`;
+  }
   await assertPublicUrl(url);
   return url;
 }
