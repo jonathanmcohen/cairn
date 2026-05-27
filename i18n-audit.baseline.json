@@ -1,6 +1,498 @@
 {
   "findings": [
     {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 80,
+      "text": "No chat-bridge installs yet. Configure Slack or Discord on the main",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 82,
+      "text": "chat bridge",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 84,
+      "text": "page first.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 88,
+      "text": "Add channel link",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 91,
+      "text": "Install",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 97,
+      "text": "Chat bridge install",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 107,
+      "text": "Channel id",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 113,
+      "text": "C0123ABC or 1100000000000000000",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 117,
+      "text": "Page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 123,
+      "text": "Target page",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 133,
+      "text": "Mode",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 139,
+      "text": "Link mode",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 141,
+      "text": "Notify (outbound only)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 142,
+      "text": "Sync (bidirectional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 153,
+      "text": "Add link",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 161,
+      "text": "Existing links",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 164,
+      "text": "No channel links yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 170,
+      "text": "Platform",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 171,
+      "text": "Channel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 172,
+      "text": "Page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 173,
+      "text": "Mode",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 195,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 66,
+      "text": "Chat bridge — channel links",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 68,
+      "text": "Connect a Slack or Discord channel to a Cairn page. In",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 68,
+      "text": "mode, messages from the\n          channel append as comments and new comments post back to the channel. In",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 68,
+      "text": "sync",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 69,
+      "text": "notify",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 70,
+      "text": "mode, only outbound notifications fire.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 90,
+      "text": "Slack",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 109,
+      "text": "Disconnect",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 131,
+      "text": "Incoming webhook URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 135,
+      "text": "Signing secret",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 140,
+      "text": "Team ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 144,
+      "text": "Channel ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 175,
+      "text": "Discord",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 194,
+      "text": "Disconnect",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 216,
+      "text": "Webhook URL (append ?wait=true for posted-log)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 220,
+      "text": "Application public key (hex)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 225,
+      "text": "Application ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 229,
+      "text": "Channel ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/page.tsx",
+      "line": 44,
+      "text": "Chat bridge",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/page.tsx",
+      "line": 46,
+      "text": "Forward page + comment events to Slack or Discord, and let teammates reply in-thread to\n          create Cairn comments. Paste your incoming webhook URL and signing secret below; full\n          OAuth install is coming in v0.10.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 136,
+      "text": "Kind",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 151,
+      "text": "Each kind speaks its native protocol:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 151,
+      "text": "splunk_hec",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 151,
+      "text": "uses the HTTP Event\n          Collector;",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "datadog",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "s3",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "uploads a\n          gzipped NDJSON object per workspace per UTC day.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "uses the Logs Intake API;",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 158,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 170,
+      "text": "Endpoint",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 193,
+      "text": "Sourcetype",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 198,
+      "text": "cairn:audit",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 202,
+      "text": "cairn:audit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 202,
+      "text": "Splunk indexing classifier. Defaults to",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 206,
+      "text": "Source",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 211,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 220,
+      "text": "Service",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 225,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 229,
+      "text": "Hostname",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 234,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 238,
+      "text": "Extra tags (comma-separated)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 243,
+      "text": "env:prod,team:platform",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 247,
+      "text": "alongside the per-event",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 247,
+      "text": "ddtags",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 247,
+      "text": "Joined into",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 248,
+      "text": "tag.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 248,
+      "text": "workspace:&lt;id&gt;",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 256,
+      "text": "Object prefix",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 261,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 265,
+      "text": "Object key shape:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 266,
+      "text": "&lt;prefix&gt;/&lt;workspaceId&gt;/audit/YYYY-MM-DD.ndjson.gz",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 275,
+      "text": "(optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 298,
+      "text": "Enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 40,
+      "text": "SIEM forwarders",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 42,
+      "text": "Forward every audit event to a syslog endpoint or HTTP webhook. Use this to feed your SOC,\n          observability platform, or compliance log archive. Failed deliveries retry on an\n          exponential backoff and the per-attempt history is recorded for review.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 50,
+      "text": "Configured forwarders",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 53,
+      "text": "No forwarders configured yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 72,
+      "text": "enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 75,
+      "text": "disabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 87,
+      "text": "Add a forwarder",
+      "kind": "jsx_text"
+    },
+    {
       "file": "app/(app)/admin/sso/oidc/[idpId]/edit/page.tsx",
       "line": 30,
       "text": "Edit OIDC provider",
@@ -253,6 +745,48 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/(app)/pages/[pageId]/versions/diff/page.tsx",
+      "line": 78,
+      "text": "— version diff",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 101,
+      "text": "(added in B)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 125,
+      "text": "(removed from A)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 150,
+      "text": "Snapshot A ·",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 153,
+      "text": "Snapshot B ·",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 182,
+      "text": "identical blocks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 182,
+      "text": "Show",
+      "kind": "jsx_text"
+    },
+    {
       "file": "app/(app)/settings/account/profile/page.tsx",
       "line": 16,
       "text": "Profile",
@@ -442,6 +976,42 @@
       "file": "app/(app)/settings/admin/mfa/page.tsx",
       "line": 38,
       "text": "and passkeys at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 50,
+      "text": "Cairn upgrade",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 52,
+      "text": "The release-watch daemon polls the configured release feed and inserts a notification when a\n        newer stable tag is published. Use the button below to apply the upgrade in place (snapshot\n        → migrate → restart → healthcheck). Auto-apply is off by default.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 57,
+      "text": "Current version",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 59,
+      "text": "Available version",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 70,
+      "text": "Release notes",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 74,
+      "text": "none — up to date",
       "kind": "jsx_text"
     },
     {
@@ -967,6 +1537,54 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 43,
+      "text": "Target",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 50,
+      "text": "MkDocs (Material)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 51,
+      "text": "Docusaurus",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 59,
+      "text": "Building the project tree and bundling assets. This can take a minute on large workspaces.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 20,
+      "text": "Static-site export",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 22,
+      "text": "Generate a buildable static-site project from this workspace. The download is a ZIP archive\n        — unpack it, then run",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 23,
+      "text": "in the unpacked folder to preview the site.\n        Workspaces containing any end-to-end-encrypted page cannot be exported.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 23,
+      "text": "mkdocs serve",
+      "kind": "jsx_text"
+    },
+    {
       "file": "app/(app)/settings/workspace/general/page.tsx",
       "line": 33,
       "text": "General",
@@ -1423,6 +2041,24 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/api-docs/page.tsx",
+      "line": 17,
+      "text": "API documentation",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/api-docs/page.tsx",
+      "line": 18,
+      "text": "Cairn API documentation",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/api-docs/swagger-ui-client.tsx",
+      "line": 48,
+      "text": "Swagger UI",
+      "kind": "jsx_attr"
+    },
+    {
       "file": "app/flashcards/study/page.tsx",
       "line": 44,
       "text": "Loading…",
@@ -1586,97 +2222,97 @@
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 227,
+      "line": 251,
       "text": "Action",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 229,
+      "line": 253,
       "text": "Filter by action",
       "kind": "jsx_attr"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 234,
+      "line": 258,
       "text": "All actions",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 243,
+      "line": 267,
       "text": "Target type",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 245,
+      "line": 269,
       "text": "Filter by target type",
       "kind": "jsx_attr"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 250,
+      "line": 274,
       "text": "All targets",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 259,
+      "line": 283,
       "text": "From",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 262,
+      "line": 286,
       "text": "Filter from date",
       "kind": "jsx_attr"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 269,
+      "line": 293,
       "text": "To",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 272,
+      "line": 296,
       "text": "Filter to date",
       "kind": "jsx_attr"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 293,
+      "line": 317,
       "text": "Action",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 294,
+      "line": 318,
       "text": "Actor",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 295,
+      "line": 319,
       "text": "Target",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 296,
+      "line": 320,
       "text": "When",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 297,
+      "line": 321,
       "text": "Metadata",
       "kind": "jsx_text"
     },
     {
       "file": "components/admin/audit-viewer.tsx",
-      "line": 304,
+      "line": 328,
       "text": "No audit entries match these filters.",
       "kind": "jsx_text"
     },
@@ -3248,7 +3884,7 @@
     },
     {
       "file": "components/editor/editor.tsx",
-      "line": 481,
+      "line": 488,
       "text": "Outline",
       "kind": "jsx_text"
     },
@@ -4015,26 +4651,50 @@
       "kind": "jsx_text"
     },
     {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 26,
+      "text": "Focus mode",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 27,
+      "text": "Focus mode (hide sidebar + header + comments)",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 38,
+      "text": "Reader mode",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 39,
+      "text": "Reader mode (read-only prose view)",
+      "kind": "jsx_attr"
+    },
+    {
       "file": "components/pages/save-as-template-dialog.tsx",
-      "line": 90,
+      "line": 92,
       "text": "Save as template",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/save-as-template-dialog.tsx",
-      "line": 94,
+      "line": 96,
       "text": "Name",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/save-as-template-dialog.tsx",
-      "line": 105,
+      "line": 107,
       "text": "Visibility",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/save-as-template-dialog.tsx",
-      "line": 129,
+      "line": 131,
       "text": "Cancel",
       "kind": "jsx_text"
     },
@@ -4052,43 +4712,55 @@
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 56,
+      "line": 80,
       "text": "Allow duplication",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 60,
+      "line": 84,
       "text": "Link password",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 71,
+      "line": 97,
       "text": "Remove password",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 78,
+      "line": 102,
+      "text": "Rotate password",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 107,
+      "text": "Rotate password",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 116,
       "text": "Set a password",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 95,
+      "line": 133,
       "text": "Set",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 102,
+      "line": 140,
       "text": "Expires",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/share-panel.tsx",
-      "line": 119,
+      "line": 157,
       "text": "Save",
       "kind": "jsx_text"
     },
@@ -4118,49 +4790,61 @@
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 127,
+      "line": 129,
       "text": "Version history",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 137,
+      "line": 139,
       "text": "Version history",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 142,
+      "line": 144,
       "text": "Close version history",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 152,
+      "line": 154,
       "text": "No saved versions yet.",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 170,
+      "line": 172,
       "text": "Restore this version",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 186,
+      "line": 188,
       "text": "Compare A",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 195,
+      "line": 197,
       "text": "Compare B",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/version-history.tsx",
-      "line": 205,
+      "line": 212,
+      "text": "Open side-by-side diff",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 215,
+      "text": "Compare selected",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 223,
       "text": "Diff (A → B)",
       "kind": "jsx_text"
     },
@@ -4220,25 +4904,25 @@
     },
     {
       "file": "components/search/search-chip-input.tsx",
-      "line": 79,
+      "line": 76,
       "text": "Search",
       "kind": "jsx_attr"
     },
     {
       "file": "components/search/search-chip-input.tsx",
-      "line": 95,
+      "line": 92,
       "text": "Add filter",
       "kind": "jsx_attr"
     },
     {
       "file": "components/search/search-chip-input.tsx",
-      "line": 100,
+      "line": 97,
       "text": "Add filter",
       "kind": "jsx_text"
     },
     {
       "file": "components/search/search-chip-input.tsx",
-      "line": 125,
+      "line": 122,
       "text": "Unknown filter:",
       "kind": "jsx_text"
     },
@@ -4670,7 +5354,7 @@
     },
     {
       "file": "components/sidebar.tsx",
-      "line": 13,
+      "line": 14,
       "text": "Workspace sidebar",
       "kind": "jsx_attr"
     },
