@@ -337,6 +337,13 @@
       "when": 1779871117380,
       "tag": "0047_page_lifecycle_translations",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "7",
+      "when": 1779871200000,
+      "tag": "0048_page_approvals_template_visibility",
+      "breakpoints": true
     }
   ]
 }
