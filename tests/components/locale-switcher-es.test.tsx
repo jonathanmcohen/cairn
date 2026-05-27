@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import enMessages from '../../messages/en.json' with { type: 'json' };
-import esMessages from '../../messages/es.json' with { type: 'json' };
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { I18nProvider } from '@/lib/i18n/provider';
+import enMessages from '../../messages/en.json' with { type: 'json' };
+import esMessages from '../../messages/es.json' with { type: 'json' };
 
 afterEach(() => {
   cleanup();
