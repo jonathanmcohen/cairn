@@ -1,21 +1,69 @@
+import { sql } from 'drizzle-orm';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import { recordAudit } from '@/lib/audit/record';
-import { getDb } from '@/db/client';
-import type * as schema from '@/db/schema';
+import postgres from 'postgres';
 
-type Db = PostgresJsDatabase<typeof schema>;
+// biome-ignore lint/suspicious/noExplicitAny: drizzle handle is opaque at this layer; tests + apply pass schema'd handles.
+type AnyDb = PostgresJsDatabase<any>;
 
+/**
+ * Minimal audit-writer used by the cairn-upgrade CLI. The richer
+ * `recordAudit` (src/lib/audit/record.ts) is reserved for in-app callers
+ * because it transitively imports `@/db/schema`, `@/lib/siem/dispatch`,
+ * and other Next-runtime-only modules that won't resolve under `node
+ * dist/server/upgrade-cli.js`.
+ *
+ * Inserts a single audit_log row via raw SQL. The CLI must pass a
+ * connected drizzle handle (or rely on the databaseUrl-based fallback for
+ * one-shot CLI invocations).
+ */
 export type UpgradeAuditInput = {
   workspaceId: string;
   actorUserId?: string | null;
-  db?: Db;
+  /** Optional pre-built drizzle handle. Otherwise an ad-hoc connection is opened. */
+  db?: AnyDb;
+  /** Fallback for ad-hoc connections (only used when `db` is omitted). */
+  databaseUrl?: string;
 };
 
+async function insertAudit(
+  input: UpgradeAuditInput & {
+    action: string;
+    metadata: Record<string, unknown>;
+  },
+): Promise<void> {
+  const insert = async (db: AnyDb): Promise<void> => {
+    await db.execute(sql`
+      INSERT INTO audit_log (workspace_id, actor_user_id, action, target_type, target_id, metadata)
+      VALUES (
+        ${input.workspaceId}::uuid,
+        ${input.actorUserId ?? null}::uuid,
+        ${input.action},
+        ${'workspace'},
+        ${input.workspaceId}::uuid,
+        ${JSON.stringify(input.metadata)}::jsonb
+      )
+    `);
+  };
+
+  if (input.db) {
+    await insert(input.db);
+    return;
+  }
+  if (!input.databaseUrl) {
+    throw new Error('auditUpgrade*: either db or databaseUrl is required');
+  }
+  const client = postgres(input.databaseUrl, { max: 1 });
+  try {
+    await insert(drizzle(client));
+  } finally {
+    await client.end();
+  }
+}
+
 /**
- * Record `upgrade.applied`. Caller supplies the operator-chosen workspaceId
- * (audit_log.workspace_id is NOT NULL — see v0.6 P18 schema). The CLI passes
- * the workspace owning the operator's session; the compose wrapper passes
- * the first workspace it finds in the DB (admin convention).
+ * `upgrade.applied` -- recorded after a successful apply orchestration.
+ * Metadata: { fromVersion, toVersion, migrationCount }.
  */
 export async function auditUpgradeApplied(
   input: UpgradeAuditInput & {
@@ -24,13 +72,9 @@ export async function auditUpgradeApplied(
     migrationCount: number;
   },
 ): Promise<void> {
-  const db = input.db ?? getDb();
-  await recordAudit(db, {
-    workspaceId: input.workspaceId,
-    actorUserId: input.actorUserId ?? null,
+  await insertAudit({
+    ...input,
     action: 'upgrade.applied',
-    targetType: 'workspace',
-    targetId: input.workspaceId,
     metadata: {
       fromVersion: input.fromVersion,
       toVersion: input.toVersion,
@@ -39,6 +83,10 @@ export async function auditUpgradeApplied(
   });
 }
 
+/**
+ * `upgrade.failed` -- recorded on any failure path (post-rollback).
+ * Metadata: { fromVersion, toVersion, error }.
+ */
 export async function auditUpgradeFailed(
   input: UpgradeAuditInput & {
     fromVersion: string;
@@ -46,13 +94,9 @@ export async function auditUpgradeFailed(
     error: string;
   },
 ): Promise<void> {
-  const db = input.db ?? getDb();
-  await recordAudit(db, {
-    workspaceId: input.workspaceId,
-    actorUserId: input.actorUserId ?? null,
+  await insertAudit({
+    ...input,
     action: 'upgrade.failed',
-    targetType: 'workspace',
-    targetId: input.workspaceId,
     metadata: {
       fromVersion: input.fromVersion,
       toVersion: input.toVersion,
@@ -61,16 +105,16 @@ export async function auditUpgradeFailed(
   });
 }
 
+/**
+ * `upgrade.rolled_back` -- recorded after a successful pg_restore from
+ * snapshot. Metadata: { snapshotPath }.
+ */
 export async function auditUpgradeRolledBack(
   input: UpgradeAuditInput & { snapshotPath: string },
 ): Promise<void> {
-  const db = input.db ?? getDb();
-  await recordAudit(db, {
-    workspaceId: input.workspaceId,
-    actorUserId: input.actorUserId ?? null,
+  await insertAudit({
+    ...input,
     action: 'upgrade.rolled_back',
-    targetType: 'workspace',
-    targetId: input.workspaceId,
     metadata: { snapshotPath: input.snapshotPath },
   });
 }

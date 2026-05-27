@@ -1,11 +1,11 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import type * as schema from '@/db/schema';
-import { auditUpgradeRolledBack } from './audit';
-import { restoreDatabase } from './snapshot';
+import { auditUpgradeRolledBack } from './audit.js';
+import { restoreDatabase } from './snapshot.js';
 
-type Db = PostgresJsDatabase<typeof schema>;
+// biome-ignore lint/suspicious/noExplicitAny: schema-agnostic handle.
+type Db = PostgresJsDatabase<any>;
 
 export type RollbackInput = {
   databaseUrl: string;
@@ -45,6 +45,7 @@ export async function rollbackUpgrade(input: RollbackInput): Promise<RollbackRes
       workspaceId: input.workspaceId,
       snapshotPath: path,
       db: input.db,
+      databaseUrl: input.databaseUrl,
     });
   }
   return { ok: true, snapshotPath: path };

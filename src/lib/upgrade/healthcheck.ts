@@ -1,6 +1,6 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { compareJournalToDb, loadBundledJournal } from './migrations';
+import { compareJournalToDb, loadBundledJournal } from './migrations.js';
 
 export type HealthcheckResult = {
   ok: boolean;

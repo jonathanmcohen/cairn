@@ -2,16 +2,16 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import type * as schema from '@/db/schema';
 import {
   auditUpgradeApplied,
   auditUpgradeFailed,
   auditUpgradeRolledBack,
-} from './audit';
-import { compareJournalToDb, loadBundledJournal } from './migrations';
-import { dumpDatabase, restoreDatabase } from './snapshot';
+} from './audit.js';
+import { compareJournalToDb, loadBundledJournal } from './migrations.js';
+import { dumpDatabase, restoreDatabase } from './snapshot.js';
 
-type Db = PostgresJsDatabase<typeof schema>;
+// biome-ignore lint/suspicious/noExplicitAny: schema-agnostic handle; audit helper only needs raw SQL.
+type Db = PostgresJsDatabase<any>;
 
 export type ApplyInput = {
   databaseUrl: string;
@@ -77,6 +77,7 @@ export async function applyUpgrade(input: ApplyInput): Promise<ApplyResult> {
       toVersion: input.toVersion,
       error: reason,
       db: input.db,
+      databaseUrl: input.databaseUrl,
     });
     return { ok: false, error: reason };
   }
@@ -127,6 +128,7 @@ export async function applyUpgrade(input: ApplyInput): Promise<ApplyResult> {
     toVersion: input.toVersion,
     migrationCount,
     db: input.db,
+    databaseUrl: input.databaseUrl,
   });
   return { ok: true, snapshotPath, migrationCount };
 }
@@ -144,6 +146,7 @@ async function rollback(
         workspaceId: input.workspaceId,
         snapshotPath,
         db: input.db,
+        databaseUrl: input.databaseUrl,
       });
     } catch (err) {
       reason = `${reason}; rollback also failed: ${(err as Error).message}`;
@@ -155,6 +158,7 @@ async function rollback(
     toVersion: input.toVersion,
     error: reason,
     db: input.db,
+    databaseUrl: input.databaseUrl,
   });
   return { ok: false, snapshotPath, error: reason };
 }

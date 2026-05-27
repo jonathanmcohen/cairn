@@ -28,13 +28,13 @@ export async function applyViaCompose(input: ComposeApplyInput): Promise<Compose
   const compose = input.dockerCompose ?? defaultDockerCompose;
   const dump =
     input.dump ??
-    (async (u, d) => (await import('./snapshot')).dumpDatabase({ databaseUrl: u, outDir: d }));
+    (async (u, d) => (await import('./snapshot.js')).dumpDatabase({ databaseUrl: u, outDir: d }));
   const health =
     input.healthcheck ??
-    (async () => (await import('./healthcheck')).runHealthcheck({ databaseUrl: input.databaseUrl }));
+    (async () => (await import('./healthcheck.js')).runHealthcheck({ databaseUrl: input.databaseUrl }));
   const restore =
     input.restore ??
-    (async (u, p) => (await import('./snapshot')).restoreDatabase({ databaseUrl: u, dumpPath: p }));
+    (async (u, p) => (await import('./snapshot.js')).restoreDatabase({ databaseUrl: u, dumpPath: p }));
 
   const stop = await compose(['stop', 'cairn', 'cairn-collab']);
   if (!stop.ok) return { ok: false, error: `compose stop: ${stop.stderr ?? ''}` };
