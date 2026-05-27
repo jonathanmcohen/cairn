@@ -92,9 +92,7 @@ describe('POST /p/[slug]/verify (v0.9.0 G6 P33)', () => {
     const rows = await db
       .select({ action: schema.auditLog.action, targetId: schema.auditLog.targetId })
       .from(schema.auditLog);
-    const uses = rows.filter(
-      (r) => r.action === 'share.password_used' && r.targetId === pageId,
-    );
+    const uses = rows.filter((r) => r.action === 'share.password_used' && r.targetId === pageId);
     expect(uses.length).toBeGreaterThanOrEqual(1);
   });
 

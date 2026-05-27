@@ -190,7 +190,7 @@ Two releases remain to 1.0.
 - [x] G5 P30 — Federated multi-workspace + cross-instance search (migration `0050`)
 - [x] G6 P31 — i18n framework polish + Biome rule + es translations
 - [x] G6 P32 — Side-by-side version diff
-- [ ] G6 P33 — Focus mode + reader mode + share-password verify
+- [x] G6 P33 — Focus mode + reader mode + share-password verify
 - [ ] G7 P34 — Static export pipeline + CLI + UI + MkDocs target
 - [ ] G7 P35 — Static export Docusaurus target + per-format frontmatter
 - [ ] G7 P36 — Chat bridge outbound + inbound (Slack + Discord)

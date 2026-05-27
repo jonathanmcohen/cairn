@@ -51,7 +51,9 @@ export function SharePanel({
   async function rotatePassword(): Promise<void> {
     const bytes = new Uint8Array(12);
     crypto.getRandomValues(bytes);
-    const next = btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, '').slice(0, 16);
+    const next = btoa(String.fromCharCode(...bytes))
+      .replace(/[+/=]/g, '')
+      .slice(0, 16);
     const ok = await patch({ password: next });
     if (!ok) return;
     try {
