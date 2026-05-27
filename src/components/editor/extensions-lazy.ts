@@ -22,6 +22,7 @@ export const EDITOR_NODE_NAMES = [
   'pdf',
   'flashcard',
   'datetime',
+  'cairnAudio',
 ] as const;
 export type LazyEditorNodeName = (typeof EDITOR_NODE_NAMES)[number];
 
@@ -36,6 +37,7 @@ const FACTORIES: Record<LazyEditorNodeName, () => Promise<{ default: AnyExtensio
   pdf: () => import(/* webpackChunkName: "pdf" */ './extensions/pdf'),
   flashcard: () => import('./extensions/flashcard'),
   datetime: () => import('./extensions/datetime'),
+  cairnAudio: () => import('./blocks/audio-view'),
 };
 
 /** Load one lazy extension by its TipTap node name. */

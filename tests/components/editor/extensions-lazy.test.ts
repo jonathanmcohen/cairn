@@ -7,7 +7,7 @@ import {
 } from '@/components/editor/extensions-lazy';
 
 describe('extensions-lazy', () => {
-  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio/gallery/pdf/flashcard/datetime)', () => {
+  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio/gallery/pdf/flashcard/datetime/cairnAudio)', () => {
     expect(EDITOR_NODE_NAMES).toEqual([
       'math',
       'syncedBlock',
@@ -19,6 +19,7 @@ describe('extensions-lazy', () => {
       'pdf',
       'flashcard',
       'datetime',
+      'cairnAudio',
     ]);
   });
 
@@ -68,6 +69,12 @@ describe('extensions-lazy', () => {
     const ext = await loadEditorExtension('datetime');
     expect(ext).toBeDefined();
     expect((ext as { name?: string }).name).toBe('datetime');
+  });
+
+  it('loadEditorExtension("cairnAudio") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('cairnAudio');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('cairnAudio');
   });
 
   it('loadEditorExtension throws on an unknown name', async () => {

@@ -8,6 +8,7 @@ import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
+import { AudioNode } from './blocks/audio-node';
 import { Bookmark } from './blocks/bookmark';
 import { ButtonBlock } from './blocks/button';
 import { CitationNode } from './blocks/citation-node';
@@ -79,6 +80,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     DividerNode,
     ButtonBlock,
     VideoBlock,
+    // v0.9.0 G3 P22 — `cairnAudio` schema-only registration. The React node-
+    // view loads lazily via `extensions-lazy.ts#audio` so the bundle stays
+    // slim until a doc actually contains audio (or the user types `/audio`).
+    AudioNode,
     // v0.9.0 G3 P18 — citation block + inline footnote mark. Both are schema-
     // pure (no React node-view in this list; the style-aware `CitationView`
     // lives in `extensions/citation.tsx` and is wired by editor.tsx when a
@@ -173,6 +178,13 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     React node-view is a label/href/variant editor that writes
  *                     EVERY edit back to attrs via `updateAttributes` (no node-
  *                     local persistence). v0.8.0 P24.                            SAFE
+ *  - AudioNode     — block atom, attrs `{ fileId, mime, name, src }` only.
+ *                     The React node-view fetches a session signed URL via
+ *                     `/api/files/<id>/signed-url` on mount; `src` is a
+ *                     transient public-render override read in the same shape
+ *                     as `VideoBlock` (peers re-derive at view time, never
+ *                     persisting a stale URL). No node-local mutable state.
+ *                     v0.9.0 G3 P22.                                          SAFE
  *  - VideoBlock     — block atom, attrs `{ fileId, mimeType, src }` only. The
  *                     React node-view shows a file picker until `fileId` lands,
  *                     then renders `<video controls>` whose `<source src>` is

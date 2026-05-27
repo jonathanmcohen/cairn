@@ -3,6 +3,7 @@ import { TaskItem, TaskList } from '@tiptap/extension-list';
 import Mention from '@tiptap/extension-mention';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
+import { AudioNode } from './blocks/audio-node';
 import { BookmarkNode } from './blocks/bookmark-node';
 import { CitationNode } from './blocks/citation-node';
 import { Column, ColumnList } from './blocks/columns';
@@ -68,6 +69,10 @@ export function schemaExtensions() {
     PlantUmlNode,
     DrawioNode,
     GalleryNode,
+    // v0.9.0 G3 P22 — `cairnAudio` schema-only registration. Matches the
+    // baseExtensions() set so server-side suggestion-transform parses stored
+    // content carrying audio nodes without dropping them.
+    AudioNode,
     // v0.9.0 G3 P18 — citation + footnote types so the server-side accept/reject
     // transform recognizes stored content carrying these.
     CitationNode,
