@@ -137,5 +137,23 @@ export async function register(): Promise<void> {
       .catch((err) => {
         console.error('[siem] daily-archive cron registration failed', err);
       });
+
+    // v0.9.0 G8 P42 — register the global release-watch:tick cron row
+    // (daily at 04:30 UTC). Polls CAIRN_RELEASE_FEED_URL and notifies
+    // every admin/owner when a newer stable tag ships. Gated by
+    // CAIRN_RELEASE_WATCH_ENABLED so air-gapped deploys can opt out.
+    // Auto-apply remains OFF; the admin button at /settings/admin/upgrade
+    // is the only path to `applyUpgrade`.
+    if (env().CAIRN_RELEASE_WATCH_ENABLED) {
+      const { registerReleaseWatchTickCron } = await import('@/server/cron-register');
+      void registerReleaseWatchTickCron(getDb())
+        .then(() => {
+          // biome-ignore lint/suspicious/noConsole: server startup
+          console.log('[release-watch] tick cron registered (30 4 * * *)');
+        })
+        .catch((err) => {
+          console.error('[release-watch] tick cron registration failed', err);
+        });
+    }
   }
 }

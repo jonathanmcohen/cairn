@@ -99,6 +99,24 @@ const Schema = z.object({
   CAIRN_DISCORD_CLIENT_ID: z.string().optional(),
   CAIRN_DISCORD_CLIENT_SECRET: z.string().optional(),
   CAIRN_DISCORD_BOT_TOKEN: z.string().optional(),
+  // v0.9.0 G8 P42 — release-watch daemon. Polls a GitHub-shaped releases
+  // feed on a cron and notifies every owner/admin when a newer stable tag
+  // ships. Auto-apply is OFF by default — the admin /settings/admin/upgrade
+  // button is the only path that actually invokes `applyUpgrade`.
+  //
+  // CAIRN_RELEASE_FEED_URL  GitHub releases endpoint (or any JSON array of
+  //                          { tag_name, html_url, draft, prerelease }).
+  //                          Defaults to the upstream Cairn repo.
+  // CAIRN_RELEASE_WATCH_ENABLED  When false, the cron registration is
+  //                              skipped at boot — air-gapped deploys
+  //                              should set this off.
+  CAIRN_RELEASE_FEED_URL: z
+    .url()
+    .default('https://api.github.com/repos/jonathanmcohen/cairn/releases'),
+  CAIRN_RELEASE_WATCH_ENABLED: z
+    .enum(['true', 'false'])
+    .default('true')
+    .transform((v) => v === 'true'),
 });
 
 export type Env = z.infer<typeof Schema>;

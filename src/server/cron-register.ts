@@ -288,3 +288,63 @@ export async function registerSiemDailyArchiveCron(
     nextRunAt,
   });
 }
+
+/**
+ * v0.9.0 G8 P42 — global `release-watch:tick` cron, daily at 04:30 UTC.
+ *
+ * Single row (`workspace_id IS NULL`); the tick fetches the configured
+ * release feed and inserts one notification per (admin/owner, workspace)
+ * whose latest known version is older than the upstream tag. Idempotent
+ * per (user, workspace, version). Identified by an exact command match.
+ * Re-running this updates the existing row and re-enables it if an
+ * operator toggled it off.
+ *
+ * Air-gapped operators set `CAIRN_RELEASE_WATCH_ENABLED=false` so
+ * instrumentation skips the registration entirely; this helper is the
+ * source of truth when the flag is on.
+ */
+const RELEASE_WATCH_TICK_CRON = '30 4 * * *';
+const RELEASE_WATCH_TICK_COMMAND = 'release-watch:tick';
+
+export async function registerReleaseWatchTickCron(
+  db: PostgresJsDatabase<typeof schema>,
+): Promise<void> {
+  const nextRunAt = CronExpressionParser.parse(RELEASE_WATCH_TICK_CRON, {
+    currentDate: new Date(),
+    tz: 'UTC',
+  })
+    .next()
+    .toDate();
+
+  const existing = await db
+    .select({ id: schema.cronSchedules.id })
+    .from(schema.cronSchedules)
+    .where(
+      and(
+        isNull(schema.cronSchedules.workspaceId),
+        eq(schema.cronSchedules.command, RELEASE_WATCH_TICK_COMMAND),
+      ),
+    )
+    .limit(1);
+
+  if (existing[0]) {
+    await db
+      .update(schema.cronSchedules)
+      .set({
+        command: RELEASE_WATCH_TICK_COMMAND,
+        cronSpec: RELEASE_WATCH_TICK_CRON,
+        enabled: true,
+        nextRunAt,
+      })
+      .where(eq(schema.cronSchedules.id, existing[0].id));
+    return;
+  }
+
+  await db.insert(schema.cronSchedules).values({
+    workspaceId: null,
+    command: RELEASE_WATCH_TICK_COMMAND,
+    cronSpec: RELEASE_WATCH_TICK_CRON,
+    enabled: true,
+    nextRunAt,
+  });
+}

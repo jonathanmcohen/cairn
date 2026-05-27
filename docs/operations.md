@@ -286,3 +286,38 @@ enrollment page.
 opt-in destructive surface) requires a fresh WebAuthn assertion (within
 5 minutes). Missing / stale returns 403 `stepup-required`; the UI triggers
 the assertion inline and retries the request on success.
+
+## Release watch (v0.9.0 G8 P42)
+
+When `CAIRN_SCHEDULER_ENABLED=1` is set and the scheduler is running, the
+boot path registers a global `release-watch:tick` row in `cron_schedules`
+(daily at 04:30 UTC). Each tick fetches `CAIRN_RELEASE_FEED_URL`, finds
+the highest stable semver tag in the response, and inserts one
+`upgrade_available` notification per (admin/owner, workspace) whose
+latest known version is older than the upstream tag. The fan-out is
+idempotent per (user, workspace, version): re-runs at the same version
+insert zero rows; a newer feed inserts only the missing rows. The
+notification bell + `/notifications` drawer render the
+`upgrade_available` type with a link to `/settings/admin/upgrade`.
+
+```env
+# Defaults (no config needed unless you want a mirror or to opt out):
+CAIRN_RELEASE_FEED_URL=https://api.github.com/repos/jonathanmcohen/cairn/releases
+CAIRN_RELEASE_WATCH_ENABLED=true
+```
+
+**Auto-apply is OFF.** The daemon only inserts notifications. The
+`/settings/admin/upgrade` page renders current vs available version and
+exposes an "Apply upgrade now" button that streams `cairn-upgrade apply`
+via SSE — that is the *only* path that actually runs `applyUpgrade`.
+
+**Air-gapped deploys** set `CAIRN_RELEASE_WATCH_ENABLED=false`; the cron
+registration is skipped at boot and operators upgrade out-of-band.
+
+**Mirrors / private feeds:** point `CAIRN_RELEASE_FEED_URL` at any
+endpoint returning a JSON array of
+`{ tag_name, html_url, draft, prerelease }` objects (the GitHub Releases
+v3 shape). Drafts and prereleases are filtered out; the highest
+semver-valid stable tag wins. GitHub API rate-limit responses
+(`X-RateLimit-Remaining: 0`) and non-2xx responses are surfaced as
+`feedError` on the tick result and never crash the cron.

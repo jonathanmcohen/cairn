@@ -225,7 +225,8 @@ async function main(): Promise<void> {
         `  cli pages:auto-unlock\n` +
         `  cli flashcards:notify-due\n` +
         `  cli siem:retry-sweep\n` +
-        `  cli siem:daily-archive`,
+        `  cli siem:daily-archive\n` +
+        `  cli release-watch:tick`,
     );
     process.exit(2);
   }
@@ -343,6 +344,20 @@ async function main(): Promise<void> {
     const summary = await runSiemDailyArchive();
     console.log(
       `[siem:daily-archive] swept=${summary.swept} ok=${summary.succeeded} failed=${summary.failed}`,
+    );
+  } else if (args.command === 'release-watch:tick') {
+    // v0.9.0 G8 P42 — daily release-watch tick. Polls the configured
+    // GitHub releases feed; if the latest stable tag is newer than the
+    // bundled version, inserts one `upgrade_available` notification per
+    // (admin/owner, workspace) that hasn't been notified for this exact
+    // target version yet. Auto-apply remains OFF — the admin must click
+    // the button at /settings/admin/upgrade.
+    const { runReleaseWatchTickCli } = await import('../lib/upgrade/release-watch-cli.js');
+    const summary = await runReleaseWatchTickCli();
+    console.log(
+      `[release-watch:tick] created=${summary.notificationsCreated} latestTag=${summary.latestTag ?? 'n/a'}${
+        summary.feedError ? ` feedError=${summary.feedError}` : ''
+      }`,
     );
   }
 }

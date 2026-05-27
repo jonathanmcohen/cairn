@@ -36,7 +36,8 @@ export interface CliArgs {
     | 'pages:auto-unlock'
     | 'flashcards:notify-due'
     | 'siem:retry-sweep'
-    | 'siem:daily-archive';
+    | 'siem:daily-archive'
+    | 'release-watch:tick';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -83,6 +84,12 @@ const KNOWN_COMMANDS = [
   // workspace + writes them to s3 for every enabled `kind='s3'` forwarder.
   // One delivery-log row per non-empty archive; empty days produce nothing.
   'siem:daily-archive',
+  // v0.9.0 G8 P42 — daily poll of CAIRN_RELEASE_FEED_URL; inserts one
+  // `upgrade_available` notification per (admin/owner, workspace) when the
+  // bundled `package.json#version` lags the latest stable tag. Idempotent
+  // per (user, workspace, version). Auto-apply is OFF — the admin button
+  // is the only path to `applyUpgrade`.
+  'release-watch:tick',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 
