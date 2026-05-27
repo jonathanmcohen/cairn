@@ -25,7 +25,8 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "email:digest": "tsx src/server/digest-cli.ts",
     "i18n:check": "tsx scripts/i18n-audit.ts",
-    "i18n:baseline": "rm -f i18n-audit.baseline.json && tsx scripts/i18n-audit.ts"
+    "i18n:baseline": "rm -f i18n-audit.baseline.json && tsx scripts/i18n-audit.ts",
+    "export:static": "tsx scripts/cairn-export.ts"
   },
   "dependencies": {
     "@auth/drizzle-adapter": "^1.7.0",
