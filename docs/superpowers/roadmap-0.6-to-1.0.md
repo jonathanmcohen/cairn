@@ -170,7 +170,7 @@ Two releases remain to 1.0.
 - [x] G1 P10 — PAT quota admin dashboard
 - [x] G2 P11 — Spaces (migration `0040`) + sidebar grouping + ACL chain
 - [x] G2 P12 — Workspace-pinned (migration `0041`) + admin UI
-- [ ] G2 P13 — Trash retention (migration `0042`) + admin UI + cron + audit
+- [x] G2 P13 — Trash retention (migration `0042`) + admin UI + cron + audit
 - [ ] G2 P14 — Page lock (migration `0043`) + audit + auto-unlock
 - [ ] G3 P15 — Diagram blocks expansion (PlantUML + drawio)
 - [ ] G3 P16 — Image gallery + lightbox
