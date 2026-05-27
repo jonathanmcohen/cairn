@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { CommentsToggle } from '@/components/comments/comments-toggle';
 import { CoverImage } from '@/components/cover-image';
@@ -14,6 +15,7 @@ import { LockBanner } from '@/components/pages/lock-banner';
 import { LockToggle } from '@/components/pages/lock-toggle';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
+import { TocSidebar } from '@/components/pages/toc-sidebar';
 import { VersionHistory } from '@/components/pages/version-history';
 import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
@@ -45,6 +47,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   const cover = await getPageCover(getDb(), page.id, ctx.workspaceId);
   const canEdit = hasMinRole(ctx.role, 'editor');
+  // v0.9.0 G5 P28 — per-device TOC sidebar pref persists as a cookie; the
+  // toggle lives at /settings/account/theme. Reading at render time avoids
+  // a client-side flicker.
+  const cookieStore = await cookies();
+  const showTocSidebar = cookieStore.get('cairn-toc-sidebar')?.value === '1';
   const unsplashKey = env().NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY;
   // v0.9.0 G1 P6 — E2E "Encrypt page" affordance gates on the public mirror
   // of CAIRN_ENABLE_E2E_ENCRYPTION. Already-encrypted pages don't render
@@ -113,6 +120,18 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         editable={hasMinRole(ctx.role, 'editor')}
         encrypted={page.encrypted}
       />
+      {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the
+          `cairn-toc-sidebar` cookie set by the Settings toggle. Rendered
+          in-flow inside PageDetailShell (the shell has no right-rail slot)
+          and absolutely positioned to the right of the editor on xl+
+          viewports; hidden below xl where there's no room. */}
+      {showTocSidebar ? (
+        <aside className="pointer-events-none absolute right-4 top-32 hidden xl:block xl:w-56">
+          <div className="pointer-events-auto">
+            <TocSidebar initialDoc={page.content} />
+          </div>
+        </aside>
+      ) : null}
       {/* v0.9.0 G5 P27 — "See also" related-pages panel (vector kNN, ACL-gated).
           PageDetailShell has no right-rail slot so this renders in-flow below
           the editor. The helper excludes encrypted pages server-side. */}

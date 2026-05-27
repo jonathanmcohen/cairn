@@ -299,6 +299,29 @@ export function Editor({
     };
   }, [editor]);
 
+  // v0.9.0 G5 P28 — emit a `cairn:editor:doc-changed` CustomEvent on the
+  // window each time the editor doc mutates, so out-of-tree consumers (the
+  // sticky <TocSidebar>) can recompute their headings list without
+  // subscribing to the Yjs document directly. Throttle-free: the listeners
+  // are passive and `collectHeadings()` is O(nodes) with no allocations
+  // per heading. Skips when there's no editor yet (StrictMode double-mount).
+  useEffect(() => {
+    if (!editor) return;
+    const emit = () => {
+      window.dispatchEvent(
+        new CustomEvent('cairn:editor:doc-changed', { detail: { doc: editor.getJSON() } }),
+      );
+    };
+    editor.on('update', emit);
+    // Fire once on mount so a listener that attaches AFTER the editor is
+    // ready still gets an initial snapshot (the sidebar's initialDoc prop
+    // already covers the SSR path, but client-only mounts benefit).
+    emit();
+    return () => {
+      editor.off('update', emit);
+    };
+  }, [editor]);
+
   // Empty-doc seeding (Plan 1 did not seed server-side): a brand-new page has
   // no Yjs state. The first client to finish syncing seeds the shared doc from
   // `pages.content` — but ONLY if the synced doc is still empty, so concurrent
