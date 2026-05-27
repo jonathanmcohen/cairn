@@ -316,6 +316,13 @@
       "when": 1779856698607,
       "tag": "0044_pdf_annotations",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1779862407344,
+      "tag": "0045_flashcards",
+      "breakpoints": true
     }
   ]
 }

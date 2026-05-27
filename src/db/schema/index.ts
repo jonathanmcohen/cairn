@@ -11,6 +11,7 @@ export * from './database-connectors';
 export * from './databases';
 export * from './e2e';
 export * from './files';
+export * from './flashcards';
 export * from './import-jobs';
 export * from './invite-tokens';
 export * from './notifications';
