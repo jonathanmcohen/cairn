@@ -95,6 +95,11 @@ export const AUDIT_ACTIONS = [
   'page.approved',
   'page.approval_rejected',
   'page.changes_requested',
+  // v0.9.0 G5 P30 — admin elected to run a search that pierced workspace
+  // membership (include_all_workspaces=true). metadata: { query }. Fires on
+  // EVERY such call (even zero hits) because the privacy concern is the
+  // query string itself, not whether it matched.
+  'search.cross_workspace_admin',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
