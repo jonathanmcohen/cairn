@@ -86,6 +86,7 @@
     "nodemailer": "^7.0.13",
     "onnxruntime-node": "^1.26.0",
     "otplib": "^13.4.0",
+    "pdfjs-dist": "^4",
     "pino": "^10.3.1",
     "plantuml-encoder": "^1.4.0",
     "postgres": "^3.4.5",

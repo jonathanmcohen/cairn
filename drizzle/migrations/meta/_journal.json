@@ -309,6 +309,13 @@
       "when": 1779846065792,
       "tag": "0043_page_lock",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1779856698607,
+      "tag": "0044_pdf_annotations",
+      "breakpoints": true
     }
   ]
 }
