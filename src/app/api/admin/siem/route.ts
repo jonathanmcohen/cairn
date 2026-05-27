@@ -20,7 +20,10 @@ import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
-const Kind = z.enum(['syslog', 'http']);
+// v0.9.0 G8 P40 — extend the kind enum with the three new native targets.
+// The siem_forwarders.kind column itself is plain `text` (no DB-side CHECK
+// constraint), so adding new kinds is a route-layer change only.
+const Kind = z.enum(['syslog', 'http', 'splunk_hec', 'datadog', 's3']);
 
 const CreateBody = z.object({
   kind: Kind,

@@ -132,6 +132,86 @@ describe('POST /api/admin/siem', () => {
     expect(rows[0]?.credentialSecret).toBe('tok_abc');
   });
 
+  it('creates a splunk_hec forwarder with sourcetype option (v0.9.0 G8 P40)', async () => {
+    const admin = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    await actAs(admin.userId, admin.workspaceId);
+    const { POST } = await import('@/app/api/admin/siem/route');
+    const res = await POST(
+      new Request('http://localhost/api/admin/siem', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'splunk_hec',
+          name: 'splunk-primary',
+          endpoint: 'https://splunk.example.com:8088',
+          credentialSecret: 'hec_token_xyz',
+          options: { sourcetype: 'cairn:audit', source: 'cairn' },
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const [row] = await db
+      .select()
+      .from(schema.siemForwarders)
+      .where(eq(schema.siemForwarders.workspaceId, admin.workspaceId));
+    expect(row?.kind).toBe('splunk_hec');
+    expect(row?.credentialSecret).toBe('hec_token_xyz');
+    expect((row?.options as { sourcetype?: string })?.sourcetype).toBe('cairn:audit');
+  });
+
+  it('creates a datadog forwarder with service option (v0.9.0 G8 P40)', async () => {
+    const admin = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    await actAs(admin.userId, admin.workspaceId);
+    const { POST } = await import('@/app/api/admin/siem/route');
+    const res = await POST(
+      new Request('http://localhost/api/admin/siem', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 'datadog',
+          name: 'dd-primary',
+          endpoint: 'https://http-intake.logs.datadoghq.com',
+          credentialSecret: 'dd_api_key_xyz',
+          options: { service: 'cairn', tags: ['env:prod'] },
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const [row] = await db
+      .select()
+      .from(schema.siemForwarders)
+      .where(eq(schema.siemForwarders.workspaceId, admin.workspaceId));
+    expect(row?.kind).toBe('datadog');
+    expect(row?.credentialSecret).toBe('dd_api_key_xyz');
+    expect((row?.options as { service?: string })?.service).toBe('cairn');
+  });
+
+  it('creates an s3 forwarder (no credentialSecret) (v0.9.0 G8 P40)', async () => {
+    const admin = await createTestWorkspaceWithUser(db, { role: 'admin' });
+    await actAs(admin.userId, admin.workspaceId);
+    const { POST } = await import('@/app/api/admin/siem/route');
+    const res = await POST(
+      new Request('http://localhost/api/admin/siem', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          kind: 's3',
+          name: 's3-archive',
+          endpoint: 's3://cairn-audit-bucket',
+          options: { prefix: 'cairn' },
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const [row] = await db
+      .select()
+      .from(schema.siemForwarders)
+      .where(eq(schema.siemForwarders.workspaceId, admin.workspaceId));
+    expect(row?.kind).toBe('s3');
+    expect(row?.credentialSecret).toBeNull();
+    expect((row?.options as { prefix?: string })?.prefix).toBe('cairn');
+  });
+
   it('400s when the body is malformed (unknown kind)', async () => {
     const admin = await createTestWorkspaceWithUser(db, { role: 'admin' });
     await actAs(admin.userId, admin.workspaceId);
