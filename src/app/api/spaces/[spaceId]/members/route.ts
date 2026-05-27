@@ -16,9 +16,7 @@ const PostSchema = z.object({
  * Existence-hiding admin gate: the caller must be a workspace `admin` AND the
  * space must live in the active workspace. Cross-workspace spaceId → 404.
  */
-async function gateAdmin(
-  spaceId: string,
-): Promise<{ ctx: WorkspaceContext } | { res: Response }> {
+async function gateAdmin(spaceId: string): Promise<{ ctx: WorkspaceContext } | { res: Response }> {
   const ctx = await requireRole('admin');
   const access = await requireSpaceAccess(getDb(), {
     spaceId,
@@ -126,12 +124,7 @@ export async function DELETE(
     }
     await getDb()
       .delete(schema.spaceMembers)
-      .where(
-        and(
-          eq(schema.spaceMembers.spaceId, spaceId),
-          eq(schema.spaceMembers.userId, userId),
-        ),
-      );
+      .where(and(eq(schema.spaceMembers.spaceId, spaceId), eq(schema.spaceMembers.userId, userId)));
     await recordAudit(getDb(), {
       workspaceId: gate.ctx.workspaceId,
       actorUserId: gate.ctx.userId,

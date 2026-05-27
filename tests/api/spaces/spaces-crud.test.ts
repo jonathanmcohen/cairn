@@ -156,9 +156,12 @@ describe('DELETE /api/spaces/[spaceId]', () => {
     if (!page) throw new Error('page');
     await setUser(admin.id);
     const { DELETE } = await import('@/app/api/spaces/[spaceId]/route');
-    const res = await DELETE(new Request(`http://localhost/api/spaces/${space.id}`, { method: 'DELETE' }), {
-      params: Promise.resolve({ spaceId: space.id }),
-    });
+    const res = await DELETE(
+      new Request(`http://localhost/api/spaces/${space.id}`, { method: 'DELETE' }),
+      {
+        params: Promise.resolve({ spaceId: space.id }),
+      },
+    );
     expect(res.status).toBe(204);
     const [refreshed] = await db.select().from(schema.pages).where(eq(schema.pages.id, page.id));
     expect(refreshed?.spaceId).toBeNull();
@@ -215,10 +218,7 @@ describe('PATCH /api/spaces/[spaceId]', () => {
       { params: Promise.resolve({ spaceId: space.id }) },
     );
     expect(res.status).toBe(200);
-    const [refreshed] = await db
-      .select()
-      .from(schema.spaces)
-      .where(eq(schema.spaces.id, space.id));
+    const [refreshed] = await db.select().from(schema.spaces).where(eq(schema.spaces.id, space.id));
     expect(refreshed?.name).toBe('New');
     expect(refreshed?.icon).toBe('📁');
   });

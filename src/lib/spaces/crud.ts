@@ -46,10 +46,7 @@ export async function createSpace(
     .select({ id: schema.spaces.id })
     .from(schema.spaces)
     .where(
-      and(
-        eq(schema.spaces.workspaceId, input.workspaceId),
-        eq(schema.spaces.slug, input.slug),
-      ),
+      and(eq(schema.spaces.workspaceId, input.workspaceId), eq(schema.spaces.slug, input.slug)),
     );
   if (dup) return { ok: false, code: 'duplicate_slug' };
   try {
@@ -119,10 +116,7 @@ export async function updateSpace(
   if (input.icon !== undefined) patch.icon = input.icon;
   if (input.position !== undefined) patch.position = input.position;
   if (Object.keys(patch).length === 0) {
-    const [row] = await db
-      .select()
-      .from(schema.spaces)
-      .where(eq(schema.spaces.id, input.spaceId));
+    const [row] = await db.select().from(schema.spaces).where(eq(schema.spaces.id, input.spaceId));
     return row ?? null;
   }
   return await db.transaction(async (tx) => {

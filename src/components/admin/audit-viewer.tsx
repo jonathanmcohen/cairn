@@ -34,6 +34,9 @@ const TARGET_TYPES: AuditTargetType[] = [
   'page_acl',
   'webauthn_credential',
   'mfa_policy',
+  // v0.9.0 G2 P11 — Spaces target types.
+  'space',
+  'space_member',
 ];
 
 // Human-readable labels for the documented action vocabulary (spec §2.27, §3 G1).
@@ -91,6 +94,13 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'mfa.passkey_used': 'Passkey used',
   'mfa.stepup_required': 'Step-up required',
   'mfa.policy_changed': 'MFA policy changed',
+  // v0.9.0 G2 P11 — Spaces lifecycle + per-space ACL events.
+  'space.created': 'Space created',
+  'space.updated': 'Space updated',
+  'space.deleted': 'Space deleted',
+  'space.member_added': 'Space member added',
+  'space.member_removed': 'Space member removed',
+  'page.moved_space': 'Page moved between spaces',
 };
 
 function actionLabel(action: string): string {

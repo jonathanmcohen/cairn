@@ -13,6 +13,9 @@ export type CreatePageInput = {
   parentId?: string;
   title?: string;
   icon?: string | null;
+  // v0.9.0 G2 P11 — optional space pointer. Null/undefined → "Unfiled" in the
+  // sidebar. Caller (route) verifies space access before invoking createPage.
+  spaceId?: string | null;
 };
 
 export async function createPage(
@@ -37,6 +40,7 @@ export async function createPage(
       .values({
         workspaceId: input.workspaceId,
         parentId: input.parentId ?? null,
+        spaceId: input.spaceId ?? null,
         title: input.title ?? 'Untitled',
         icon: input.icon ?? formatIcon({ kind: 'emoji', value: randomDefaultIcon() }),
         content: emptyDocument(),

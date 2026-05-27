@@ -146,10 +146,7 @@ export function VirtualizedPageTree({
 
   return (
     <div ref={parentRef} className="h-full overflow-y-auto">
-      <ul
-        className="relative w-full"
-        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-      >
+      <ul className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
         {rowVirtualizer.getVirtualItems().map((virtual) => {
           const row = rows[virtual.index];
           if (!row) return null;

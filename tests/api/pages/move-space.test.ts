@@ -80,10 +80,7 @@ describe('POST /api/pages/[pageId]/move-space', () => {
       { params: Promise.resolve({ pageId: page.id }) },
     );
     expect(res.status).toBe(200);
-    const [refreshed] = await db
-      .select()
-      .from(schema.pages)
-      .where(eq(schema.pages.id, page.id));
+    const [refreshed] = await db.select().from(schema.pages).where(eq(schema.pages.id, page.id));
     expect(refreshed?.spaceId).toBe(space.id);
   });
 
@@ -129,10 +126,7 @@ describe('POST /api/pages/[pageId]/move-space', () => {
       { params: Promise.resolve({ pageId: page.id }) },
     );
     expect(res.status).toBe(200);
-    const [refreshed] = await db
-      .select()
-      .from(schema.pages)
-      .where(eq(schema.pages.id, page.id));
+    const [refreshed] = await db.select().from(schema.pages).where(eq(schema.pages.id, page.id));
     expect(refreshed?.spaceId).toBeNull();
   });
 

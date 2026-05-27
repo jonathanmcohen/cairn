@@ -90,10 +90,7 @@ describe('space members route', () => {
       .select()
       .from(schema.spaceMembers)
       .where(
-        and(
-          eq(schema.spaceMembers.spaceId, space.id),
-          eq(schema.spaceMembers.userId, member.id),
-        ),
+        and(eq(schema.spaceMembers.spaceId, space.id), eq(schema.spaceMembers.userId, member.id)),
       );
     expect(row?.role).toBe('editor');
   });
@@ -118,10 +115,7 @@ describe('space members route', () => {
       .select()
       .from(schema.spaceMembers)
       .where(
-        and(
-          eq(schema.spaceMembers.spaceId, space.id),
-          eq(schema.spaceMembers.userId, member.id),
-        ),
+        and(eq(schema.spaceMembers.spaceId, space.id), eq(schema.spaceMembers.userId, member.id)),
       );
     expect(row?.role).toBe('admin');
   });
@@ -144,10 +138,7 @@ describe('space members route', () => {
       .select()
       .from(schema.spaceMembers)
       .where(
-        and(
-          eq(schema.spaceMembers.spaceId, space.id),
-          eq(schema.spaceMembers.userId, member.id),
-        ),
+        and(eq(schema.spaceMembers.spaceId, space.id), eq(schema.spaceMembers.userId, member.id)),
       );
     expect(rows).toHaveLength(0);
   });
@@ -159,10 +150,9 @@ describe('space members route', () => {
       .values({ spaceId: space.id, userId: member.id, role: 'editor' });
     await setUser(admin.id);
     const { GET } = await import('@/app/api/spaces/[spaceId]/members/route');
-    const res = await GET(
-      new Request(`http://localhost/api/spaces/${space.id}/members`),
-      { params: Promise.resolve({ spaceId: space.id }) },
-    );
+    const res = await GET(new Request(`http://localhost/api/spaces/${space.id}/members`), {
+      params: Promise.resolve({ spaceId: space.id }),
+    });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { members: { userId: string; role: string }[] };
     expect(body.members.map((m) => m.userId)).toContain(member.id);

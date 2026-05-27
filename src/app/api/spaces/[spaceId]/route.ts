@@ -25,10 +25,7 @@ export async function GET(
       workspaceId: ctx.workspaceId,
     });
     if (!r.ok) {
-      return NextResponse.json(
-        { error: r.code },
-        { status: r.code === 'not_found' ? 404 : 403 },
-      );
+      return NextResponse.json({ error: r.code }, { status: r.code === 'not_found' ? 404 : 403 });
     }
     return NextResponse.json({ ok: true, role: r.role });
   } catch (err) {
