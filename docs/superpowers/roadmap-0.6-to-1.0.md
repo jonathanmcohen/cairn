@@ -178,7 +178,7 @@ Two releases remain to 1.0.
 - [x] G3 P18 — Citation + footnote blocks + bibliography aggregator
 - [x] G3 P19 — Flashcards (migration `0045`) + SM-2 + due-queue + notifs + digest
 - [x] G3 P20 — Date/time block with timezone (luxon)
-- [ ] G3 P21 — DOI / PubMed citation lookup
+- [x] G3 P21 — DOI / PubMed citation lookup (APA/MLA/Chicago)
 - [ ] G3 P22 — Bulk file drag-drop + audio block + MIME allowlist
 - [ ] G4 P23 — Tasks hub (`/my-tasks` aggregator)
 - [ ] G4 P24 — Page approval + signed audit (migration `0046`)
