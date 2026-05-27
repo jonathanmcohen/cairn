@@ -47,7 +47,9 @@ export function schemaExtensions() {
   return [
     StarterKit.configure({
       codeBlock: false,
-      heading: { levels: [1, 2, 3] },
+      // v0.9 P28: widen to h4 so server-side parsing keeps level-4 headings
+      // intact (mirrors the editor config in extensions.ts).
+      heading: { levels: [1, 2, 3, 4] },
     }),
     CodeBlockLowlight.configure({ lowlight }),
     TaskList,

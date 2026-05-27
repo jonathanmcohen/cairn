@@ -53,7 +53,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
   return [
     StarterKit.configure({
       codeBlock: false,
-      heading: { levels: [1, 2, 3] },
+      // v0.9 P28: widen to h4 so the TOC sidebar + inline TOC block can render
+      // a fourth nesting level. Keyboard shortcuts (Ctrl/Cmd-Alt-4) become
+      // available automatically.
+      heading: { levels: [1, 2, 3, 4] },
       ...(undoRedo ? {} : { undoRedo: false as const }),
     }),
     CodeBlockLowlight.configure({ lowlight }),
