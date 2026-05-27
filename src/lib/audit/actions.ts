@@ -108,6 +108,16 @@ export const AUDIT_ACTIONS = [
   'share.password_set',
   'share.password_cleared',
   'share.password_used',
+  // v0.9.0 G7 P36 — chat-bridge events (outbound post log + inbound comment
+  // created + per-call signature rejection + admin install changes). Metadata
+  // is scrubbed: platform + channel_id are operator-facing identifiers, never
+  // raw chat payload. `chat.signature_rejected` fires on every rejected
+  // request (anti-replay or wrong sig) — useful for SIEM correlation when an
+  // operator's signing secret rotates incorrectly.
+  'chat.outbound_posted',
+  'chat.inbound_comment_created',
+  'chat.signature_rejected',
+  'chat.install_changed',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -129,4 +139,7 @@ export type AuditTargetType =
   | 'mfa_policy'
   // v0.9.0 G2 P11 — spaces CRUD + per-space ACL rows.
   | 'space'
-  | 'space_member';
+  | 'space_member'
+  // v0.9.0 G7 P36 — chat-bridge events target comments (inbound) or webhooks
+  // (admin install changes).
+  | 'comment';

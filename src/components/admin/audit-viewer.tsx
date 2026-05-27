@@ -129,6 +129,11 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'share.password_set': 'Share password set',
   'share.password_cleared': 'Share password cleared',
   'share.password_used': 'Share password used',
+  // v0.9.0 G7 P36 — chat-bridge lifecycle events.
+  'chat.outbound_posted': 'Chat bridge — outbound message posted',
+  'chat.inbound_comment_created': 'Chat bridge — inbound reply ingested',
+  'chat.signature_rejected': 'Chat bridge — invalid signature rejected',
+  'chat.install_changed': 'Chat bridge — install changed',
 };
 
 function actionLabel(action: string): string {
