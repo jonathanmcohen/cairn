@@ -111,10 +111,7 @@ describe('sendDatadog', () => {
 
   it('refuses without credentialSecret', async () => {
     await expect(
-      sendDatadog(
-        { endpoint: 'http://127.0.0.1:1', credentialSecret: null, options: {} },
-        sample,
-      ),
+      sendDatadog({ endpoint: 'http://127.0.0.1:1', credentialSecret: null, options: {} }, sample),
     ).rejects.toThrow(/DD-API-KEY/);
   });
 });

@@ -16,8 +16,8 @@ import { createServer, type Server } from 'node:http';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createTestLogger } from '@/lib/observability/logger';
 import { formatAuditEvent } from '@/lib/siem/format';
-import { archiveDayToS3 } from '@/lib/siem/targets/s3-archive';
 import { sendDatadog } from '@/lib/siem/targets/datadog';
+import { archiveDayToS3 } from '@/lib/siem/targets/s3-archive';
 import { sendSplunkHec } from '@/lib/siem/targets/splunk-hec';
 
 const HEC_TOKEN = 'leak-canary-hec-token-1234567890';

@@ -60,9 +60,7 @@ function buildClient(): S3Client {
     region: cfg.S3_REGION ?? 'us-east-1',
     forcePathStyle: true,
     credentials:
-      accessKey && secretKey
-        ? { accessKeyId: accessKey, secretAccessKey: secretKey }
-        : undefined,
+      accessKey && secretKey ? { accessKeyId: accessKey, secretAccessKey: secretKey } : undefined,
   });
 }
 

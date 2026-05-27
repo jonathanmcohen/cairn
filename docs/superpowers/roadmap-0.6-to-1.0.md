@@ -197,7 +197,7 @@ Two releases remain to 1.0.
 - [x] G7 P37 — Chat bridge slash commands + channel↔page sync (migration `0052`)
 - [x] G7 P38 — OpenAPI generator + `/openapi.json` + Swagger UI
 - [x] G8 P39 — SIEM forwarder (migration `0053`) + syslog + HTTP webhook
-- [ ] G8 P40 — SIEM native Splunk HEC + Datadog Logs + S3 NDJSON archive
+- [x] G8 P40 — SIEM native Splunk HEC + Datadog Logs + S3 NDJSON archive
 - [ ] G8 P41 — `cairn-upgrade` CLI + compose orchestration
 - [ ] G8 P42 — Release-watch daemon + admin upgrade UI
 - [ ] G8 P43 — Encrypted workspace backups (AES-256-GCM envelope)
