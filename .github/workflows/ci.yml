@@ -110,6 +110,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Hard gate: no NEW hardcoded user-facing strings outside the baseline.
+      # Baseline lives at i18n-audit.baseline.json — bump it by running
+      # `pnpm i18n:baseline` after lifting strings into messages/en.json.
+      - name: i18n hardcoded-string check
+        run: pnpm i18n:check
+
       - name: Typecheck
         run: pnpm typecheck
 
