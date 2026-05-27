@@ -57,7 +57,7 @@ export async function SeeAlsoPanel(props: SeeAlsoPanelProps) {
                   <span className="font-medium">{r.title}</span>
                   <span
                     className="ml-auto text-xs tabular-nums text-muted-foreground"
-                    aria-label={`similarity ${Math.round(r.score * 100)} percent`}
+                    title={`similarity ${Math.round(r.score * 100)} percent`}
                   >
                     {Math.round(r.score * 100)}%
                   </span>

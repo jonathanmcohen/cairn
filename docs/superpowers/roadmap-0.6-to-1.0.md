@@ -184,7 +184,7 @@ Two releases remain to 1.0.
 - [x] G4 P24 — Page approval + signed audit (migration `0048`)
 - [x] G4 P25 — Save-as-template + sharing controls
 - [x] G4 P26 — Page lifecycle status + translations (migration `0047`)
-- [ ] G5 P27 — "See also" related-pages panel
+- [x] G5 P27 — "See also" related-pages panel
 - [ ] G5 P28 — TOC sidebar
 - [ ] G5 P29 — Search operators parser + chip UI + saved templates
 - [ ] G5 P30 — Federated multi-workspace + cross-instance search (migration `0047`)

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { Bibliography } from '@/components/editor/extensions/bibliography';
 import { ReadOnlyView } from '@/components/editor/read-only-view';
 import { CoverBanner } from '@/components/pages/cover-banner';
+import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
 import { getDb } from '@/db/client';
 import type { CitationStyle } from '@/lib/citations/format';
@@ -85,6 +86,12 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
             </button>
           </form>
         )}
+        {/* v0.9.0 G5 P27 — "See also" related-pages panel. ACL is bypassed on
+            the public-reader path (page is already published + slug-gated);
+            encrypted, deleted, draft, and archived pages remain excluded. */}
+        <div className="mt-10">
+          <SeeAlsoPanel pageId={page.id} viewerUserId={null} publicViewer={true} />
+        </div>
       </div>
     </UserThemeProvider>
   );
