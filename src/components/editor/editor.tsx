@@ -12,6 +12,7 @@ import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions
 import { DragHandle } from './drag-handle';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
+import { composeGalleryInsert } from './image-extension';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { SuggestionToolbar } from './suggestion-toolbar';
@@ -97,21 +98,27 @@ export function Editor({
 
   const uploadAndInsert = useCallback(async (files: File[]) => {
     if (!uploadAllowedRef.current) return;
-    for (const file of files) {
-      const fd = new FormData();
-      fd.set('file', file);
-      const res = await fetch('/api/upload', { method: 'POST', body: fd });
-      if (!res.ok) continue;
-      const body = (await res.json()) as {
-        signedUrl: string;
-        file: { id: string; name: string };
-      };
-      editorRef.current
-        ?.chain()
-        .focus()
-        .insertCairnImage({ src: body.signedUrl, alt: body.file.name, fileId: body.file.id })
-        .run();
-    }
+    // v0.9.0 G3 P16 — composeGalleryInsert collapses N>=2 image files into a
+    // single `gallery` node containing N `cairnImage` children; single-file
+    // drops still produce one bare `cairnImage` for back-compat. Non-image
+    // files are filtered upstream, so a heterogeneous drop becomes a clean
+    // gallery of just the images.
+    const result = await composeGalleryInsert({
+      files,
+      uploadFn: async (file) => {
+        const fd = new FormData();
+        fd.set('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error(`upload failed: ${res.status}`);
+        const body = (await res.json()) as {
+          signedUrl: string;
+          file: { id: string; name: string };
+        };
+        return { fileId: body.file.id, src: body.signedUrl, alt: body.file.name };
+      },
+    });
+    if (result.type === 'gallery' && result.content.length === 0) return;
+    editorRef.current?.chain().focus().insertContent(result).run();
   }, []);
 
   // The editor is only built once the provider exists, so the Collaboration
