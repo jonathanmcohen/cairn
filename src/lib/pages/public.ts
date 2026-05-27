@@ -49,6 +49,8 @@ function signedUrlFor(fileId: string, secret: string): string {
  *   - `fileAttachment` → `href`
  *   - `video` (v0.8.0 P24) → `src` (transient public-render override read by
  *     `VideoNode.renderHTML`; never persisted into the editing surface)
+ *   - `cairnAudio` (v0.9.0 G3 P22) → `src` (transient public-render override
+ *     read by `AudioView` — same shape as the video override)
  * Nodes without a `fileId` are left untouched. Pure: the input document is
  * not mutated.
  */
@@ -62,6 +64,8 @@ export function resignDocumentImages(doc: unknown, secret: string): unknown {
       } else if (next.type === 'fileAttachment') {
         next.attrs = { ...next.attrs, href: signedUrlFor(fileId, secret) };
       } else if (next.type === 'video') {
+        next.attrs = { ...next.attrs, src: signedUrlFor(fileId, secret) };
+      } else if (next.type === 'cairnAudio') {
         next.attrs = { ...next.attrs, src: signedUrlFor(fileId, secret) };
       }
     }
