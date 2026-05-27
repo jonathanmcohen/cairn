@@ -26,10 +26,7 @@ export type ExportArgs = {
 export class StaticExportError extends Error {
   constructor(
     message: string,
-    public readonly code:
-      | 'workspace_not_found'
-      | 'encrypted_pages_refused'
-      | 'unknown_target',
+    public readonly code: 'workspace_not_found' | 'encrypted_pages_refused' | 'unknown_target',
   ) {
     super(message);
   }
@@ -68,10 +65,7 @@ export async function exportWorkspace(
     .where(eq(schema.workspaces.id, args.workspaceId))
     .limit(1);
   if (!ws) {
-    throw new StaticExportError(
-      `workspace not found: ${args.workspaceId}`,
-      'workspace_not_found',
-    );
+    throw new StaticExportError(`workspace not found: ${args.workspaceId}`, 'workspace_not_found');
   }
 
   // 2. Refuse encrypted pages (spec §4 — public-share-equivalent action).
@@ -139,10 +133,7 @@ export async function exportWorkspace(
     }
     case 'docusaurus':
       // P35 wires this branch.
-      throw new StaticExportError(
-        'docusaurus target not implemented in P34',
-        'unknown_target',
-      );
+      throw new StaticExportError('docusaurus target not implemented in P34', 'unknown_target');
     default: {
       const _exh: never = args.target;
       throw new StaticExportError(`unknown target: ${String(_exh)}`, 'unknown_target');

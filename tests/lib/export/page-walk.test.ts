@@ -1,7 +1,7 @@
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { runMigrations } from '@/db/migrate';
 import { getDb } from '@/db/client';
+import { runMigrations } from '@/db/migrate';
 import { walkWorkspacePages } from '@/lib/export/page-walk';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 

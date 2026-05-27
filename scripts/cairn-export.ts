@@ -20,7 +20,7 @@ type Args = { workspace?: string; target?: Target; out?: string };
 function parseArgs(argv: string[]): Args {
   const out: Args = {};
   for (let i = 0; i < argv.length; i++) {
-    const a = argv[i]!;
+    const a = argv[i];
     const v = argv[i + 1];
     if (a === '--workspace' && v) {
       out.workspace = v;

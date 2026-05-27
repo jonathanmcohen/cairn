@@ -31,7 +31,10 @@ const MEDIA_NODE_TYPES = new Set([
 ]);
 const FILE_URL_RE = /^\/api\/files\/([0-9a-f-]{36})(?:\?|$)/;
 
-function collectMediaSrcs(node: Node, acc: { node: Node; fileId: string; attr: 'src' | 'href' }[]): void {
+function collectMediaSrcs(
+  node: Node,
+  acc: { node: Node; fileId: string; attr: 'src' | 'href' }[],
+): void {
   if (!node || typeof node !== 'object') return;
   if (node.type && MEDIA_NODE_TYPES.has(node.type)) {
     const src = node.attrs?.src;

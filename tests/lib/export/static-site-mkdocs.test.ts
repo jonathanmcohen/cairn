@@ -1,12 +1,12 @@
+import { writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { writeFile } from 'node:fs/promises';
 import { Readable, type Readable as ReadableT } from 'node:stream';
 import postgres from 'postgres';
 import { Open } from 'unzipper';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { runMigrations } from '@/db/migrate';
 import { getDb } from '@/db/client';
+import { runMigrations } from '@/db/migrate';
 import { exportWorkspace, StaticExportError } from '@/lib/export/static-site';
 import type { FileStorage } from '@/lib/files/storage';
 import { startPostgres, stopPostgres } from '../../helpers/db';
@@ -113,9 +113,7 @@ describe('exportWorkspace (mkdocs)', () => {
     const dir = await Open.file(zipPath);
     const paths = dir.files.map((f) => f.path);
 
-    expect(
-      paths.some((p) => p.startsWith(`docs/assets/${F}-pic.png`)),
-    ).toBe(true);
+    expect(paths.some((p) => p.startsWith(`docs/assets/${F}-pic.png`))).toBe(true);
     const mdFile = dir.files.find((f) => f.path.endsWith('.md'))!;
     const md = (await mdFile.buffer()).toString('utf-8');
     expect(md).toMatch(new RegExp(`\\.\\/assets\\/${F}-pic\\.png`));
