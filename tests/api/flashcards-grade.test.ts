@@ -147,6 +147,41 @@ describe('POST /api/flashcards/grade', () => {
     expect(rows[0]!.interval).toBe(6); // 1 → 6 on second successful review
   });
 
+  it('handles concurrent grades atomically (no PK collision)', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const page = await createPage(getDb(), {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    const card = await upsertCard(getDb(), {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+    const results = await Promise.all(
+      Array.from({ length: 10 }, () => callGrade({ cardId: card.id, grade: 2 })),
+    );
+    for (const r of results) {
+      expect(r.status).toBe(200);
+    }
+    const rows = await getDb()
+      .select()
+      .from(schema.flashcardReviews)
+      .where(
+        and(
+          eq(schema.flashcardReviews.cardId, card.id),
+          eq(schema.flashcardReviews.userId, u.userId),
+        ),
+      );
+    expect(rows).toHaveLength(1);
+  });
+
   it('returns 404 for a card in a different workspace', async () => {
     const a = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
     const b = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });

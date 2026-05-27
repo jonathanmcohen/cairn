@@ -39,49 +39,46 @@ export async function POST(req: Request): Promise<Response> {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
     }
 
-    const [existing] = await db
-      .select()
-      .from(schema.flashcardReviews)
-      .where(
-        and(
-          eq(schema.flashcardReviews.cardId, parsed.cardId),
-          eq(schema.flashcardReviews.userId, ctx.userId),
-        ),
-      )
-      .limit(1);
-    const prev = existing
-      ? { ease: existing.ease, interval: existing.interval }
-      : { ease: 2.5, interval: 0 };
-    const next = scheduleNext(prev, parsed.grade);
-
-    if (existing) {
-      await db
-        .update(schema.flashcardReviews)
-        .set({
-          ease: next.ease,
-          interval: next.interval,
-          dueAt: next.dueAt,
-          lastReviewedAt: next.lastReviewedAt,
-          lastGrade: next.lastGrade,
-          updatedAt: new Date(),
-        })
+    const next = await db.transaction(async (tx) => {
+      const [existing] = await tx
+        .select()
+        .from(schema.flashcardReviews)
         .where(
           and(
             eq(schema.flashcardReviews.cardId, parsed.cardId),
             eq(schema.flashcardReviews.userId, ctx.userId),
           ),
-        );
-    } else {
-      await db.insert(schema.flashcardReviews).values({
-        cardId: parsed.cardId,
-        userId: ctx.userId,
-        ease: next.ease,
-        interval: next.interval,
-        dueAt: next.dueAt,
-        lastReviewedAt: next.lastReviewedAt,
-        lastGrade: next.lastGrade,
-      });
-    }
+        )
+        .limit(1)
+        .for('update');
+      const prev = existing
+        ? { ease: existing.ease, interval: existing.interval }
+        : { ease: 2.5, interval: 0 };
+      const scheduled = scheduleNext(prev, parsed.grade);
+      await tx
+        .insert(schema.flashcardReviews)
+        .values({
+          cardId: parsed.cardId,
+          userId: ctx.userId,
+          ease: scheduled.ease,
+          interval: scheduled.interval,
+          dueAt: scheduled.dueAt,
+          lastReviewedAt: scheduled.lastReviewedAt,
+          lastGrade: scheduled.lastGrade,
+        })
+        .onConflictDoUpdate({
+          target: [schema.flashcardReviews.cardId, schema.flashcardReviews.userId],
+          set: {
+            ease: scheduled.ease,
+            interval: scheduled.interval,
+            dueAt: scheduled.dueAt,
+            lastReviewedAt: scheduled.lastReviewedAt,
+            lastGrade: scheduled.lastGrade,
+            updatedAt: new Date(),
+          },
+        });
+      return scheduled;
+    });
     return NextResponse.json({
       ok: true,
       dueAt: next.dueAt.toISOString(),
