@@ -56,6 +56,31 @@ export const REDACT_PATHS: string[] = [
   'signingSecret',
   '*.signing_secret',
   'signing_secret',
+  // v0.9.0 G8 P40 — SIEM forwarder credentials (Splunk HEC token, Datadog
+  // API key, S3 access keys). The dispatcher never serializes a forwarder
+  // row through pino, but a stray "log the row" call would dump the secret
+  // in plaintext without these guards.
+  '*.credentialSecret',
+  'credentialSecret',
+  '*.credential_secret',
+  'credential_secret',
+  '*.hecToken',
+  'hecToken',
+  '*.hec_token',
+  'hec_token',
+  '*.ddApiKey',
+  'ddApiKey',
+  '*.dd_api_key',
+  'dd_api_key',
+  // Process env mirrors of the existing S3 deployment vars used by the
+  // archive target. The file-storage adapter already runs without leaking
+  // these, but the new archive cron interpolates them at client construction.
+  'env.S3_ACCESS_KEY',
+  'S3_ACCESS_KEY',
+  '*.S3_ACCESS_KEY',
+  'env.S3_SECRET_KEY',
+  'S3_SECRET_KEY',
+  '*.S3_SECRET_KEY',
 ];
 
 const level = process.env.CAIRN_LOG_LEVEL ?? 'info';
