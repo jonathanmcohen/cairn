@@ -1,6 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { reconcileFlashcards } from '@/lib/flashcards/reconcile';
 import { requireUnlocked } from '@/lib/pages/lock';
 import { reindexPageLinks } from '@/lib/pages/page-links';
 import { emit } from '@/lib/webhooks/dispatch';
@@ -77,6 +78,14 @@ export async function updatePage(
     // never drift from `pages.content`).
     if (input.patch.content !== undefined) {
       await reindexPageLinks(tx, current.id, input.patch.content);
+      // v0.9.0 G3 P19 — keep flashcard_cards in lockstep with `flashcard`
+      // blocks in the saved doc. Same in-tx rationale as page-links.
+      await reconcileFlashcards(tx, {
+        pageId: current.id,
+        workspaceId: input.workspaceId,
+        userId: input.byUserId,
+        content: input.patch.content,
+      });
     }
     return updated;
   });
