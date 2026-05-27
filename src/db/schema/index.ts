@@ -38,5 +38,6 @@ export * from './webauthn';
 export * from './webhooks';
 export * from './workspace-members';
 export * from './workspace-mfa';
+export * from './workspace-pins';
 export * from './workspace-quotas';
 export * from './workspaces';
