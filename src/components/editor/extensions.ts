@@ -17,6 +17,7 @@ import { EmbedNode } from './blocks/embed-node';
 import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
+import { PdfNode } from './blocks/pdf-node';
 import { PlantUmlNode } from './blocks/plantuml-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
@@ -70,6 +71,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     PlantUmlNode,
     DrawioNode,
     GalleryNode,
+    PdfNode,
     DividerNode,
     ButtonBlock,
     VideoBlock,

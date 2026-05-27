@@ -19,6 +19,7 @@ export const EDITOR_NODE_NAMES = [
   'plantuml',
   'drawio',
   'gallery',
+  'pdf',
 ] as const;
 export type LazyEditorNodeName = (typeof EDITOR_NODE_NAMES)[number];
 
@@ -30,6 +31,7 @@ const FACTORIES: Record<LazyEditorNodeName, () => Promise<{ default: AnyExtensio
   plantuml: () => import(/* webpackChunkName: "plantuml" */ './extensions/plantuml'),
   drawio: () => import('./extensions/drawio'),
   gallery: () => import('./extensions/gallery'),
+  pdf: () => import(/* webpackChunkName: "pdf" */ './extensions/pdf'),
 };
 
 /** Load one lazy extension by its TipTap node name. */
