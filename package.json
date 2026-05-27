@@ -29,6 +29,7 @@
     "export:static": "tsx scripts/cairn-export.ts"
   },
   "dependencies": {
+    "@asteasolutions/zod-to-openapi": "^8.5.0",
     "@auth/drizzle-adapter": "^1.7.0",
     "@authenio/samlify-node-xmllint": "^2.0.0",
     "@aws-sdk/client-s3": "^3.1052.0",
@@ -106,6 +107,7 @@
     "react-hook-form": "^7.76.0",
     "samlify": "^2.13.1",
     "sonner": "^2.0.7",
+    "swagger-ui-dist": "^5.32.6",
     "swr": "^2.4.1",
     "tailwind-merge": "^3.6.0",
     "tippy.js": "^6.3.7",
@@ -116,6 +118,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@apidevtools/swagger-parser": "^12.1.0",
     "@axe-core/playwright": "^4.11.3",
     "@biomejs/biome": "^2.4.15",
     "@lhci/cli": "^0.15.1",
@@ -135,6 +138,7 @@
     "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
+    "@types/swagger-ui-dist": "^3.30.6",
     "@types/unzipper": "^0.10.11",
     "@vitest/coverage-v8": "^4.1.7",
     "drizzle-kit": "^0.31.10",
