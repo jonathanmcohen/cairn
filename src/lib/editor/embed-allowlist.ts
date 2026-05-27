@@ -36,6 +36,10 @@ export const EMBED_FRAME_HOSTS = [
   'https://open.spotify.com',
   'https://vimeo.com',
   'https://excalidraw.com',
+  // v0.9.0 G3 P15 — drawio viewer-only iframe. The block builds the embed URL
+  // directly (no `resolveEmbed` pattern entry) since the source XML/URL is
+  // user-supplied via the editor textarea, not pasted as a public URL.
+  'https://viewer.diagrams.net',
 ] as const;
 
 const YT_ID = /^[\w-]{11}$/;

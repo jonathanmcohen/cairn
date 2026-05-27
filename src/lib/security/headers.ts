@@ -22,6 +22,8 @@ const EMBED_FRAME_HOSTS = [
   'https://open.spotify.com',
   'https://vimeo.com',
   'https://excalidraw.com',
+  // v0.9.0 G3 P15 — drawio viewer-only iframe.
+  'https://viewer.diagrams.net',
 ] as const;
 
 export type CspOptions = {

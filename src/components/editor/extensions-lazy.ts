@@ -11,7 +11,14 @@ import type { AnyExtension } from '@tiptap/core';
  *   2. ON INSERT — slash commands / shortcuts that mint a lazy node load
  *      its factory first, then call the editor command.
  */
-export const EDITOR_NODE_NAMES = ['math', 'syncedBlock', 'embed', 'mermaid', 'plantuml'] as const;
+export const EDITOR_NODE_NAMES = [
+  'math',
+  'syncedBlock',
+  'embed',
+  'mermaid',
+  'plantuml',
+  'drawio',
+] as const;
 export type LazyEditorNodeName = (typeof EDITOR_NODE_NAMES)[number];
 
 const FACTORIES: Record<LazyEditorNodeName, () => Promise<{ default: AnyExtension }>> = {
@@ -20,6 +27,7 @@ const FACTORIES: Record<LazyEditorNodeName, () => Promise<{ default: AnyExtensio
   embed: () => import('./extensions/embed'),
   mermaid: () => import('./extensions/mermaid'),
   plantuml: () => import(/* webpackChunkName: "plantuml" */ './extensions/plantuml'),
+  drawio: () => import('./extensions/drawio'),
 };
 
 /** Load one lazy extension by its TipTap node name. */

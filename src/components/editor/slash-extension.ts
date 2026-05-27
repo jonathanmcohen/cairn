@@ -271,6 +271,15 @@ const items: SlashItem[] = [
     },
   },
   {
+    title: 'drawio diagram',
+    description: 'Embed a viewer-only diagrams.net diagram (XML or public URL)',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'drawio').then(() => {
+        editor.chain().focus().setDrawio().run();
+      });
+    },
+  },
+  {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",
     command: (editor) => editor.chain().focus().insertTableOfContents().run(),
