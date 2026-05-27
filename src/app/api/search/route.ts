@@ -5,6 +5,7 @@ import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { type SearchFilters, searchPages } from '@/lib/pages/search';
+import { federatedSearch } from '@/lib/search/federated';
 import { filtersFromOperators, parseQuery } from '@/lib/search/operators';
 import { expandTemplates } from '@/lib/search/operators-template';
 import { listTemplates } from '@/lib/search/saved';
@@ -85,7 +86,36 @@ export async function GET(req: Request): Promise<Response> {
     }
     const mode = modeResult.data;
 
+    // v0.9.0 G5 P30 — federated search opt-in flag. When set + caller is
+    // admin/owner, federatedSearch ALSO scans non-member workspaces and
+    // emits a `search.cross_workspace_admin` audit. Peer fan-out is gated
+    // by env (CAIRN_FEDERATION_SHARED_SECRET) and runs unconditionally
+    // when configured.
+    const includeAll = url.searchParams.get('include_all_workspaces') === 'true';
+
     try {
+      // Federated path: used when the user explicitly opts in (admin
+      // cross-workspace) OR when this instance is configured with a
+      // federation secret (peer fan-out always applies). The route only
+      // supports 'fts' mode through federation today — semantic/hybrid stay
+      // on the direct searchPages path until per-workspace embedding sets
+      // can be queried across instances.
+      if ((includeAll || process.env.CAIRN_FEDERATION_SHARED_SECRET) && mode === 'fts') {
+        const fed = await federatedSearch(getDb(), {
+          userId: ctx.userId,
+          workspaceId: ctx.workspaceId,
+          role: ctx.role,
+          query: result.free,
+          filters,
+          includeAllWorkspaces: includeAll,
+        });
+        return NextResponse.json({
+          results: fed.local,
+          peer_results: fed.peer,
+          warnings: [...result.warnings, ...expanded.warnings],
+        });
+      }
+
       const results = await searchPages(getDb(), {
         workspaceId: ctx.workspaceId,
         query: result.free,
