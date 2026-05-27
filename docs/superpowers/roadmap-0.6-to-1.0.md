@@ -201,7 +201,7 @@ Two releases remain to 1.0.
 - [x] G8 P41 — `cairn-upgrade` CLI + compose orchestration
 - [x] G8 P42 — Release-watch daemon + admin upgrade UI
 - [x] G8 P43 — Encrypted workspace backups (AES-256-GCM envelope)
-- [ ] G9 P44 — Combined smoke + release (single PR `release/v0.9.0 → main` + tag)
+- [x] G9 P44 — Combined smoke + release (single PR `release/v0.9.0 → main` + tag)
 
 ---
 

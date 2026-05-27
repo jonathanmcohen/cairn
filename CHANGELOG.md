@@ -5,6 +5,77 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-05-27
+
+> Power features + 1.0-readiness release. Nine groups completing every remaining pre-1.0 roadmap feature except the AI cluster. 44 plans, 20 new migrations (`0034`–`0053`), executed on a single `release/v0.9.0` branch and merged via one PR — per the v0.7-v0.8 retrospective rule on release-branch discipline.
+
+### Added (v0.9.0 G1 — Security + identity)
+- **P1** SSO data model: `idp_configurations`, `external_identities`, `scim_tokens` (migration `0034`). Workspace-scoped IdP configs; user-to-external-subject mapping; SCIM bearer tokens (token plaintext returned once; only SHA-256 hash stored).
+- **P2** OIDC adapter: Auth.js v5 OIDC provider per IdP config; HMAC-signed state cookie via `jose`; admin CRUD UI; existing-user link by email + auto-provision via workspace invite flow; session minted via `next-auth/jwt` `encode`. Admin GET strips `clientSecret`. Idempotent `external_identities` upsert.
+- **P3** SAML 2.0 adapter (`samlify`): SP-initiated + IdP-initiated flows; metadata XML at `/api/sso/saml/metadata/[id]`; HMAC-signed state cookie with `InResponseTo` replay protection; admin CRUD; per-IdP X.509 keypair; sandbox SP keypair stripped from admin GET.
+- **P4** SCIM 2.0 endpoint: `/api/scim/v2/Users` + `/Groups`; bearer-token auth with scope gating (`users:read|write`, `groups:read|write`); filter parser (`userName eq ...`); roles-as-groups for `owner/admin/editor/viewer`; admin token mint/revoke + dashboard at `/admin/sso`.
+- **P5** End-to-end encryption — crypto core + migration `0035`. Tables `user_keypairs`, `page_encryption_keys`, `workspace_encryption_keys`; `pages.encrypted` flag. X25519 keypair generation, passphrase-sealed private key (scrypt KDF), DEK generation, X25519 sealed-box wrap/unwrap. New env `CAIRN_ENABLE_E2E_ENCRYPTION`.
+- **P6** E2E per-page mode + migration `0036` (`pages.content_encrypted` bytea). UI toggle to encrypt; per-page AES-256-GCM cipher; DEK wrapped to each workspace member's keypair. Consumer audit: search (FTS + trigram + semantic), embeddings, public-share, webhooks all skip encrypted pages.
+- **P7** E2E workspace-wide mode + migration `0037` (`workspaces.e2e_mode`, `pages.encrypted_under_wsk`). Admin enable sweeps all pages under one WSK; per-member key wrap; rekey support; member add/remove rewraps; page-creation hook auto-encrypts under WSK.
+- **P8** MFA WebAuthn + migration `0038` (`user_webauthn_credentials`, `workspace_mfa_policies`). `@simplewebauthn/server` v13 ceremonies; step-up auth (5-min TTL JWT claim + cookie); admin workspace-MFA enforcement gates sign-in; `requireStepUp` helper; reusable `<StepUpModal>` wired to DangerZone workspace-delete.
+- **P9** PAT quotas + migration `0039`. Daily + monthly request caps + per-scope rate-limits in `personal_access_tokens`; `pat_quota_usage` rollup. Atomic upsert via raw SQL `INSERT ... ON CONFLICT DO UPDATE WHERE requests < limit` closes the race window. Dispatcher returns 429 + `Retry-After` on cap.
+- **P10** PAT quota admin dashboard at `/settings/admin/api-keys`: per-PAT current usage + 14-day sparkline + reset button. Reset scoped to current day + month windows only — historical sparkline preserved.
+
+### Added (v0.9.0 G2 — Workspace structure)
+- **P11** Spaces + migration `0040`: `spaces`, `space_members`, `pages.space_id`. Sidebar groups pages by space; per-space ACL chain extends `requirePageAccess` (workspace owner/admin > space role > viewer-of-space). Admin space CRUD at `/settings/workspace/spaces`; page-create space picker; move-space route.
+- **P12** Workspace pins + migration `0041`: `workspace_pins` (distinct from v0.8 favorites). Admin UI with drag-reorder; sidebar Pinned section above Favorites.
+- **P13** Trash retention + migration `0042` (settings batch: `trash_retention_days`, `default_page_status`, `enable_federated_search`). Daily `trash:purge` cron per workspace; admin UI with confirm-by-typing empty-trash button. `CAIRN_TRASH_RETENTION_DAYS=0` disables auto-purge.
+- **P14** Page lock + migration `0043` (`pages.locked_at/locked_by/locked_until`). Write-gate refuses update/delete/move when locked + caller is not locker/admin. Auto-unlock cron sweeps expired locks every 5 min. Lock banner + popover toggle (Lock indefinitely / 1h / 24h). Yjs collab token-mint gate refuses editor-role tokens to non-lockers on locked pages. `PageLockedError extends HttpError` (status 403) for uniform error mapping.
+
+### Added (v0.9.0 G3 — New blocks)
+- **P15** Diagram blocks expansion: PlantUML (lazy-load encoder, `<img>` to configurable `CAIRN_PLANTUML_SERVER`) + drawio (sandboxed iframe to `viewer.diagrams.net`). CSP `EMBED_FRAME_HOSTS` updated. Encrypted-page guard refuses to render diagrams (would leak source to 3rd-party server).
+- **P16** Image gallery + lightbox block: TipTap gallery node (`cairnImage+` content); multi-file drop composes one gallery node; portal modal with focus trap + ESC + arrow nav; semantic `<ul><li><button>` grid.
+- **P17** PDF viewer + annotation + migration `0044` (`pdf_annotations`). `pdfjs-dist` lazy-mounted; per-user annotation overlay; HMAC-signed file URL via existing storage helper; encrypted-page guard refuses to render.
+- **P18** Citation + footnote blocks + bibliography aggregator: APA/MLA/Chicago formatters; bibliography section auto-renders on public pages; footnote popover with `role="doc-noteref"`/`role="doc-footnote"`; ReadOnlyView numbers footnotes via `FootnoteSup`.
+- **P19** Flashcards block + migration `0045` (`flashcard_cards`, `flashcard_reviews`). SM-2 algorithm; due-queue per-user; grade endpoint with atomic `onConflictDoUpdate` upsert; reconcile hook on page save; daily `flashcards:notify-due` cron + in-app + email digest. Sidebar review-due counter; study session route `/flashcards/study`.
+- **P20** Date/time block with timezone (`luxon`): TipTap node + popover picker; markdown export emits semantic `<time>`; page-save hook extracts ISO timestamps into `pages.metadata.datetimes`.
+- **P21** DOI / PubMed citation lookup: Crossref + PubMed fetchers (1 RPS rate-limit, 5s timeout, 256 KB cap); `/api/citations/lookup` GET with xor `doi`/`pubmed` validation; paste-detect dialog with style preview.
+- **P22** Bulk file drag-drop + audio block + MIME allowlist. `cairnAudio` TipTap node (`<audio controls>`); bulk uploader modal with parallel queue + per-file status; audio MIME allowlist (`audio/mpeg|wav|ogg|flac|aac`).
+
+### Added (v0.9.0 G4 — Content lifecycle)
+- **P23** Tasks hub `/my-tasks` + migration `0046` (`mv_user_tasks` materialized view). PL/pgSQL extractor walks `pages.content` for taskItem nodes; refresh trigger on page INSERT/UPDATE/DELETE; filter chips (open/done/all + due date); optimistic toggle with revert on error.
+- **P24** Page approval + signed audit + migration `0048` (`page_approvals`). HMAC-SHA256 signature over canonical `{ page_id, status, approver_id, decided_at }`; editor requests, admin decides; `ApprovalPanel` gated on `canDecide` + `inReview`; lifecycle integration with P26 status transitions.
+- **P25** Save-as-template + sharing controls: `templates.visibility` (private/workspace/public, default workspace); modal with visibility selector; `/templates/gallery` groups by visibility; ACL via `canReadTemplate` + `listVisibleTemplates`.
+- **P26** Page lifecycle status + migration `0047` (`pages.status` enum draft|review|published|archived, `translation_of_page_id` self-FK, `translation_locale`). `transitionStatus` matrix with audit; FTS + sidebar + public-share filter on status; symmetric translation linkage helper.
+
+### Added (v0.9.0 G5 — Search + discovery)
+- **P27** "See also" related-pages panel: reuses v0.7 pgvector embeddings; cosine-kNN with ACL post-gate + encrypted-page skip; RSC panel on page-detail.
+- **P28** TOC sidebar: sticky right-rail with IntersectionObserver active-link; per-user pref via localStorage + cookie; coexists with v0.6 P6 inline TOC block. Headings extended to h4.
+- **P29** Search operators parser + chip UI + migration `0049` (`saved_searches.template_name`): `type:`, `space:`, `status:`, `from:`, `created:>`, `due:<` operators; chip-builder client component; named saved templates with `@name` expansion (no nesting).
+- **P30** Federated multi-workspace + cross-instance search + migration `0050` (`peer_instances`). HMAC-signed envelope with anti-replay LRU + 5-min window; admin cross-workspace scope; peer fan-out with per-peer token-bucket rate-limit (10/min); inbound peer route with peer-auth + 256KB cap; new env `CAIRN_FEDERATION_SHARED_SECRET`.
+
+### Added (v0.9.0 G6 — Polish + UX)
+- **P31** i18n framework polish: TypeScript-Compiler-API audit script `pnpm i18n:check` with baselined hardcoded-string registry (796 baselined findings; `i18n-audit.baseline.json`); CI step before typecheck; full `es` locale bundle (17 keys); `<LocaleSwitcher>` surfaces all 3 locales (en, ar, es).
+- **P32** Side-by-side version diff: structural ProseMirror snapshot diff (LCS over block signatures); ACL-gated `/api/pages/:id/versions/diff`; `<VersionDiffViewer>` with added/removed/changed markers + a11y landmarks; encrypted-page refuse.
+- **P33** Focus + reader + share-password verify: focus-mode hides sidebar/chrome; reader-mode renders content-only typography; Argon2id verify for `link_password_hash` with 5-min cookie TTL; password-rotate affordance; rate-limited verify attempts.
+
+### Added (v0.9.0 G7 — Export + interop)
+- **P34** Static-site export pipeline + CLI + UI + MkDocs target: `pnpm exec cairn-export --target=mkdocs`; admin UI button at `/settings/workspace/export-static-site`; page-tree walk + asset extraction + in-doc link rewrite; per-target frontmatter helper. Adds `gray-matter` + `js-yaml`.
+- **P35** Static-site export Docusaurus target + i18n parallel-translations: `sidebars.js` + `docusaurus.config.js` emission; translation pages route to `i18n/<locale>/...`. README documents both targets.
+- **P36** Chat bridge outbound + inbound + migration `0051` (`webhooks.kind` discriminator + `chat_posted_messages`). Outbound translators for Slack + Discord (signed POST); inbound HMAC-SHA256 verify-slack + Ed25519 verify-discord (Node webcrypto); per-workspace synthetic chat-bot user posts comments back. Adds `@slack/bolt` + `discord.js`.
+- **P37** Chat bridge slash commands + channel↔page sync + migration `0052` (`chat_bridge_installs`, `chat_channel_links`). `/cairn create|search|page` slash commands (Slack + Discord); channel↔page sync engine; admin channel-link management UI; sanitize + dedupe + bot-skip; rate-limit + replay-protection primitives.
+- **P38** OpenAPI 3.1 generator + `/openapi.json` + Swagger UI at `/api-docs`: `zod-to-openapi` registry + v1 route manifest + shared Zod schemas; workspace-member gate + 1h cache; local-bundled Swagger UI (no external CDN).
+
+### Added (v0.9.0 G8 — Operations)
+- **P39** SIEM forwarder core + migration `0053` (`siem_forwarders`, `siem_delivery_log`). Envelope + RFC5424 syslog (UDP/TCP) + HTTP webhook with optional bearer; dispatcher via `setImmediate` audit hook + delivery log; cron retry sweep every minute; admin UI; prom-client counters + latency histogram.
+- **P40** SIEM native Splunk HEC + Datadog Logs + S3 NDJSON archive: per-kind sender + Zod admin form; daily S3 archive cron (01:15 UTC) with injectable dump/restore for tests; logger redact paths for HEC token + DD-API-KEY + S3 creds.
+- **P41** `cairn-upgrade` CLI + compose orchestration: preview (scratch-DB dry run + schema diff), apply (snapshot → migrate → restart → health → auto-rollback), rollback (pg_restore + auto snapshot picker), healthcheck (`/api/health` + journal-vs-db). Dockerfile ships `postgresql17-client`. Audit actions `upgrade.applied|failed|rolled_back`.
+- **P42** Release-watch daemon + admin upgrade UI: daily 04:30 UTC cron polls `CAIRN_RELEASE_FEED_URL`; fan-out `upgrade_available` notifications to workspace admins/owners; `/settings/admin/upgrade` page shows current + available + Apply button with SSE-streamed progress. New env `CAIRN_RELEASE_WATCH_ENABLED`.
+- **P43** Encrypted workspace backups: AES-256-GCM envelope around v0.5 S3 backup pipeline; Argon2id KDF (m=64MB, t=3, p=1) from `CAIRN_BACKUP_ENCRYPTION_PASSPHRASE`; envelope magic `CAIRN-ENC-BAK-v1` + salt + nonce; backup + restore CLI auto-detect `.enc` siblings; secret-leak hygiene + logger redacts.
+
+### Migrations
+- `0034`–`0053` (20 additive). All migrations forward-only. Drizzle `_journal.json` updated. Migration ledger in `docs/superpowers/plans/v0.9.0/2026-05-26-cairn-v0.9.0-plans-index.md`.
+
+### Conventions
+- Release-branch discipline (`release/v0.9.0`) per the v0.7-v0.8 retrospective. No direct commits to `main` between v0.8.0 and v0.9.0 tags.
+- Per-plan subagent execution with plan-review gate + spec-compliance review + code-quality review + fix-pass loop.
+- Retrospective lessons applied preemptively: `db.transaction(...)` around state + audit, `.onConflictDoUpdate` for race-prone upserts, secret stripping on admin GET, generic 400 + server-side log for external-lib errors, encrypted-page consumer audit across every read path.
+
 ## [0.8.0] - 2026-05-24
 
 > Experience + 1.0-readiness release. Ten new bands on top of v0.7: full Yjs-over-IndexedDB sync + mobile gesture polish (G1), performance pass with virtualization + bundle code-split + Lighthouse CI budget (G2), quick-capture + PWA `share_target` + onboarding wizard (G3), expanded command palette + settings-hub restructure + microcopy polish (G4), a11y v0.7 new-route sweep (G5), notification center + favorites reorder + backlinks delta (G6), per-user themes + page covers + page-icon polish (G7), embed allowlist expansion + rich unfurls + new block types (G8), opt-in server-side native PDF via Playwright (G9), and the cross-feature release smoke + docs (G10). Migrations `0029`–`0033`. Built area-by-area (plans P1–P26); entries below are grouped by group.
