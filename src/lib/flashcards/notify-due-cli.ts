@@ -1,5 +1,5 @@
 import { getDb } from '@/db/client';
-import { notifyDueFlashcards, type NotifyResult } from './notify-due';
+import { type NotifyResult, notifyDueFlashcards } from './notify-due';
 
 /**
  * CLI shim for the `flashcards:notify-due` scheduler command (v0.9.0 G3 P19).

@@ -200,10 +200,7 @@ describe('flashcards due-queue', () => {
       .select()
       .from(schema.flashcardCards)
       .where(
-        and(
-          eq(schema.flashcardCards.pageId, page.id),
-          eq(schema.flashcardCards.blockId, 'b1'),
-        ),
+        and(eq(schema.flashcardCards.pageId, page.id), eq(schema.flashcardCards.blockId, 'b1')),
       );
     expect(all).toHaveLength(1);
     expect(all[0]!.front).toBe('Q2');

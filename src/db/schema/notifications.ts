@@ -31,11 +31,7 @@ export const notifications = pgTable(
   }),
 );
 
-export type NotificationType =
-  | 'mention'
-  | 'comment_reply'
-  | 'reminder'
-  | 'flashcards_due';
+export type NotificationType = 'mention' | 'comment_reply' | 'reminder' | 'flashcards_due';
 export type CommentNotificationPayload = {
   pageId: string;
   commentId: string;

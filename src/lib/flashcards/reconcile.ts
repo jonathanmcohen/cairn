@@ -4,10 +4,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { upsertCard } from './upsert-card';
 
-type Tx = Pick<
-  PostgresJsDatabase<typeof schema>,
-  'select' | 'delete' | 'insert' | 'update'
->;
+type Tx = Pick<PostgresJsDatabase<typeof schema>, 'select' | 'delete' | 'insert' | 'update'>;
 
 export type FlashcardBlock = {
   blockId: string;
@@ -86,9 +83,7 @@ export async function reconcileFlashcards(
   }
   const liveBlockIds = blocks.map((b) => b.blockId);
   if (liveBlockIds.length === 0) {
-    await tx
-      .delete(schema.flashcardCards)
-      .where(eq(schema.flashcardCards.pageId, input.pageId));
+    await tx.delete(schema.flashcardCards).where(eq(schema.flashcardCards.pageId, input.pageId));
   } else {
     await tx
       .delete(schema.flashcardCards)

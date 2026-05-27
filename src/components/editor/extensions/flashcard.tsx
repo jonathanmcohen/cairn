@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  NodeViewWrapper,
-  type ReactNodeViewProps,
-  ReactNodeViewRenderer,
-} from '@tiptap/react';
+import { NodeViewWrapper, type ReactNodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import { useState } from 'react';
 import { FlashcardNode } from '@/components/editor/blocks/flashcard-node';
 
@@ -15,7 +11,7 @@ import { FlashcardNode } from '@/components/editor/blocks/flashcard-node';
  * present. The full study experience lives at `/flashcards/study`; this view
  * is just a visual peek so authors can verify what they wrote.
  */
-function FlashcardNodeView({ node }: ReactNodeViewProps): JSX.Element {
+function FlashcardNodeView({ node }: ReactNodeViewProps): React.JSX.Element {
   const [flipped, setFlipped] = useState(false);
   const front = String(node.attrs.front ?? '');
   const back = String(node.attrs.back ?? '');

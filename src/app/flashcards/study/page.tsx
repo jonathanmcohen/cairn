@@ -15,7 +15,7 @@ type DueCard = {
  * `/api/flashcards/due`, shows one card at a time, and POSTs each grade to
  * `/api/flashcards/grade`. Optional `?deck=<tag>` filter narrows the queue.
  */
-export default function StudyPage(): JSX.Element {
+export default function StudyPage(): React.JSX.Element {
   const params = useSearchParams();
   const deck = params.get('deck');
   const [queue, setQueue] = useState<DueCard[] | null>(null);

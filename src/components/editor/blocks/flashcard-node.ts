@@ -4,11 +4,7 @@ declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     flashcard: {
       /** Insert a flashcard block with the given front/back/deck. */
-      setFlashcard: (attrs: {
-        front: string;
-        back: string;
-        deckTag?: string | null;
-      }) => ReturnType;
+      setFlashcard: (attrs: { front: string; back: string; deckTag?: string | null }) => ReturnType;
     };
   }
 }

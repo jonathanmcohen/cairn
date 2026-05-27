@@ -22,10 +22,7 @@ export type UpsertCardInput = {
  *
  * Pure helper — no transaction; the caller's page-save tx encloses it.
  */
-export async function upsertCard(
-  db: Db,
-  input: UpsertCardInput,
-): Promise<schema.FlashcardCard> {
+export async function upsertCard(db: Db, input: UpsertCardInput): Promise<schema.FlashcardCard> {
   const [existing] = await db
     .select()
     .from(schema.flashcardCards)

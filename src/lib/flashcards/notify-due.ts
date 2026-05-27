@@ -22,10 +22,7 @@ export type NotifyResult = { notified: number };
  * actually a member of the owning workspace for. Stale cards in a workspace
  * the user no longer belongs to don't trigger spam.
  */
-export async function notifyDueFlashcards(
-  db: Db,
-  now: Date = new Date(),
-): Promise<NotifyResult> {
+export async function notifyDueFlashcards(db: Db, now: Date = new Date()): Promise<NotifyResult> {
   const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
 
@@ -50,12 +47,7 @@ export async function notifyDueFlashcards(
         eq(schema.flashcardReviews.userId, schema.workspaceMembers.userId),
       ),
     )
-    .where(
-      or(
-        isNull(schema.flashcardReviews.dueAt),
-        lte(schema.flashcardReviews.dueAt, now),
-      ),
-    )
+    .where(or(isNull(schema.flashcardReviews.dueAt), lte(schema.flashcardReviews.dueAt, now)))
     .groupBy(schema.workspaceMembers.userId, schema.flashcardCards.workspaceId);
 
   let notified = 0;

@@ -85,7 +85,10 @@ describe('reconcile on page update', () => {
         content: {
           type: 'doc',
           content: [
-            { type: 'flashcard', attrs: { blockId: 'b1', front: 'Q1', back: 'A1', deckTag: 'spanish' } },
+            {
+              type: 'flashcard',
+              attrs: { blockId: 'b1', front: 'Q1', back: 'A1', deckTag: 'spanish' },
+            },
             { type: 'flashcard', attrs: { blockId: 'b2', front: 'Q2', back: 'A2', deckTag: null } },
           ],
         },

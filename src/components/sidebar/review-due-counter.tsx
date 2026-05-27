@@ -9,7 +9,7 @@ import { useEffect, useState } from 'react';
  * on mount and shows a count badge when the user has at least one card due.
  * The link routes to `/flashcards/study` for the full session.
  */
-export function ReviewDueCounter(): JSX.Element | null {
+export function ReviewDueCounter(): React.JSX.Element | null {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -40,9 +40,7 @@ export function ReviewDueCounter(): JSX.Element | null {
         <GraduationCap aria-hidden="true" className="h-3 w-3" />
         Review due
       </span>
-      <span className="rounded-full bg-primary px-2 text-xs text-primary-foreground">
-        {count}
-      </span>
+      <span className="rounded-full bg-primary px-2 text-xs text-primary-foreground">{count}</span>
     </Link>
   );
 }

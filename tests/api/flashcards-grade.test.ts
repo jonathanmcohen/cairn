@@ -30,16 +30,13 @@ beforeEach(async () => {
 vi.mock('@/lib/auth/require-role', async () => {
   const actual =
     await vi.importActual<typeof import('@/lib/auth/require-role')>('@/lib/auth/require-role');
-  let ctx:
-    | { userId: string; workspaceId: string | null; role: schema.MemberRole | null }
-    | null = null;
+  let ctx: { userId: string; workspaceId: string | null; role: schema.MemberRole | null } | null =
+    null;
   return {
     ...actual,
     getAuthContext: async () => ctx,
     __set: (
-      next:
-        | { userId: string; workspaceId: string | null; role: schema.MemberRole | null }
-        | null,
+      next: { userId: string; workspaceId: string | null; role: schema.MemberRole | null } | null,
     ) => {
       ctx = next;
     },

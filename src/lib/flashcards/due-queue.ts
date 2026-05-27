@@ -39,14 +39,10 @@ export async function listDueForUser(
 ): Promise<DueCard[]> {
   const now = opts.now ?? new Date();
   const filters = [
-    or(
-      isNull(schema.flashcardReviews.dueAt),
-      lte(schema.flashcardReviews.dueAt, now),
-    ),
+    or(isNull(schema.flashcardReviews.dueAt), lte(schema.flashcardReviews.dueAt, now)),
   ];
   if (opts.deckTag) filters.push(eq(schema.flashcardCards.deckTag, opts.deckTag));
-  if (opts.workspaceId)
-    filters.push(eq(schema.flashcardCards.workspaceId, opts.workspaceId));
+  if (opts.workspaceId) filters.push(eq(schema.flashcardCards.workspaceId, opts.workspaceId));
 
   const rows = await db
     .select({
