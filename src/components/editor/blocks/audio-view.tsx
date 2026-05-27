@@ -1,6 +1,6 @@
 'use client';
 
-import { NodeViewWrapper, type NodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
+import { type NodeViewProps, NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useEffect, useState } from 'react';
 import { AudioNode } from './audio-node';
 
@@ -65,26 +65,16 @@ export function AudioView(props: NodeViewProps): React.JSX.Element {
 
   return (
     <NodeViewWrapper className="cairn-audio my-2" data-drag-handle>
-      {error && (
-        <p className="text-destructive text-sm">Audio unavailable: {error}</p>
-      )}
+      {error && <p className="text-destructive text-sm">Audio unavailable: {error}</p>}
       {signedUrl && !error ? (
         // biome-ignore lint/a11y/useMediaCaption: user-uploaded audio; captions not in scope for v0.9 P22
-        <audio
-          controls
-          preload="metadata"
-          src={signedUrl}
-          aria-label={label}
-          className="w-full"
-        >
+        <audio controls preload="metadata" src={signedUrl} aria-label={label} className="w-full">
           <source src={signedUrl} type={attrs.mime} />
         </audio>
       ) : (
         !error && <div className="h-12 animate-pulse rounded bg-muted" />
       )}
-      {attrs.name ? (
-        <p className="mt-1 text-muted-foreground text-xs">{attrs.name}</p>
-      ) : null}
+      {attrs.name ? <p className="mt-1 text-muted-foreground text-xs">{attrs.name}</p> : null}
     </NodeViewWrapper>
   );
 }
