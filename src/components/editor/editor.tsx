@@ -96,6 +96,31 @@ export function Editor({
     uploadAllowedRef.current = uploadAllowed;
   }, [uploadAllowed]);
 
+  // v0.9.0 G3 P17 — `.pdf` files dropped (or pasted) on the editor surface
+  // upload via /api/upload and insert a `pdf` block at the caret. The lazy
+  // extension is loaded first so the schema accepts the insert + the React
+  // node-view mounts immediately. Non-PDF, non-image files still fall through
+  // to the existing image-gallery handler so behavior for unrelated drops is
+  // unchanged.
+  const uploadAndInsertPdfs = useCallback(async (files: File[]) => {
+    if (!uploadAllowedRef.current) return;
+    const ed = editorRef.current;
+    if (!ed) return;
+    const { loadEditorExtension } = await import('./extensions-lazy');
+    const ext = await loadEditorExtension('pdf');
+    if (!ed.extensionManager.extensions.some((e) => e.name === ext.name)) {
+      ed.setOptions({ extensions: [...ed.extensionManager.extensions, ext] });
+    }
+    for (const file of files) {
+      const fd = new FormData();
+      fd.set('file', file);
+      const res = await fetch('/api/upload', { method: 'POST', body: fd });
+      if (!res.ok) continue;
+      const body = (await res.json()) as { file: { id: string; name: string } };
+      ed.chain().focus().setPdf({ fileId: body.file.id, defaultPage: 1 }).run();
+    }
+  }, []);
+
   const uploadAndInsert = useCallback(async (files: File[]) => {
     if (!uploadAllowedRef.current) return;
     // v0.9.0 G3 P16 — composeGalleryInsert collapses N>=2 image files into a
@@ -158,12 +183,16 @@ export function Editor({
             handleDrop(_view, event, _slice, moved) {
               if (moved) return false;
               const dataTransfer = (event as DragEvent).dataTransfer;
-              const droppedFiles = Array.from(dataTransfer?.files ?? []).filter((f) =>
-                f.type.startsWith('image/'),
-              );
-              if (droppedFiles.length === 0) return false;
+              const allFiles = Array.from(dataTransfer?.files ?? []);
+              // v0.9.0 G3 P17 — PDFs route to the PDF block; image drops keep
+              // the existing gallery composer; mixed drops produce one PDF
+              // node per .pdf + one gallery for the images.
+              const pdfFiles = allFiles.filter((f) => f.type === 'application/pdf');
+              const imageFiles = allFiles.filter((f) => f.type.startsWith('image/'));
+              if (pdfFiles.length === 0 && imageFiles.length === 0) return false;
               event.preventDefault();
-              void uploadAndInsert(droppedFiles);
+              if (pdfFiles.length > 0) void uploadAndInsertPdfs(pdfFiles);
+              if (imageFiles.length > 0) void uploadAndInsert(imageFiles);
               return true;
             },
             handlePaste(_view, event) {

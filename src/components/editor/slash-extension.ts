@@ -80,6 +80,38 @@ function openPagePicker(editor: Editor, onPick: (item: PageItem) => void): void 
   });
 }
 
+/**
+ * Slash-menu entry for the PDF block (v0.9.0 G3 P17). Opens a file picker
+ * restricted to `application/pdf`, uploads via `/api/upload`, then inserts a
+ * `pdf` node carrying the new `fileId`. Exported so the editor's drop handler
+ * (in `editor.tsx`) can share the same insertion code-path, and so a unit
+ * test can verify the entry without spinning up the full slash extension.
+ */
+export const pdfSlashItem: SlashItem = {
+  title: 'PDF',
+  description: 'Upload a PDF and annotate it inline',
+  command: (editor) => {
+    void (async () => {
+      await ensureLazyExtension(editor, 'pdf');
+      if (editor.isDestroyed) return;
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.set('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) return;
+        const { file: meta } = (await res.json()) as { file: { id: string; name: string } };
+        editor.chain().focus().setPdf({ fileId: meta.id, defaultPage: 1 }).run();
+      };
+      input.click();
+    })();
+  },
+};
+
 const items: SlashItem[] = [
   {
     title: 'Heading 1',
@@ -288,6 +320,7 @@ const items: SlashItem[] = [
       });
     },
   },
+  pdfSlashItem,
   {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",
