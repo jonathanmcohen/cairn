@@ -16,7 +16,14 @@ describe('PinnedSection', () => {
         if (url === '/api/workspace/pins') {
           return new Response(
             JSON.stringify({
-              pins: [{ pageId: '1199dc8a-2c4f-4400-9b1d-000000000001', title: 'Onboarding', icon: null, position: 0 }],
+              pins: [
+                {
+                  pageId: '1199dc8a-2c4f-4400-9b1d-000000000001',
+                  title: 'Onboarding',
+                  icon: null,
+                  position: 0,
+                },
+              ],
             }),
             { status: 200 },
           );
