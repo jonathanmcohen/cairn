@@ -32,7 +32,8 @@ export interface CliArgs {
     | 'reminders:scan'
     | 'reindex-embeddings'
     | 'connector:sync'
-    | 'trash:purge';
+    | 'trash:purge'
+    | 'pages:auto-unlock';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -63,6 +64,10 @@ const KNOWN_COMMANDS = [
   'reindex-embeddings',
   'connector:sync',
   'trash:purge',
+  // v0.9.0 G2 P14 — single global cron sweep that auto-unlocks pages whose
+  // `locked_until` has passed. No flags; reads DATABASE_URL like every other
+  // CLI subcommand.
+  'pages:auto-unlock',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 

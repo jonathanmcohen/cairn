@@ -85,5 +85,18 @@ export async function register(): Promise<void> {
     };
     process.on('SIGTERM', stop);
     process.on('SIGINT', stop);
+
+    // v0.9.0 G2 P14 — register the global pages:auto-unlock cron row (every 5
+    // minutes). Tied to the scheduler enable-flag because the schedule is
+    // useless without a process to consume it.
+    const { registerPageAutoUnlockCron } = await import('@/server/cron-register');
+    void registerPageAutoUnlockCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[pages] auto-unlock cron registered (*/5 * * * *)');
+      })
+      .catch((err) => {
+        console.error('[pages] auto-unlock cron registration failed', err);
+      });
   }
 }

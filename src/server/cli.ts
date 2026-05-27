@@ -313,6 +313,12 @@ async function main(): Promise<void> {
       `[trash:purge] ${args.workspaceId} purged=${summary.purgedCount} ` +
         `descendants=${summary.descendantsCount} bytes=${summary.bytesReclaimed}`,
     );
+  } else if (args.command === 'pages:auto-unlock') {
+    // v0.9.0 G2 P14 — global sweep. Single audit row per affected page;
+    // logs the count so the scheduler can surface it in last_status.
+    const { runAutoUnlockCli } = await import('../lib/pages/auto-unlock-cli.js');
+    const summary = await runAutoUnlockCli();
+    console.log(`[pages:auto-unlock] unlocked=${summary.unlockedCount}`);
   }
 }
 
