@@ -125,6 +125,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'page.changes_requested': 'Page changes requested',
   // v0.9.0 G5 P30 — admin pierced workspace membership via federated search.
   'search.cross_workspace_admin': 'Admin cross-workspace search',
+  // v0.9.0 G6 P33 — fine-grained share-password lifecycle events.
+  'share.password_set': 'Share password set',
+  'share.password_cleared': 'Share password cleared',
+  'share.password_used': 'Share password used',
 };
 
 function actionLabel(action: string): string {

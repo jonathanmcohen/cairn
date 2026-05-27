@@ -100,6 +100,14 @@ export const AUDIT_ACTIONS = [
   // EVERY such call (even zero hits) because the privacy concern is the
   // query string itself, not whether it matched.
   'search.cross_workspace_admin',
+  // v0.9.0 G6 P33 — fine-grained share-password events. Complement the legacy
+  // `page.share_changed` (still emitted for duplication + expiresAt changes
+  // and ALSO co-emitted when the password path changes, for SIEM
+  // back-compat). `share.password_used` fires from /p/<slug>/verify on a
+  // successful unlock — actorUserId is null because the viewer is anonymous.
+  'share.password_set',
+  'share.password_cleared',
+  'share.password_used',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

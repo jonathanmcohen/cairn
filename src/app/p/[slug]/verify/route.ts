@@ -2,14 +2,21 @@ import { and, eq, isNull } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 import { env } from '@/lib/env';
 import { verifyShareAccess } from '@/lib/pages/share';
 import { cookieNameFor, issueAccessCookieValue } from '@/lib/pages/share-cookie';
 
 type RouteCtx = { params: Promise<{ slug: string }> };
 
-/** Default access TTL: 12 hours, capped to the page's own expiry when sooner. */
-const DEFAULT_TTL_SECONDS = 12 * 60 * 60;
+/**
+ * Default access TTL: 5 minutes, capped to the page's own expiry when sooner.
+ *
+ * v0.9.0 G6 P33 — narrowed from 12 h to 5 min so a shared-link unlock doesn't
+ * leave a long-lived cookie that survives the viewer closing their tab.
+ * Public viewers re-enter the password each time they return after the gap.
+ */
+const DEFAULT_TTL_SECONDS = 5 * 60;
 
 export async function POST(req: Request, { params }: RouteCtx): Promise<Response> {
   const { slug } = await params;
@@ -55,6 +62,23 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
     expiresAt,
     secret: env().AUTH_SECRET,
   });
+
+  // v0.9.0 G6 P33 — record a per-unlock audit row. actorUserId is null because
+  // the viewer is anonymous; we record the slug (already public) but never
+  // the password. Failures during audit insert MUST NOT block the unlock —
+  // the gate has already passed — so wrap in try/catch.
+  try {
+    await recordAudit(db, {
+      workspaceId: page.workspaceId,
+      actorUserId: null,
+      action: 'share.password_used',
+      targetType: 'page',
+      targetId: page.id,
+      metadata: { slug },
+    });
+  } catch {
+    // Best-effort: never fail the user unlock if the audit insert errors.
+  }
 
   const res = NextResponse.json({ ok: true });
   res.cookies.set(cookieNameFor(page.id), value, {

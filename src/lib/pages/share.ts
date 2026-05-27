@@ -61,6 +61,24 @@ export async function setShareSettings(
         allowDuplication: s.allowDuplication ?? null,
       },
     });
+    // v0.9.0 G6 P33 — split the password path into fine-grained events so
+    // SIEM dashboards can alert on password lifecycle independently of
+    // expiresAt / allowDuplication tweaks. We KEEP emitting the legacy
+    // `page.share_changed` above for back-compat with existing dashboards
+    // (no consumer migration needed).
+    if (s.password !== undefined) {
+      await recordAudit(tx, {
+        workspaceId: s.workspaceId,
+        actorUserId: s.actorUserId,
+        action: s.password === null ? 'share.password_cleared' : 'share.password_set',
+        targetType: 'page',
+        targetId: s.pageId,
+        metadata: {
+          // Never include the password OR its hash. Just record THAT it changed.
+          hadPassword: s.password !== null,
+        },
+      });
+    }
   });
 }
 
