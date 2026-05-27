@@ -1,8 +1,10 @@
 import { NextResponse } from 'next/server';
-import { HttpError } from '@/lib/auth/require-role';
+import { getDb } from '@/db/client';
+import { HttpError, hasMinRole } from '@/lib/auth/require-role';
 import { mintCollabToken } from '@/lib/collab/token';
 import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
+import { isLocked } from '@/lib/pages/lock';
 import { collabTokenLimiter, ipKey } from '@/lib/security/rate-limit';
 
 export async function GET(req: Request): Promise<Response> {
@@ -25,6 +27,22 @@ export async function GET(req: Request): Promise<Response> {
         },
       });
     }
+
+    // v0.9.0 G2 P14 — Yjs gate. Locked pages refuse new collab tokens for
+    // editor callers who are not the locker or an admin. Viewers still get
+    // tokens — they never had write access, and read-only Yjs sessions are
+    // useful while a page is locked. The token still carries `editor` for
+    // the locker so the editor surface stays writable; the lock-write-gate
+    // enforces lockedness on every mutation pathway downstream.
+    if (hasMinRole(ctx.role, 'editor')) {
+      const state = await isLocked(getDb(), pageId);
+      const canBypass =
+        !state.locked || state.lockedBy === ctx.userId || hasMinRole(ctx.role, 'admin');
+      if (!canBypass) {
+        return NextResponse.json({ error: 'PageLocked', state }, { status: 403 });
+      }
+    }
+
     const token = mintCollabToken({
       userId: ctx.userId,
       pageId,

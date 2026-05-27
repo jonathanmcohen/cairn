@@ -9,6 +9,8 @@ import { CoverBanner } from '@/components/pages/cover-banner';
 import { CoverPicker } from '@/components/pages/cover-picker';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
 import { PageExportMenu } from '@/components/pages/export-menu';
+import { LockBanner } from '@/components/pages/lock-banner';
+import { LockToggle } from '@/components/pages/lock-toggle';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { VersionHistory } from '@/components/pages/version-history';
 import { getDb } from '@/db/client';
@@ -70,6 +72,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         />
         <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
         <PageExportMenu pageId={page.id} />
+        {canEdit && <LockToggle pageId={page.id} />}
         {showEncryptAction && (
           <EncryptPageAction
             pageId={page.id}
@@ -87,6 +90,12 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
         />
       </div>
+      {/* v0.9.0 G2 P14 — locked-page banner; null when the page is unlocked. */}
+      <LockBanner
+        pageId={page.id}
+        viewerUserId={ctx.userId}
+        viewerIsAdmin={hasMinRole(ctx.role, 'admin')}
+      />
       <Editor
         pageId={page.id}
         workspaceId={page.workspaceId}
