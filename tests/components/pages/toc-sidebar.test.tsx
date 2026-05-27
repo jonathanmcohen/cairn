@@ -40,14 +40,7 @@ afterEach(() => {
 describe('<TocSidebar>', () => {
   it('renders a navigation landmark with all h1-h4 headings nested', () => {
     render(
-      <TocSidebar
-        initialDoc={doc([
-          h(1, 'One'),
-          h(2, 'Two'),
-          h(3, 'Three'),
-          h(4, 'Four'),
-        ])}
-      />,
+      <TocSidebar initialDoc={doc([h(1, 'One'), h(2, 'Two'), h(3, 'Three'), h(4, 'Four')])} />,
     );
     expect(screen.getByRole('navigation', { name: /table of contents/i })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'One' })).toBeTruthy();
@@ -57,9 +50,7 @@ describe('<TocSidebar>', () => {
   });
 
   it('nests deeper levels under shallower (visual indentation via inline padding)', () => {
-    render(
-      <TocSidebar initialDoc={doc([h(1, 'L1'), h(2, 'L2'), h(3, 'L3'), h(4, 'L4')])} />,
-    );
+    render(<TocSidebar initialDoc={doc([h(1, 'L1'), h(2, 'L2'), h(3, 'L3'), h(4, 'L4')])} />);
     // Padding-inline-start grows with level. Inspect the inline style on each
     // <li> wrapper directly — jsdom's getComputedStyle doesn't surface
     // logical properties, but `style.paddingInlineStart` reflects the

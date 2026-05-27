@@ -11,12 +11,7 @@ const heading = (level: number, text: string) => ({
 describe('collectHeadings — h4 support', () => {
   it('includes h4 entries in document order', () => {
     const result = collectHeadings(
-      doc([
-        heading(1, 'One'),
-        heading(2, 'Two'),
-        heading(3, 'Three'),
-        heading(4, 'Four'),
-      ]),
+      doc([heading(1, 'One'), heading(2, 'Two'), heading(3, 'Three'), heading(4, 'Four')]),
     );
     expect(result.map((h) => ({ level: h.level, text: h.text }))).toEqual([
       { level: 1, text: 'One' },
