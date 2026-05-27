@@ -73,6 +73,14 @@ const Schema = z.object({
   CAIRN_RP_ID: z.string().min(1).optional(),
   CAIRN_RP_NAME: z.string().default('Cairn'),
   CAIRN_RP_ORIGIN: z.url().optional(),
+  // v0.9.0 G3 P15 — optional self-hosted PlantUML render server. When unset,
+  // both the server-side renderer (SSR shared pages) and the client editor
+  // fall back to `https://www.plantuml.com/plantuml`. The PUBLIC variant is
+  // inlined into the browser bundle so the editor's <img> view can hit the
+  // operator's server directly; the SERVER variant is for future SSR hooks.
+  // Operators self-hosting MUST set both to the same URL.
+  CAIRN_PLANTUML_SERVER: z.url().optional(),
+  NEXT_PUBLIC_CAIRN_PLANTUML_SERVER: z.url().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;

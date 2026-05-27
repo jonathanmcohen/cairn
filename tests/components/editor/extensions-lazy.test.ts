@@ -7,8 +7,8 @@ import {
 } from '@/components/editor/extensions-lazy';
 
 describe('extensions-lazy', () => {
-  it('exposes the lazy node names (math/syncedBlock/embed/mermaid)', () => {
-    expect(EDITOR_NODE_NAMES).toEqual(['math', 'syncedBlock', 'embed', 'mermaid']);
+  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml)', () => {
+    expect(EDITOR_NODE_NAMES).toEqual(['math', 'syncedBlock', 'embed', 'mermaid', 'plantuml']);
   });
 
   it('loadEditorExtension("math") returns a TipTap-extension-shaped object', async () => {
@@ -33,6 +33,12 @@ describe('extensions-lazy', () => {
     const ext = await loadEditorExtension('mermaid');
     expect(ext).toBeDefined();
     expect((ext as { name?: string }).name).toBe('mermaid');
+  });
+
+  it('loadEditorExtension("plantuml") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('plantuml');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('plantuml');
   });
 
   it('loadEditorExtension throws on an unknown name', async () => {

@@ -8,6 +8,7 @@ import { Column, ColumnList } from './blocks/columns';
 import { EmbedNode } from './blocks/embed-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
+import { PlantUmlNode } from './blocks/plantuml-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { ToggleNode } from './blocks/toggle-node';
@@ -58,6 +59,7 @@ export function schemaExtensions() {
     MathBlockNode,
     SyncedBlockNode,
     MermaidNode,
+    PlantUmlNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,

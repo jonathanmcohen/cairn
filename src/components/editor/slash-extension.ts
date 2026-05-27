@@ -262,6 +262,15 @@ const items: SlashItem[] = [
     },
   },
   {
+    title: 'PlantUML diagram',
+    description: 'Render PlantUML (sequence, use-case, class) via public or self-hosted server',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'plantuml').then(() => {
+        editor.chain().focus().setPlantUml().run();
+      });
+    },
+  },
+  {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",
     command: (editor) => editor.chain().focus().insertTableOfContents().run(),

@@ -15,6 +15,7 @@ import { DividerNode } from './blocks/divider-node';
 import { EmbedNode } from './blocks/embed-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
+import { PlantUmlNode } from './blocks/plantuml-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
@@ -64,6 +65,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     MathBlockNode,
     SyncedBlockNode,
     MermaidNode,
+    PlantUmlNode,
     DividerNode,
     ButtonBlock,
     VideoBlock,
