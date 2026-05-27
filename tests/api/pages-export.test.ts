@@ -57,6 +57,8 @@ describe('GET /api/pages/[id]/export', () => {
     await updatePage(getDb(), {
       pageId: p.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: {
         content: {
           type: 'doc',

@@ -1,6 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { requireUnlocked } from '@/lib/pages/lock';
 import { reindexPageLinks } from '@/lib/pages/page-links';
 import { emit } from '@/lib/webhooks/dispatch';
 import { buildPageWebhookPayload } from '@/lib/webhooks/payload';
@@ -22,12 +23,23 @@ export type UpdatePageInput = {
     content: unknown;
   }>;
   expectedUpdatedAt?: Date;
+  // v0.9.0 G2 P14 — caller identity used by the page-lock gate. `byUserId` is
+  // the actor; `adminOverride` lets an admin bypass another user's lock and
+  // is normally `hasMinRole(ctx.role, 'admin')`. The two are required so
+  // call-sites can't accidentally write through a lock by omitting them.
+  byUserId: string;
+  adminOverride: boolean;
 };
 
 export async function updatePage(
   db: PostgresJsDatabase<typeof schema>,
   input: UpdatePageInput,
 ): Promise<schema.Page> {
+  await requireUnlocked(db, {
+    pageId: input.pageId,
+    byUserId: input.byUserId,
+    adminOverride: input.adminOverride,
+  });
   const updated = await db.transaction(async (tx) => {
     const [current] = await tx
       .select()

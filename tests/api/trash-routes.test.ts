@@ -58,6 +58,7 @@ describe('trash routes', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const { GET } = await import('@/app/api/trash/route');
     const res = await GET();
@@ -73,6 +74,7 @@ describe('trash routes', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const { POST } = await import('@/app/api/pages/[pageId]/restore/route');
     const res = await POST(
@@ -89,6 +91,7 @@ describe('trash routes', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const { POST } = await import('@/app/api/pages/[pageId]/restore/route');
     const res = await POST(
@@ -105,6 +108,7 @@ describe('trash routes', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const { DELETE } = await import('@/app/api/trash/[pageId]/route');
     const res = await DELETE(
@@ -121,6 +125,7 @@ describe('trash routes', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const { DELETE } = await import('@/app/api/trash/[pageId]/route');
     const res = await DELETE(

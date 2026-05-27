@@ -108,6 +108,11 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.9.0 G2 P13 — Trash retention auto-purge cron + admin "Empty trash now".
   'trash.purged_auto': 'Trash auto-purged',
   'trash.purged_manual': 'Trash manually purged',
+  // v0.9.0 G2 P14 — Page lock lifecycle (manual lock/unlock + cron expiry + admin override).
+  'page.locked': 'Page locked',
+  'page.unlocked': 'Page unlocked',
+  'page.auto_unlocked': 'Page auto-unlocked',
+  'page.unlock_overridden_by_admin': 'Page unlock overridden by admin',
 };
 
 function actionLabel(action: string): string {

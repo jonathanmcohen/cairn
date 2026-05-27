@@ -37,6 +37,8 @@ describe('emit wiring (pages)', () => {
     await updatePage(getDb(), {
       pageId: page.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: { title: 'X' },
     });
     expect(emit).toHaveBeenCalledWith(
@@ -49,6 +51,7 @@ describe('emit wiring (pages)', () => {
       pageId: page.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     // page.deleted intentionally keeps the legacy `{id}` shape — there's no
     // content/body to redact at delete time.

@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
-import { HttpError } from '@/lib/auth/require-role';
+import { HttpError, hasMinRole } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
+import { PageLockedError } from '@/lib/pages/lock';
 import { movePage } from '@/lib/pages/move';
 
 const MoveInput = z.object({
@@ -21,9 +22,15 @@ export async function POST(
       pageId,
       workspaceId: ctx.workspaceId,
       newParentId: parsed.newParentId,
+      // v0.9.0 G2 P14 — page-lock gate.
+      byUserId: ctx.userId,
+      adminOverride: hasMinRole(ctx.role, 'admin'),
     });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
+    if (err instanceof PageLockedError) {
+      return NextResponse.json({ error: err.code, state: err.state }, { status: err.status });
+    }
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }

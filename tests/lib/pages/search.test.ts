@@ -48,6 +48,8 @@ describe('searchPages', () => {
     await updatePage(db, {
       pageId: p.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: {
         content: {
           type: 'doc',

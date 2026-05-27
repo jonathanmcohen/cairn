@@ -183,6 +183,8 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
         await updatePage(db, {
           pageId: page.id,
           workspaceId: existingWs.id,
+          byUserId: existingUser.id,
+          adminOverride: true,
           patch: { content: doc },
         });
         const state = buildYjsState(doc);
@@ -248,6 +250,8 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
     await updatePage(db, {
       pageId: page.id,
       workspaceId: ws.id,
+      byUserId: user.id,
+      adminOverride: true,
       patch: { content: sampleDocument() },
     });
 
@@ -267,6 +271,8 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
     await updatePage(db, {
       pageId: page.id,
       workspaceId: ws.id,
+      byUserId: user.id,
+      adminOverride: true,
       patch: { content: doc },
     });
     const state = buildYjsState(doc);

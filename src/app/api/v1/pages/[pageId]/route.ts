@@ -46,6 +46,10 @@ export const PATCH = (req: Request, { params }: Params): Promise<Response> =>
       pageId,
       workspaceId: ws.workspaceId,
       patch: parsed,
+      // v0.9.0 G2 P14 — page-lock gate. PAT-driven write requests run as the
+      // PAT's owning user; admin override flows from the same role check.
+      byUserId: ws.userId,
+      adminOverride: hasMinRole(ws.role, 'admin'),
     });
     return Response.json(page, { status: 200 });
   })(req);
@@ -59,6 +63,7 @@ export const DELETE = (req: Request, { params }: Params): Promise<Response> =>
       pageId,
       workspaceId: ws.workspaceId,
       actorUserId: ws.userId,
+      adminOverride: hasMinRole(ws.role, 'admin'),
     });
     return new Response(null, { status: 204 });
   })(req);

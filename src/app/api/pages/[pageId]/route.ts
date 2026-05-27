@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
-import { HttpError } from '@/lib/auth/require-role';
+import { HttpError, hasMinRole } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 import { softDeletePage } from '@/lib/pages/delete';
+import { PageLockedError } from '@/lib/pages/lock';
 import { PageConflictError, updatePage } from '@/lib/pages/update';
 import { snapshotIfChanged } from '@/lib/pages/versions';
 
@@ -42,6 +43,10 @@ export async function PATCH(req: Request, { params }: RouteCtx): Promise<Respons
         content: parsed.content,
       },
       expectedUpdatedAt: parsed.expectedUpdatedAt ? new Date(parsed.expectedUpdatedAt) : undefined,
+      // v0.9.0 G2 P14 — page-lock gate. Editors can only write through their
+      // own lock; admins implicitly bypass.
+      byUserId: ctx.userId,
+      adminOverride: hasMinRole(ctx.role, 'admin'),
     });
     if (parsed.content !== undefined) {
       try {
@@ -71,6 +76,7 @@ export async function DELETE(_req: Request, { params }: RouteCtx): Promise<Respo
       pageId,
       workspaceId: ctx.workspaceId,
       actorUserId: ctx.userId,
+      adminOverride: hasMinRole(ctx.role, 'admin'),
     });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
@@ -79,6 +85,11 @@ export async function DELETE(_req: Request, { params }: RouteCtx): Promise<Respo
 }
 
 function errorToResponse(err: unknown): Response {
+  if (err instanceof PageLockedError) {
+    // v0.9.0 G2 P14 — surface the lock state so the client can show a banner
+    // ("Locked by <name>, auto-unlocks in 1h") without an extra round-trip.
+    return NextResponse.json({ error: err.code, state: err.state }, { status: err.status });
+  }
   if (err instanceof HttpError) {
     return NextResponse.json({ error: err.message }, { status: err.status });
   }

@@ -36,6 +36,7 @@ describe('autoPurge', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await sql`UPDATE pages SET deleted_at = now() - interval '31 days' WHERE id = ${p.id}`;
 
@@ -52,6 +53,7 @@ describe('autoPurge', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const purged = await autoPurge(db, { retentionDays: 30 });
     expect(purged).toBe(0);
@@ -66,6 +68,7 @@ describe('autoPurge', () => {
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await sql`UPDATE pages SET deleted_at = now() - interval '31 days' WHERE id = ${p.id}`;
 

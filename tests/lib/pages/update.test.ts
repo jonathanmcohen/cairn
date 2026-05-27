@@ -38,6 +38,8 @@ describe('updatePage', () => {
     const updated = await updatePage(db, {
       pageId: p.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: { title: 'New' },
     });
     expect(updated.title).toBe('New');
@@ -50,6 +52,8 @@ describe('updatePage', () => {
     const updated = await updatePage(db, {
       pageId: p.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: {
         content: {
           type: 'doc',
@@ -66,6 +70,8 @@ describe('updatePage', () => {
     const updated = await updatePage(db, {
       pageId: p.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: { icon: '🐉' },
     });
     expect(updated.icon).toBe('🐉');
@@ -77,12 +83,16 @@ describe('updatePage', () => {
     await updatePage(db, {
       pageId: p.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: { title: 'First' },
     });
     await expect(
       updatePage(db, {
         pageId: p.id,
         workspaceId: u.workspaceId,
+        byUserId: u.userId,
+        adminOverride: true,
         patch: { title: 'Second' },
         expectedUpdatedAt: p.updatedAt, // stale
       }),
@@ -97,6 +107,8 @@ describe('updatePage', () => {
       updatePage(db, {
         pageId: p.id,
         workspaceId: a.workspaceId,
+        byUserId: a.userId,
+        adminOverride: true,
         patch: { title: 'X' },
       }),
     ).rejects.toThrow(/not found/i);
