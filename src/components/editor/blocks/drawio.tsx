@@ -29,13 +29,32 @@ export function buildDrawioUrl(input: { source?: string; sourceUrl?: string }): 
   return u.toString();
 }
 
-function DrawioView({ node, editor, updateAttributes }: NodeViewProps) {
+export function DrawioView({ node, editor, updateAttributes }: NodeViewProps) {
   const source = (node.attrs.source as string | undefined) ?? '';
   const sourceUrl = (node.attrs.sourceUrl as string | undefined) ?? '';
+  // v0.9.0 G3 P15 review fix — encrypted-page leak guard. The page-detail shell
+  // stamps `editor.storage.cairn.encrypted` (see editor.tsx). drawio's viewer
+  // receives the XML via the URL `data=` param (or fetches `url=`), so an E2E
+  // page would ship DECRYPTED diagram XML to viewer.diagrams.net. Fail-closed.
+  const encrypted =
+    (editor.storage as { cairn?: { encrypted?: boolean } }).cairn?.encrypted === true;
   const hasContent = Boolean(source || sourceUrl);
   const [editing, setEditing] = useState(!hasContent);
   const [draftSource, setDraftSource] = useState(source);
   const [draftUrl, setDraftUrl] = useState(sourceUrl);
+
+  if (encrypted) {
+    return (
+      <NodeViewWrapper className="my-3">
+        <div
+          className="rounded-md border border-muted p-3 text-sm text-muted-foreground"
+          data-encrypted-placeholder="drawio"
+        >
+          Diagram rendering disabled on encrypted pages (would expose source to external server).
+        </div>
+      </NodeViewWrapper>
+    );
+  }
 
   if (editing && editor.isEditable) {
     return (
@@ -102,14 +121,21 @@ function DrawioView({ node, editor, updateAttributes }: NodeViewProps) {
 
   return (
     <NodeViewWrapper className="my-3">
+      {/*
+        SECURITY — do NOT strip `allow-same-origin` from this sandbox combo.
+        viewer.diagrams.net is a THIRD-PARTY origin (NOT Cairn's). The web
+        platform's sandbox contract means `allow-same-origin` only relaxes the
+        iframe's relationship with ITS OWN origin (diagrams.net), never with
+        the embedding origin. The viewer needs same-origin to read its own
+        configuration cookies and IndexedDB at diagrams.net; without it the
+        viewer fails to bootstrap. `allow-scripts` is required to run the
+        viewer JS; `allow-popups` lets the "open in drawio" link open a tab.
+        `referrerPolicy="no-referrer"` keeps the Cairn page URL off the wire.
+      */}
       <iframe
         src={buildDrawioUrl({ source, sourceUrl })}
         title="drawio diagram"
         className="aspect-video w-full rounded-md border"
-        // The viewer is hosted on the SAME third-party origin (viewer.diagrams.net),
-        // so `allow-same-origin` only grants the iframe access to ITS OWN cookies/
-        // storage at that origin, never Cairn's. `allow-popups` lets the viewer's
-        // "open in drawio" link open in a new tab.
         sandbox="allow-scripts allow-same-origin allow-popups"
         referrerPolicy="no-referrer"
         loading="lazy"

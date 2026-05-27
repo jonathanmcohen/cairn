@@ -103,6 +103,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         initialUpdatedAt={page.updatedAt.toISOString()}
         currentUser={currentUser}
         editable={hasMinRole(ctx.role, 'editor')}
+        encrypted={page.encrypted}
       />
     </PageDetailShell>
   );

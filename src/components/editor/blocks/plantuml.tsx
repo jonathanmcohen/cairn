@@ -20,15 +20,23 @@ export function buildPlantUmlUrl(
   return `${base}/svg/${encodeFn(source)}`;
 }
 
-function PlantUmlView({ node, editor, updateAttributes }: NodeViewProps) {
+export function PlantUmlView({ node, editor, updateAttributes }: NodeViewProps) {
   const source = (node.attrs.source as string | undefined) ?? '';
+  // v0.9.0 G3 P15 review fix — encrypted-page leak guard. The page-detail shell
+  // stamps `editor.storage.cairn.encrypted` (see editor.tsx). PlantUML encodes
+  // the source into a URL fetched from www.plantuml.com (or CAIRN_PLANTUML_SERVER),
+  // which would ship DECRYPTED diagram text to a 3rd-party server on an E2E
+  // page. Fail-closed: anything that isn't strictly `false` is treated as
+  // encrypted (mirrors `src/lib/webhooks/payload.ts`).
+  const encrypted =
+    (editor.storage as { cairn?: { encrypted?: boolean } }).cairn?.encrypted === true;
   const [editing, setEditing] = useState(!source);
   const [draft, setDraft] = useState(source);
   const [url, setUrl] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!source) {
+    if (!source || encrypted) {
       setUrl(null);
       return;
     }
@@ -55,7 +63,20 @@ function PlantUmlView({ node, editor, updateAttributes }: NodeViewProps) {
     return () => {
       cancelled = true;
     };
-  }, [source]);
+  }, [source, encrypted]);
+
+  if (encrypted) {
+    return (
+      <NodeViewWrapper className="my-3">
+        <div
+          className="rounded-md border border-muted p-3 text-sm text-muted-foreground"
+          data-encrypted-placeholder="plantuml"
+        >
+          Diagram rendering disabled on encrypted pages (would expose source to external server).
+        </div>
+      </NodeViewWrapper>
+    );
+  }
 
   if (editing && editor.isEditable) {
     return (
@@ -103,12 +124,18 @@ function PlantUmlView({ node, editor, updateAttributes }: NodeViewProps) {
         // PlantUML renders as a plain <img>; the public/self-hosted server
         // emits SVG/PNG bytes. No iframe → no CSP `frame-src` entry needed
         // (`img-src https:` already permits the public server).
+        // `referrerPolicy="no-referrer"` prevents leaking the Cairn page URL
+        // (which may itself contain workspace/page ids) to the diagram server;
+        // `crossOrigin="anonymous"` opts the fetch into CORS so no credentials
+        // are sent and the response can be inspected if needed.
         // biome-ignore lint/performance/noImgElement: TipTap node-view emits a raw <img>; next/image is not appropriate inside ProseMirror node views.
         <img
           src={url}
           alt="PlantUML diagram"
           className="max-w-full overflow-x-auto"
           loading="lazy"
+          referrerPolicy="no-referrer"
+          crossOrigin="anonymous"
         />
       )}
       {editor.isEditable && (

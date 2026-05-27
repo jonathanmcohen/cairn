@@ -39,6 +39,14 @@ export type EditorProps = {
    * so viewers broadcast no caret). Derived from the caller's page role.
    */
   editable: boolean;
+  /**
+   * v0.9.0 G3 P15 review fix — when true, diagram blocks (PlantUML/drawio)
+   * that would otherwise ship the decrypted source to a 3rd-party server
+   * (www.plantuml.com / viewer.diagrams.net) render a placeholder instead.
+   * Stamped onto `editor.storage.cairn.encrypted` for the React node views.
+   * Defaults to false; pass `page.encrypted` from the page-detail shell.
+   */
+  encrypted?: boolean;
 };
 
 const STATUS_LABEL = {
@@ -54,6 +62,7 @@ export function Editor({
   initialContent,
   currentUser,
   editable,
+  encrypted = false,
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
@@ -190,9 +199,12 @@ export function Editor({
 
   useEffect(() => {
     if (editor) {
-      (editor.storage as { cairn?: { pageId: string } }).cairn = { pageId };
+      (editor.storage as { cairn?: { pageId: string; encrypted: boolean } }).cairn = {
+        pageId,
+        encrypted,
+      };
     }
-  }, [editor, pageId]);
+  }, [editor, pageId, encrypted]);
 
   // Lazy-load heavy editor extensions (math/syncedBlock/embed) only when the
   // initial doc actually contains them. The static `baseExtensions()` carries
