@@ -3,6 +3,10 @@ export * from './audit-log';
 export * from './auth';
 export * from './automation-rules';
 export * from './automation-runs';
+// v0.9.0 G7 P37 — chat-bridge install + channel-link tables (slash commands
+// + channel↔page sync). Separate from `chat_posted_messages` (P36 outbound
+// log) and from `webhooks` (P36 install metadata).
+export * from './chat-bridge';
 // v0.9.0 G7 P36 — chat-bridge posted-message log (maps Slack/Discord posts
 // back to a Cairn page + parent comment so inbound replies resolve correctly).
 export * from './chat-posted-messages';

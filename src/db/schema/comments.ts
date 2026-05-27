@@ -22,6 +22,10 @@ export const comments = pgTable(
       .references(() => users.id, { onDelete: 'restrict' }),
     body: text('body').notNull(),
     anchor: jsonb('anchor').$type<CommentAnchor>(),
+    // v0.9.0 G7 P37 — set when a comment was ingested FROM a linked chat
+    // channel (Slack/Discord). Used as the dedupe key by `ingestChannelMessage`
+    // + `postCommentToChannels` to break the echo loop between channel and page.
+    chatMessageId: text('chat_message_id'),
     resolvedAt: timestamp('resolved_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -30,6 +34,7 @@ export const comments = pgTable(
     pageIdx: index('comments_page_idx').on(t.pageId),
     workspaceIdx: index('comments_workspace_idx').on(t.workspaceId),
     targetIdx: index('comments_target_idx').on(t.targetType, t.targetId),
+    chatMessageIdx: index('comments_chat_message_id_idx').on(t.chatMessageId),
   }),
 );
 
