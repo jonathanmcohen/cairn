@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/react';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
+import { FootnoteMark } from './blocks/footnote-mark';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
@@ -87,6 +88,85 @@ function openPagePicker(editor: Editor, onPick: (item: PageItem) => void): void 
  * (in `editor.tsx`) can share the same insertion code-path, and so a unit
  * test can verify the entry without spinning up the full slash extension.
  */
+/**
+ * v0.9.0 G3 P18 — Footnote + Citation slash entries.
+ *
+ * Exported in the `{ command, title, description, run }` shape that the plan's
+ * test fixture (`tests/components/editor/citation-slash.test.ts`) probes.
+ * The active slash menu still consumes the `SlashItem` shape (`{ title,
+ * description, command(editor) }`) — see the `items` array below where these
+ * two get appended via `toSlashItem()`.
+ */
+export type CitationSlashEntry = {
+  command: `/${string}`;
+  title: string;
+  description: string;
+  run: (editor: Editor) => void;
+};
+
+export const footnoteMenuItem: CitationSlashEntry = {
+  command: '/footnote',
+  title: 'Footnote',
+  description: 'Add an inline footnote',
+  run: (editor: Editor): void => {
+    const content = window.prompt('Footnote text');
+    if (!content) return;
+    if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
+      editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
+    }
+    const id = crypto.randomUUID();
+    editor.chain().focus().setMark('footnote', { id, content }).run();
+  },
+};
+
+export const citationMenuItem: CitationSlashEntry = {
+  command: '/citation',
+  title: 'Citation',
+  description: 'Insert a bibliographic reference',
+  run: (editor: Editor): void => {
+    const doi = window.prompt('DOI (optional)') ?? null;
+    const pubmed = window.prompt('PubMed ID (optional)') ?? null;
+    const author = window.prompt('Author (Last, F.)') ?? '';
+    const title = window.prompt('Title') ?? '';
+    const yearStr = window.prompt('Year') ?? '';
+    const year = Number.parseInt(yearStr, 10);
+    if (!author || !title || Number.isNaN(year)) return;
+    const ref = { authors: [author], title, year };
+    void Promise.all([
+      import('@/lib/citations/format'),
+      import('./extensions/citation').then((m) => m.CitationExtension),
+    ]).then(([fmt, CitationExt]) => {
+      if (editor.isDestroyed) return;
+      if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
+        editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
+      }
+      const fullRef = { ...ref, doi: doi ?? undefined, pubmedId: pubmed ?? undefined };
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'citation',
+          attrs: {
+            id: crypto.randomUUID(),
+            doi,
+            pubmed_id: pubmed,
+            formatted_apa: fmt.formatCitation(fullRef, 'apa'),
+            formatted_mla: fmt.formatCitation(fullRef, 'mla'),
+            formatted_chicago: fmt.formatCitation(fullRef, 'chicago'),
+            raw_authors: [author],
+            raw_title: title,
+            raw_year: year,
+          },
+        })
+        .run();
+    });
+  },
+};
+
+function toSlashItem(entry: CitationSlashEntry): SlashItem {
+  return { title: entry.title, description: entry.description, command: entry.run };
+}
+
 export const pdfSlashItem: SlashItem = {
   title: 'PDF',
   description: 'Upload a PDF and annotate it inline',
@@ -321,6 +401,8 @@ const items: SlashItem[] = [
     },
   },
   pdfSlashItem,
+  toSlashItem(footnoteMenuItem),
+  toSlashItem(citationMenuItem),
   {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",

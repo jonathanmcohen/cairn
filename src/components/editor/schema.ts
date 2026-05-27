@@ -4,9 +4,11 @@ import Mention from '@tiptap/extension-mention';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import { BookmarkNode } from './blocks/bookmark-node';
+import { CitationNode } from './blocks/citation-node';
 import { Column, ColumnList } from './blocks/columns';
 import { DrawioNode } from './blocks/drawio-node';
 import { EmbedNode } from './blocks/embed-node';
+import { FootnoteMark } from './blocks/footnote-mark';
 import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
@@ -64,6 +66,10 @@ export function schemaExtensions() {
     PlantUmlNode,
     DrawioNode,
     GalleryNode,
+    // v0.9.0 G3 P18 — citation + footnote types so the server-side accept/reject
+    // transform recognizes stored content carrying these.
+    CitationNode,
+    FootnoteMark,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,

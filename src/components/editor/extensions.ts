@@ -10,10 +10,12 @@ import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
 import { Bookmark } from './blocks/bookmark';
 import { ButtonBlock } from './blocks/button';
+import { CitationNode } from './blocks/citation-node';
 import { Column, ColumnList } from './blocks/columns';
 import { DividerNode } from './blocks/divider-node';
 import { DrawioNode } from './blocks/drawio-node';
 import { EmbedNode } from './blocks/embed-node';
+import { FootnoteMark } from './blocks/footnote-mark';
 import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
@@ -75,6 +77,12 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     DividerNode,
     ButtonBlock,
     VideoBlock,
+    // v0.9.0 G3 P18 — citation block + inline footnote mark. Both are schema-
+    // pure (no React node-view in this list; the style-aware `CitationView`
+    // lives in `extensions/citation.tsx` and is wired by editor.tsx when a
+    // page-level `citationStyle` prop is provided).
+    CitationNode,
+    FootnoteMark,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
