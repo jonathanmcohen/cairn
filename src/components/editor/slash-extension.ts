@@ -390,6 +390,38 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setVideo().run(),
   },
   {
+    title: 'Audio',
+    description: 'Upload and embed an audio file (mp3/wav/ogg/flac/aac)',
+    command: (editor) => {
+      // v0.9.0 G3 P22: load the React node-view first so the inserted node
+      // renders with the signed-URL `<audio>` element instead of the bare
+      // schema div. Pattern mirrors the embed/math slash entries.
+      void ensureLazyExtension(editor, 'cairnAudio').then(() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/aac';
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const fd = new FormData();
+          fd.set('file', file);
+          const res = await fetch('/api/upload', { method: 'POST', body: fd });
+          if (!res.ok) return;
+          const { file: meta } = (await res.json()) as {
+            signedUrl: string;
+            file: { id: string; name: string; mimeType: string };
+          };
+          editor
+            .chain()
+            .focus()
+            .setAudio({ fileId: meta.id, mime: meta.mimeType, name: meta.name })
+            .run();
+        };
+        input.click();
+      });
+    },
+  },
+  {
     title: 'Equation',
     description: 'Block math rendered with KaTeX',
     command: (editor) => {

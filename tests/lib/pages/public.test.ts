@@ -133,7 +133,9 @@ describe('resignDocumentImages', () => {
         },
       ],
     };
-    const out = resignDocumentImages(doc, SECRET) as typeof doc;
+    const out = resignDocumentImages(doc, SECRET) as {
+      content: Array<{ attrs?: { src?: unknown } }>;
+    };
     const src = out.content[0]?.attrs?.src as string;
     const parsed = parseSignedUrl(src);
     expect(parsed.id).toBe('aud');
