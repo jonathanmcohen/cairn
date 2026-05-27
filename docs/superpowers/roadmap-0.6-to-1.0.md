@@ -175,7 +175,7 @@ Two releases remain to 1.0.
 - [x] G3 P15 — Diagram blocks expansion (PlantUML + drawio)
 - [x] G3 P16 — Image gallery + lightbox
 - [x] G3 P17 — PDF viewer + annotation (migration `0044`)
-- [ ] G3 P18 — Citation + footnote blocks + bibliography aggregator
+- [x] G3 P18 — Citation + footnote blocks + bibliography aggregator
 - [ ] G3 P19 — Flashcards (migration `0044`) + SM-2 + due-queue + notifs + digest
 - [ ] G3 P20 — Date/time block with timezone
 - [ ] G3 P21 — DOI / PubMed citation lookup

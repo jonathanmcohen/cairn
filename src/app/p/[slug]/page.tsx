@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { ReadOnlyView } from '@/components/editor/read-only-view';
 import { Bibliography } from '@/components/editor/extensions/bibliography';
+import { ReadOnlyView } from '@/components/editor/read-only-view';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
 import { getDb } from '@/db/client';
