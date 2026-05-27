@@ -2,13 +2,9 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
-import {
-  auditUpgradeApplied,
-  auditUpgradeFailed,
-  auditUpgradeRolledBack,
-} from './audit.js';
-import { compareJournalToDb, loadBundledJournal } from './migrations.js';
-import { dumpDatabase, restoreDatabase } from './snapshot.js';
+import { auditUpgradeApplied, auditUpgradeFailed, auditUpgradeRolledBack } from './audit';
+import { compareJournalToDb, loadBundledJournal } from './migrations';
+import { dumpDatabase, restoreDatabase } from './snapshot';
 
 // biome-ignore lint/suspicious/noExplicitAny: schema-agnostic handle; audit helper only needs raw SQL.
 type Db = PostgresJsDatabase<any>;

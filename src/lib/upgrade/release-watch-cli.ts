@@ -6,19 +6,16 @@
  * the cron dispatcher can `await import(...)` it without pulling in
  * `@/db/client` or `@/lib/env` at module-load time.
  */
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
 import { getDb } from '@/db/client';
 import { env } from '@/lib/env';
 import { fetchReleaseFeed } from './feed';
 import { type ReleaseWatchTickResult, runReleaseWatchTick } from './release-watch';
+import { readPackageVersion } from './version';
 
 export async function runReleaseWatchTickCli(): Promise<ReleaseWatchTickResult> {
-  const pkgPath = path.resolve(process.cwd(), 'package.json');
-  const pkg = JSON.parse(await readFile(pkgPath, 'utf8')) as { version: string };
   return runReleaseWatchTick({
     db: getDb(),
-    currentVersion: pkg.version,
+    currentVersion: await readPackageVersion(),
     fetchFeed: () => fetchReleaseFeed({ url: env().CAIRN_RELEASE_FEED_URL }),
   });
 }

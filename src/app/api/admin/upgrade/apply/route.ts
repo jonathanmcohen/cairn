@@ -13,11 +13,10 @@
  * crashes the stream.
  */
 
-import { readFile } from 'node:fs/promises';
-import path from 'node:path';
+import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { applyUpgrade, type ProgressEvent } from '@/lib/upgrade/apply';
-import { HttpError, requireRole } from '@/lib/auth/require-role';
+import { readPackageVersion } from '@/lib/upgrade/version';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -46,15 +45,7 @@ export async function POST(_req: Request): Promise<Response> {
   // invoked AFTER an image swap (the operator pulled the new tag, the
   // process is running the new code) and the audit row reflects the new
   // package.json#version on both sides.
-  let pkgVersion: string;
-  try {
-    const pkg = JSON.parse(
-      await readFile(path.resolve(process.cwd(), 'package.json'), 'utf8'),
-    ) as { version: string };
-    pkgVersion = pkg.version;
-  } catch {
-    pkgVersion = process.env.npm_package_version ?? 'unknown';
-  }
+  const pkgVersion = await readPackageVersion();
 
   const encoder = new TextEncoder();
   const stream = new ReadableStream<Uint8Array>({
