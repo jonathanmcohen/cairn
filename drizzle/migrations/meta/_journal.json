@@ -330,6 +330,13 @@
       "when": 1779862500000,
       "tag": "0046_user_tasks_view",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1779871117380,
+      "tag": "0047_page_lifecycle_translations",
+      "breakpoints": true
     }
   ]
 }
