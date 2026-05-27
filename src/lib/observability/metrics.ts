@@ -16,6 +16,9 @@ let embeddingDuration: Histogram<'provider'>;
 let automationRuleTotal: Counter<'action_type' | 'outcome'>;
 let connectorSyncTotal: Counter<'kind' | 'outcome'>;
 let connectorSyncDuration: Histogram<'kind'>;
+// v0.9.0 G8 P39 — SIEM forwarder delivery counters.
+let siemDeliveryTotal: Counter<'forwarder_kind' | 'status'>;
+let siemDeliveryDuration: Histogram<'forwarder_kind' | 'status'>;
 
 function build(): void {
   registry = new Registry();
@@ -111,6 +114,22 @@ function build(): void {
     help: 'Connector sync run duration in seconds',
     labelNames: ['kind'],
     buckets: [0.1, 0.5, 1, 2.5, 5, 10, 30, 60, 120, 300],
+    registers: [registry],
+  });
+  // v0.9.0 G8 P39 — every SIEM forwarder delivery increments this counter
+  // with the forwarder kind (syslog | http | ...) + outcome
+  // (success | retry | failed).
+  siemDeliveryTotal = new Counter({
+    name: 'cairn_siem_delivery_total',
+    help: 'Total SIEM forwarder delivery attempts by forwarder kind and status',
+    labelNames: ['forwarder_kind', 'status'],
+    registers: [registry],
+  });
+  siemDeliveryDuration = new Histogram({
+    name: 'cairn_siem_delivery_latency_seconds',
+    help: 'SIEM forwarder per-attempt delivery latency in seconds',
+    labelNames: ['forwarder_kind', 'status'],
+    buckets: [0.005, 0.01, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10],
     registers: [registry],
   });
 }
@@ -210,4 +229,25 @@ export function incConnectorSync(s: {
 }): void {
   connectorSyncTotal.inc({ kind: s.kind, outcome: s.outcome });
   connectorSyncDuration.observe({ kind: s.kind }, s.durationSec);
+}
+
+/**
+ * v0.9.0 G8 P39 — SIEM forwarder delivery outcomes. `forwarder_kind` is the
+ * closed set from the migration CHECK (`syslog | http | splunk_hec | datadog
+ * | s3`); `status` mirrors the `siem_delivery_log.status` enum
+ * (`success | retry | failed`). The dispatcher passes the per-attempt
+ * latency (wall clock around the sender call) so the histogram captures
+ * both success and failure paths.
+ */
+export type SiemForwarderKind = 'syslog' | 'http' | 'splunk_hec' | 'datadog' | 's3';
+export type SiemDeliveryStatus = 'success' | 'retry' | 'failed';
+
+export function incSiemDelivery(s: {
+  forwarderKind: SiemForwarderKind | string;
+  status: SiemDeliveryStatus;
+  durationSec: number;
+}): void {
+  const labels = { forwarder_kind: s.forwarderKind, status: s.status };
+  siemDeliveryTotal.inc(labels);
+  siemDeliveryDuration.observe(labels, s.durationSec);
 }

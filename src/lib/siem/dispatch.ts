@@ -31,6 +31,7 @@ import { and, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { logger } from '@/lib/observability/logger';
+import { incSiemDelivery } from '@/lib/observability/metrics';
 import { isExhausted, nextBackoffMs } from './backoff';
 import { formatAuditEvent, type SiemEnvelope } from './format';
 import { sendHttp } from './targets/http';
@@ -92,6 +93,7 @@ async function deliverOne(
       ),
     );
   const attempt = prior.length + 1;
+  const startMs = Date.now();
   try {
     await send(
       {
@@ -107,16 +109,27 @@ async function deliverOne(
       status: 'success',
       attempt,
     });
+    incSiemDelivery({
+      forwarderKind: forwarder.kind,
+      status: 'success',
+      durationSec: (Date.now() - startMs) / 1000,
+    });
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     const exhausted = isExhausted(attempt + 1);
+    const status: 'retry' | 'failed' = exhausted ? 'failed' : 'retry';
     await db.insert(schema.siemDeliveryLog).values({
       forwarderId: forwarder.id,
       auditEventId: audit.id,
-      status: exhausted ? 'failed' : 'retry',
+      status,
       attempt,
       error: msg,
       nextAttemptAt: exhausted ? null : new Date(Date.now() + nextBackoffMs(attempt)),
+    });
+    incSiemDelivery({
+      forwarderKind: forwarder.kind,
+      status,
+      durationSec: (Date.now() - startMs) / 1000,
     });
     if (exhausted) {
       logger.error({ forwarderId: forwarder.id, auditEventId: audit.id }, 'siem.delivery_failed');
