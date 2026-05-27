@@ -2,9 +2,9 @@ import { and, arrayContains, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { evaluateRules } from '@/lib/automation/dispatcher';
-import { type CairnChatEvent, translateToSlack } from '@/lib/chat/translate-slack';
-import { translateToDiscord } from '@/lib/chat/translate-discord';
 import { recordPostedMessage } from '@/lib/chat/posted-log';
+import { translateToDiscord } from '@/lib/chat/translate-discord';
+import { type CairnChatEvent, translateToSlack } from '@/lib/chat/translate-slack';
 import { logger } from '@/lib/observability/logger';
 import { incWebhook } from '@/lib/observability/metrics';
 import { signBody } from './sign';
@@ -74,9 +74,10 @@ async function recordOutboundPostedMessage(
   let threadTs: string | null = null;
   let channelId: string | null = null;
   try {
-    const resp = (await input.response.clone().json().catch(() => null)) as
-      | Record<string, unknown>
-      | null;
+    const resp = (await input.response
+      .clone()
+      .json()
+      .catch(() => null)) as Record<string, unknown> | null;
     if (resp) {
       if (input.kind === 'slack') {
         const ts = typeof resp.ts === 'string' ? resp.ts : null;

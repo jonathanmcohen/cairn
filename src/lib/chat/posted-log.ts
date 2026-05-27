@@ -30,10 +30,7 @@ export type RecordPostedMessageInput = {
   metadata?: Record<string, unknown> | null;
 };
 
-export async function recordPostedMessage(
-  db: Db,
-  input: RecordPostedMessageInput,
-): Promise<void> {
+export async function recordPostedMessage(db: Db, input: RecordPostedMessageInput): Promise<void> {
   await db
     .insert(schema.chatPostedMessages)
     .values({

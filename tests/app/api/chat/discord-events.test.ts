@@ -46,7 +46,9 @@ async function signHex(priv: CryptoKey, msg: string): Promise<string> {
   return Buffer.from(sig).toString('hex');
 }
 
-async function seedDiscordInstall(pubHex: string): Promise<{ workspaceId: string; pageId: string }> {
+async function seedDiscordInstall(
+  pubHex: string,
+): Promise<{ workspaceId: string; pageId: string }> {
   const u = await createTestWorkspaceWithUser(db);
   const rows = (await db.execute(drizzleSql`
     INSERT INTO pages (id, workspace_id, title, content, created_by, created_at, updated_at)
@@ -110,9 +112,7 @@ describe('POST /api/chat/discord/events', () => {
     const { workspaceId } = await seedDiscordInstall(pair.pubHex);
     const ts = '1700000000';
     const body = { type: 1, application_id: 'APP1' };
-    const res = await POST(
-      req(body, { 'x-signature-timestamp': ts, 'x-signature-ed25519': '00' }),
-    );
+    const res = await POST(req(body, { 'x-signature-timestamp': ts, 'x-signature-ed25519': '00' }));
     expect(res.status).toBe(400);
     const audits = await db.select().from(schema.auditLog);
     expect(audits.some((a) => a.action === 'chat.signature_rejected')).toBe(true);

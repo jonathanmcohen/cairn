@@ -88,10 +88,7 @@ async function findOrCreateChatBotUser(db: Db, workspaceId: string): Promise<str
   return inserted.id;
 }
 
-export async function ingestInboundReply(
-  db: Db,
-  input: InboundReplyInput,
-): Promise<string | null> {
+export async function ingestInboundReply(db: Db, input: InboundReplyInput): Promise<string | null> {
   const ref = await lookupPostedMessage(db, {
     platform: input.platform,
     channelId: input.channelId,

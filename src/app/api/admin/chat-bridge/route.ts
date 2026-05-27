@@ -21,8 +21,8 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
-import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { recordAudit } from '@/lib/audit/record';
+import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { assertPublicUrl } from '@/lib/webhooks/ssrf';
 
 const Platform = z.enum(['slack', 'discord']);
@@ -51,16 +51,10 @@ export async function POST(req: Request): Promise<Response> {
     await assertPublicUrl(parsed.webhookUrl);
 
     if (parsed.platform === 'slack' && !parsed.signingSecret) {
-      return NextResponse.json(
-        { error: 'signingSecret is required for Slack' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'signingSecret is required for Slack' }, { status: 400 });
     }
     if (parsed.platform === 'discord' && !parsed.publicKey) {
-      return NextResponse.json(
-        { error: 'publicKey is required for Discord' },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: 'publicKey is required for Discord' }, { status: 400 });
     }
 
     const platformMetadata: Record<string, unknown> = {};
@@ -172,4 +166,3 @@ export async function DELETE(req: Request): Promise<Response> {
     );
   }
 }
-

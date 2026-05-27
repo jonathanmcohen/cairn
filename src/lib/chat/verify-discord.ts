@@ -25,13 +25,9 @@ export async function verifyDiscordSignature(input: VerifyDiscordInput): Promise
     const pubKey = Buffer.from(input.publicKeyHex, 'hex');
     const sig = Buffer.from(input.signature, 'hex');
     const msg = Buffer.from(`${input.timestamp}${input.rawBody}`);
-    const key = await webcrypto.subtle.importKey(
-      'raw',
-      pubKey,
-      { name: 'Ed25519' },
-      false,
-      ['verify'],
-    );
+    const key = await webcrypto.subtle.importKey('raw', pubKey, { name: 'Ed25519' }, false, [
+      'verify',
+    ]);
     return await webcrypto.subtle.verify({ name: 'Ed25519' }, key, sig, msg);
   } catch {
     return false;

@@ -93,9 +93,7 @@ describe('POST /api/chat/slack/events', () => {
     const ts = String(Math.floor(Date.now() / 1000));
     const res = await POST(makeRequest(body, { sig: 'v0=DEADBEEF', ts }));
     expect(res.status).toBe(400);
-    const audits = await db
-      .select()
-      .from(schema.auditLog);
+    const audits = await db.select().from(schema.auditLog);
     expect(audits.some((a) => a.action === 'chat.signature_rejected')).toBe(true);
     expect(audits.find((a) => a.action === 'chat.signature_rejected')?.workspaceId).toBe(
       workspaceId,

@@ -27,7 +27,7 @@ import { recordAudit } from '@/lib/audit/record';
 import { ingestInboundReply } from '@/lib/chat/inbound';
 import { verifySlackSignature } from '@/lib/chat/verify-slack';
 import { logger } from '@/lib/observability/logger';
-import { RateLimiter, clientIp } from '@/lib/security/rate-limit';
+import { clientIp, RateLimiter } from '@/lib/security/rate-limit';
 
 export const dynamic = 'force-dynamic';
 

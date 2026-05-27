@@ -26,7 +26,7 @@ import { recordAudit } from '@/lib/audit/record';
 import { ingestInboundReply } from '@/lib/chat/inbound';
 import { verifyDiscordSignature } from '@/lib/chat/verify-discord';
 import { logger } from '@/lib/observability/logger';
-import { RateLimiter, clientIp } from '@/lib/security/rate-limit';
+import { clientIp, RateLimiter } from '@/lib/security/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -79,8 +79,7 @@ export async function POST(req: Request): Promise<Response> {
   // and ratchets up; staying quiet is the right move.
   if (!match) return NextResponse.json({ ok: true });
 
-  const publicKeyHex =
-    (match.platformMetadata as { public_key?: string } | null)?.public_key ?? '';
+  const publicKeyHex = (match.platformMetadata as { public_key?: string } | null)?.public_key ?? '';
   const valid = await verifyDiscordSignature({
     publicKeyHex,
     timestamp: ts,
