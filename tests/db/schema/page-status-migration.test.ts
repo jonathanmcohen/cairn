@@ -98,10 +98,7 @@ describe('migration 0047 — page lifecycle status + translations', () => {
       })
       .returning();
     await db.delete(schema.pages).where(eq(schema.pages.id, a!.id));
-    const [stillThere] = await db
-      .select()
-      .from(schema.pages)
-      .where(eq(schema.pages.id, b!.id));
+    const [stillThere] = await db.select().from(schema.pages).where(eq(schema.pages.id, b!.id));
     expect(stillThere!.translationOfPageId).toBeNull();
   });
 

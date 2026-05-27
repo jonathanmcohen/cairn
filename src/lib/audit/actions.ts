@@ -86,6 +86,15 @@ export const AUDIT_ACTIONS = [
   // metadata: { locale, canonicalPageId }.
   'page.status_changed',
   'page.translation_linked',
+  // v0.9.0 G4 P24 — page approval workflow. `page.approval_requested` records
+  // an editor moving a page into review. `page.approved` /
+  // `page.approval_rejected` / `page.changes_requested` record the admin's
+  // signed decision; metadata carries { versionSnapshotId, signatureHmac } so
+  // the audit log alone proves which version was decided on under which key.
+  'page.approval_requested',
+  'page.approved',
+  'page.approval_rejected',
+  'page.changes_requested',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

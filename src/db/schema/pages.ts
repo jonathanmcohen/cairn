@@ -1,3 +1,4 @@
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   boolean,
   customType,
@@ -8,7 +9,6 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { workspaces } from './workspaces';
 
@@ -99,10 +99,9 @@ export const pages = pgTable(
     // v0.9.0 G4 P26 — translation linkage. Self-FK + BCP-47 locale code. Self-FK
     // requires AnyPgColumn cast (Drizzle callback form cannot reference the
     // table being declared).
-    translationOfPageId: uuid('translation_of_page_id').references(
-      (): AnyPgColumn => pages.id,
-      { onDelete: 'set null' },
-    ),
+    translationOfPageId: uuid('translation_of_page_id').references((): AnyPgColumn => pages.id, {
+      onDelete: 'set null',
+    }),
     translationLocale: text('translation_locale'),
   },
   (t) => ({

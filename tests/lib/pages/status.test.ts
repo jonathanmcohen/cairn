@@ -71,9 +71,9 @@ describe('transitionStatus — allowed-transition matrix', () => {
         const out = await transitionStatus(db, { pageId, to, byUserId: userId });
         expect(out.status).toBe(to);
       } else {
-        await expect(
-          transitionStatus(db, { pageId, to, byUserId: userId }),
-        ).rejects.toBeInstanceOf(IllegalStatusTransition);
+        await expect(transitionStatus(db, { pageId, to, byUserId: userId })).rejects.toBeInstanceOf(
+          IllegalStatusTransition,
+        );
       }
     });
   }

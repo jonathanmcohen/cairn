@@ -118,6 +118,11 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.9.0 G4 P26 — page lifecycle + translation linkage events.
   'page.status_changed': 'Page status changed',
   'page.translation_linked': 'Page translation linked',
+  // v0.9.0 G4 P24 — page approval workflow events.
+  'page.approval_requested': 'Page approval requested',
+  'page.approved': 'Page approved',
+  'page.approval_rejected': 'Page approval rejected',
+  'page.changes_requested': 'Page changes requested',
 };
 
 function actionLabel(action: string): string {
