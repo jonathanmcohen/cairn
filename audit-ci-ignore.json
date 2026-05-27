@@ -35,6 +35,13 @@
       "severity": "high",
       "reason": "Same chain as 1117571. DoS through unbounded protobuf recursion in decode. Wire-byte input only — no untrusted protobuf wire traffic reaches this library in this codebase.",
       "expires": "2026-08-23"
+    },
+    {
+      "id": 1119610,
+      "module": "tmp",
+      "severity": "high",
+      "reason": "Pinned at 0.0.33 by @lhci/cli@0.15.1 → inquirer@6.5.2 → external-editor@3.1.0 → tmp@0.0.33 (devDependency only — Lighthouse CI for the perf budget check in CI). The advisory is path traversal via unsanitized prefix/postfix arguments to tmp.dirSync/fileSync; @lhci/cli never passes user-controlled values to those calls, and the package is never loaded by the production server bundle. Re-review when @lhci/cli ships a release that upgrades inquirer (or replaces external-editor).",
+      "expires": "2026-08-23"
     }
   ]
 }
