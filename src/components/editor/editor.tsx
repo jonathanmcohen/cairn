@@ -9,6 +9,7 @@ import { useAnnounce } from '@/components/a11y/live-region';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
+import { BulkUploader } from './bulk-uploader';
 import { DragHandle } from './drag-handle';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
@@ -16,6 +17,7 @@ import { composeGalleryInsert } from './image-extension';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { SuggestionToolbar } from './suggestion-toolbar';
+import { useBulkDropHandler } from './use-bulk-drop-handler';
 import { useCollabDoc } from './use-collab-doc';
 
 export type EditorProps = {
@@ -95,6 +97,13 @@ export function Editor({
   useEffect(() => {
     uploadAllowedRef.current = uploadAllowed;
   }, [uploadAllowed]);
+
+  // v0.9.0 G3 P22 — Bulk multi-file drop handler. The hook owns the modal's
+  // open/files/onComplete state; `bulkOpenRef.current` is read inside the
+  // useEditor `handleDrop` closure (declared BEFORE the editor exists) so we
+  // route ≥2-file drops through the BulkUploader. Single-file drops fall
+  // through to the legacy P16/P17 image-gallery + PDF handlers.
+  const bulkOpenRef = useRef<((files: File[], dropPos: number | null) => void) | null>(null);
 
   // v0.9.0 G3 P17 — `.pdf` files dropped (or pasted) on the editor surface
   // upload via /api/upload and insert a `pdf` block at the caret. The lazy
@@ -180,10 +189,25 @@ export function Editor({
               'aria-label': 'Page content',
               'aria-multiline': 'true',
             },
-            handleDrop(_view, event, _slice, moved) {
+            handleDrop(view, event, _slice, moved) {
               if (moved) return false;
               const dataTransfer = (event as DragEvent).dataTransfer;
               const allFiles = Array.from(dataTransfer?.files ?? []);
+              if (allFiles.length === 0) return false;
+              // v0.9.0 G3 P22 — multi-file drops (>=2 files of any kind) route
+              // through the BulkUploader modal so each file lands as the right
+              // block type (image → cairnImage / gallery, audio → cairnAudio,
+              // video → video, pdf → pdf, other → fileAttachment). Single-file
+              // drops keep the legacy P16/P17 fast paths below.
+              if (allFiles.length >= 2) {
+                if (!uploadAllowedRef.current) return false;
+                event.preventDefault();
+                const ev = event as DragEvent;
+                const dropPos =
+                  view.posAtCoords({ left: ev.clientX, top: ev.clientY })?.pos ?? null;
+                bulkOpenRef.current?.(allFiles, dropPos);
+                return true;
+              }
               // v0.9.0 G3 P17 — PDFs route to the PDF block; image drops keep
               // the existing gallery composer; mixed drops produce one PDF
               // node per .pdf + one gallery for the images.
@@ -232,6 +256,14 @@ export function Editor({
   useEffect(() => {
     editorRef.current = editor;
   }, [editor]);
+
+  // v0.9.0 G3 P22 — Wire the bulk drop handler. Must follow the useEditor
+  // call (the hook needs the editor instance) but precedes the JSX render of
+  // <BulkUploader/>.
+  const bulk = useBulkDropHandler({ editor });
+  useEffect(() => {
+    bulkOpenRef.current = bulk.openWith;
+  }, [bulk.openWith]);
 
   useEffect(() => {
     if (editor) {
@@ -435,6 +467,12 @@ export function Editor({
           <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
         )}
       </div>
+      <BulkUploader
+        open={bulk.open}
+        files={bulk.files}
+        onOpenChange={bulk.onOpenChange}
+        onComplete={bulk.onComplete}
+      />
     </div>
   );
 }

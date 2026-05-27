@@ -67,6 +67,22 @@ describe('BulkUploader', () => {
     expect(results.find((r) => r.name === 'c.mp4')?.kind).toBe('video');
   });
 
+  it('refuses to close while uploads are still in flight', async () => {
+    // Stub fetch to hang so uploads stay in `uploading` forever during the test.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(() => new Promise(() => {})),
+    );
+    const onOpenChange = vi.fn();
+    const files = Array.from({ length: 4 }, (_, i) => makeFile(`f${i}.mp3`, 'audio/mpeg'));
+    render(<BulkUploader open files={files} onOpenChange={onOpenChange} onComplete={() => {}} />);
+    // Simulate an Escape keypress (the modal listens on document).
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    // onOpenChange must NOT have been called with false while uploads are
+    // mid-flight (state machine gate from Task 7).
+    expect(onOpenChange).not.toHaveBeenCalledWith(false);
+  });
+
   it('marks failed uploads without blocking remaining files', async () => {
     let callCount = 0;
     vi.stubGlobal(
