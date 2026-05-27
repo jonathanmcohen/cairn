@@ -44,11 +44,6 @@ export async function listWorkspacePins(
     })
     .from(schema.workspacePins)
     .innerJoin(schema.pages, eq(schema.pages.id, schema.workspacePins.pageId))
-    .where(
-      and(
-        eq(schema.workspacePins.workspaceId, workspaceId),
-        isNull(schema.pages.deletedAt),
-      ),
-    )
+    .where(and(eq(schema.workspacePins.workspaceId, workspaceId), isNull(schema.pages.deletedAt)))
     .orderBy(asc(schema.workspacePins.position), asc(schema.pages.title));
 }

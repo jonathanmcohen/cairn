@@ -95,10 +95,7 @@ describe('addPin', () => {
       .select()
       .from(schema.workspacePins)
       .where(
-        and(
-          eq(schema.workspacePins.workspaceId, ws.id),
-          eq(schema.workspacePins.pageId, p1.id),
-        ),
+        and(eq(schema.workspacePins.workspaceId, ws.id), eq(schema.workspacePins.pageId, p1.id)),
       );
     expect(rows).toHaveLength(1);
   });

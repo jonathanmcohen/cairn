@@ -35,12 +35,7 @@ export async function addPin(
   const [page] = await db
     .select({ id: schema.pages.id })
     .from(schema.pages)
-    .where(
-      and(
-        eq(schema.pages.id, input.pageId),
-        eq(schema.pages.workspaceId, input.workspaceId),
-      ),
-    );
+    .where(and(eq(schema.pages.id, input.pageId), eq(schema.pages.workspaceId, input.workspaceId)));
   if (!page) throw new PinNotFoundError();
 
   // Idempotent: a repeated add returns the existing row unchanged. The
@@ -58,7 +53,7 @@ export async function addPin(
   if (existing) return existing;
 
   return await db.transaction(async (tx) => {
-    const [{ nextPos }] = (await tx
+    const posRows = (await tx
       .select({
         nextPos: sql<number>`COALESCE(${max(schema.workspacePins.position)}, -1) + 1`,
       })
@@ -66,6 +61,7 @@ export async function addPin(
       .where(eq(schema.workspacePins.workspaceId, input.workspaceId))) as Array<{
       nextPos: number;
     }>;
+    const nextPos = posRows[0]?.nextPos ?? 0;
 
     const [row] = await tx
       .insert(schema.workspacePins)

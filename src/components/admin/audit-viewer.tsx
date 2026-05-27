@@ -101,6 +101,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'space.member_added': 'Space member added',
   'space.member_removed': 'Space member removed',
   'page.moved_space': 'Page moved between spaces',
+  // v0.9.0 G2 P12 — Workspace-pinned pages lifecycle.
+  'workspace.pin_added': 'Workspace pin added',
+  'workspace.pin_removed': 'Workspace pin removed',
+  'workspace.pins_reordered': 'Workspace pins reordered',
 };
 
 function actionLabel(action: string): string {
