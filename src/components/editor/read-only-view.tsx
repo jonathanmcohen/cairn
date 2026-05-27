@@ -1,7 +1,11 @@
 'use client';
 
 import { EditorContent, useEditor } from '@tiptap/react';
+import { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { numberFootnotes } from '@/lib/citations/numbering';
 import { baseExtensions } from './extensions';
+import { FootnoteSup } from './extensions/footnote';
 import { ReadOnlyMentionExtension } from './mention-readonly-extension';
 import { PublicDatabaseNode } from './public-database-extension';
 
@@ -36,9 +40,69 @@ export function ReadOnlyView({ content }: { content: unknown }) {
     },
   });
 
+  // v0.9.0 G3 P18 — footnote hydration. The FootnoteMark's renderHTML emits a
+  // bare `<sup data-footnote-id data-footnote-content>` with no number and no
+  // popover. After the editor mounts we walk its DOM, compute the document-
+  // order number map via `numberFootnotes`, blank out each <sup>'s text content
+  // and mount a `<FootnoteSup number text>` portal into it so the public page
+  // shows the numbered superscript + click-to-reveal popover.
+  const footnoteMap = useMemo(
+    () =>
+      numberFootnotes(
+        (content ?? { type: 'doc', content: [] }) as Parameters<typeof numberFootnotes>[0],
+      ),
+    [content],
+  );
+  const [mounts, setMounts] = useState<
+    Array<{ host: HTMLElement; id: string; number: number; text: string }>
+  >([]);
+
+  useEffect(() => {
+    if (!editor) return;
+    const root = editor.view.dom as HTMLElement;
+    const collect = () => {
+      const sups = Array.from(root.querySelectorAll<HTMLElement>('sup[data-footnote-id]'));
+      const next: Array<{ host: HTMLElement; id: string; number: number; text: string }> = [];
+      for (const sup of sups) {
+        const id = sup.getAttribute('data-footnote-id') ?? '';
+        const number = footnoteMap.map[id];
+        if (!id || number === undefined) continue;
+        const text =
+          sup.getAttribute('data-footnote-content') ??
+          footnoteMap.ordered.find((e) => e.id === id)?.content ??
+          '';
+        // Hide the bare TipTap-emitted <sup> and mount the interactive
+        // FootnoteSup (its own <sup> + popover) into a sibling <span>. Nesting
+        // <sup> inside <sup> would be valid phrasing content but visually
+        // doubles the superscript shift; sibling-mount keeps a single shift.
+        sup.style.display = 'none';
+        let mount = sup.nextElementSibling as HTMLElement | null;
+        if (!mount || mount.dataset.footnoteMount !== id) {
+          mount = document.createElement('span');
+          mount.dataset.footnoteMount = id;
+          sup.after(mount);
+        }
+        next.push({ host: mount, id, number, text });
+      }
+      setMounts(next);
+    };
+    collect();
+    editor.on('update', collect);
+    return () => {
+      editor.off('update', collect);
+    };
+  }, [editor, footnoteMap]);
+
   return (
     <div className="relative">
       <EditorContent editor={editor} />
+      {mounts.map((m) =>
+        createPortal(
+          <FootnoteSup number={m.number} content={m.text} />,
+          m.host,
+          `${m.id}-${m.number}`,
+        ),
+      )}
     </div>
   );
 }
