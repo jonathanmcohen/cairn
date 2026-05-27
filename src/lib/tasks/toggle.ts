@@ -26,7 +26,8 @@ function walkAndToggle(node: ContentNode, blockId: string): { found: boolean; ch
     node.type === 'taskItem' &&
     (node.attrs as { blockId?: string } | undefined)?.blockId === blockId
   ) {
-    const wasChecked = ((node.attrs as { checked?: boolean } | undefined)?.checked ?? false) === true;
+    const wasChecked =
+      ((node.attrs as { checked?: boolean } | undefined)?.checked ?? false) === true;
     const nextChecked = !wasChecked;
     node.attrs = { ...(node.attrs ?? {}), checked: nextChecked };
     return { found: true, checked: nextChecked };

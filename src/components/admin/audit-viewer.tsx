@@ -113,6 +113,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'page.unlocked': 'Page unlocked',
   'page.auto_unlocked': 'Page auto-unlocked',
   'page.unlock_overridden_by_admin': 'Page unlock overridden by admin',
+  // v0.9.0 G4 P23 — Tasks hub toggle event.
+  'task.toggled': 'Task toggled',
 };
 
 function actionLabel(action: string): string {

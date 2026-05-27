@@ -47,16 +47,16 @@ describe('toggleTaskCheck', () => {
   });
 
   it('throws on unknown blockId', async () => {
-    await expect(
-      toggleTaskCheck({ pageId: P, blockId: 'nope', userId: U }),
-    ).rejects.toThrow(/not found/);
+    await expect(toggleTaskCheck({ pageId: P, blockId: 'nope', userId: U })).rejects.toThrow(
+      /not found/,
+    );
   });
 
   it('throws on encrypted page', async () => {
     await sql`UPDATE pages SET encrypted = true WHERE id = ${P}`;
-    await expect(
-      toggleTaskCheck({ pageId: P, blockId: 'b1', userId: U }),
-    ).rejects.toThrow(/encrypted/);
+    await expect(toggleTaskCheck({ pageId: P, blockId: 'b1', userId: U })).rejects.toThrow(
+      /encrypted/,
+    );
   });
 
   it('writes an audit record', async () => {
