@@ -66,6 +66,9 @@ export const AUDIT_ACTIONS = [
   'workspace.pin_added',
   'workspace.pin_removed',
   'workspace.pins_reordered',
+  // v0.9.0 G2 P13 — Trash retention purge (auto = cron, manual = admin click).
+  'trash.purged_auto',
+  'trash.purged_manual',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
