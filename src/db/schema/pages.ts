@@ -67,6 +67,10 @@ export const pages = pgTable(
     metadata: jsonb('metadata').$type<Record<string, unknown>>().notNull().default({}),
     contentText: text('content_text').notNull().default(''),
     contentTsv: tsvector('content_tsv'),
+    // v0.9.0 G2 P11 — optional grouping under a workspace-scoped space.
+    // The FK is declared in 0040_spaces.sql (avoids a Drizzle circular import
+    // between pages.ts and spaces.ts). Null = "Unfiled" in the sidebar.
+    spaceId: uuid('space_id'),
     createdBy: uuid('created_by')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
@@ -79,6 +83,8 @@ export const pages = pgTable(
     workspaceIdx: index('pages_workspace_idx').on(t.workspaceId),
     parentIdx: index('pages_parent_idx').on(t.parentId),
     tsvIdx: index('pages_content_tsv_idx').using('gin', t.contentTsv),
+    // v0.9.0 G2 P11 — sidebar groups pages by space, so the lister filters by it.
+    spaceIdx: index('pages_space_id_idx').on(t.spaceId),
   }),
 );
 

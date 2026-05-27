@@ -24,6 +24,7 @@ export * from './pat-quota-usage';
 export * from './personal-access-tokens';
 export * from './reminders';
 export * from './saved-searches';
+export * from './spaces';
 export * from './sso';
 export * from './suggestions';
 export * from './system-meta';
