@@ -35,6 +35,7 @@ import { incSiemDelivery } from '@/lib/observability/metrics';
 import { isExhausted, nextBackoffMs } from './backoff';
 import { formatAuditEvent, type SiemEnvelope } from './format';
 import { sendHttp } from './targets/http';
+import { sendSplunkHec } from './targets/splunk-hec';
 import { sendSyslog } from './targets/syslog';
 
 export type DispatchInput = {
@@ -60,6 +61,7 @@ export type Sender = (
 export const DEFAULT_SENDERS: Record<string, Sender> = {
   http: (f, env) => sendHttp(f, env),
   syslog: (f, env) => sendSyslog({ endpoint: f.endpoint, options: f.options }, env),
+  splunk_hec: (f, env) => sendSplunkHec(f, env),
 };
 
 export type DispatchOptions = {
