@@ -105,6 +105,9 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'workspace.pin_added': 'Workspace pin added',
   'workspace.pin_removed': 'Workspace pin removed',
   'workspace.pins_reordered': 'Workspace pins reordered',
+  // v0.9.0 G2 P13 — Trash retention auto-purge cron + admin "Empty trash now".
+  'trash.purged_auto': 'Trash auto-purged',
+  'trash.purged_manual': 'Trash manually purged',
 };
 
 function actionLabel(action: string): string {

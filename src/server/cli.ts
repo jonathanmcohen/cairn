@@ -220,7 +220,8 @@ async function main(): Promise<void> {
         `  cli reconcile [--workspace <id>]\n` +
         `  cli reminders:scan\n` +
         `  cli reindex-embeddings [--workspace <id>] [--batch-size N]\n` +
-        `  cli connector:sync [--connector <id>]`,
+        `  cli connector:sync [--connector <id>]\n` +
+        `  cli trash:purge --workspace-id=<id>`,
     );
     process.exit(2);
   }
@@ -304,6 +305,14 @@ async function main(): Promise<void> {
     const { runConnectorSync } = await import('../lib/connectors/cli.js');
     await runConnectorSync({ connectorId: args.connectorId });
     await recordCliAudit(conn, 'connector.sync_invoked', { connectorId: args.connectorId });
+  } else if (args.command === 'trash:purge') {
+    if (!args.workspaceId) throw new Error('trash:purge requires --workspace-id=<id>');
+    const { runTrashPurgeCli } = await import('../lib/trash/cli.js');
+    const summary = await runTrashPurgeCli({ workspaceId: args.workspaceId });
+    console.log(
+      `[trash:purge] ${args.workspaceId} purged=${summary.purgedCount} ` +
+        `descendants=${summary.descendantsCount} bytes=${summary.bytesReclaimed}`,
+    );
   }
 }
 
