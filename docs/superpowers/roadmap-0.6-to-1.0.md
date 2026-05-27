@@ -192,7 +192,7 @@ Two releases remain to 1.0.
 - [x] G6 P32 — Side-by-side version diff
 - [x] G6 P33 — Focus mode + reader mode + share-password verify
 - [x] G7 P34 — Static export pipeline + CLI + UI + MkDocs target
-- [ ] G7 P35 — Static export Docusaurus target + per-format frontmatter
+- [x] G7 P35 — Static export Docusaurus target + per-format frontmatter
 - [ ] G7 P36 — Chat bridge outbound + inbound (Slack + Discord)
 - [ ] G7 P37 — Chat bridge slash commands + channel↔page sync (migration `0048`)
 - [ ] G7 P38 — OpenAPI generator + `/openapi.json` + Swagger UI
