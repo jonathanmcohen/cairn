@@ -155,10 +155,7 @@ export async function listTemplates(
   return rows.map(toTemplate);
 }
 
-export async function deleteTemplate(
-  db: Db,
-  input: { id: string; userId: string },
-): Promise<void> {
+export async function deleteTemplate(db: Db, input: { id: string; userId: string }): Promise<void> {
   const deleted = await db
     .delete(schema.savedSearches)
     .where(

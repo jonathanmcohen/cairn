@@ -186,7 +186,7 @@ Two releases remain to 1.0.
 - [x] G4 P26 — Page lifecycle status + translations (migration `0047`)
 - [x] G5 P27 — "See also" related-pages panel
 - [x] G5 P28 — TOC sidebar
-- [ ] G5 P29 — Search operators parser + chip UI + saved templates
+- [x] G5 P29 — Search operators parser + chip UI + saved templates
 - [ ] G5 P30 — Federated multi-workspace + cross-instance search (migration `0047`)
 - [ ] G6 P31 — i18n framework polish + Biome rule + es translations
 - [ ] G6 P32 — Side-by-side version diff

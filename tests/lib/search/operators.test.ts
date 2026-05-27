@@ -24,9 +24,7 @@ describe('parseQuery', () => {
   });
 
   it('respects quoted values (single or double)', () => {
-    expect(parseQuery('tag:"release notes"').ops).toEqual([
-      { key: 'tag', value: 'release notes' },
-    ]);
+    expect(parseQuery('tag:"release notes"').ops).toEqual([{ key: 'tag', value: 'release notes' }]);
     expect(parseQuery("tag:'multi word'").ops).toEqual([{ key: 'tag', value: 'multi word' }]);
   });
 
