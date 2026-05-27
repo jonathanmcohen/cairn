@@ -81,6 +81,11 @@ export const AUDIT_ACTIONS = [
   // v0.9.0 G4 P23 — Tasks hub: user toggled a taskItem checkbox via /my-tasks
   // or the toggle API. metadata: { blockId, checked }.
   'task.toggled',
+  // v0.9.0 G4 P26 — page lifecycle + translation linkage.
+  // `page.status_changed` metadata: { from, to }. `page.translation_linked`
+  // metadata: { locale, canonicalPageId }.
+  'page.status_changed',
+  'page.translation_linked',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
