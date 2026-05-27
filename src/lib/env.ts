@@ -88,6 +88,17 @@ const Schema = z.object({
   // participates in the federation mesh; per-peer rotation is achieved by
   // updating both sides simultaneously.
   CAIRN_FEDERATION_SHARED_SECRET: z.string().default(''),
+  // v0.9.0 G7 P36 — chat bridge (Slack + Discord). All OPTIONAL; the bridge is
+  // workspace-opt-in and never auto-engaged. Operators paste an incoming-
+  // webhook URL into the admin UI; per-workspace secrets live in
+  // `webhooks.platform_metadata` (jsonb). These env vars only matter if the
+  // operator later wires real OAuth installs (deferred to P37).
+  CAIRN_SLACK_CLIENT_ID: z.string().optional(),
+  CAIRN_SLACK_CLIENT_SECRET: z.string().optional(),
+  CAIRN_SLACK_SIGNING_SECRET: z.string().optional(),
+  CAIRN_DISCORD_CLIENT_ID: z.string().optional(),
+  CAIRN_DISCORD_CLIENT_SECRET: z.string().optional(),
+  CAIRN_DISCORD_BOT_TOKEN: z.string().optional(),
 });
 
 export type Env = z.infer<typeof Schema>;

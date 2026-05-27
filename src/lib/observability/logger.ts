@@ -34,6 +34,17 @@ export const REDACT_PATHS: string[] = [
   '*.CAIRN_EMBEDDING_API_KEY',
   '*.sig',
   'sig',
+  // v0.9.0 G7 P36 — chat-bridge per-workspace secrets + inbound auth headers.
+  // The bot token + signing secret normally live in webhooks.platform_metadata
+  // (jsonb), but stray env interpolation in a log line must never leak them.
+  'env.CAIRN_SLACK_SIGNING_SECRET',
+  'CAIRN_SLACK_SIGNING_SECRET',
+  '*.CAIRN_SLACK_SIGNING_SECRET',
+  'env.CAIRN_DISCORD_BOT_TOKEN',
+  'CAIRN_DISCORD_BOT_TOKEN',
+  '*.CAIRN_DISCORD_BOT_TOKEN',
+  'req.headers["x-slack-signature"]',
+  'req.headers["x-signature-ed25519"]',
 ];
 
 const level = process.env.CAIRN_LOG_LEVEL ?? 'info';
