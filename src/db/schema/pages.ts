@@ -78,6 +78,14 @@ export const pages = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp('deleted_at', { withTimezone: true }),
     deletedRoot: boolean('deleted_root').notNull().default(false),
+    // v0.9.0 G2 P14 — page lock. `locked_at IS NOT NULL` means the page is
+    // frozen for everyone except the locker (or an admin override). When
+    // `locked_until` is set and in the past, the auto-unlock cron clears all
+    // three cols. `locked_by` SET NULL on user delete so a deleted user's
+    // outstanding locks become admin-clearable rather than dangling FKs.
+    lockedAt: timestamp('locked_at', { withTimezone: true }),
+    lockedBy: uuid('locked_by').references(() => users.id, { onDelete: 'set null' }),
+    lockedUntil: timestamp('locked_until', { withTimezone: true }),
   },
   (t) => ({
     workspaceIdx: index('pages_workspace_idx').on(t.workspaceId),
