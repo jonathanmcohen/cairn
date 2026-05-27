@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { HttpError } from '@/lib/auth/require-role';
+import { postToChat } from '@/lib/chat/post-clients';
+import { postCommentToChannels } from '@/lib/chat/sync';
 import { CommentAnchorSchema } from '@/lib/comments/anchor';
 import { createComment } from '@/lib/comments/create';
 import { listComments } from '@/lib/comments/list';
+import { logger } from '@/lib/observability/logger';
 import { requirePageAccess } from '@/lib/pages/access';
 
 type RouteCtx = { params: Promise<{ pageId: string }> };
@@ -38,6 +41,20 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
       body: parsed.body,
       anchor: parsed.anchor ?? null,
       target: { type: 'page', id: pageId },
+    });
+    // v0.9.0 G7 P37 — fan UI-originated comments out to linked sync channels.
+    // `createComment` does not set `chat_message_id`, so this branch ALWAYS
+    // fires for UI inserts. The opposite direction (channel → page) goes
+    // through `ingestChannelMessage` which sets `chat_message_id`, then
+    // bypasses this route entirely (it writes the comment directly), so the
+    // echo loop is broken structurally.
+    void postCommentToChannels({
+      workspaceId: ctx.workspaceId,
+      pageId,
+      body: parsed.body,
+      postFn: postToChat,
+    }).catch((err) => {
+      logger.warn({ err }, '[chat] post-back failed');
     });
     return NextResponse.json(comment, { status: 201 });
   } catch (err) {
