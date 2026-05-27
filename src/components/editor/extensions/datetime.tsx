@@ -79,24 +79,19 @@ export function DateTimeView(props: {
 
   return (
     <span className="relative inline-block">
-      <time
-        dateTime={node.attrs.iso}
-        className="inline-flex items-baseline gap-1 underline decoration-dotted cursor-pointer"
+      <button
+        type="button"
+        className="inline-flex items-baseline gap-1 underline decoration-dotted cursor-pointer bg-transparent border-0 p-0 text-inherit font-inherit"
         aria-label={`${formatted} (original timezone ${node.attrs.tz})`}
+        aria-haspopup="dialog"
+        aria-expanded={open}
         onClick={() => setOpen((o) => !o)}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            setOpen((o) => !o);
-          }
-        }}
-        // biome-ignore lint/a11y/useSemanticElements: <time> needs a button role for the toggle behavior
-        role="button"
-        tabIndex={0}
       >
-        <span>{formatted}</span>
+        <time dateTime={node.attrs.iso} className="inline">
+          {formatted}
+        </time>
         <span className="text-xs text-muted-foreground">({node.attrs.tz})</span>
-      </time>
+      </button>
       {open ? (
         <span
           className="absolute z-50 mt-1 left-0 top-full w-72 space-y-2 rounded-md border bg-popover p-3 text-popover-foreground shadow-md"

@@ -72,7 +72,9 @@ export async function updatePage(
       // the saved doc and stash their ms-epoch values into `metadata.datetimes`.
       // P29's date-range search filter reads this side-channel rather than
       // re-parsing `content` jsonb on every query.
-      const dts = extractDateTimesFromDoc(input.patch.content as Parameters<typeof extractDateTimesFromDoc>[0]);
+      const dts = extractDateTimesFromDoc(
+        input.patch.content as Parameters<typeof extractDateTimesFromDoc>[0],
+      );
       const epochs = dts.map((d) => d.epochMs);
       const existing = (current.metadata ?? {}) as Record<string, unknown>;
       values.metadata = { ...existing, datetimes: epochs };

@@ -26,6 +26,8 @@ import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { VideoBlock } from './blocks/video';
 import { Callout } from './callout-extension';
+import { DateTimeNode } from './blocks/datetime-node';
+import { FlashcardNode } from './blocks/flashcard-node';
 import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
@@ -83,6 +85,11 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     // page-level `citationStyle` prop is provided).
     CitationNode,
     FootnoteMark,
+    // v0.9.0 G3 P19 + P20 — schema-only static reg so server-side document
+    // parsers don't silently drop these nodes when loading content. The
+    // React node-views still load lazily via extensions-lazy.ts.
+    FlashcardNode,
+    DateTimeNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,

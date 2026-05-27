@@ -6,8 +6,10 @@ import { common, createLowlight } from 'lowlight';
 import { BookmarkNode } from './blocks/bookmark-node';
 import { CitationNode } from './blocks/citation-node';
 import { Column, ColumnList } from './blocks/columns';
+import { DateTimeNode } from './blocks/datetime-node';
 import { DrawioNode } from './blocks/drawio-node';
 import { EmbedNode } from './blocks/embed-node';
+import { FlashcardNode } from './blocks/flashcard-node';
 import { FootnoteMark } from './blocks/footnote-mark';
 import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
@@ -70,6 +72,10 @@ export function schemaExtensions() {
     // transform recognizes stored content carrying these.
     CitationNode,
     FootnoteMark,
+    // v0.9.0 G3 P19 + P20 — Flashcard + DateTime nodes (schema-only on the
+    // server-side accept/reject + suggestion-transform paths).
+    FlashcardNode,
+    DateTimeNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,

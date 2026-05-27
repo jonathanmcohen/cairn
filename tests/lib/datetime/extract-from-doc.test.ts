@@ -8,23 +8,16 @@ describe('extractDateTimesFromDoc', () => {
       content: [
         {
           type: 'paragraph',
-          content: [
-            { type: 'datetime', attrs: { iso: '2026-01-01T00:00:00Z', tz: 'UTC' } },
-          ],
+          content: [{ type: 'datetime', attrs: { iso: '2026-01-01T00:00:00Z', tz: 'UTC' } }],
         },
         {
           type: 'paragraph',
-          content: [
-            { type: 'datetime', attrs: { iso: '2026-02-01T00:00:00Z', tz: 'UTC' } },
-          ],
+          content: [{ type: 'datetime', attrs: { iso: '2026-02-01T00:00:00Z', tz: 'UTC' } }],
         },
       ],
     };
     const dts = extractDateTimesFromDoc(doc);
-    expect(dts.map((d) => d.iso)).toEqual([
-      '2026-01-01T00:00:00Z',
-      '2026-02-01T00:00:00Z',
-    ]);
+    expect(dts.map((d) => d.iso)).toEqual(['2026-01-01T00:00:00Z', '2026-02-01T00:00:00Z']);
   });
 
   it('returns ms-epoch values suitable for range filters', () => {
@@ -49,9 +42,7 @@ describe('extractDateTimesFromDoc', () => {
   });
 
   it('returns empty array for docs with no datetime', () => {
-    expect(
-      extractDateTimesFromDoc({ type: 'doc', content: [{ type: 'paragraph' }] }),
-    ).toEqual([]);
+    expect(extractDateTimesFromDoc({ type: 'doc', content: [{ type: 'paragraph' }] })).toEqual([]);
   });
 
   it('skips invalid ISO strings', () => {
@@ -64,9 +55,7 @@ describe('extractDateTimesFromDoc', () => {
         },
         {
           type: 'paragraph',
-          content: [
-            { type: 'datetime', attrs: { iso: '2026-02-01T00:00:00Z', tz: 'UTC' } },
-          ],
+          content: [{ type: 'datetime', attrs: { iso: '2026-02-01T00:00:00Z', tz: 'UTC' } }],
         },
       ],
     };
