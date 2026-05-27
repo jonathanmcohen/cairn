@@ -224,7 +224,8 @@ async function main(): Promise<void> {
         `  cli trash:purge --workspace-id=<id>\n` +
         `  cli pages:auto-unlock\n` +
         `  cli flashcards:notify-due\n` +
-        `  cli siem:retry-sweep`,
+        `  cli siem:retry-sweep\n` +
+        `  cli siem:daily-archive`,
     );
     process.exit(2);
   }
@@ -334,6 +335,15 @@ async function main(): Promise<void> {
     const { runSiemRetrySweep } = await import('../lib/siem/retry-cli.js');
     const summary = await runSiemRetrySweep();
     console.log(`[siem:retry-sweep] swept=${summary.swept}`);
+  } else if (args.command === 'siem:daily-archive') {
+    // v0.9.0 G8 P40 — global daily sweep at 01:15 UTC that archives the prior
+    // UTC day of audit_log rows to S3 (gzipped NDJSON) for every enabled
+    // `kind='s3'` forwarder. One delivery-log row per non-empty archive.
+    const { runSiemDailyArchive } = await import('../lib/siem/archive-cli.js');
+    const summary = await runSiemDailyArchive();
+    console.log(
+      `[siem:daily-archive] swept=${summary.swept} ok=${summary.succeeded} failed=${summary.failed}`,
+    );
   }
 }
 

@@ -114,7 +114,9 @@ export async function register(): Promise<void> {
 
     // v0.9.0 G8 P39 — register the global siem:retry-sweep cron row
     // (every minute). The sweep is a no-op when the delivery log is clean.
-    const { registerSiemRetrySweepCron } = await import('@/server/cron-register');
+    const { registerSiemRetrySweepCron, registerSiemDailyArchiveCron } = await import(
+      '@/server/cron-register'
+    );
     void registerSiemRetrySweepCron(getDb())
       .then(() => {
         // biome-ignore lint/suspicious/noConsole: server startup
@@ -122,6 +124,18 @@ export async function register(): Promise<void> {
       })
       .catch((err) => {
         console.error('[siem] retry-sweep cron registration failed', err);
+      });
+
+    // v0.9.0 G8 P40 — register the global siem:daily-archive cron row
+    // (daily at 01:15 UTC). Iterates every enabled kind=s3 forwarder and
+    // archives yesterday's audit_log rows. Empty days are a no-op.
+    void registerSiemDailyArchiveCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[siem] daily-archive cron registered (15 1 * * *)');
+      })
+      .catch((err) => {
+        console.error('[siem] daily-archive cron registration failed', err);
       });
   }
 }

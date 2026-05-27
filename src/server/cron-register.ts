@@ -234,3 +234,57 @@ export async function registerSiemRetrySweepCron(
     nextRunAt,
   });
 }
+
+/**
+ * v0.9.0 G8 P40 — global `siem:daily-archive` cron, daily at 01:15 UTC.
+ *
+ * Single row (`workspace_id IS NULL`); the sweep iterates every enabled
+ * `kind='s3'` forwarder across the deployment. Identified by an exact command
+ * match. Idempotent on re-register — re-running updates the existing row and
+ * re-enables it if an operator toggled it off.
+ */
+const SIEM_DAILY_ARCHIVE_CRON = '15 1 * * *';
+const SIEM_DAILY_ARCHIVE_COMMAND = 'siem:daily-archive';
+
+export async function registerSiemDailyArchiveCron(
+  db: PostgresJsDatabase<typeof schema>,
+): Promise<void> {
+  const nextRunAt = CronExpressionParser.parse(SIEM_DAILY_ARCHIVE_CRON, {
+    currentDate: new Date(),
+    tz: 'UTC',
+  })
+    .next()
+    .toDate();
+
+  const existing = await db
+    .select({ id: schema.cronSchedules.id })
+    .from(schema.cronSchedules)
+    .where(
+      and(
+        isNull(schema.cronSchedules.workspaceId),
+        eq(schema.cronSchedules.command, SIEM_DAILY_ARCHIVE_COMMAND),
+      ),
+    )
+    .limit(1);
+
+  if (existing[0]) {
+    await db
+      .update(schema.cronSchedules)
+      .set({
+        command: SIEM_DAILY_ARCHIVE_COMMAND,
+        cronSpec: SIEM_DAILY_ARCHIVE_CRON,
+        enabled: true,
+        nextRunAt,
+      })
+      .where(eq(schema.cronSchedules.id, existing[0].id));
+    return;
+  }
+
+  await db.insert(schema.cronSchedules).values({
+    workspaceId: null,
+    command: SIEM_DAILY_ARCHIVE_COMMAND,
+    cronSpec: SIEM_DAILY_ARCHIVE_CRON,
+    enabled: true,
+    nextRunAt,
+  });
+}

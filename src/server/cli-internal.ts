@@ -35,7 +35,8 @@ export interface CliArgs {
     | 'trash:purge'
     | 'pages:auto-unlock'
     | 'flashcards:notify-due'
-    | 'siem:retry-sweep';
+    | 'siem:retry-sweep'
+    | 'siem:daily-archive';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -78,6 +79,10 @@ const KNOWN_COMMANDS = [
   // deliveries whose next_attempt_at has passed. Per-attempt rows append to
   // siem_delivery_log; the scheduler logs the swept count.
   'siem:retry-sweep',
+  // v0.9.0 G8 P40 — daily sweep that gzips yesterday's audit_log rows per
+  // workspace + writes them to s3 for every enabled `kind='s3'` forwarder.
+  // One delivery-log row per non-empty archive; empty days produce nothing.
+  'siem:daily-archive',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 
