@@ -1,6 +1,7 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { extractDateTimesFromDoc } from '@/lib/datetime/extract-from-doc';
 import { reconcileFlashcards } from '@/lib/flashcards/reconcile';
 import { requireUnlocked } from '@/lib/pages/lock';
 import { reindexPageLinks } from '@/lib/pages/page-links';
@@ -65,7 +66,17 @@ export async function updatePage(
     if (input.patch.title !== undefined) values.title = input.patch.title;
     if (input.patch.icon !== undefined) values.icon = input.patch.icon;
     if (input.patch.coverUrl !== undefined) values.coverUrl = input.patch.coverUrl;
-    if (input.patch.content !== undefined) values.content = input.patch.content as never;
+    if (input.patch.content !== undefined) {
+      values.content = input.patch.content as never;
+      // v0.9.0 G3 P20 — extract ISO timestamps from every `datetime` block in
+      // the saved doc and stash their ms-epoch values into `metadata.datetimes`.
+      // P29's date-range search filter reads this side-channel rather than
+      // re-parsing `content` jsonb on every query.
+      const dts = extractDateTimesFromDoc(input.patch.content as Parameters<typeof extractDateTimesFromDoc>[0]);
+      const epochs = dts.map((d) => d.epochMs);
+      const existing = (current.metadata ?? {}) as Record<string, unknown>;
+      values.metadata = { ...existing, datetimes: epochs };
+    }
 
     const [updated] = await tx
       .update(schema.pages)
