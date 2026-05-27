@@ -85,15 +85,12 @@ export async function fanOutToPeers(
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5_000);
     try {
-      const res = await fetchImpl(
-        `${peer.baseUrl.replace(/\/$/, '')}/api/search/federated/peer`,
-        {
-          method: 'POST',
-          headers: signed.headers,
-          body: signed.body,
-          signal: controller.signal,
-        },
-      );
+      const res = await fetchImpl(`${peer.baseUrl.replace(/\/$/, '')}/api/search/federated/peer`, {
+        method: 'POST',
+        headers: signed.headers,
+        body: signed.body,
+        signal: controller.signal,
+      });
       if (!res.ok) {
         await db
           .update(schema.peerInstances)

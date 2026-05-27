@@ -14,10 +14,7 @@ beforeEach(() => {
 describe('peer-hmac', () => {
   it('signEnvelope returns deterministic headers + JSON body', () => {
     const fixedTs = 1_700_000_000_000;
-    const r = signEnvelope(
-      { q: 'hello', workspaceScope: 'all', ts: fixedTs, nonce: 'n1' },
-      secret,
-    );
+    const r = signEnvelope({ q: 'hello', workspaceScope: 'all', ts: fixedTs, nonce: 'n1' }, secret);
     expect(r.headers['x-cairn-peer-ts']).toBe(String(fixedTs));
     expect(r.headers['x-cairn-peer-nonce']).toBe('n1');
     expect(r.headers['x-cairn-peer-sig']).toMatch(/^[a-f0-9]{64}$/);
@@ -101,7 +98,9 @@ describe('peer-hmac', () => {
       body: signed.body,
     });
     const body = await req.text();
-    const r = verifyEnvelopeWithBody(req.headers, body, [{ name: 'p1', secret: 'different-secret' }]);
+    const r = verifyEnvelopeWithBody(req.headers, body, [
+      { name: 'p1', secret: 'different-secret' },
+    ]);
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.kind).toBe('bad_signature');
   });

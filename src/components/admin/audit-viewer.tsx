@@ -123,6 +123,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'page.approved': 'Page approved',
   'page.approval_rejected': 'Page approval rejected',
   'page.changes_requested': 'Page changes requested',
+  // v0.9.0 G5 P30 — admin pierced workspace membership via federated search.
+  'search.cross_workspace_admin': 'Admin cross-workspace search',
 };
 
 function actionLabel(action: string): string {
