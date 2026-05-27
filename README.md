@@ -403,8 +403,26 @@ unzip cairn-site.zip -d ./cairn-site && cd ./cairn-site && mkdocs serve
 
 Workspaces containing any encrypted page (E2E per-page or workspace-wide mode)
 are **refused** — static export is public-share-equivalent and must not leak
-ciphertext. Only `mkdocs` is wired in v0.9.0; the Docusaurus target lands in
-P35 with no API/UI breakage.
+ciphertext.
+
+#### Docusaurus
+
+The same pipeline can emit a [Docusaurus](https://docusaurus.io/) project. A
+minimal `docusaurus.config.js` + `sidebars.js` are generated alongside the
+`docs/*.md` tree; each page picks up Docusaurus frontmatter (`id`, `slug`,
+`sidebar_position`, `title`).
+
+```sh
+pnpm export:static -- --workspace <workspace-uuid> --target docusaurus --out site.zip
+unzip site.zip -d ./site && cd ./site
+npm install
+npm run start
+```
+
+Parallel-translation pages (per `pages.translation_of_page_id` +
+`pages.translation_locale`, added in P26) land under
+`i18n/<locale>/docusaurus-plugin-content-docs/current/` and Docusaurus's i18n
+routing renders them at `/<locale>/<slug>`.
 
 ## Local development
 
