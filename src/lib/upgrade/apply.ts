@@ -13,6 +13,20 @@ import { dumpDatabase, restoreDatabase } from './snapshot.js';
 // biome-ignore lint/suspicious/noExplicitAny: schema-agnostic handle; audit helper only needs raw SQL.
 type Db = PostgresJsDatabase<any>;
 
+/**
+ * v0.9.0 G8 P42 — orchestration stage events emitted to `onProgress` so the
+ * admin SSE route can stream real-time status to the upgrade UI. The same
+ * shape lands on the wire as `data: <JSON>\n\n` per SSE event.
+ */
+export type ProgressEvent =
+  | { stage: 'snapshot'; message?: string }
+  | { stage: 'migrate'; message?: string; migrationCount?: number }
+  | { stage: 'restart'; message?: string }
+  | { stage: 'healthcheck'; message?: string }
+  | { stage: 'rollback'; message?: string }
+  | { stage: 'failed'; message?: string }
+  | { stage: 'done'; message?: string };
+
 export type ApplyInput = {
   databaseUrl: string;
   backupDir: string;
@@ -26,9 +40,27 @@ export type ApplyInput = {
   restartServer?: () => Promise<void>;
   /** Pluggable migrator — defaults to Drizzle migrate. */
   runMigrations?: () => Promise<void>;
+  /**
+   * v0.9.0 G8 P42 — pluggable snapshot. Defaults to `dumpDatabase` (which
+   * requires `pg_dump` on PATH). Tests in environments without postgres
+   * client tools inject a stub so the orchestration ladder still runs.
+   */
+  dumpDatabase?: (input: {
+    databaseUrl: string;
+    outDir: string;
+  }) => Promise<{ path: string; bytesWritten: number }>;
+  /** Pluggable restore (mirrors `dumpDatabase`). Defaults to `restoreDatabase`. */
+  restoreDatabase?: (input: { databaseUrl: string; dumpPath: string }) => Promise<void>;
   /** Audit DB handle override (tests). */
   db?: Db;
   healthcheckTimeoutMs?: number;
+  /**
+   * v0.9.0 G8 P42 — invoked at every stage boundary (before snapshot,
+   * before migrate, before restart, before healthcheck, on rollback, on
+   * failed, on done). Optional + best-effort: a callback throw is
+   * swallowed so a flaky SSE sink can't break the upgrade itself.
+   */
+  onProgress?: (event: ProgressEvent) => void;
 };
 
 export type ApplyResult = {
@@ -63,14 +95,26 @@ export async function applyUpgrade(input: ApplyInput): Promise<ApplyResult> {
       }
     });
   const timeout = input.healthcheckTimeoutMs ?? 60_000;
+  const dump = input.dumpDatabase ?? dumpDatabase;
+  const restore = input.restoreDatabase ?? restoreDatabase;
+  const emit = (event: ProgressEvent): void => {
+    if (!input.onProgress) return;
+    try {
+      input.onProgress(event);
+    } catch {
+      // SSE sink throw must not break the upgrade itself.
+    }
+  };
 
   // Step 1: snapshot
+  emit({ stage: 'snapshot' });
   let snapshotPath: string | undefined;
   try {
-    const snap = await dumpDatabase({ databaseUrl: input.databaseUrl, outDir: input.backupDir });
+    const snap = await dump({ databaseUrl: input.databaseUrl, outDir: input.backupDir });
     snapshotPath = snap.path;
   } catch (err) {
     const reason = `snapshot: ${(err as Error).message}`;
+    emit({ stage: 'failed', message: reason });
     await auditUpgradeFailed({
       workspaceId: input.workspaceId,
       fromVersion: input.fromVersion,
@@ -93,19 +137,22 @@ export async function applyUpgrade(input: ApplyInput): Promise<ApplyResult> {
     } finally {
       await client.end();
     }
+    emit({ stage: 'migrate', migrationCount });
     await runMigrations();
   } catch (err) {
-    return rollback(input, snapshotPath, `migrate: ${(err as Error).message}`);
+    return rollback(input, snapshotPath, `migrate: ${(err as Error).message}`, emit, restore);
   }
 
   // Step 3: restart
+  emit({ stage: 'restart' });
   try {
     await restartServer();
   } catch (err) {
-    return rollback(input, snapshotPath, `restart: ${(err as Error).message}`);
+    return rollback(input, snapshotPath, `restart: ${(err as Error).message}`, emit, restore);
   }
 
   // Step 4: poll healthcheck
+  emit({ stage: 'healthcheck' });
   const deadline = Date.now() + timeout;
   let healthy = false;
   while (Date.now() < deadline) {
@@ -120,7 +167,7 @@ export async function applyUpgrade(input: ApplyInput): Promise<ApplyResult> {
     }
     await sleep(250);
   }
-  if (!healthy) return rollback(input, snapshotPath, 'healthcheck timeout');
+  if (!healthy) return rollback(input, snapshotPath, 'healthcheck timeout', emit, restore);
 
   await auditUpgradeApplied({
     workspaceId: input.workspaceId,
@@ -130,6 +177,7 @@ export async function applyUpgrade(input: ApplyInput): Promise<ApplyResult> {
     db: input.db,
     databaseUrl: input.databaseUrl,
   });
+  emit({ stage: 'done' });
   return { ok: true, snapshotPath, migrationCount };
 }
 
@@ -137,11 +185,14 @@ async function rollback(
   input: ApplyInput,
   snapshotPath: string | undefined,
   reasonIn: string,
+  emit: (event: ProgressEvent) => void,
+  restore: NonNullable<ApplyInput['restoreDatabase']>,
 ): Promise<ApplyResult> {
   let reason = reasonIn;
   if (snapshotPath) {
+    emit({ stage: 'rollback', message: snapshotPath });
     try {
-      await restoreDatabase({ databaseUrl: input.databaseUrl, dumpPath: snapshotPath });
+      await restore({ databaseUrl: input.databaseUrl, dumpPath: snapshotPath });
       await auditUpgradeRolledBack({
         workspaceId: input.workspaceId,
         snapshotPath,
@@ -152,6 +203,7 @@ async function rollback(
       reason = `${reason}; rollback also failed: ${(err as Error).message}`;
     }
   }
+  emit({ stage: 'failed', message: reason });
   await auditUpgradeFailed({
     workspaceId: input.workspaceId,
     fromVersion: input.fromVersion,
