@@ -1,3 +1,5 @@
+import { DEFAULT_DISPLAY_FORMAT, formatForViewer } from '@/lib/datetime/format';
+
 type Doc = {
   type: string;
   content?: Doc[];
@@ -78,6 +80,16 @@ function renderInline(node: Doc): string {
       else if (mark.type === 'link') text = `[${text}](${(mark.attrs?.href as string) ?? ''})`;
     }
     return text;
+  }
+  // v0.9.0 G3 P20 — datetime inline atom. Emit semantic <time datetime="...">
+  // (HTML is legal in markdown). The text content uses the node's own tz so
+  // exports are stable across viewers (markdown is a file format, not a UI).
+  if (node.type === 'datetime') {
+    const iso = String(node.attrs?.iso ?? '');
+    const tz = String(node.attrs?.tz ?? 'UTC');
+    const fmt = String(node.attrs?.display_format ?? DEFAULT_DISPLAY_FORMAT);
+    const formatted = formatForViewer(iso, tz, fmt, tz);
+    return `<time datetime="${iso}">${formatted}</time>`;
   }
   return (node.content ?? []).map((c) => renderInline(c)).join('');
 }
