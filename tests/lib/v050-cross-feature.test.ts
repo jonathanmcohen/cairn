@@ -141,6 +141,7 @@ describe('v0.5.0 cross-feature smoke', () => {
       actorUserId: u.userId,
       rootPageId: page.id,
       name: 'Smoke Tpl',
+      visibility: 'workspace',
     });
     expect(tpl.kind).toBe('page');
 
