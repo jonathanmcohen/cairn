@@ -6,7 +6,13 @@ import { checkStorageQuota, incrementStorageUsed } from '@/lib/quotas/quota';
 import { signFileUrl } from './signing';
 import type { FileStorage } from './storage';
 
-const ALLOWED = new Set([
+/**
+ * Server-side MIME allowlist. Re-exported so the bulk-upload client UI
+ * (v0.9.0 G3 P22) can use the SAME constant to drive its `accept=` filter and
+ * pre-upload classification — defense-in-depth: every accepted MIME here is
+ * still re-validated server-side inside `storeUpload`.
+ */
+export const ALLOWED_UPLOAD_MIME: ReadonlySet<string> = new Set([
   'image/png',
   'image/jpeg',
   'image/gif',
@@ -21,7 +27,19 @@ const ALLOWED = new Set([
   // the allowlist is the only change needed here.
   'video/mp4',
   'video/webm',
+  // v0.9.0 G3 P22: audio block + bulk drag-drop. Five common audio MIME types
+  // — the same set the client `BulkUploader` classifies as `kind: 'audio'`.
+  'audio/mpeg',
+  'audio/wav',
+  'audio/ogg',
+  'audio/flac',
+  'audio/aac',
 ]);
+
+/** Pure predicate over `ALLOWED_UPLOAD_MIME` — the single source of truth. */
+export function isAllowedMime(mime: string): boolean {
+  return ALLOWED_UPLOAD_MIME.has(mime);
+}
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60;
 
@@ -43,7 +61,7 @@ export type StoreUploadResult = {
 };
 
 export async function storeUpload(input: StoreUploadInput): Promise<StoreUploadResult> {
-  if (!ALLOWED.has(input.mimeType)) {
+  if (!isAllowedMime(input.mimeType)) {
     throw new Error(`mime type not allowed: ${input.mimeType}`);
   }
   const id = randomUUID();
