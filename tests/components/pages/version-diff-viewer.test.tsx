@@ -73,10 +73,11 @@ describe('<VersionDiffViewer>', () => {
   });
 
   it('collapses runs of >= 4 unchanged blocks into a single toggle', () => {
-    const diff: DiffBlock[] = Array.from({ length: 5 }, (_, i) => ({
+    const blocks = Array.from({ length: 5 }, (_, i) => para(`row-${i}`));
+    const diff: DiffBlock[] = blocks.map((block, index) => ({
       kind: 'unchanged' as const,
-      index: i,
-      block: para(`row-${i}`),
+      index,
+      block,
     }));
     render(
       <VersionDiffViewer
@@ -84,12 +85,12 @@ describe('<VersionDiffViewer>', () => {
         snapshotA={{
           id: 'a',
           createdAt: fixedDate,
-          content: { type: 'doc', content: diff.map((d) => d.block) },
+          content: { type: 'doc', content: blocks },
         }}
         snapshotB={{
           id: 'b',
           createdAt: fixedDate,
-          content: { type: 'doc', content: diff.map((d) => d.block) },
+          content: { type: 'doc', content: blocks },
         }}
       />,
     );
@@ -100,10 +101,11 @@ describe('<VersionDiffViewer>', () => {
   });
 
   it('does NOT collapse a run of 3 unchanged blocks (threshold is 4)', () => {
-    const diff: DiffBlock[] = Array.from({ length: 3 }, (_, i) => ({
+    const blocks = Array.from({ length: 3 }, (_, i) => para(`row-${i}`));
+    const diff: DiffBlock[] = blocks.map((block, index) => ({
       kind: 'unchanged' as const,
-      index: i,
-      block: para(`row-${i}`),
+      index,
+      block,
     }));
     render(
       <VersionDiffViewer
@@ -111,12 +113,12 @@ describe('<VersionDiffViewer>', () => {
         snapshotA={{
           id: 'a',
           createdAt: fixedDate,
-          content: { type: 'doc', content: diff.map((d) => d.block) },
+          content: { type: 'doc', content: blocks },
         }}
         snapshotB={{
           id: 'b',
           createdAt: fixedDate,
-          content: { type: 'doc', content: diff.map((d) => d.block) },
+          content: { type: 'doc', content: blocks },
         }}
       />,
     );
