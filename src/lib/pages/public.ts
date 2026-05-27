@@ -4,9 +4,16 @@ import * as schema from '@/db/schema';
 import { signFileUrl } from '@/lib/files/signing';
 
 /**
- * Resolve a page for the public render surface. Returns the page only when it is
- * published, slug-matched, and not soft-deleted; otherwise null. This is the sole
- * authorization gate for `/p/<slug>` — no session involved.
+ * Resolve a page for the public render surface. Returns the page only when:
+ *   - `public_slug` matches,
+ *   - `published=true` (the public-share toggle), AND
+ *   - `status='published'` (v0.9.0 G4 P26 lifecycle gate — drafts/review/archived
+ *     refuse to render at `/p/<slug>` even if `published=true` because of
+ *     leftover share state),
+ *   - `deleted_at IS NULL`.
+ * Otherwise returns null. This is the sole authorization gate for `/p/<slug>` —
+ * no session involved. Returning null (not throwing) lets callers map to 404
+ * without leaking existence.
  */
 export async function getPublishedPageBySlug(
   db: PostgresJsDatabase<typeof schema>,
@@ -19,6 +26,7 @@ export async function getPublishedPageBySlug(
       and(
         eq(schema.pages.publicSlug, slug),
         eq(schema.pages.published, true),
+        eq(schema.pages.status, 'published'),
         isNull(schema.pages.deletedAt),
       ),
     )

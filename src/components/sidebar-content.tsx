@@ -34,7 +34,9 @@ export async function SidebarContent({
   const recents = ctx ? await listRecents(getDb(), { userId: ctx.userId, workspaceId }) : [];
   // Server-side flatten so the client renders a windowed flat list (P4); the
   // recursive shape is gone — depth annotation handles indentation visually.
-  const tree = await flattenedPageTree(getDb(), workspaceId);
+  // v0.9.0 G4 P26 — pass viewer so the lister can show drafts to their author
+  // and hide archived from everyone.
+  const tree = await flattenedPageTree(getDb(), workspaceId, ctx?.userId);
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="flex items-center justify-between gap-2 border-b p-2">

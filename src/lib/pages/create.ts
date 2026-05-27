@@ -35,6 +35,16 @@ export async function createPage(
         throw new Error('parent page is missing or belongs to a different workspace');
       }
     }
+    // v0.9.0 G4 P26 — honor the workspace's `default_page_status` so admins
+    // who set the default to 'draft' get drafts on new pages. The column
+    // default is 'published' (matches column default), so this branch is a
+    // no-op for fresh installs.
+    const [ws] = await tx
+      .select({ defaultPageStatus: schema.workspaces.defaultPageStatus })
+      .from(schema.workspaces)
+      .where(eq(schema.workspaces.id, input.workspaceId))
+      .limit(1);
+    const defaultStatus = (ws?.defaultPageStatus ?? 'published') as schema.PageStatus;
     const [page] = await tx
       .insert(schema.pages)
       .values({
@@ -44,6 +54,7 @@ export async function createPage(
         title: input.title ?? 'Untitled',
         icon: input.icon ?? formatIcon({ kind: 'emoji', value: randomDefaultIcon() }),
         content: emptyDocument(),
+        status: defaultStatus,
         createdBy: input.createdBy,
       })
       .returning();
