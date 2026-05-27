@@ -174,7 +174,7 @@ Two releases remain to 1.0.
 - [x] G2 P14 — Page lock (migration `0043`) + audit + auto-unlock
 - [x] G3 P15 — Diagram blocks expansion (PlantUML + drawio)
 - [x] G3 P16 — Image gallery + lightbox
-- [ ] G3 P17 — PDF viewer + annotation (migration `0043`)
+- [x] G3 P17 — PDF viewer + annotation (migration `0044`)
 - [ ] G3 P18 — Citation + footnote blocks + bibliography aggregator
 - [ ] G3 P19 — Flashcards (migration `0044`) + SM-2 + due-queue + notifs + digest
 - [ ] G3 P20 — Date/time block with timezone

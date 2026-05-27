@@ -45,7 +45,10 @@ describe('a11y: PdfRenderer (JSDOM smoke)', () => {
     global.fetch = vi
       .fn()
       .mockResolvedValueOnce({ ok: false, status: 403 })
-      .mockResolvedValueOnce({ ok: true, json: async () => ({ annotations: [] }) }) as unknown as typeof fetch;
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ annotations: [] }),
+      }) as unknown as typeof fetch;
     render(<PdfRenderer fileId="f1" defaultPage={1} pageId="p1" />);
     const alert = await screen.findByRole('alert');
     expect(alert.textContent).toMatch(/encrypted page/i);

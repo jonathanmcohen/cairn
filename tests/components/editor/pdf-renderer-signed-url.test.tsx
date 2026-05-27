@@ -29,7 +29,7 @@ describe('PdfRenderer signed-url flow', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
     render(<PdfRenderer fileId="abc" defaultPage={1} pageId="p1" />);
     await waitFor(() => {
-      expect((pdfjs.getDocument as unknown as ReturnType<typeof vi.fn>)).toHaveBeenCalledWith(
+      expect(pdfjs.getDocument as unknown as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
         'https://signed/example.pdf',
       );
     });

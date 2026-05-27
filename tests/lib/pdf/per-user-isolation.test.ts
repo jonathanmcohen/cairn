@@ -38,9 +38,7 @@ async function seedExtraUser(workspaceId: string, email: string): Promise<string
     .values({ email, passwordHash: 'h', name: 'other' })
     .returning();
   if (!u) throw new Error('user insert failed');
-  await db
-    .insert(schema.workspaceMembers)
-    .values({ workspaceId, userId: u.id, role: 'editor' });
+  await db.insert(schema.workspaceMembers).values({ workspaceId, userId: u.id, role: 'editor' });
   return u.id;
 }
 
@@ -122,9 +120,7 @@ describe('per-user annotation isolation', () => {
     await expect(
       updateAnnotation(db, { id: a.id, userId: userBId, content: 'tamper' }),
     ).rejects.toThrow(/not found/i);
-    await expect(deleteAnnotation(db, { id: a.id, userId: userBId })).rejects.toThrow(
-      /not found/i,
-    );
+    await expect(deleteAnnotation(db, { id: a.id, userId: userBId })).rejects.toThrow(/not found/i);
 
     // confirm row still intact under userA
     const listA = await listAnnotations(db, { fileId, userId: userA.userId });
