@@ -13,6 +13,7 @@ import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockBanner } from '@/components/pages/lock-banner';
 import { LockToggle } from '@/components/pages/lock-toggle';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
+import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { VersionHistory } from '@/components/pages/version-history';
 import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
@@ -112,6 +113,12 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         editable={hasMinRole(ctx.role, 'editor')}
         encrypted={page.encrypted}
       />
+      {/* v0.9.0 G5 P27 — "See also" related-pages panel (vector kNN, ACL-gated).
+          PageDetailShell has no right-rail slot so this renders in-flow below
+          the editor. The helper excludes encrypted pages server-side. */}
+      <div className="mt-10">
+        <SeeAlsoPanel pageId={page.id} viewerUserId={ctx.userId} />
+      </div>
     </PageDetailShell>
   );
 }
