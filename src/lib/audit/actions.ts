@@ -55,6 +55,13 @@ export const AUDIT_ACTIONS = [
   'mfa.passkey_used',
   'mfa.stepup_required',
   'mfa.policy_changed',
+  // v0.9.0 G2 P11 — Spaces CRUD + per-space membership.
+  'space.created',
+  'space.updated',
+  'space.deleted',
+  'space.member_added',
+  'space.member_removed',
+  'page.moved_space',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -73,4 +80,7 @@ export type AuditTargetType =
   | 'page_acl'
   // v0.9.0 G1 P8 — passkey credential rows + workspace MFA policy rows.
   | 'webauthn_credential'
-  | 'mfa_policy';
+  | 'mfa_policy'
+  // v0.9.0 G2 P11 — spaces CRUD + per-space ACL rows.
+  | 'space'
+  | 'space_member';
