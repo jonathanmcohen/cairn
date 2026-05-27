@@ -81,6 +81,12 @@ export const REDACT_PATHS: string[] = [
   'env.S3_SECRET_KEY',
   'S3_SECRET_KEY',
   '*.S3_SECRET_KEY',
+  // v0.9.0 G8 P43 — encrypted-backup envelope passphrase. Never logged; a
+  // stray "log env" line in the backup CLI must not leak it. The actual
+  // ciphertext on disk is safe to log, but the passphrase is not.
+  'env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
+  'CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
+  '*.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
 ];
 
 const level = process.env.CAIRN_LOG_LEVEL ?? 'info';

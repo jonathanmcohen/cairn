@@ -117,6 +117,15 @@ const Schema = z.object({
     .enum(['true', 'false'])
     .default('true')
     .transform((v) => v === 'true'),
+  // v0.9.0 G8 P43 — at-rest encryption envelope for backup archives.
+  // Optional. When set (≥ 8 chars), the backup CLI wraps the pg_dump output in
+  // an AES-256-GCM envelope (Argon2id-derived key, random per-archive nonce,
+  // GCM auth tag). When unset, behaviour is identical to v0.5 P5 (raw dump).
+  // The passphrase is the ONLY thing that can decrypt archives — there is no
+  // recovery path if lost. The 8-char floor is a sanity check; operators
+  // SHOULD use much longer values stored in a secret manager. See
+  // docs/operations.md § "Encrypted backup passphrase rotation".
+  CAIRN_BACKUP_ENCRYPTION_PASSPHRASE: z.string().min(8).optional(),
 });
 
 export type Env = z.infer<typeof Schema>;
