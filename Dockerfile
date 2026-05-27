@@ -31,6 +31,12 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# v0.9.0 G8 P41 — cairn-upgrade CLI spawns pg_dump + psql for snapshot/
+# restore during upgrade orchestration. The postgresql-client package on the
+# Alpine repo ships both binaries (~6 MB compressed). Pinned to v17 so the
+# wire-protocol matches the Postgres 17/18 server image used in production.
+RUN apk add --no-cache postgresql17-client
+
 RUN addgroup -g 1001 -S cairn && adduser -u 1001 -S cairn -G cairn
 
 # Standalone bundle from Next.js
