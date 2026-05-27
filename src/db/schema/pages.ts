@@ -8,8 +8,13 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { workspaces } from './workspaces';
+
+/** Closed enum for the v0.9.0 G4 P26 lifecycle status (spec §2 G4 #29). */
+export const PAGE_STATUSES = ['draft', 'review', 'published', 'archived'] as const;
+export type PageStatus = (typeof PAGE_STATUSES)[number];
 
 const tsvector = customType<{ data: string }>({
   dataType() {
@@ -86,6 +91,19 @@ export const pages = pgTable(
     lockedAt: timestamp('locked_at', { withTimezone: true }),
     lockedBy: uuid('locked_by').references(() => users.id, { onDelete: 'set null' }),
     lockedUntil: timestamp('locked_until', { withTimezone: true }),
+    // v0.9.0 G4 P26 — lifecycle status. CHECK constraint added by hand in the
+    // migration SQL (Drizzle generator has no CHECK builder). Backfill in the
+    // migration sets every existing row to 'published'. Default mirrors the
+    // forward-declared workspaces.default_page_status (P13).
+    status: text('status').notNull().default('published'),
+    // v0.9.0 G4 P26 — translation linkage. Self-FK + BCP-47 locale code. Self-FK
+    // requires AnyPgColumn cast (Drizzle callback form cannot reference the
+    // table being declared).
+    translationOfPageId: uuid('translation_of_page_id').references(
+      (): AnyPgColumn => pages.id,
+      { onDelete: 'set null' },
+    ),
+    translationLocale: text('translation_locale'),
   },
   (t) => ({
     workspaceIdx: index('pages_workspace_idx').on(t.workspaceId),
@@ -93,6 +111,9 @@ export const pages = pgTable(
     tsvIdx: index('pages_content_tsv_idx').using('gin', t.contentTsv),
     // v0.9.0 G2 P11 — sidebar groups pages by space, so the lister filters by it.
     spaceIdx: index('pages_space_id_idx').on(t.spaceId),
+    // v0.9.0 G4 P26 — lifecycle status + translation lookups.
+    statusIdx: index('pages_status_idx').on(t.status),
+    translationOfIdx: index('pages_translation_of_idx').on(t.translationOfPageId),
   }),
 );
 
