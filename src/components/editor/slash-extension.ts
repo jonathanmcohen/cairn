@@ -167,6 +167,49 @@ function toSlashItem(entry: CitationSlashEntry): SlashItem {
   return { title: entry.title, description: entry.description, command: entry.run };
 }
 
+/**
+ * v0.9.0 G3 P20 — `/datetime` slash entry. Inserts a timezone-aware date/time
+ * inline atom defaulting to "now" in the browser's resolved IANA zone. The
+ * lazy `datetime` extension is loaded on demand so the popover picker + Luxon
+ * helpers stay out of the initial editor bundle.
+ */
+export const datetimeMenuItem: CitationSlashEntry = {
+  command: '/datetime',
+  title: 'Date/time',
+  description: 'Insert a date/time with timezone',
+  run: (editor: Editor): void => {
+    void ensureLazyExtension(editor, 'datetime').then(async () => {
+      if (editor.isDestroyed) return;
+      const { parseInput, DEFAULT_DISPLAY_FORMAT } = await import('@/lib/datetime/format');
+      const now = new Date();
+      const tz =
+        typeof Intl !== 'undefined' && Intl.DateTimeFormat
+          ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC')
+          : 'UTC';
+      // Convert the current instant into the resolved tz's wall-clock so
+      // parseInput round-trips back to (roughly) the same UTC instant.
+      const local = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const date = `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}`;
+      const time = `${pad(local.getHours())}:${pad(local.getMinutes())}`;
+      let iso: string;
+      try {
+        iso = parseInput({ date, time, tz });
+      } catch {
+        iso = now.toISOString();
+      }
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'datetime',
+          attrs: { iso, tz, display_format: DEFAULT_DISPLAY_FORMAT },
+        })
+        .run();
+    });
+  },
+};
+
 export const pdfSlashItem: SlashItem = {
   title: 'PDF',
   description: 'Upload a PDF and annotate it inline',
@@ -403,6 +446,7 @@ const items: SlashItem[] = [
   pdfSlashItem,
   toSlashItem(footnoteMenuItem),
   toSlashItem(citationMenuItem),
+  toSlashItem(datetimeMenuItem),
   {
     title: 'Flashcard',
     description: 'Spaced-repetition flashcard (front / back / deck tag)',
