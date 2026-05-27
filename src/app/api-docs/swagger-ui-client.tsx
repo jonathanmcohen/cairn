@@ -19,7 +19,7 @@ type SwaggerLike = (opts: {
 }) => unknown;
 
 export default function SwaggerUiClient({ specUrl }: { specUrl: string }) {
-  const ref = useRef<HTMLDivElement | null>(null);
+  const ref = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -45,5 +45,5 @@ export default function SwaggerUiClient({ specUrl }: { specUrl: string }) {
     };
   }, [specUrl]);
 
-  return <div ref={ref} role="region" aria-label="Swagger UI" />;
+  return <section ref={ref} aria-label="Swagger UI" />;
 }

@@ -57,9 +57,7 @@ export async function POST(req: Request): Promise<Response> {
     const [page] = await db
       .select({ id: schema.pages.id })
       .from(schema.pages)
-      .where(
-        and(eq(schema.pages.id, parsed.pageId), eq(schema.pages.workspaceId, ctx.workspaceId)),
-      )
+      .where(and(eq(schema.pages.id, parsed.pageId), eq(schema.pages.workspaceId, ctx.workspaceId)))
       .limit(1);
     if (!page) {
       return NextResponse.json({ error: 'page not found' }, { status: 404 });

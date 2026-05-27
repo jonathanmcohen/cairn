@@ -57,9 +57,7 @@ export default async function ChatBridgeChannelsPage() {
   const pages = await db
     .select({ id: schema.pages.id, title: schema.pages.title })
     .from(schema.pages)
-    .where(
-      and(eq(schema.pages.workspaceId, ctx.workspaceId), eq(schema.pages.encrypted, false)),
-    )
+    .where(and(eq(schema.pages.workspaceId, ctx.workspaceId), eq(schema.pages.encrypted, false)))
     .limit(500);
 
   return (
@@ -67,8 +65,8 @@ export default async function ChatBridgeChannelsPage() {
       <header>
         <h1 className="text-2xl font-semibold">Chat bridge — channel links</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Connect a Slack or Discord channel to a Cairn page. In <b>sync</b> mode, messages from
-          the channel append as comments and new comments post back to the channel. In <b>notify</b>
+          Connect a Slack or Discord channel to a Cairn page. In <b>sync</b> mode, messages from the
+          channel append as comments and new comments post back to the channel. In <b>notify</b>
           mode, only outbound notifications fire.
         </p>
       </header>

@@ -139,7 +139,10 @@ describe('POST /api/chat/discord/interactions', () => {
     });
     const res = await POST(req);
     expect(res.status).toBe(200);
-    const payload = (await res.json()) as { type: number; data: { content: string; flags: number } };
+    const payload = (await res.json()) as {
+      type: number;
+      data: { content: string; flags: number };
+    };
     expect(payload.type).toBe(4);
     expect(payload.data.flags).toBe(64);
     expect(payload.data.content).toMatch(/created.+Foo bar/i);

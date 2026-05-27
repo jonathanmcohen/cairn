@@ -93,8 +93,7 @@ export async function ingestChannelMessage(input: {
     .limit(1);
   if (page?.encrypted) return { kind: 'skipped_encrypted' };
 
-  const customLimit =
-    (install.options as { rateLimit?: number } | null)?.rateLimit ?? undefined;
+  const customLimit = (install.options as { rateLimit?: number } | null)?.rateLimit ?? undefined;
   const rl = await checkRateLimit({
     workspaceId: install.workspaceId,
     limit: customLimit,

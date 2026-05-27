@@ -17,7 +17,7 @@
  * `chat_bridge_installs.team_id` for the Discord install row.
  */
 
-import { eq, and } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
@@ -138,8 +138,7 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ type: 4, data: { content: 'unsupported', flags: FLAG_EPHEMERAL } });
   }
 
-  const customLimit =
-    (install.options as { rateLimit?: number } | null)?.rateLimit ?? undefined;
+  const customLimit = (install.options as { rateLimit?: number } | null)?.rateLimit ?? undefined;
   const rl = await checkRateLimit({
     workspaceId: install.workspaceId,
     limit: customLimit,

@@ -85,8 +85,7 @@ export async function POST(req: Request): Promise<Response> {
     return NextResponse.json({ error: 'bad signature' }, { status: 401 });
   }
 
-  const customLimit =
-    (install.options as { rateLimit?: number } | null)?.rateLimit ?? undefined;
+  const customLimit = (install.options as { rateLimit?: number } | null)?.rateLimit ?? undefined;
   const rl = await checkRateLimit({
     workspaceId: install.workspaceId,
     limit: customLimit,
