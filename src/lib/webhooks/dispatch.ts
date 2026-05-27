@@ -2,6 +2,9 @@ import { and, arrayContains, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { evaluateRules } from '@/lib/automation/dispatcher';
+import { type CairnChatEvent, translateToSlack } from '@/lib/chat/translate-slack';
+import { translateToDiscord } from '@/lib/chat/translate-discord';
+import { recordPostedMessage } from '@/lib/chat/posted-log';
 import { logger } from '@/lib/observability/logger';
 import { incWebhook } from '@/lib/observability/metrics';
 import { signBody } from './sign';
@@ -21,6 +24,95 @@ const MAX_ATTEMPTS = 3;
 /** Canonical, signed-over JSON. Keep field order stable so signatures match. */
 export function canonicalBody(event: WebhookEvent, payload: unknown): string {
   return JSON.stringify({ event, data: payload });
+}
+
+/**
+ * v0.9.0 G7 P36 — translate to a kind-specific body. `generic` is the canonical
+ * v0.5 path; `slack`/`discord` run the payload through the translators. If the
+ * payload doesn't fit the chat-event shape we fall back to canonical so the
+ * delivery still ships (no dropped notifications for shape mismatches).
+ */
+function bodyForKind(kind: string, event: WebhookEvent, payload: unknown): string {
+  if (kind !== 'slack' && kind !== 'discord') return canonicalBody(event, payload);
+  if (event !== 'page.created' && event !== 'page.updated' && event !== 'comment.created') {
+    return canonicalBody(event, payload);
+  }
+  // The translators are pure transforms over `{event, data}`; the data shape
+  // must include a `.page` object. If the payload doesn't conform, drop back
+  // to canonical instead of throwing — dispatch must not lose deliveries.
+  const data = payload as { page?: unknown } | null;
+  if (!data || typeof data !== 'object' || !('page' in data)) {
+    return canonicalBody(event, payload);
+  }
+  const chatEvent = { event, data } as CairnChatEvent;
+  if (kind === 'slack') return JSON.stringify(translateToSlack(chatEvent));
+  return JSON.stringify(translateToDiscord(chatEvent));
+}
+
+/**
+ * v0.9.0 G7 P36 — after a 2xx delivery to a slack/discord hook, parse the
+ * response and record a `chat_posted_messages` row mapping
+ * `(platform, channel, thread_ts|message_id) → page` so an inbound reply
+ * (Task 6) resolves back. Skips quietly if the response shape doesn't include
+ * the platform message id we need.
+ */
+async function recordOutboundPostedMessage(
+  db: ReturnType<typeof getDb>,
+  input: {
+    response: Response;
+    kind: 'slack' | 'discord';
+    workspaceId: string;
+    payload: unknown;
+    platformMetadata: Record<string, unknown> | null;
+    targetUrl: string;
+  },
+): Promise<void> {
+  // Slack chat.postMessage / response_url responses include `{ok, ts, channel}`.
+  // Discord webhook executes return the Message object {id, channel_id, ...}
+  // only when the URL has `?wait=true`. If neither is present, give up.
+  let messageId: string | null = null;
+  let threadTs: string | null = null;
+  let channelId: string | null = null;
+  try {
+    const resp = (await input.response.clone().json().catch(() => null)) as
+      | Record<string, unknown>
+      | null;
+    if (resp) {
+      if (input.kind === 'slack') {
+        const ts = typeof resp.ts === 'string' ? resp.ts : null;
+        const channel = typeof resp.channel === 'string' ? resp.channel : null;
+        messageId = ts;
+        threadTs = ts;
+        channelId = channel;
+      } else {
+        const id = typeof resp.id === 'string' ? resp.id : null;
+        const channel = typeof resp.channel_id === 'string' ? resp.channel_id : null;
+        messageId = id;
+        channelId = channel;
+      }
+    }
+  } catch {
+    // ignore parse errors — fall through to null and skip below.
+  }
+
+  // Operators may set channel_id in platform_metadata so we can still pin posts
+  // to a channel even when the platform response omits it.
+  if (!channelId) {
+    const meta = input.platformMetadata as { channel_id?: string } | null;
+    channelId = typeof meta?.channel_id === 'string' ? meta.channel_id : input.targetUrl;
+  }
+
+  const pageId = (input.payload as { page?: { id?: string } } | null)?.page?.id;
+  if (!messageId || !pageId) return; // Not enough to log; bail out quietly.
+
+  await recordPostedMessage(db, {
+    workspaceId: input.workspaceId,
+    pageId,
+    platform: input.kind,
+    channelId,
+    messageId,
+    threadTs,
+  });
 }
 
 /**
@@ -104,6 +196,9 @@ export async function deliver(
       delivery: schema.webhookDeliveries,
       url: schema.webhooks.url,
       secret: schema.webhooks.secret,
+      kind: schema.webhooks.kind,
+      platformMetadata: schema.webhooks.platformMetadata,
+      workspaceId: schema.webhooks.workspaceId,
     })
     .from(schema.webhookDeliveries)
     .innerJoin(schema.webhooks, eq(schema.webhookDeliveries.webhookId, schema.webhooks.id))
@@ -111,7 +206,11 @@ export async function deliver(
     .limit(1);
   if (!row || row.delivery.status === 'success') return;
 
-  const body = canonicalBody(row.delivery.event as WebhookEvent, row.delivery.payload);
+  const event = row.delivery.event as WebhookEvent;
+  // v0.9.0 G7 P36 — when kind is slack/discord the body is platform-shaped.
+  // The HMAC still signs the EXACT bytes we POST, so the signature header
+  // remains meaningful even on platforms that ignore unknown headers.
+  const body = bodyForKind(row.kind ?? 'generic', event, row.delivery.payload);
   const signature = signBody(row.secret, body);
 
   let attempts = 0;
@@ -145,6 +244,29 @@ export async function deliver(
           outcome,
           durationSec: (performance.now() - attemptStart) / 1000,
         });
+        // v0.9.0 G7 P36 — record the posted-message log row so an inbound
+        // reply (Task 6) can resolve back to (page, parentComment). Non-fatal:
+        // if the response shape is unexpected, we just skip — the user can
+        // still see the message in Slack/Discord, only inbound resolution
+        // suffers.
+        if (row.kind === 'slack' || row.kind === 'discord') {
+          await recordOutboundPostedMessage(db, {
+            response: res,
+            kind: row.kind,
+            workspaceId: row.workspaceId,
+            payload: row.delivery.payload,
+            platformMetadata: row.platformMetadata,
+            targetUrl: row.url,
+          }).catch((err) => {
+            logger.warn(
+              {
+                deliveryId,
+                err: err instanceof Error ? { message: err.message, name: err.name } : err,
+              },
+              '[chat] posted-log write failed',
+            );
+          });
+        }
         return;
       }
     } catch (err) {
