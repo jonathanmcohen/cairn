@@ -83,9 +83,7 @@ describe('siem delivery metrics', () => {
     );
     const dump = await metricsRegistry().metrics();
     expect(dump).toContain('cairn_siem_delivery_total');
-    expect(dump).toMatch(
-      /cairn_siem_delivery_total\{forwarder_kind="http",status="success"\}\s+1/,
-    );
+    expect(dump).toMatch(/cairn_siem_delivery_total\{forwarder_kind="http",status="success"\}\s+1/);
     expect(dump).toContain('cairn_siem_delivery_latency_seconds');
   });
 
@@ -124,8 +122,6 @@ describe('siem delivery metrics', () => {
       { senders: { http: vi.fn().mockRejectedValue(new Error('boom')), syslog: vi.fn() }, db },
     );
     const dump = await metricsRegistry().metrics();
-    expect(dump).toMatch(
-      /cairn_siem_delivery_total\{forwarder_kind="http",status="retry"\}\s+1/,
-    );
+    expect(dump).toMatch(/cairn_siem_delivery_total\{forwarder_kind="http",status="retry"\}\s+1/);
   });
 });
