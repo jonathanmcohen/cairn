@@ -6,10 +6,7 @@ export type ComposeApplyInput = {
   fromVersion: string;
   toVersion: string;
   dockerCompose?: (args: string[]) => Promise<{ ok: boolean; stderr?: string }>;
-  dump?: (
-    databaseUrl: string,
-    outDir: string,
-  ) => Promise<{ path: string; bytesWritten: number }>;
+  dump?: (databaseUrl: string, outDir: string) => Promise<{ path: string; bytesWritten: number }>;
   healthcheck?: () => Promise<{ ok: boolean; drift: boolean; reason?: string }>;
   restore?: (databaseUrl: string, dumpPath: string) => Promise<void>;
   healthcheckTimeoutMs?: number;
@@ -31,10 +28,12 @@ export async function applyViaCompose(input: ComposeApplyInput): Promise<Compose
     (async (u, d) => (await import('./snapshot.js')).dumpDatabase({ databaseUrl: u, outDir: d }));
   const health =
     input.healthcheck ??
-    (async () => (await import('./healthcheck.js')).runHealthcheck({ databaseUrl: input.databaseUrl }));
+    (async () =>
+      (await import('./healthcheck.js')).runHealthcheck({ databaseUrl: input.databaseUrl }));
   const restore =
     input.restore ??
-    (async (u, p) => (await import('./snapshot.js')).restoreDatabase({ databaseUrl: u, dumpPath: p }));
+    (async (u, p) =>
+      (await import('./snapshot.js')).restoreDatabase({ databaseUrl: u, dumpPath: p }));
 
   const stop = await compose(['stop', 'cairn', 'cairn-collab']);
   if (!stop.ok) return { ok: false, error: `compose stop: ${stop.stderr ?? ''}` };
@@ -42,7 +41,8 @@ export async function applyViaCompose(input: ComposeApplyInput): Promise<Compose
   const snap = await dump(input.databaseUrl, input.backupDir);
 
   const pull = await compose(['pull']);
-  if (!pull.ok) return { ok: false, snapshotPath: snap.path, error: `compose pull: ${pull.stderr ?? ''}` };
+  if (!pull.ok)
+    return { ok: false, snapshotPath: snap.path, error: `compose pull: ${pull.stderr ?? ''}` };
 
   const up = await compose(['up', '-d']);
   if (!up.ok) {
@@ -59,7 +59,11 @@ export async function applyViaCompose(input: ComposeApplyInput): Promise<Compose
   }
   if (!last.ok) {
     await restore(input.databaseUrl, snap.path).catch(() => {});
-    return { ok: false, snapshotPath: snap.path, error: `healthcheck: ${last.reason ?? 'unknown'}` };
+    return {
+      ok: false,
+      snapshotPath: snap.path,
+      error: `healthcheck: ${last.reason ?? 'unknown'}`,
+    };
   }
   return { ok: true, snapshotPath: snap.path };
 }

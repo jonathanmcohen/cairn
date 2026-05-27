@@ -50,8 +50,8 @@ export default async function AdminUpgradePage() {
       <h1 className="mb-4 font-semibold text-xl">Cairn upgrade</h1>
       <p className="mb-4 text-muted-foreground text-sm">
         The release-watch daemon polls the configured release feed and inserts a notification when a
-        newer stable tag is published. Use the button below to apply the upgrade in place
-        (snapshot → migrate → restart → healthcheck). Auto-apply is off by default.
+        newer stable tag is published. Use the button below to apply the upgrade in place (snapshot
+        → migrate → restart → healthcheck). Auto-apply is off by default.
       </p>
       <dl className="mt-6 grid grid-cols-2 gap-4 text-sm">
         <dt className="font-medium">Current version</dt>

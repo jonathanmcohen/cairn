@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { type ReactElement, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { DiffBlock, InlineDiff, PMDoc, PMNode } from '@/lib/pages/version-diff';
 
@@ -156,15 +156,14 @@ export function VersionDiffViewer({ diff, snapshotA, snapshotB }: VersionDiffVie
       {rows.flatMap((row) => {
         if (row.kind === 'collapsed') {
           if (expanded.has(row.firstRowIndex)) {
-            return diff
-              .slice(row.firstRowIndex, row.firstRowIndex + row.count)
-              .map((entry, k) => (
-                <DiffRow
-                  key={`row-${row.firstRowIndex + k}`}
-                  rowIndex={row.firstRowIndex + k}
-                  entry={entry}
-                />
-              ));
+            const slice = diff.slice(row.firstRowIndex, row.firstRowIndex + row.count);
+            const out: ReactElement[] = [];
+            for (let k = 0; k < slice.length; k++) {
+              const entry = slice[k] as DiffBlock;
+              const rowIndex = row.firstRowIndex + k;
+              out.push(<DiffRow key={`row-${rowIndex}`} rowIndex={rowIndex} entry={entry} />);
+            }
+            return out;
           }
           return [
             <div key={`collapsed-${row.firstRowIndex}`} className="col-span-2 my-2">

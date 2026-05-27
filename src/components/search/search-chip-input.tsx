@@ -55,10 +55,7 @@ export function SearchChipInput({ initialValue, onChange }: SearchChipInputProps
     <div className="flex flex-wrap items-center gap-1 rounded-md border px-2 py-1.5">
       {parsed.ops.map((op, idx) => (
         <span
-          // biome-ignore lint/suspicious/noArrayIndexKey: chip identity is
-          // stable for its render position; ops may carry duplicate
-          // key:value pairs (e.g. type:page type:db_row) so a composite key
-          // is not unique.
+          // biome-ignore lint/suspicious/noArrayIndexKey: chip identity is stable for its render position; ops may carry duplicate key:value pairs (e.g. type:page type:db_row) so a composite key is not unique.
           key={`${op.key}-${op.value}-${idx}`}
           className="inline-flex items-center gap-1 rounded bg-muted px-2 py-0.5 text-xs"
         >

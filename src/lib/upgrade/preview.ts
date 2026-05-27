@@ -99,11 +99,7 @@ function withDb(databaseUrl: string, dbName: string): string {
   return u.toString();
 }
 
-async function spawnOk(
-  cmd: string,
-  args: string[],
-  opts?: { writeTo?: string },
-): Promise<void> {
+async function spawnOk(cmd: string, args: string[], opts?: { writeTo?: string }): Promise<void> {
   return new Promise<void>((resolve, reject) => {
     const proc = spawn(cmd, args, {
       stdio: ['ignore', opts?.writeTo ? 'pipe' : 'inherit', 'pipe'],

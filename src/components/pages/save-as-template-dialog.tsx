@@ -73,11 +73,13 @@ export function SaveAsTemplateDialog(props: SaveAsTemplateDialogProps) {
 
   return (
     // biome-ignore lint/a11y/noStaticElementInteractions: backdrop close on click; Esc handler above wires keyboard dismissal
+    // biome-ignore lint/a11y/useKeyWithClickEvents: backdrop close on click; Esc handler above wires keyboard dismissal
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={onClose}
     >
       {/* biome-ignore lint/a11y/noStaticElementInteractions: stop propagation so clicks inside the dialog don't close it; Esc + the form submit / cancel handle keyboard dismissal */}
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: stop propagation so clicks inside the dialog don't close it; Esc + the form submit / cancel handle keyboard dismissal */}
       <div
         ref={dialogRef}
         className="w-[420px] max-w-[92vw] rounded-lg border bg-background p-4 shadow-xl"

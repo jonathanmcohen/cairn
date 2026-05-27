@@ -50,7 +50,7 @@ describe('runReleaseWatchTick', () => {
     ]);
 
     // Separate workspace with its own owner.
-    const ws2Owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    await createTestWorkspaceWithUser(db, { role: 'owner' });
 
     const result = await runReleaseWatchTick({
       db,
@@ -79,9 +79,11 @@ describe('runReleaseWatchTick', () => {
 
   it('is idempotent per-version (rerun = 0 new rows)', async () => {
     const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
-    const fetchFeed = async (): Promise<
-      { ok: true; latestTag: string; releaseNotesUrl: string }
-    > => ({ ok: true, latestTag: '0.9.0', releaseNotesUrl: 'x' });
+    const fetchFeed = async (): Promise<{
+      ok: true;
+      latestTag: string;
+      releaseNotesUrl: string;
+    }> => ({ ok: true, latestTag: '0.9.0', releaseNotesUrl: 'x' });
 
     const first = await runReleaseWatchTick({ db, currentVersion: '0.8.0', fetchFeed });
     const second = await runReleaseWatchTick({ db, currentVersion: '0.8.0', fetchFeed });

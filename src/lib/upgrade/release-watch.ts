@@ -17,7 +17,7 @@
  */
 import { sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
-import * as schema from '@/db/schema';
+import type * as schema from '@/db/schema';
 import { compareVersions } from './feed';
 
 type Db = PostgresJsDatabase<typeof schema>;

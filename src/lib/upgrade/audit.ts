@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
-import { drizzle } from 'drizzle-orm/postgres-js';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 
 // biome-ignore lint/suspicious/noExplicitAny: drizzle handle is opaque at this layer; tests + apply pass schema'd handles.
