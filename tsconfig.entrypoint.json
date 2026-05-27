@@ -20,7 +20,8 @@
     "src/lib/templates/**/*.ts",
     "src/lib/reminders/**/*.ts",
     "src/lib/upgrade/**/*.ts",
-    "src/lib/audit/**/*.ts"
+    "src/lib/audit/**/*.ts",
+    "src/lib/backups/**/*.ts"
   ],
   "exclude": ["node_modules", ".next", "tests", "src/**/__tests__/**"]
 }

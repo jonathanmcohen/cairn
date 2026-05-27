@@ -3,14 +3,17 @@
 // a client older than the server cannot restore a 16 custom-format dump. Pin the apt
 // package in the Dockerfile runner stage and keep it in lockstep with the Postgres image.
 import { spawn } from 'node:child_process';
-import { mkdir, readdir, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { createReadStream, createWriteStream } from 'node:fs';
+import { mkdir, readdir, readFile, rm, stat, unlink, writeFile } from 'node:fs/promises';
 import { basename, dirname, join } from 'node:path';
 import { createInterface } from 'node:readline/promises';
+import { pipeline } from 'node:stream/promises';
 import { type CliArgs, type DbConnection, parseArgs, parseDbUrl } from './cli-internal.js';
 
 const VERSION = process.env.npm_package_version ?? 'unknown';
 const UPLOAD_DIR = process.env.UPLOAD_DIR ?? '/data/uploads';
 const FILE_BACKEND = process.env.FILE_BACKEND ?? 'local';
+const BACKUP_PASSPHRASE = process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE;
 
 // `env` is extra vars merged onto process.env (see spawn below). Typed as a plain
 // string map rather than NodeJS.ProcessEnv: under the entrypoint tsconfig, Next's
@@ -28,6 +31,52 @@ function run(cmd: string, args: string[], env?: Record<string, string>): Promise
 
 function stamp(): string {
   return new Date().toISOString().replace(/[:.]/g, '-');
+}
+
+/**
+ * v0.9.0 G8 P43 — wrap a file in the AES-256-GCM envelope when
+ * CAIRN_BACKUP_ENCRYPTION_PASSPHRASE is set. The plaintext input is removed on
+ * success so the on-disk artefact is only the `.enc` ciphertext. No-op when the
+ * env is unset (raw .dump / .tar.gz stays exactly as v0.5 P5 produced it).
+ *
+ * Returned path is the final on-disk artefact (input path when unencrypted;
+ * `${input}.enc` when encrypted). Callers update their bookkeeping (manifest,
+ * pushToTarget) against the returned name.
+ */
+async function encryptInPlaceIfRequested(inputPath: string): Promise<string> {
+  if (!BACKUP_PASSPHRASE) return inputPath;
+  const { encryptBackup } = await import('../lib/backups/encryption.js');
+  const outputPath = `${inputPath}.enc`;
+  console.log(`Encrypting ${basename(inputPath)} → ${basename(outputPath)} (AES-256-GCM envelope)`);
+  await pipeline(
+    createReadStream(inputPath),
+    encryptBackup(BACKUP_PASSPHRASE),
+    createWriteStream(outputPath),
+  );
+  await unlink(inputPath);
+  return outputPath;
+}
+
+/**
+ * v0.9.0 G8 P43 — inverse of encryptInPlaceIfRequested. Reads `<bundle>.enc`,
+ * decrypts to a sibling `<bundle>` (without `.enc`), and returns the plaintext
+ * path. The caller is responsible for cleaning up the plaintext after restore.
+ * Throws on wrong passphrase / tamper / wrong magic with the underlying
+ * `decryption failed: ...` / `envelope magic mismatch ...` message.
+ */
+async function decryptToSibling(encPath: string, passphrase: string): Promise<string> {
+  const { decryptBackup } = await import('../lib/backups/encryption.js');
+  const plainPath = encPath.replace(/\.enc$/, '');
+  if (plainPath === encPath) {
+    throw new Error(`decrypt path requires a .enc suffix on the input file, got: ${encPath}`);
+  }
+  console.log(`Decrypting ${basename(encPath)} → ${basename(plainPath)}`);
+  await pipeline(
+    createReadStream(encPath),
+    decryptBackup(passphrase),
+    createWriteStream(plainPath),
+  );
+  return plainPath;
 }
 
 async function backup(conn: DbConnection, outDir: string): Promise<string> {
@@ -53,6 +102,8 @@ async function backup(conn: DbConnection, outDir: string): Promise<string> {
     ],
     { PGPASSWORD: conn.password },
   );
+  // v0.9.0 G8 P43 — optional AES-256-GCM envelope. No-op when the env is unset.
+  await encryptInPlaceIfRequested(dumpPath);
 
   if (FILE_BACKEND === 's3') {
     console.log(
@@ -62,6 +113,7 @@ async function backup(conn: DbConnection, outDir: string): Promise<string> {
     const tarPath = join(outDir, `cairn-uploads-${ts}.tar.gz`);
     console.log(`Archiving uploads ${UPLOAD_DIR} → ${tarPath}`);
     await run('tar', ['-czf', tarPath, '-C', UPLOAD_DIR, '.']);
+    await encryptInPlaceIfRequested(tarPath);
   }
 
   const manifest = join(outDir, `cairn-backup-${ts}.manifest.json`);
@@ -73,19 +125,30 @@ async function backup(conn: DbConnection, outDir: string): Promise<string> {
         createdAt: new Date().toISOString(),
         fileBackend: FILE_BACKEND,
         database: conn.database,
+        // v0.9.0 G8 P43 — operators inspecting the manifest can tell at a glance
+        // whether the sibling .dump/.tar.gz files are encrypted, without
+        // having to magic-byte the archive bodies themselves.
+        encrypted: Boolean(BACKUP_PASSPHRASE),
       },
       null,
       2,
     ),
   );
   console.log(`Backup complete. Bundle timestamp: ${ts}`);
-  console.warn(
-    'WARNING: this bundle contains the full database (password & API-key hashes) and all files. Store it securely.',
-  );
+  if (BACKUP_PASSPHRASE) {
+    console.warn(
+      'NOTE: archives are AES-256-GCM-encrypted (CAIRN-ENC-BAK-v1). KEEP CAIRN_BACKUP_ENCRYPTION_PASSPHRASE — without it the bundle is unrecoverable.',
+    );
+  } else {
+    console.warn(
+      'WARNING: this bundle contains the full database (password & API-key hashes) and all files. Store it securely.',
+    );
+  }
   return ts;
 }
 
-/** Delete cairn-backup-* / cairn-uploads-* / manifest bundles older than N days in outDir. */
+/** Delete cairn-backup-* / cairn-uploads-* / manifest bundles older than N days in outDir.
+ * Matches both raw `.dump`/`.tar.gz` and `.enc`-encrypted variants (v0.9.0 G8 P43). */
 async function pruneBundles(outDir: string, retentionDays: number): Promise<void> {
   const cutoff = Date.now() - retentionDays * 24 * 60 * 60 * 1000;
   for (const name of await readdir(outDir)) {
@@ -159,7 +222,24 @@ async function restore(conn: DbConnection, bundle: string, force: boolean): Prom
     }
   }
 
-  console.log(`Restoring database ${conn.database} from ${bundle}`);
+  // v0.9.0 G8 P43 — if the bundle is an encrypted envelope, decrypt to a
+  // sibling plaintext first. CAIRN_BACKUP_ENCRYPTION_PASSPHRASE MUST be set
+  // (matching the passphrase used at backup time). The plaintext sibling lives
+  // alongside the .enc input and is removed below after pg_restore completes.
+  // A `.dump.enc` becomes `.dump`; a `.tar.gz.enc` becomes `.tar.gz`.
+  let pgRestoreInput = bundle;
+  let plaintextToCleanUp: string | null = null;
+  if (bundle.endsWith('.enc')) {
+    if (!BACKUP_PASSPHRASE) {
+      throw new Error(
+        `restore: bundle ${basename(bundle)} is encrypted (.enc) but CAIRN_BACKUP_ENCRYPTION_PASSPHRASE is unset`,
+      );
+    }
+    pgRestoreInput = await decryptToSibling(bundle, BACKUP_PASSPHRASE);
+    plaintextToCleanUp = pgRestoreInput;
+  }
+
+  console.log(`Restoring database ${conn.database} from ${pgRestoreInput}`);
   await run(
     'pg_restore',
     [
@@ -174,7 +254,7 @@ async function restore(conn: DbConnection, bundle: string, force: boolean): Prom
       conn.user,
       '-d',
       conn.database,
-      bundle,
+      pgRestoreInput,
     ],
     { PGPASSWORD: conn.password },
   );
@@ -182,22 +262,44 @@ async function restore(conn: DbConnection, bundle: string, force: boolean): Prom
   if (FILE_BACKEND === 's3') {
     console.log('FILE_BACKEND=s3: uploads live in the bucket; restore them out-of-band.');
   } else {
-    // Bundle name: cairn-backup-<ts>.dump → matching cairn-uploads-<ts>.tar.gz in the same dir.
-    const ts = basename(bundle)
+    // Bundle name: cairn-backup-<ts>.dump[.enc] → matching cairn-uploads-<ts>.tar.gz[.enc].
+    const ts = basename(pgRestoreInput)
       .replace(/^cairn-backup-/, '')
       .replace(/\.dump$/, '');
     const dir = dirname(bundle);
-    const tar = (await readdir(dir)).find((f) => f === `cairn-uploads-${ts}.tar.gz`);
-    if (tar) {
-      console.log(`Restoring uploads from ${tar} → ${UPLOAD_DIR}`);
+    const dirEntries = await readdir(dir);
+    const rawTar = `cairn-uploads-${ts}.tar.gz`;
+    const encTar = `cairn-uploads-${ts}.tar.gz.enc`;
+    const tarName = dirEntries.find((f) => f === rawTar) ?? dirEntries.find((f) => f === encTar);
+    if (tarName) {
+      let tarInputPath = join(dir, tarName);
+      let tarPlaintextToCleanUp: string | null = null;
+      if (tarName.endsWith('.enc')) {
+        if (!BACKUP_PASSPHRASE) {
+          throw new Error(
+            `restore: uploads archive ${tarName} is encrypted but CAIRN_BACKUP_ENCRYPTION_PASSPHRASE is unset`,
+          );
+        }
+        tarInputPath = await decryptToSibling(tarInputPath, BACKUP_PASSPHRASE);
+        tarPlaintextToCleanUp = tarInputPath;
+      }
+      console.log(`Restoring uploads from ${basename(tarInputPath)} → ${UPLOAD_DIR}`);
       await mkdir(UPLOAD_DIR, { recursive: true });
-      await run('tar', ['-xzf', join(dir, tar), '-C', UPLOAD_DIR]);
+      await run('tar', ['-xzf', tarInputPath, '-C', UPLOAD_DIR]);
+      if (tarPlaintextToCleanUp) {
+        await unlink(tarPlaintextToCleanUp);
+      }
     } else {
-      console.warn(
-        `No matching uploads archive (cairn-uploads-${ts}.tar.gz) found; restored DB only.`,
-      );
+      console.warn(`No matching uploads archive (${rawTar} or ${encTar}) found; restored DB only.`);
     }
   }
+
+  if (plaintextToCleanUp) {
+    // v0.9.0 G8 P43 — remove the temporary decrypted dump so the on-disk
+    // artefact set stays exactly as it was before the restore command ran.
+    await unlink(plaintextToCleanUp);
+  }
+
   console.log('Restore complete.');
 }
 
