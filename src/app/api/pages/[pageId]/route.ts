@@ -4,7 +4,6 @@ import { getDb } from '@/db/client';
 import { HttpError, hasMinRole } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 import { softDeletePage } from '@/lib/pages/delete';
-import { PageLockedError } from '@/lib/pages/lock';
 import { PageConflictError, updatePage } from '@/lib/pages/update';
 import { snapshotIfChanged } from '@/lib/pages/versions';
 
@@ -85,13 +84,15 @@ export async function DELETE(_req: Request, { params }: RouteCtx): Promise<Respo
 }
 
 function errorToResponse(err: unknown): Response {
-  if (err instanceof PageLockedError) {
-    // v0.9.0 G2 P14 — surface the lock state so the client can show a banner
-    // ("Locked by <name>, auto-unlocks in 1h") without an extra round-trip.
-    return NextResponse.json({ error: err.code, state: err.state }, { status: err.status });
-  }
   if (err instanceof HttpError) {
-    return NextResponse.json({ error: err.message }, { status: err.status });
+    // v0.9.0 G2 P14 review — PageLockedError extends HttpError, so the lock
+    // state surfaces here too. Include `code` + `state` when present so the
+    // client can render a "Locked by <name>" banner without a round-trip.
+    const body: { error: string; code?: string; state?: unknown } = { error: err.message };
+    const maybe = err as { code?: string; state?: unknown };
+    if (typeof maybe.code === 'string') body.code = maybe.code;
+    if (maybe.state !== undefined) body.state = maybe.state;
+    return NextResponse.json(body, { status: err.status });
   }
   if (err instanceof z.ZodError) {
     return NextResponse.json({ error: 'validation', issues: err.issues }, { status: 400 });

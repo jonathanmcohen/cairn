@@ -191,6 +191,92 @@ describe('softDeletePage write gate under lock', () => {
   });
 });
 
+describe('expired-lock gate behavior', () => {
+  it('allows write from a non-locker non-admin when locked_until has passed', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'old',
+    });
+    const otherId = await seedExtraUser(`other-${Date.now()}@example.com`);
+    // v0.9.0 G2 P14 review — write directly so we control both columns: an
+    // expired lock (locked_at = now() - 1h, locked_until = now() - 30min)
+    // must NOT block writes; the auto-unlock cron is responsible for clearing
+    // the row, but the gate must respect the cutoff.
+    const lockedAt = new Date(Date.now() - 60 * 60 * 1000);
+    const lockedUntil = new Date(Date.now() - 30 * 60 * 1000);
+    await db
+      .update(schema.pages)
+      .set({ lockedAt, lockedBy: u.userId, lockedUntil })
+      .where(eq(schema.pages.id, page.id));
+
+    await updatePage(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      byUserId: otherId,
+      adminOverride: false,
+      patch: { title: 'after-expiry' },
+    });
+    const [row] = await db
+      .select({ title: schema.pages.title })
+      .from(schema.pages)
+      .where(eq(schema.pages.id, page.id));
+    expect(row?.title).toBe('after-expiry');
+  });
+
+  it('still blocks a non-locker non-admin when locked_until is in the future', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'old',
+    });
+    const otherId = await seedExtraUser(`other-${Date.now()}@example.com`);
+    const lockedAt = new Date(Date.now() - 60 * 60 * 1000);
+    const lockedUntil = new Date(Date.now() + 30 * 60 * 1000);
+    await db
+      .update(schema.pages)
+      .set({ lockedAt, lockedBy: u.userId, lockedUntil })
+      .where(eq(schema.pages.id, page.id));
+
+    await expect(
+      updatePage(db, {
+        pageId: page.id,
+        workspaceId: u.workspaceId,
+        byUserId: otherId,
+        adminOverride: false,
+        patch: { title: 'should-fail' },
+      }),
+    ).rejects.toBeInstanceOf(PageLockedError);
+  });
+
+  it('still blocks indefinite (locked_until IS NULL) locks for non-locker non-admin', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'old',
+    });
+    const otherId = await seedExtraUser(`other-${Date.now()}@example.com`);
+    await lockPage(db, {
+      pageId: page.id,
+      byUserId: u.userId,
+      workspaceId: u.workspaceId,
+      lockedUntil: null,
+    });
+    await expect(
+      updatePage(db, {
+        pageId: page.id,
+        workspaceId: u.workspaceId,
+        byUserId: otherId,
+        adminOverride: false,
+        patch: { title: 'should-fail' },
+      }),
+    ).rejects.toBeInstanceOf(PageLockedError);
+  });
+});
+
 describe('movePage write gate under lock', () => {
   it('refuses move from non-locker', async () => {
     const u = await createTestWorkspaceWithUser(db);

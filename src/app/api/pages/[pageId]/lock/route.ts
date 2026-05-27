@@ -18,7 +18,7 @@ import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { HttpError, hasMinRole } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
-import { lockPage, PageLockedError, unlockPage } from '@/lib/pages/lock';
+import { lockPage, unlockPage } from '@/lib/pages/lock';
 
 type RouteCtx = { params: Promise<{ pageId: string }> };
 
@@ -77,11 +77,14 @@ export async function DELETE(req: Request, { params }: RouteCtx): Promise<Respon
 }
 
 function errorToResponse(err: unknown): Response {
-  if (err instanceof PageLockedError) {
-    return NextResponse.json({ error: 'PageLocked', state: err.state }, { status: 403 });
-  }
   if (err instanceof HttpError) {
-    return NextResponse.json({ error: err.message }, { status: err.status });
+    // v0.9.0 G2 P14 review — PageLockedError extends HttpError; carry its
+    // optional `code`/`state` through when present.
+    const body: { error: string; code?: string; state?: unknown } = { error: err.message };
+    const maybe = err as { code?: string; state?: unknown };
+    if (typeof maybe.code === 'string') body.code = maybe.code;
+    if (maybe.state !== undefined) body.state = maybe.state;
+    return NextResponse.json(body, { status: err.status });
   }
   if (err instanceof z.ZodError) {
     return NextResponse.json({ error: 'Bad request' }, { status: 400 });

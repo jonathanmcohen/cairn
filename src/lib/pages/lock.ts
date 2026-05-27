@@ -15,6 +15,7 @@ import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { HttpError } from '@/lib/auth/require-role';
 
 export type LockState =
   | { locked: false; lockedBy: null; lockedAt: null; lockedUntil: null }
@@ -50,11 +51,10 @@ export async function isLocked(
   };
 }
 
-export class PageLockedError extends Error {
+export class PageLockedError extends HttpError {
   readonly code = 'PageLocked';
-  readonly status = 403;
   constructor(public state: LockState) {
-    super('Page is locked');
+    super(403, 'Page is locked');
     this.name = 'PageLockedError';
   }
 }
@@ -71,6 +71,11 @@ export async function requireUnlocked(
 ): Promise<void> {
   const state = await isLocked(db, input.pageId);
   if (!state.locked) return;
+  // v0.9.0 G2 P14 review — an expired `locked_until` no longer blocks writes;
+  // the auto-unlock cron is solely responsible for clearing the columns, but
+  // the gate respects the cutoff so writes don't wait on the sweep. A NULL
+  // `locked_until` is an indefinite (manual-only) lock and still blocks.
+  if (state.lockedUntil !== null && state.lockedUntil.getTime() <= Date.now()) return;
   if (input.adminOverride) return;
   if (state.lockedBy === input.byUserId) return;
   throw new PageLockedError(state);
