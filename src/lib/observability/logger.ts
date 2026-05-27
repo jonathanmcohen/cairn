@@ -45,6 +45,17 @@ export const REDACT_PATHS: string[] = [
   '*.CAIRN_DISCORD_BOT_TOKEN',
   'req.headers["x-slack-signature"]',
   'req.headers["x-signature-ed25519"]',
+  // v0.9.0 G7 P37 — per-install bot tokens + signing secrets stored on the
+  // `chat_bridge_installs` row. If a route handler logs an install object the
+  // raw values must never appear.
+  '*.botToken',
+  'botToken',
+  '*.bot_token',
+  'bot_token',
+  '*.signingSecret',
+  'signingSecret',
+  '*.signing_secret',
+  'signing_secret',
 ];
 
 const level = process.env.CAIRN_LOG_LEVEL ?? 'info';
