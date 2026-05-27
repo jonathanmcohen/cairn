@@ -34,7 +34,8 @@ export interface CliArgs {
     | 'connector:sync'
     | 'trash:purge'
     | 'pages:auto-unlock'
-    | 'flashcards:notify-due';
+    | 'flashcards:notify-due'
+    | 'siem:retry-sweep';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -73,6 +74,10 @@ const KNOWN_COMMANDS = [
   // notification per (user, workspace) with at least one due card. Idempotent
   // within a UTC day; no flags.
   'flashcards:notify-due',
+  // v0.9.0 G8 P39 — every-minute sweep that re-runs retry-status SIEM
+  // deliveries whose next_attempt_at has passed. Per-attempt rows append to
+  // siem_delivery_log; the scheduler logs the swept count.
+  'siem:retry-sweep',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 

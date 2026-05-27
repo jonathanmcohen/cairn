@@ -180,3 +180,57 @@ export async function registerFlashcardsNotifyDueCron(
     nextRunAt,
   });
 }
+
+/**
+ * v0.9.0 G8 P39 — global `siem:retry-sweep` cron, every minute.
+ *
+ * Single row (`workspace_id IS NULL`); the sweep is workspace-scoped at the
+ * delivery-log level. Identified by an exact command match. Idempotent on
+ * re-register — re-running updates the existing row and re-enables it if an
+ * operator toggled it off.
+ */
+const SIEM_RETRY_SWEEP_CRON = '* * * * *';
+const SIEM_RETRY_SWEEP_COMMAND = 'siem:retry-sweep';
+
+export async function registerSiemRetrySweepCron(
+  db: PostgresJsDatabase<typeof schema>,
+): Promise<void> {
+  const nextRunAt = CronExpressionParser.parse(SIEM_RETRY_SWEEP_CRON, {
+    currentDate: new Date(),
+    tz: 'UTC',
+  })
+    .next()
+    .toDate();
+
+  const existing = await db
+    .select({ id: schema.cronSchedules.id })
+    .from(schema.cronSchedules)
+    .where(
+      and(
+        isNull(schema.cronSchedules.workspaceId),
+        eq(schema.cronSchedules.command, SIEM_RETRY_SWEEP_COMMAND),
+      ),
+    )
+    .limit(1);
+
+  if (existing[0]) {
+    await db
+      .update(schema.cronSchedules)
+      .set({
+        command: SIEM_RETRY_SWEEP_COMMAND,
+        cronSpec: SIEM_RETRY_SWEEP_CRON,
+        enabled: true,
+        nextRunAt,
+      })
+      .where(eq(schema.cronSchedules.id, existing[0].id));
+    return;
+  }
+
+  await db.insert(schema.cronSchedules).values({
+    workspaceId: null,
+    command: SIEM_RETRY_SWEEP_COMMAND,
+    cronSpec: SIEM_RETRY_SWEEP_CRON,
+    enabled: true,
+    nextRunAt,
+  });
+}

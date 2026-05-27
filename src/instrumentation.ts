@@ -111,5 +111,17 @@ export async function register(): Promise<void> {
       .catch((err) => {
         console.error('[flashcards] notify-due cron registration failed', err);
       });
+
+    // v0.9.0 G8 P39 — register the global siem:retry-sweep cron row
+    // (every minute). The sweep is a no-op when the delivery log is clean.
+    const { registerSiemRetrySweepCron } = await import('@/server/cron-register');
+    void registerSiemRetrySweepCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[siem] retry-sweep cron registered (* * * * *)');
+      })
+      .catch((err) => {
+        console.error('[siem] retry-sweep cron registration failed', err);
+      });
   }
 }

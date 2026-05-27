@@ -221,7 +221,10 @@ async function main(): Promise<void> {
         `  cli reminders:scan\n` +
         `  cli reindex-embeddings [--workspace <id>] [--batch-size N]\n` +
         `  cli connector:sync [--connector <id>]\n` +
-        `  cli trash:purge --workspace-id=<id>`,
+        `  cli trash:purge --workspace-id=<id>\n` +
+        `  cli pages:auto-unlock\n` +
+        `  cli flashcards:notify-due\n` +
+        `  cli siem:retry-sweep`,
     );
     process.exit(2);
   }
@@ -325,6 +328,12 @@ async function main(): Promise<void> {
     const { runFlashcardsNotifyDueCli } = await import('../lib/flashcards/notify-due-cli.js');
     const summary = await runFlashcardsNotifyDueCli();
     console.log(`[flashcards:notify-due] notified=${summary.notified}`);
+  } else if (args.command === 'siem:retry-sweep') {
+    // v0.9.0 G8 P39 — global every-minute sweep that re-runs retry-status
+    // SIEM deliveries whose next_attempt_at has passed.
+    const { runSiemRetrySweep } = await import('../lib/siem/retry-cli.js');
+    const summary = await runSiemRetrySweep();
+    console.log(`[siem:retry-sweep] swept=${summary.swept}`);
   }
 }
 
