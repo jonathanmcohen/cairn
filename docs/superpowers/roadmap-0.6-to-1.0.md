@@ -173,7 +173,7 @@ Two releases remain to 1.0.
 - [x] G2 P13 — Trash retention (migration `0042`) + admin UI + cron + audit
 - [x] G2 P14 — Page lock (migration `0043`) + audit + auto-unlock
 - [x] G3 P15 — Diagram blocks expansion (PlantUML + drawio)
-- [ ] G3 P16 — Image gallery + lightbox
+- [x] G3 P16 — Image gallery + lightbox
 - [ ] G3 P17 — PDF viewer + annotation (migration `0043`)
 - [ ] G3 P18 — Citation + footnote blocks + bibliography aggregator
 - [ ] G3 P19 — Flashcards (migration `0044`) + SM-2 + due-queue + notifs + digest
