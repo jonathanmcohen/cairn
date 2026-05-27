@@ -344,6 +344,13 @@
       "when": 1779871200000,
       "tag": "0048_page_approvals_template_visibility",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1779880414738,
+      "tag": "0049_search_templates",
+      "breakpoints": true
     }
   ]
 }
