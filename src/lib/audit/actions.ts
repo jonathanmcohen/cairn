@@ -78,6 +78,9 @@ export const AUDIT_ACTIONS = [
   'page.unlocked',
   'page.auto_unlocked',
   'page.unlock_overridden_by_admin',
+  // v0.9.0 G4 P23 — Tasks hub: user toggled a taskItem checkbox via /my-tasks
+  // or the toggle API. metadata: { blockId, checked }.
+  'task.toggled',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
