@@ -52,7 +52,6 @@ describe('PlantUmlView — encrypted-page guard', () => {
   it('renders WITHOUT the encrypted placeholder when encrypted=false', () => {
     const { container } = render(
       <PlantUmlView
-        // biome-ignore lint/suspicious/noExplicitAny: stub props for view-level test
         {...({
           node: makeNode(SOURCE),
           editor: makeEditor(false),

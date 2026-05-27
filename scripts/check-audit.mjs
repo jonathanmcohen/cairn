@@ -49,6 +49,3 @@ if (blocking.length > 0) {
     console.error(`  - [${a.severity}] ${a.id ?? a.github_advisory_id}: ${a.title}`);
   process.exit(1);
 }
-console.log(
-  `audit ok — ${advisories.length} advisories, ${active.size} active ignores, 0 blocking`,
-);

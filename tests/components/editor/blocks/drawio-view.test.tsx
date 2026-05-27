@@ -49,7 +49,6 @@ describe('DrawioView — encrypted-page guard', () => {
   it('renders the iframe (NO placeholder) when encrypted=false', () => {
     const { container } = render(
       <DrawioView
-        // biome-ignore lint/suspicious/noExplicitAny: stub props for view-level test
         {...({
           node: makeNode(XML),
           editor: makeEditor(false),
