@@ -31,7 +31,12 @@ export const notifications = pgTable(
   }),
 );
 
-export type NotificationType = 'mention' | 'comment_reply' | 'reminder' | 'flashcards_due';
+export type NotificationType =
+  | 'mention'
+  | 'comment_reply'
+  | 'reminder'
+  | 'flashcards_due'
+  | 'upgrade_available';
 export type CommentNotificationPayload = {
   pageId: string;
   commentId: string;
@@ -47,10 +52,20 @@ export type ReminderNotificationPayload = {
 export type FlashcardsDueNotificationPayload = {
   count: number;
 };
+// v0.9.0 G8 P42 — release-watch payload. Inserted by `runReleaseWatchTick`
+// against every owner/admin row in `workspace_members` whenever the bundled
+// `package.json#version` lags behind the latest stable tag in
+// `CAIRN_RELEASE_FEED_URL`. The page at `/settings/admin/upgrade` resolves
+// `releaseNotesUrl` via this payload (last row by version, then created_at).
+export type UpgradeAvailableNotificationPayload = {
+  version: string;
+  releaseNotesUrl: string;
+};
 export type NotificationPayload =
   | CommentNotificationPayload
   | ReminderNotificationPayload
-  | FlashcardsDueNotificationPayload;
+  | FlashcardsDueNotificationPayload
+  | UpgradeAvailableNotificationPayload;
 
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;
