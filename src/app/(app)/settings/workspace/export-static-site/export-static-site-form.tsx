@@ -48,7 +48,7 @@ export function ExportStaticSiteForm({ workspaceId }: { workspaceId: string }) {
           disabled={busy}
         >
           <option value="mkdocs">MkDocs (Material)</option>
-          {/* P35 unlocks docusaurus. */}
+          <option value="docusaurus">Docusaurus</option>
         </select>
       </label>
       <Button onClick={onGenerate} disabled={busy}>
