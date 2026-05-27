@@ -5,6 +5,7 @@ import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
+import { ApprovalPanel } from '@/components/pages/approval-panel';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { CoverPicker } from '@/components/pages/cover-picker';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
@@ -95,6 +96,12 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         pageId={page.id}
         viewerUserId={ctx.userId}
         viewerIsAdmin={hasMinRole(ctx.role, 'admin')}
+      />
+      {/* v0.9.0 G4 P24 — approval panel; null when not in review and no history. */}
+      <ApprovalPanel
+        pageId={page.id}
+        canDecide={hasMinRole(ctx.role, 'admin')}
+        inReview={page.status === 'review'}
       />
       <Editor
         pageId={page.id}
