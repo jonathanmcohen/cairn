@@ -5,12 +5,17 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import type { TemplateVisibility } from '@/db/schema';
 
 export type TemplateCard = {
   id: string;
   name: string;
   kind: 'page' | 'database';
   builtIn: boolean;
+  /** v0.9 G4 P25 — sharing tier. Defaults to 'workspace' for legacy rows. */
+  visibility?: TemplateVisibility;
+  /** Workspace that owns the template. Null = built-in / global. */
+  workspaceId?: string | null;
 };
 
 type InstantiateResponse = { rootPageId: string | null; rootDatabaseId: string | null };
@@ -21,7 +26,19 @@ const BUILT_IN_DESCRIPTIONS: Record<string, string> = {
   'Weekly planner': 'A week-at-a-glance page with this-week, goals, and follow-ups headers.',
 };
 
-export function TemplatesGallery({ initialTemplates }: { initialTemplates: TemplateCard[] }) {
+// v0.9 G4 P25 — gallery groups by visibility tier. Render order:
+//   workspace (most relevant)
+//   public    (gallery's reason for being)
+//   private   (creator-only — least surfaced)
+const VISIBILITY_ORDER: TemplateVisibility[] = ['workspace', 'public', 'private'];
+
+export type TemplatesGalleryProps = {
+  initialTemplates: TemplateCard[];
+  /** Active workspace id — used to label "In this workspace" vs "Shared". */
+  activeWorkspaceId?: string;
+};
+
+export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: TemplatesGalleryProps) {
   const router = useRouter();
   const [templates, setTemplates] = useState<TemplateCard[]>(initialTemplates);
   const [busy, setBusy] = useState<string | null>(null);
@@ -70,6 +87,17 @@ export function TemplatesGallery({ initialTemplates }: { initialTemplates: Templ
     }
   }
 
+  // v0.9 G4 P25 — group rows by visibility. Built-ins keep their pre-existing
+  // workspace-style placement; group them under 'public' since they're global.
+  const grouped = new Map<TemplateVisibility, TemplateCard[]>();
+  for (const v of VISIBILITY_ORDER) grouped.set(v, []);
+  for (const t of templates) {
+    const tier = (
+      t.builtIn ? 'public' : (t.visibility ?? 'workspace')
+    ) satisfies TemplateVisibility;
+    grouped.get(tier)?.push(t);
+  }
+
   return (
     <div className="space-y-4">
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
@@ -80,55 +108,74 @@ export function TemplatesGallery({ initialTemplates }: { initialTemplates: Templ
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {templates.map((t) => (
-          <Card key={t.id} className="flex flex-col">
-            <CardHeader>
-              <CardTitle className="text-base">{t.name}</CardTitle>
-              <div className="mt-1 flex flex-wrap gap-1.5">
-                <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
-                  {t.kind}
-                </span>
-                {t.builtIn ? (
-                  <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                    Built-in
-                  </span>
-                ) : null}
-              </div>
-            </CardHeader>
-            <CardContent className="mt-auto flex flex-col gap-2">
-              {t.builtIn && BUILT_IN_DESCRIPTIONS[t.name] ? (
-                <details className="text-xs text-muted-foreground">
-                  <summary className="cursor-pointer select-none">Preview</summary>
-                  <p className="mt-1">{BUILT_IN_DESCRIPTIONS[t.name]}</p>
-                </details>
-              ) : null}
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  size="sm"
-                  disabled={busy === t.id}
-                  onClick={() => void onUse(t.id)}
-                >
-                  {busy === t.id ? 'Working…' : 'Use template'}
-                </Button>
-                {t.builtIn ? null : (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive hover:text-destructive"
-                    disabled={busy === t.id}
-                    onClick={() => void onDelete(t.id)}
-                  >
-                    Delete
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {VISIBILITY_ORDER.map((v) => {
+        const rows = grouped.get(v) ?? [];
+        if (rows.length === 0) return null;
+        return (
+          <section key={v} aria-labelledby={`tpl-section-${v}`}>
+            <h2
+              id={`tpl-section-${v}`}
+              className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground"
+            >
+              {v}
+            </h2>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {rows.map((t) => (
+                <Card key={t.id} className="flex flex-col">
+                  <CardHeader>
+                    <CardTitle className="text-base">{t.name}</CardTitle>
+                    <div className="mt-1 flex flex-wrap gap-1.5">
+                      <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
+                        {t.kind}
+                      </span>
+                      {t.builtIn ? (
+                        <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                          Built-in
+                        </span>
+                      ) : null}
+                      {activeWorkspaceId && t.workspaceId === activeWorkspaceId ? (
+                        <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                          In this workspace
+                        </span>
+                      ) : null}
+                    </div>
+                  </CardHeader>
+                  <CardContent className="mt-auto flex flex-col gap-2">
+                    {t.builtIn && BUILT_IN_DESCRIPTIONS[t.name] ? (
+                      <details className="text-xs text-muted-foreground">
+                        <summary className="cursor-pointer select-none">Preview</summary>
+                        <p className="mt-1">{BUILT_IN_DESCRIPTIONS[t.name]}</p>
+                      </details>
+                    ) : null}
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        disabled={busy === t.id}
+                        onClick={() => void onUse(t.id)}
+                      >
+                        {busy === t.id ? 'Working…' : 'Use template'}
+                      </Button>
+                      {t.builtIn ? null : (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="text-destructive hover:text-destructive"
+                          disabled={busy === t.id}
+                          onClick={() => void onDelete(t.id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }

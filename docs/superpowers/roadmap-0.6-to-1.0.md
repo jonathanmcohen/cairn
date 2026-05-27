@@ -182,7 +182,7 @@ Two releases remain to 1.0.
 - [x] G3 P22 — Bulk file drag-drop + audio block + MIME allowlist
 - [x] G4 P23 — Tasks hub (`/my-tasks` aggregator)
 - [x] G4 P24 — Page approval + signed audit (migration `0048`)
-- [ ] G4 P25 — Save-as-template + sharing controls
+- [x] G4 P25 — Save-as-template + sharing controls
 - [x] G4 P26 — Page lifecycle status + translations (migration `0047`)
 - [ ] G5 P27 — "See also" related-pages panel
 - [ ] G5 P28 — TOC sidebar
