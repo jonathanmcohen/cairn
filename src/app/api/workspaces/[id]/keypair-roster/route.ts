@@ -5,7 +5,7 @@ import { userKeypairs, workspaceMembers } from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
 /**
- * v0.9.0 G1 P6 — GET /api/workspaces/[workspaceId]/keypair-roster.
+ * v0.9.0 G1 P6 — GET /api/workspaces/[id]/keypair-roster.
  *
  * Returns the public keys of every workspace member with a registered E2E
  * keypair, for the calling client to wrap a per-page DEK against. Only the
@@ -19,11 +19,11 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
  */
 export const runtime = 'nodejs';
 
-type RouteCtx = { params: Promise<{ workspaceId: string }> };
+type RouteCtx = { params: Promise<{ id: string }> };
 
 export async function GET(_req: Request, { params }: RouteCtx): Promise<Response> {
   try {
-    const { workspaceId } = await params;
+    const { id: workspaceId } = await params;
     const ctx = await requireRole('viewer');
     // Cross-workspace request → 404 (existence-leak guard).
     if (ctx.workspaceId !== workspaceId) {

@@ -56,13 +56,13 @@ async function seedKeypair(userId: string, fill: number) {
 }
 
 async function get(workspaceId: string) {
-  const { GET } = await import('@/app/api/workspaces/[workspaceId]/keypair-roster/route');
+  const { GET } = await import('@/app/api/workspaces/[id]/keypair-roster/route');
   return GET(new Request('http://localhost/x'), {
-    params: Promise.resolve({ workspaceId }),
+    params: Promise.resolve({ id: workspaceId }),
   });
 }
 
-describe('GET /api/workspaces/[workspaceId]/keypair-roster', () => {
+describe('GET /api/workspaces/[id]/keypair-roster', () => {
   it('returns public keys only for members with a keypair', async () => {
     const owner = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     await seedKeypair(owner.userId, 0xaa);

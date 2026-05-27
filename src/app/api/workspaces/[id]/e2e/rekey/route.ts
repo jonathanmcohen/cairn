@@ -8,7 +8,7 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { assertCoverageAndKeypairs, getCurrentKeyVersion } from '@/lib/e2e/wsk-server';
 
 /**
- * v0.9.0 G1 P7 — POST /api/workspaces/[workspaceId]/e2e/rekey.
+ * v0.9.0 G1 P7 — POST /api/workspaces/[id]/e2e/rekey.
  *
  * Owner-only. After removing a workspace member (or any time the admin wants
  * to rotate the WSK), the client:
@@ -36,7 +36,7 @@ import { assertCoverageAndKeypairs, getCurrentKeyVersion } from '@/lib/e2e/wsk-s
  */
 export const runtime = 'nodejs';
 
-type RouteCtx = { params: Promise<{ workspaceId: string }> };
+type RouteCtx = { params: Promise<{ id: string }> };
 
 const Body = z.object({
   wrapped: z
@@ -58,7 +58,7 @@ const Body = z.object({
 
 export async function POST(req: Request, { params }: RouteCtx): Promise<Response> {
   try {
-    const { workspaceId } = await params;
+    const { id: workspaceId } = await params;
     const ctx = await requireRole('owner');
     if (ctx.workspaceId !== workspaceId) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });

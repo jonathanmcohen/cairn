@@ -82,18 +82,18 @@ async function addMember(workspaceId: string, email: string, role: schema.Member
 }
 
 async function post(workspaceId: string, body: unknown) {
-  const { POST } = await import('@/app/api/workspaces/[workspaceId]/e2e/wrap-for-member/route');
+  const { POST } = await import('@/app/api/workspaces/[id]/e2e/wrap-for-member/route');
   return POST(
     new Request('http://localhost/x', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     }),
-    { params: Promise.resolve({ workspaceId }) },
+    { params: Promise.resolve({ id: workspaceId }) },
   );
 }
 
-describe('POST /api/workspaces/[workspaceId]/e2e/wrap-for-member', () => {
+describe('POST /api/workspaces/[id]/e2e/wrap-for-member', () => {
   it('happy path: caller wraps WSK for a new member', async () => {
     const owner = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     await seedKeypair(owner.userId);

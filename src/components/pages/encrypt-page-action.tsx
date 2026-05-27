@@ -17,7 +17,7 @@ type Sealed = {
  *
  *   1. Fetch the keypair roster (public keys of every workspace member with
  *      an enrolled keypair) from
- *      GET /api/workspaces/[workspaceId]/keypair-roster.
+ *      GET /api/workspaces/[id]/keypair-roster.
  *   2. Unlock the caller's private key — sealed keypair is cached in
  *      localStorage at enrollment time (P5 surface). Passphrase prompt
  *      happens here; the unlocked key is held only in memory.

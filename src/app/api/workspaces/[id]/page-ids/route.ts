@@ -6,7 +6,7 @@ import { pages } from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
 /**
- * v0.9.0 G1 P7 — GET /api/workspaces/[workspaceId]/page-ids.
+ * v0.9.0 G1 P7 — GET /api/workspaces/[id]/page-ids.
  *
  * Lightweight helper used by the workspace-wide enable sweep driver to learn
  * which pages still need encrypting. Returns id + title for every page in the
@@ -26,7 +26,7 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
  */
 export const runtime = 'nodejs';
 
-type RouteCtx = { params: Promise<{ workspaceId: string }> };
+type RouteCtx = { params: Promise<{ id: string }> };
 
 const Query = z.object({
   cursor: z.uuid().optional(),
@@ -35,7 +35,7 @@ const Query = z.object({
 
 export async function GET(req: Request, { params }: RouteCtx): Promise<Response> {
   try {
-    const { workspaceId } = await params;
+    const { id: workspaceId } = await params;
     const ctx = await requireRole('admin');
     if (ctx.workspaceId !== workspaceId) {
       return NextResponse.json({ error: 'not found' }, { status: 404 });

@@ -79,7 +79,7 @@ describe('workspace-wide E2E enable end-to-end', () => {
     await setSession(owner.userId);
 
     // 1. Flip the workspace into workspace_wide mode.
-    const { POST: enable } = await import('@/app/api/workspaces/[workspaceId]/e2e/enable/route');
+    const { POST: enable } = await import('@/app/api/workspaces/[id]/e2e/enable/route');
     const enableRes = await enable(
       new Request('http://localhost/x', {
         method: 'POST',
@@ -90,7 +90,7 @@ describe('workspace-wide E2E enable end-to-end', () => {
           ],
         }),
       }),
-      { params: Promise.resolve({ workspaceId: owner.workspaceId }) },
+      { params: Promise.resolve({ id: owner.workspaceId }) },
     );
     expect(enableRes.status).toBe(200);
 

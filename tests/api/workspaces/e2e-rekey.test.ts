@@ -93,18 +93,18 @@ async function makePage(workspaceId: string, userId: string) {
 }
 
 async function post(workspaceId: string, body: unknown) {
-  const { POST } = await import('@/app/api/workspaces/[workspaceId]/e2e/rekey/route');
+  const { POST } = await import('@/app/api/workspaces/[id]/e2e/rekey/route');
   return POST(
     new Request('http://localhost/x', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify(body),
     }),
-    { params: Promise.resolve({ workspaceId }) },
+    { params: Promise.resolve({ id: workspaceId }) },
   );
 }
 
-describe('POST /api/workspaces/[workspaceId]/e2e/rekey', () => {
+describe('POST /api/workspaces/[id]/e2e/rekey', () => {
   it('happy path: owner rotates WSK + bumps key_version + re-encrypts pages', async () => {
     const owner = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     await seedKeypair(owner.userId);

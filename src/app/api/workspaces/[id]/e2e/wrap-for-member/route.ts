@@ -8,7 +8,7 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { getCurrentKeyVersion } from '@/lib/e2e/wsk-server';
 
 /**
- * v0.9.0 G1 P7 — POST /api/workspaces/[workspaceId]/e2e/wrap-for-member.
+ * v0.9.0 G1 P7 — POST /api/workspaces/[id]/e2e/wrap-for-member.
  *
  * A workspace admin (member onboarding is an admin action) unwraps the WSK
  * locally and re-wraps it under a new member's public key, then POSTs the
@@ -32,7 +32,7 @@ import { getCurrentKeyVersion } from '@/lib/e2e/wsk-server';
  */
 export const runtime = 'nodejs';
 
-type RouteCtx = { params: Promise<{ workspaceId: string }> };
+type RouteCtx = { params: Promise<{ id: string }> };
 
 const Body = z.object({
   memberUserId: z.uuid(),
@@ -41,7 +41,7 @@ const Body = z.object({
 
 export async function POST(req: Request, { params }: RouteCtx): Promise<Response> {
   try {
-    const { workspaceId } = await params;
+    const { id: workspaceId } = await params;
     // admin-gated: member onboarding is an admin action.
     const ctx = await requireRole('admin');
     if (ctx.workspaceId !== workspaceId) {

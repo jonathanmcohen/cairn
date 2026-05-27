@@ -8,7 +8,7 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { assertCoverageAndKeypairs } from '@/lib/e2e/wsk-server';
 
 /**
- * v0.9.0 G1 P7 — POST /api/workspaces/[workspaceId]/e2e/enable.
+ * v0.9.0 G1 P7 — POST /api/workspaces/[id]/e2e/enable.
  *
  * Owner-only flip from `e2eMode === 'off'` to `'workspace_wide'`. The caller
  * submits a roster of wrapped workspace-keys (one per current member); the
@@ -29,7 +29,7 @@ import { assertCoverageAndKeypairs } from '@/lib/e2e/wsk-server';
  */
 export const runtime = 'nodejs';
 
-type RouteCtx = { params: Promise<{ workspaceId: string }> };
+type RouteCtx = { params: Promise<{ id: string }> };
 
 const Body = z.object({
   wrapped: z
@@ -44,7 +44,7 @@ const Body = z.object({
 
 export async function POST(req: Request, { params }: RouteCtx): Promise<Response> {
   try {
-    const { workspaceId } = await params;
+    const { id: workspaceId } = await params;
     const ctx = await requireRole('owner');
     if (ctx.workspaceId !== workspaceId) {
       // Cross-workspace request → 404 (existence-leak guard).
