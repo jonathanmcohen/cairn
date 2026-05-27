@@ -69,6 +69,15 @@ export const AUDIT_ACTIONS = [
   // v0.9.0 G2 P13 — Trash retention purge (auto = cron, manual = admin click).
   'trash.purged_auto',
   'trash.purged_manual',
+  // v0.9.0 G2 P14 — Page lock. `page.locked` / `page.unlocked` cover the
+  // happy path; `page.auto_unlocked` fires when the cron sweep clears an
+  // expired `locked_until`; `page.unlock_overridden_by_admin` records an
+  // admin force-unlock of someone else's lock (self-unlock by an admin who
+  // also happens to be the locker stays a plain `page.unlocked`).
+  'page.locked',
+  'page.unlocked',
+  'page.auto_unlocked',
+  'page.unlock_overridden_by_admin',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
