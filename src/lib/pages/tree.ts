@@ -59,6 +59,10 @@ export type FlatPageNode = {
   title: string;
   icon: string | null;
   depth: number;
+  // v0.9.0 G2 P11 — optional space pointer used by the sidebar to group rows
+  // under a space-header row. `null` (or undefined) means the page lives in
+  // the synthetic "Unfiled" bucket at the bottom of the tree.
+  spaceId?: string | null;
 };
 
 export async function flattenedPageTree(
@@ -71,6 +75,7 @@ export async function flattenedPageTree(
       parentId: schema.pages.parentId,
       title: schema.pages.title,
       icon: schema.pages.icon,
+      spaceId: schema.pages.spaceId,
     })
     .from(schema.pages)
     .where(and(eq(schema.pages.workspaceId, workspaceId), isNull(schema.pages.deletedAt)))
