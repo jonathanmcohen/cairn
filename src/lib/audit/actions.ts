@@ -125,6 +125,11 @@ export const AUDIT_ACTIONS = [
   'chat.slash_invoked',
   'chat.channel_linked',
   'chat.channel_unlinked',
+  // v0.9.0 G8 P39 — meta-audit emitted when a SIEM forwarder delivery
+  // exhausts its retry budget. Excluded from the SIEM dispatch hook so a
+  // perpetually dead forwarder cannot create an infinite delivery loop.
+  // Metadata: { forwarderId, error } — never the raw envelope or secret.
+  'siem.delivery_failed',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
