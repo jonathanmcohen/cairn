@@ -404,6 +404,23 @@ const items: SlashItem[] = [
   toSlashItem(footnoteMenuItem),
   toSlashItem(citationMenuItem),
   {
+    title: 'Flashcard',
+    description: 'Spaced-repetition flashcard (front / back / deck tag)',
+    command: (editor) => {
+      const front = window.prompt('Front (question)') ?? '';
+      const back = window.prompt('Back (answer)') ?? '';
+      if (!front || !back) return;
+      const deck = window.prompt('Deck tag (optional)') ?? '';
+      void ensureLazyExtension(editor, 'flashcard').then(() => {
+        editor
+          .chain()
+          .focus()
+          .setFlashcard({ front, back, deckTag: deck || null })
+          .run();
+      });
+    },
+  },
+  {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",
     command: (editor) => editor.chain().focus().insertTableOfContents().run(),

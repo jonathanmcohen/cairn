@@ -8,6 +8,7 @@ import { appVersion } from '@/lib/version';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
 import { PinnedSection } from './sidebar/pinned-section';
+import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { SavedSearches } from './sidebar/saved-searches';
 import { VirtualizedPageTree } from './sidebar/virtualized-page-tree';
 import { SidebarFavorites } from './sidebar-favorites';
@@ -59,6 +60,7 @@ export async function SidebarContent({
         <VirtualizedPageTree initial={tree} />
       </nav>
       <div className="border-t p-3 text-xs text-muted-foreground">
+        <ReviewDueCounter />
         <Link
           href="/templates"
           className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
