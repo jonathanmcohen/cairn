@@ -145,6 +145,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'chat.channel_unlinked': 'Chat bridge — channel unlinked from page',
   // v0.9.0 G8 P39 — SIEM-forwarder delivery exhausted its retry budget.
   'siem.delivery_failed': 'SIEM — delivery failed after retries',
+  // v0.9.0 G8 P41 — cairn-upgrade CLI lifecycle events.
+  'upgrade.applied': 'Upgrade applied',
+  'upgrade.failed': 'Upgrade failed',
+  'upgrade.rolled_back': 'Upgrade rolled back',
 };
 
 function actionLabel(action: string): string {

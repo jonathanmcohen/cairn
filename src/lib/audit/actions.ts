@@ -130,6 +130,17 @@ export const AUDIT_ACTIONS = [
   // perpetually dead forwarder cannot create an infinite delivery loop.
   // Metadata: { forwarderId, error } — never the raw envelope or secret.
   'siem.delivery_failed',
+  // v0.9.0 G8 P41 — cairn-upgrade CLI lifecycle events. Emitted by the
+  // upgrade orchestrator (apply / rollback / compose wrapper). The audit
+  // row's workspace_id points to the operator-chosen "admin" workspace
+  // because audit_log.workspace_id is NOT NULL. Metadata:
+  //  - `upgrade.applied`:     { fromVersion, toVersion, migrationCount }
+  //  - `upgrade.failed`:      { fromVersion, toVersion, error }
+  //  - `upgrade.rolled_back`: { snapshotPath } — operator-visible path to
+  //                           the pre-upgrade dump file; never a secret.
+  'upgrade.applied',
+  'upgrade.failed',
+  'upgrade.rolled_back',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
