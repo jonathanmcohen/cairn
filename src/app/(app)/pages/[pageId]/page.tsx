@@ -14,6 +14,8 @@ import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockBanner } from '@/components/pages/lock-banner';
 import { LockToggle } from '@/components/pages/lock-toggle';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
+import { PageModeShell } from '@/components/pages/page-mode-shell';
+import { PageModeToggles } from '@/components/pages/page-mode-toggles';
 import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { TocSidebar } from '@/components/pages/toc-sidebar';
 import { VersionHistory } from '@/components/pages/version-history';
@@ -61,65 +63,67 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   return (
     <PageDetailShell>
-      <CoverBanner cover={cover} alt={page.title} />
-      {canEdit && (
-        <div className="mb-2 flex justify-end">
-          <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
-        </div>
-      )}
-      <CoverImage pageId={page.id} initial={page.coverUrl} />
-      <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
-        <PageIconPicker pageId={page.id} initial={page.icon} />
-        <div className="min-w-0 flex-1 basis-full sm:basis-auto">
-          <PageTitleInput pageId={page.id} initial={page.title} />
-        </div>
-        <CommentsToggle
-          pageId={page.id}
-          canComment={hasMinRole(ctx.role, 'editor')}
-          currentUserId={ctx.userId}
-          currentRole={ctx.role}
-        />
-        <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
-        <PageExportMenu pageId={page.id} />
-        {canEdit && <LockToggle pageId={page.id} />}
-        {showEncryptAction && (
-          <EncryptPageAction
-            pageId={page.id}
-            workspaceId={page.workspaceId}
-            currentDoc={page.content}
-          />
+      <PageModeShell toggles={<PageModeToggles />}>
+        <CoverBanner cover={cover} alt={page.title} />
+        {canEdit && (
+          <div className="mb-2 flex justify-end">
+            <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
+          </div>
         )}
-        <PageMenu
+        <CoverImage pageId={page.id} initial={page.coverUrl} />
+        <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
+          <PageIconPicker pageId={page.id} initial={page.icon} />
+          <div className="min-w-0 flex-1 basis-full sm:basis-auto">
+            <PageTitleInput pageId={page.id} initial={page.title} />
+          </div>
+          <CommentsToggle
+            pageId={page.id}
+            canComment={hasMinRole(ctx.role, 'editor')}
+            currentUserId={ctx.userId}
+            currentRole={ctx.role}
+          />
+          <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
+          <PageExportMenu pageId={page.id} />
+          {canEdit && <LockToggle pageId={page.id} />}
+          {showEncryptAction && (
+            <EncryptPageAction
+              pageId={page.id}
+              workspaceId={page.workspaceId}
+              currentDoc={page.content}
+            />
+          )}
+          <PageMenu
+            pageId={page.id}
+            initialPublished={page.published}
+            initialSlug={page.publicSlug}
+            pageTitle={page.title}
+            initialAllowDuplication={page.allowDuplication}
+            initialHasPassword={!!page.linkPasswordHash}
+            initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
+          />
+        </div>
+        {/* v0.9.0 G2 P14 — locked-page banner; null when the page is unlocked. */}
+        <LockBanner
           pageId={page.id}
-          initialPublished={page.published}
-          initialSlug={page.publicSlug}
-          pageTitle={page.title}
-          initialAllowDuplication={page.allowDuplication}
-          initialHasPassword={!!page.linkPasswordHash}
-          initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
+          viewerUserId={ctx.userId}
+          viewerIsAdmin={hasMinRole(ctx.role, 'admin')}
         />
-      </div>
-      {/* v0.9.0 G2 P14 — locked-page banner; null when the page is unlocked. */}
-      <LockBanner
-        pageId={page.id}
-        viewerUserId={ctx.userId}
-        viewerIsAdmin={hasMinRole(ctx.role, 'admin')}
-      />
-      {/* v0.9.0 G4 P24 — approval panel; null when not in review and no history. */}
-      <ApprovalPanel
-        pageId={page.id}
-        canDecide={hasMinRole(ctx.role, 'admin')}
-        inReview={page.status === 'review'}
-      />
-      <Editor
-        pageId={page.id}
-        workspaceId={page.workspaceId}
-        initialContent={page.content}
-        initialUpdatedAt={page.updatedAt.toISOString()}
-        currentUser={currentUser}
-        editable={hasMinRole(ctx.role, 'editor')}
-        encrypted={page.encrypted}
-      />
+        {/* v0.9.0 G4 P24 — approval panel; null when not in review and no history. */}
+        <ApprovalPanel
+          pageId={page.id}
+          canDecide={hasMinRole(ctx.role, 'admin')}
+          inReview={page.status === 'review'}
+        />
+        <Editor
+          pageId={page.id}
+          workspaceId={page.workspaceId}
+          initialContent={page.content}
+          initialUpdatedAt={page.updatedAt.toISOString()}
+          currentUser={currentUser}
+          editable={hasMinRole(ctx.role, 'editor')}
+          encrypted={page.encrypted}
+        />
+      </PageModeShell>
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the
           `cairn-toc-sidebar` cookie set by the Settings toggle. Rendered
           in-flow inside PageDetailShell (the shell has no right-rail slot)

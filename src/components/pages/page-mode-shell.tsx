@@ -45,6 +45,16 @@ export function usePageMode(): ModeCtx {
 }
 
 /**
+ * Non-throwing variant for components (e.g. <Editor>) that may be rendered
+ * both inside and outside the shell — public `/p/<slug>` viewers mount the
+ * editor without the workspace shell, so reader-mode falls back to false
+ * there. Returns null when outside.
+ */
+export function usePageModeOptional(): ModeCtx | null {
+  return useContext(Ctx);
+}
+
+/**
  * Best-effort try/catch read of the persisted prefs. localStorage can throw in
  * private-mode Safari + a few sandboxed iframes; we fall back to defaults
  * silently rather than crash the page-detail route.

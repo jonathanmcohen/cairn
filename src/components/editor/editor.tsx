@@ -6,6 +6,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useAnnounce } from '@/components/a11y/live-region';
+import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
@@ -70,6 +71,12 @@ export function Editor({
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
   const announce = useAnnounce();
+  // v0.9.0 G6 P33 — reader mode forces the surface into read-only even for
+  // editor-role users. Optional because `/p/<slug>` mounts <Editor> outside
+  // the PageModeShell (public viewers don't carry the toggle).
+  const pageMode = usePageModeOptional();
+  const readerMode = pageMode?.reader ?? false;
+  const effectiveEditable = editable && !readerMode;
 
   // Announce collab connection-status transitions through the shell's polite
   // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
@@ -166,13 +173,13 @@ export function Editor({
   const editor = useEditor(
     provider
       ? {
-          editable,
+          editable: effectiveEditable,
           extensions: collabExtensions({
             ydoc,
             provider,
             user: currentUser,
-            // viewers: no CollaborationCursor → no awareness writes
-            withCursor: editable,
+            // viewers + reader-mode users: no CollaborationCursor → no awareness writes
+            withCursor: effectiveEditable,
           }),
           immediatelyRender: false,
           editorProps: {
@@ -250,7 +257,7 @@ export function Editor({
           // from their sibling components.
         }
       : { extensions: baseExtensions(), editable: false, immediatelyRender: false },
-    [provider, editable],
+    [provider, effectiveEditable],
   );
 
   useEffect(() => {
@@ -352,7 +359,7 @@ export function Editor({
 
   // Load the open-suggestion count once the editable editor exists.
   useEffect(() => {
-    if (!editable || !pageId) return;
+    if (!effectiveEditable || !pageId) return;
     let cancelled = false;
     void (async () => {
       const res = await fetch(`/api/pages/${pageId}/suggestions`);
@@ -363,11 +370,11 @@ export function Editor({
     return () => {
       cancelled = true;
     };
-  }, [editable, pageId]);
+  }, [effectiveEditable, pageId]);
 
   // Track the suggestionId under the selection so Accept/Reject can target it.
   useEffect(() => {
-    if (!editor || !editable) return;
+    if (!editor || !effectiveEditable) return;
     const update = () => {
       const id =
         (editor.getAttributes('suggestionInsert').suggestionId as string | undefined) ||
@@ -382,7 +389,7 @@ export function Editor({
       editor.off('selectionUpdate', update);
       editor.off('transaction', update);
     };
-  }, [editor, editable]);
+  }, [editor, effectiveEditable]);
 
   // Toggle suggestion mode. Turning ON proposes a new open suggestion (the
   // marks applied while suggesting share its id); turning OFF clears the active
@@ -457,7 +464,7 @@ export function Editor({
   return (
     <div className="relative">
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-        {editable && (
+        {effectiveEditable && (
           <SuggestionToolbar
             editor={editor}
             active={suggestionMode}
