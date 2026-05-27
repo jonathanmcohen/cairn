@@ -62,6 +62,10 @@ export const AUDIT_ACTIONS = [
   'space.member_added',
   'space.member_removed',
   'page.moved_space',
+  // v0.9.0 G2 P12 — Workspace-pinned pages (admin-curated top-of-sidebar).
+  'workspace.pin_added',
+  'workspace.pin_removed',
+  'workspace.pins_reordered',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
