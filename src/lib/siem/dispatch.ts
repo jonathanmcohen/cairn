@@ -48,7 +48,11 @@ export type DispatchInput = {
 };
 
 export type Sender = (
-  forwarder: { endpoint: string; credentialSecret: string | null; options: Record<string, unknown> },
+  forwarder: {
+    endpoint: string;
+    credentialSecret: string | null;
+    options: Record<string, unknown>;
+  },
   env: SiemEnvelope,
 ) => Promise<void>;
 
@@ -115,10 +119,7 @@ async function deliverOne(
       nextAttemptAt: exhausted ? null : new Date(Date.now() + nextBackoffMs(attempt)),
     });
     if (exhausted) {
-      logger.error(
-        { forwarderId: forwarder.id, auditEventId: audit.id },
-        'siem.delivery_failed',
-      );
+      logger.error({ forwarderId: forwarder.id, auditEventId: audit.id }, 'siem.delivery_failed');
     }
   }
 }
@@ -146,9 +147,7 @@ export async function dispatchAuditEvent(
       ),
     );
 
-  await Promise.all(
-    forwarders.map((f) => deliverOne(db, f, audit, envelope, senders)),
-  );
+  await Promise.all(forwarders.map((f) => deliverOne(db, f, audit, envelope, senders)));
 }
 
 /**
@@ -161,10 +160,7 @@ export function dispatchAuditEventSafe(
   opts: DispatchOptions = {},
 ): Promise<void> {
   return dispatchAuditEvent(audit, opts).catch((err) => {
-    logger.warn(
-      { err: err instanceof Error ? err.message : String(err) },
-      'siem.dispatch_threw',
-    );
+    logger.warn({ err: err instanceof Error ? err.message : String(err) }, 'siem.dispatch_threw');
   });
 }
 
@@ -195,10 +191,7 @@ export async function retryPendingDeliveries(
       schema.siemForwarders,
       eq(schema.siemDeliveryLog.forwarderId, schema.siemForwarders.id),
     )
-    .innerJoin(
-      schema.auditLog,
-      eq(schema.siemDeliveryLog.auditEventId, schema.auditLog.id),
-    )
+    .innerJoin(schema.auditLog, eq(schema.siemDeliveryLog.auditEventId, schema.auditLog.id))
     .where(eq(schema.siemDeliveryLog.status, 'retry'));
 
   const now = Date.now();
@@ -219,9 +212,7 @@ export async function retryPendingDeliveries(
           eq(schema.siemDeliveryLog.status, 'retry'),
         ),
       );
-    const ready = pending.some(
-      (p) => p.nextAttemptAt !== null && p.nextAttemptAt.getTime() <= now,
-    );
+    const ready = pending.some((p) => p.nextAttemptAt !== null && p.nextAttemptAt.getTime() <= now);
     if (!ready) continue;
     if (!row.forwarder.enabled) continue;
 

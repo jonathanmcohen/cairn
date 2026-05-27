@@ -33,9 +33,7 @@ describe('sendHttp', () => {
       });
       req.on('end', () => {
         lastReq = {
-          headers: Object.fromEntries(
-            Object.entries(req.headers).map(([k, v]) => [k, String(v)]),
-          ),
+          headers: Object.fromEntries(Object.entries(req.headers).map(([k, v]) => [k, String(v)])),
           body: buf,
           method: req.method ?? '',
         };

@@ -17,7 +17,11 @@
 import type { SiemEnvelope } from '../format';
 
 export async function sendHttp(
-  forwarder: { endpoint: string; credentialSecret: string | null; options: Record<string, unknown> },
+  forwarder: {
+    endpoint: string;
+    credentialSecret: string | null;
+    options: Record<string, unknown>;
+  },
   env: SiemEnvelope,
 ): Promise<void> {
   const timeoutMs = (forwarder.options.timeoutMs as number | undefined) ?? 5_000;

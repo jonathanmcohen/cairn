@@ -30,9 +30,7 @@ import { workspaces } from './workspaces';
 export const siemForwarders = pgTable(
   'siem_forwarders',
   {
-    id: uuid('id')
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
@@ -40,10 +38,7 @@ export const siemForwarders = pgTable(
     name: text('name').notNull(),
     endpoint: text('endpoint').notNull(),
     credentialSecret: text('credential_secret'),
-    options: jsonb('options')
-      .$type<Record<string, unknown>>()
-      .notNull()
-      .default(sql`'{}'::jsonb`),
+    options: jsonb('options').$type<Record<string, unknown>>().notNull().default(sql`'{}'::jsonb`),
     enabled: boolean('enabled').notNull().default(true),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -57,9 +52,7 @@ export const siemForwarders = pgTable(
 export const siemDeliveryLog = pgTable(
   'siem_delivery_log',
   {
-    id: uuid('id')
-      .primaryKey()
-      .default(sql`gen_random_uuid()`),
+    id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
     forwarderId: uuid('forwarder_id')
       .notNull()
       .references(() => siemForwarders.id, { onDelete: 'cascade' }),

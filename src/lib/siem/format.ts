@@ -41,9 +41,7 @@ export function formatAuditEvent(input: AuditEventInput): SiemEnvelope {
     actor_user_id: input.actorUserId,
     action: input.action,
     target:
-      input.targetType && input.targetId
-        ? { type: input.targetType, id: input.targetId }
-        : null,
+      input.targetType && input.targetId ? { type: input.targetType, id: input.targetId } : null,
     metadata: input.metadata,
   };
 }

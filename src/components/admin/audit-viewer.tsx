@@ -143,6 +143,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'chat.slash_invoked': 'Chat bridge — slash command invoked',
   'chat.channel_linked': 'Chat bridge — channel linked to page',
   'chat.channel_unlinked': 'Chat bridge — channel unlinked from page',
+  // v0.9.0 G8 P39 — SIEM-forwarder delivery exhausted its retry budget.
+  'siem.delivery_failed': 'SIEM — delivery failed after retries',
 };
 
 function actionLabel(action: string): string {

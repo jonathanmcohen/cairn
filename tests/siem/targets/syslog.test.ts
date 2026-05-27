@@ -18,11 +18,6 @@ const sample = formatAuditEvent({
 describe('sendSyslog', () => {
   let udp: Socket | undefined;
   let tcp: Server | undefined;
-  let received: string[] = [];
-
-  beforeEach(() => {
-    received = [];
-  });
   afterEach(async () => {
     if (udp) {
       await new Promise<void>((r) => {

@@ -12,9 +12,10 @@ const SCHEDULE_MS = [1_000, 5_000, 30_000, 5 * 60_000] as const;
 export const MAX_ATTEMPTS = SCHEDULE_MS.length;
 
 export function nextBackoffMs(attempt: number): number {
-  if (attempt < 1) return SCHEDULE_MS[0];
-  if (attempt > SCHEDULE_MS.length) return SCHEDULE_MS[SCHEDULE_MS.length - 1];
-  return SCHEDULE_MS[attempt - 1];
+  const last = SCHEDULE_MS[SCHEDULE_MS.length - 1] ?? 0;
+  if (attempt < 1) return SCHEDULE_MS[0] ?? 0;
+  if (attempt > SCHEDULE_MS.length) return last;
+  return SCHEDULE_MS[attempt - 1] ?? last;
 }
 
 /**
