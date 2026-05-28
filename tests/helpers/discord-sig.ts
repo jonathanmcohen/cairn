@@ -15,7 +15,7 @@ export async function makeDiscordKeypair(): Promise<EdKeypair> {
   const keys = (await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
     'sign',
     'verify',
-  ])) as CryptoKeyPair;
+  ])) as unknown as CryptoKeyPair;
   const rawPub = await webcrypto.subtle.exportKey('raw', keys.publicKey);
   const publicKeyHex = Buffer.from(rawPub).toString('hex');
   return {

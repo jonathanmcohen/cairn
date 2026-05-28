@@ -34,7 +34,7 @@ async function genPair(): Promise<Pair> {
   const pair = (await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
     'sign',
     'verify',
-  ])) as CryptoKeyPair;
+  ])) as unknown as CryptoKeyPair;
   const raw = new Uint8Array(await webcrypto.subtle.exportKey('raw', pair.publicKey));
   return { pubHex: Buffer.from(raw).toString('hex'), priv: pair.privateKey };
 }
