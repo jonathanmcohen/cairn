@@ -1,9 +1,26 @@
 // @vitest-environment jsdom
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { PdfNode } from '@/components/editor/blocks/pdf-node';
+
+// Track + destroy editors so prosemirror-view's DOMObserver doesn't schedule a
+// deferred flush (setTimeout) that fires after vitest tears down jsdom — that
+// throws an uncaught `ReferenceError: document is not defined` which fails the
+// whole run even though every assertion passed. Same fix as audio-node.test.tsx.
+const editors: Editor[] = [];
+const makeEditor = (opts: ConstructorParameters<typeof Editor>[0]) => {
+  const e = new Editor(opts);
+  editors.push(e);
+  return e;
+};
+
+afterEach(() => {
+  while (editors.length > 0) {
+    editors.pop()?.destroy();
+  }
+});
 
 describe('PdfNode schema', () => {
   it('declares the `pdf` node name, block group, atom', () => {
@@ -13,7 +30,7 @@ describe('PdfNode schema', () => {
   });
 
   it('serializes + parses through JSON roundtrip preserving fileId + defaultPage', () => {
-    const editor = new Editor({ extensions: [StarterKit, PdfNode] });
+    const editor = makeEditor({ extensions: [StarterKit, PdfNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [{ type: 'pdf', attrs: { fileId: 'file-123', defaultPage: 3 } }],
@@ -26,7 +43,7 @@ describe('PdfNode schema', () => {
   });
 
   it('defaults defaultPage to 1 and fileId to null', () => {
-    const editor = new Editor({ extensions: [StarterKit, PdfNode] });
+    const editor = makeEditor({ extensions: [StarterKit, PdfNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [{ type: 'pdf', attrs: {} }],

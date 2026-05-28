@@ -116,4 +116,37 @@ describe('suggestion transform', () => {
     const doc = { type: 'doc', content: [para(text('a', ins('s1')))] };
     expect(acceptSuggestion(doc, 'nope')).toEqual(doc);
   });
+
+  // Regression: prosemirror-model builds node/mark attrs with
+  // `Object.create(null)`. React 19's RSC serializer refuses null-prototype
+  // objects passed Server->Client, which 500s the public `/p/<slug>` render.
+  // previewAccepted must return objects with the default prototype throughout.
+  it('returns plain-prototype objects (no null-prototype attrs) for RSC', () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        {
+          type: 'heading',
+          attrs: { level: 1 },
+          content: [{ type: 'text', text: 'Title' }],
+        },
+        para(text('link', { type: 'link', attrs: { href: 'https://example.test' } })),
+      ],
+    };
+    const out = previewAccepted(doc as unknown as Json);
+
+    const protosOk = (v: unknown): boolean => {
+      if (Array.isArray(v)) return v.every(protosOk);
+      if (v && typeof v === 'object') {
+        if (Object.getPrototypeOf(v) !== Object.prototype) return false;
+        return Object.values(v).every(protosOk);
+      }
+      return true;
+    };
+    expect(protosOk(out)).toBe(true);
+
+    // The heading node's attrs must be a plain object (the exact shape RSC trips on).
+    const heading = asDoc(out).content[0] as unknown as { attrs: Record<string, unknown> };
+    expect(Object.getPrototypeOf(heading.attrs)).toBe(Object.prototype);
+  });
 });

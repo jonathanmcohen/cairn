@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-05-28
+
+> Dependency-maintenance release: runtime → Node 24 LTS, package manager → pnpm 11, and the full dependency tree advanced to latest (including the breaking nodemailer 8 and pdfjs-dist 5 majors) with the codebase migrated to match. No schema changes — **no migrations, no new env vars**; upgraders need only redeploy. Plus a public-render bug fix that unblocks Lighthouse CI, and a light+dark feature screenshot set in the README.
+
+### Changed (runtime + tooling)
+- **Node 24 LTS** is now the runtime: `engines` `>=24`, `.nvmrc`, Dockerfile `NODE_VERSION` (`24-alpine`), CI `setup-node` (all jobs + Lighthouse), and `@types/node@24`. Node-24 webcrypto type change handled (`generateKey` → `CryptoKey`).
+- **pnpm 11.4.0** (`packageManager` + corepack). pnpm 10+ no longer auto-runs dependency build scripts; an `allowBuilds` allowlist in `pnpm-workspace.yaml` re-enables the native deps Cairn needs (esbuild, sharp, onnxruntime-node, cpu-features, ssh2, protobufjs).
+- Dependency sweep to latest: TipTap 3.23.6, Biome 2.4.16, AWS SDK, Slack Bolt, TanStack Virtual, Testcontainers 12.0.1, react-hook-form, `@hookform/resolvers` 5.4, lucide-react 1.17.
+- **nodemailer 8** (breaking major) — transport API verified unchanged; no code change beyond the bump.
+- **pdfjs-dist 5** (breaking major) — `page.render()` now requires `canvas`; the PDF viewer passes it. Worker wiring unchanged.
+
+### Fixed
+- Public page `/p/<slug>` returned HTTP 500 (and failed every Lighthouse CI run): prosemirror-model builds node/mark attrs with `Object.create(null)`, which React 19's RSC serializer rejects when passed to a Client Component. `previewAccepted` now normalizes its output to plain objects.
+
+### Docs
+- README gains a **Screenshots** section (light + dark) for the editor, ⌘K palette, API keys, automation, and webhook deliveries, captured via the a11y harness (`tests/a11y/screenshots.spec.ts`).
+
 ## [0.9.0] - 2026-05-27
 
 > Power features + 1.0-readiness release. Nine groups completing every remaining pre-1.0 roadmap feature except the AI cluster. 44 plans, 20 new migrations (`0034`–`0053`), executed on a single `release/v0.9.0` branch and merged via one PR — per the v0.7-v0.8 retrospective rule on release-branch discipline.

@@ -6,7 +6,7 @@ async function genKeyPair(): Promise<CryptoKeyPair> {
   return (await webcrypto.subtle.generateKey({ name: 'Ed25519' }, true, [
     'sign',
     'verify',
-  ])) as CryptoKeyPair;
+  ])) as unknown as CryptoKeyPair;
 }
 
 async function exportPubHex(key: CryptoKey): Promise<string> {

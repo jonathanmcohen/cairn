@@ -1,12 +1,29 @@
 // @vitest-environment jsdom
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { DateTimeNode } from '@/components/editor/blocks/datetime-node';
+
+// Track + destroy editors so prosemirror-view's DOMObserver doesn't schedule a
+// deferred flush (setTimeout) that fires after vitest tears down jsdom — that
+// throws an uncaught `ReferenceError: document is not defined` which fails the
+// whole run even though every assertion passed. Same fix as audio-node.test.tsx.
+const editors: Editor[] = [];
+const makeEditor = (opts: ConstructorParameters<typeof Editor>[0]) => {
+  const e = new Editor(opts);
+  editors.push(e);
+  return e;
+};
+
+afterEach(() => {
+  while (editors.length > 0) {
+    editors.pop()?.destroy();
+  }
+});
 
 describe('DateTimeNode', () => {
   it('serializes all three attrs through JSON', () => {
-    const editor = new Editor({ extensions: [StarterKit, DateTimeNode] });
+    const editor = makeEditor({ extensions: [StarterKit, DateTimeNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [
@@ -35,7 +52,7 @@ describe('DateTimeNode', () => {
   });
 
   it('applies default display_format', () => {
-    const editor = new Editor({ extensions: [StarterKit, DateTimeNode] });
+    const editor = makeEditor({ extensions: [StarterKit, DateTimeNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [
@@ -52,7 +69,7 @@ describe('DateTimeNode', () => {
   });
 
   it('renders to HTML as a <time> with datetime + data-* attrs', () => {
-    const editor = new Editor({ extensions: [StarterKit, DateTimeNode] });
+    const editor = makeEditor({ extensions: [StarterKit, DateTimeNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [

@@ -15,6 +15,43 @@ audit log + observability, per-workspace storage quotas, scheduled backups,
 import/export, search-filter + saved searches, reminders, and bulk page ops
 — without sending your content to anyone else.
 
+## Screenshots
+
+Each view in both light and dark themes. Captured from the seeded
+accessibility harness (`tests/a11y/screenshots.spec.ts`).
+
+### Block editor — sidebar, page, and an inline database
+
+| Light | Dark |
+|---|---|
+| ![Editor (light)](docs/screenshots/editor-light.png) | ![Editor (dark)](docs/screenshots/editor-dark.png) |
+
+### ⌘K command palette
+
+| Light | Dark |
+|---|---|
+| ![Command palette (light)](docs/screenshots/command-palette-light.png) | ![Command palette (dark)](docs/screenshots/command-palette-dark.png) |
+
+### Developer settings — API keys
+
+| Light | Dark |
+|---|---|
+| ![API keys (light)](docs/screenshots/settings-api-keys-light.png) | ![API keys (dark)](docs/screenshots/settings-api-keys-dark.png) |
+
+### Automation rules
+
+| Light | Dark |
+|---|---|
+| ![Automation (light)](docs/screenshots/settings-automation-light.png) | ![Automation (dark)](docs/screenshots/settings-automation-dark.png) |
+
+### Webhook delivery dashboard
+
+| Light | Dark |
+|---|---|
+| ![Webhook deliveries (light)](docs/screenshots/webhook-deliveries-light.png) | ![Webhook deliveries (dark)](docs/screenshots/webhook-deliveries-dark.png) |
+
+> Regenerate with `CAIRN_CAPTURE_SCREENSHOTS=1 pnpm test:a11y` after `pnpm build`.
+
 ## v0.8.0 features
 
 **PWA + mobile polish (G1).** Full Yjs-over-IndexedDB sync: every page the
