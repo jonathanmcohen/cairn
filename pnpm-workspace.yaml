@@ -1,0 +1,12 @@
+# pnpm 10+ no longer runs dependency build/postinstall scripts by default
+# (supply-chain hardening). pnpm 11 tracks approvals in this allowBuilds map.
+# true = run the dep's build script (native bindings / codegen Cairn needs).
+# @scarf/scarf is pure telemetry — kept false so it never runs.
+allowBuilds:
+  '@scarf/scarf': false
+  cpu-features: true # ssh2 native speedup (testcontainers transport)
+  esbuild: true # vite/vitest bundler — native binary required
+  onnxruntime-node: true # embedding provider runtime (native)
+  protobufjs: true # onnxruntime dependency codegen
+  sharp: true # image processing (next/image, image gallery, a11y screenshots)
+  ssh2: true # testcontainers docker SSH transport
