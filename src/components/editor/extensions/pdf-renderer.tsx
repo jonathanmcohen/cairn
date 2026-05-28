@@ -104,7 +104,9 @@ export default function PdfRenderer({ fileId, defaultPage, pageId }: Props) {
           canvas.height = viewport.height;
           const ctx = canvas.getContext('2d');
           if (!ctx) continue;
-          await page.render({ canvasContext: ctx, viewport }).promise;
+          // pdfjs-dist v5 made `canvas` a required RenderParameters field
+          // (was optional in v4). Pass the element we already resolved.
+          await page.render({ canvas, canvasContext: ctx, viewport }).promise;
         }
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : 'render failed');
