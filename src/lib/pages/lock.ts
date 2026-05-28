@@ -15,7 +15,7 @@ import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
-import { HttpError } from '@/lib/auth/require-role';
+import { HttpError } from '@/lib/auth/http-error';
 
 export type LockState =
   | { locked: false; lockedBy: null; lockedAt: null; lockedUntil: null }
