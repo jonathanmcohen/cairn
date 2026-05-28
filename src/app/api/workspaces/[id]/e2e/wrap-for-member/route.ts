@@ -133,7 +133,7 @@ export async function POST(req: Request, { params }: RouteCtx): Promise<Response
         action: 'e2e.workspace.member_added',
         targetType: 'member',
         targetId: parsed.data.memberUserId,
-        metadata: { keyVersion: v, rewrapped: existing ? true : false },
+        metadata: { keyVersion: v, rewrapped: Boolean(existing) },
       });
     });
 
