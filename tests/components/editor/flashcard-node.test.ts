@@ -1,12 +1,29 @@
 // @vitest-environment jsdom
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { FlashcardNode } from '@/components/editor/blocks/flashcard-node';
+
+// Track + destroy editors so prosemirror-view's DOMObserver doesn't schedule a
+// deferred flush (setTimeout) that fires after vitest tears down jsdom — that
+// throws an uncaught `ReferenceError: document is not defined` which fails the
+// whole run even though every assertion passed. Same fix as audio-node.test.tsx.
+const editors: Editor[] = [];
+const makeEditor = (opts: ConstructorParameters<typeof Editor>[0]) => {
+  const e = new Editor(opts);
+  editors.push(e);
+  return e;
+};
+
+afterEach(() => {
+  while (editors.length > 0) {
+    editors.pop()?.destroy();
+  }
+});
 
 describe('FlashcardNode', () => {
   it('roundtrips attrs through JSON', () => {
-    const editor = new Editor({ extensions: [StarterKit, FlashcardNode] });
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [
@@ -25,7 +42,7 @@ describe('FlashcardNode', () => {
   });
 
   it('setFlashcard command inserts a flashcard node', () => {
-    const editor = new Editor({ extensions: [StarterKit, FlashcardNode] });
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
     editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
     editor.commands.setFlashcard({ front: 'F', back: 'B', deckTag: null });
     const found = (editor.getJSON().content ?? []).some(
@@ -35,7 +52,7 @@ describe('FlashcardNode', () => {
   });
 
   it('renders to HTML with data-* attributes for serialization', () => {
-    const editor = new Editor({ extensions: [StarterKit, FlashcardNode] });
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [
