@@ -190,5 +190,11 @@ export function previewAccepted(doc: Json): Json {
   const node = schema.nodeFromJSON(doc);
   let result = node;
   for (const id of collectIds(node)) result = acceptOn(result, id);
-  return result.toJSON() as Json;
+  // prosemirror-model builds `node.attrs` (and mark attrs) with
+  // `Object.create(null)`, and `toJSON()` returns those null-prototype objects
+  // by reference. React 19's RSC serializer refuses null-prototype objects
+  // passed from a Server Component to a Client Component ("Only plain objects
+  // ... can be passed"), which 500s the public `/p/<slug>` render. Round-trip
+  // through JSON to rebuild every nested object with the default prototype.
+  return JSON.parse(JSON.stringify(result.toJSON())) as Json;
 }
