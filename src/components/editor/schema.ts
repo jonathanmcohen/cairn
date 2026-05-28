@@ -3,11 +3,19 @@ import { TaskItem, TaskList } from '@tiptap/extension-list';
 import Mention from '@tiptap/extension-mention';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
+import { AudioNode } from './blocks/audio-node';
 import { BookmarkNode } from './blocks/bookmark-node';
+import { CitationNode } from './blocks/citation-node';
 import { Column, ColumnList } from './blocks/columns';
+import { DateTimeNode } from './blocks/datetime-node';
+import { DrawioNode } from './blocks/drawio-node';
 import { EmbedNode } from './blocks/embed-node';
+import { FlashcardNode } from './blocks/flashcard-node';
+import { FootnoteMark } from './blocks/footnote-mark';
+import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
+import { PlantUmlNode } from './blocks/plantuml-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { ToggleNode } from './blocks/toggle-node';
@@ -39,7 +47,9 @@ export function schemaExtensions() {
   return [
     StarterKit.configure({
       codeBlock: false,
-      heading: { levels: [1, 2, 3] },
+      // v0.9 P28: widen to h4 so server-side parsing keeps level-4 headings
+      // intact (mirrors the editor config in extensions.ts).
+      heading: { levels: [1, 2, 3, 4] },
     }),
     CodeBlockLowlight.configure({ lowlight }),
     TaskList,
@@ -58,6 +68,21 @@ export function schemaExtensions() {
     MathBlockNode,
     SyncedBlockNode,
     MermaidNode,
+    PlantUmlNode,
+    DrawioNode,
+    GalleryNode,
+    // v0.9.0 G3 P22 — `cairnAudio` schema-only registration. Matches the
+    // baseExtensions() set so server-side suggestion-transform parses stored
+    // content carrying audio nodes without dropping them.
+    AudioNode,
+    // v0.9.0 G3 P18 — citation + footnote types so the server-side accept/reject
+    // transform recognizes stored content carrying these.
+    CitationNode,
+    FootnoteMark,
+    // v0.9.0 G3 P19 + P20 — Flashcard + DateTime nodes (schema-only on the
+    // server-side accept/reject + suggestion-transform paths).
+    FlashcardNode,
+    DateTimeNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,

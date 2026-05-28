@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { StepUpModal } from '@/components/security/stepup-modal';
 import { Button } from '@/components/ui/button';
 
 type Member = { userId: string; name: string; email: string; role: string };
@@ -33,6 +34,7 @@ export function DangerZone({
   const [deleteConfirmName, setDeleteConfirmName] = useState('');
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [stepUpOpen, setStepUpOpen] = useState(false);
 
   const canTransfer = !!toUserId && transferConfirmName === workspaceName && !transferring;
   const canDelete = deleteConfirmName === workspaceName && !deleting;
@@ -60,14 +62,20 @@ export function DangerZone({
     }
   }
 
-  async function onDelete(e: React.FormEvent) {
-    e.preventDefault();
+  async function performDelete() {
     setDeleteError(null);
     setDeleting(true);
     try {
       const res = await fetch(`/api/workspaces/${workspaceId}`, { method: 'DELETE' });
       if (!res.ok) {
-        const b = (await res.json().catch(() => null)) as { error?: string } | null;
+        const b = (await res.json().catch(() => null)) as {
+          error?: string;
+          code?: string;
+        } | null;
+        if (res.status === 403 && b?.code === 'stepup-required') {
+          setStepUpOpen(true);
+          return;
+        }
         setDeleteError(b?.error ?? `Failed to delete (${res.status})`);
         return;
       }
@@ -77,6 +85,11 @@ export function DangerZone({
     } finally {
       setDeleting(false);
     }
+  }
+
+  async function onDelete(e: React.FormEvent) {
+    e.preventDefault();
+    await performDelete();
   }
 
   return (
@@ -181,6 +194,17 @@ export function DangerZone({
           {deleting ? 'Deleting…' : 'Delete workspace permanently'}
         </Button>
       </form>
+
+      {stepUpOpen ? (
+        <StepUpModal
+          open={stepUpOpen}
+          onOpenChange={setStepUpOpen}
+          onComplete={async () => {
+            setStepUpOpen(false);
+            await performDelete();
+          }}
+        />
+      ) : null}
     </div>
   );
 }

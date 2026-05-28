@@ -3,6 +3,7 @@ import type { Editor } from '@tiptap/react';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
+import { FootnoteMark } from './blocks/footnote-mark';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
@@ -79,6 +80,160 @@ function openPagePicker(editor: Editor, onPick: (item: PageItem) => void): void 
     component.updateProps({ items, command: choose });
   });
 }
+
+/**
+ * Slash-menu entry for the PDF block (v0.9.0 G3 P17). Opens a file picker
+ * restricted to `application/pdf`, uploads via `/api/upload`, then inserts a
+ * `pdf` node carrying the new `fileId`. Exported so the editor's drop handler
+ * (in `editor.tsx`) can share the same insertion code-path, and so a unit
+ * test can verify the entry without spinning up the full slash extension.
+ */
+/**
+ * v0.9.0 G3 P18 — Footnote + Citation slash entries.
+ *
+ * Exported in the `{ command, title, description, run }` shape that the plan's
+ * test fixture (`tests/components/editor/citation-slash.test.ts`) probes.
+ * The active slash menu still consumes the `SlashItem` shape (`{ title,
+ * description, command(editor) }`) — see the `items` array below where these
+ * two get appended via `toSlashItem()`.
+ */
+export type CitationSlashEntry = {
+  command: `/${string}`;
+  title: string;
+  description: string;
+  run: (editor: Editor) => void;
+};
+
+export const footnoteMenuItem: CitationSlashEntry = {
+  command: '/footnote',
+  title: 'Footnote',
+  description: 'Add an inline footnote',
+  run: (editor: Editor): void => {
+    const content = window.prompt('Footnote text');
+    if (!content) return;
+    if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
+      editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
+    }
+    const id = crypto.randomUUID();
+    editor.chain().focus().setMark('footnote', { id, content }).run();
+  },
+};
+
+export const citationMenuItem: CitationSlashEntry = {
+  command: '/citation',
+  title: 'Citation',
+  description: 'Insert a bibliographic reference',
+  run: (editor: Editor): void => {
+    const doi = window.prompt('DOI (optional)') ?? null;
+    const pubmed = window.prompt('PubMed ID (optional)') ?? null;
+    const author = window.prompt('Author (Last, F.)') ?? '';
+    const title = window.prompt('Title') ?? '';
+    const yearStr = window.prompt('Year') ?? '';
+    const year = Number.parseInt(yearStr, 10);
+    if (!author || !title || Number.isNaN(year)) return;
+    const ref = { authors: [author], title, year };
+    void Promise.all([
+      import('@/lib/citations/format'),
+      import('./extensions/citation').then((m) => m.CitationExtension),
+    ]).then(([fmt, CitationExt]) => {
+      if (editor.isDestroyed) return;
+      if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
+        editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
+      }
+      const fullRef = { ...ref, doi: doi ?? undefined, pubmedId: pubmed ?? undefined };
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'citation',
+          attrs: {
+            id: crypto.randomUUID(),
+            doi,
+            pubmed_id: pubmed,
+            formatted_apa: fmt.formatCitation(fullRef, 'apa'),
+            formatted_mla: fmt.formatCitation(fullRef, 'mla'),
+            formatted_chicago: fmt.formatCitation(fullRef, 'chicago'),
+            raw_authors: [author],
+            raw_title: title,
+            raw_year: year,
+          },
+        })
+        .run();
+    });
+  },
+};
+
+function toSlashItem(entry: CitationSlashEntry): SlashItem {
+  return { title: entry.title, description: entry.description, command: entry.run };
+}
+
+/**
+ * v0.9.0 G3 P20 — `/datetime` slash entry. Inserts a timezone-aware date/time
+ * inline atom defaulting to "now" in the browser's resolved IANA zone. The
+ * lazy `datetime` extension is loaded on demand so the popover picker + Luxon
+ * helpers stay out of the initial editor bundle.
+ */
+export const datetimeMenuItem: CitationSlashEntry = {
+  command: '/datetime',
+  title: 'Date/time',
+  description: 'Insert a date/time with timezone',
+  run: (editor: Editor): void => {
+    void ensureLazyExtension(editor, 'datetime').then(async () => {
+      if (editor.isDestroyed) return;
+      const { parseInput, DEFAULT_DISPLAY_FORMAT } = await import('@/lib/datetime/format');
+      const now = new Date();
+      const tz =
+        typeof Intl !== 'undefined' && Intl.DateTimeFormat
+          ? (Intl.DateTimeFormat().resolvedOptions().timeZone ?? 'UTC')
+          : 'UTC';
+      // Convert the current instant into the resolved tz's wall-clock so
+      // parseInput round-trips back to (roughly) the same UTC instant.
+      const local = new Date(now.toLocaleString('en-US', { timeZone: tz }));
+      const pad = (n: number) => String(n).padStart(2, '0');
+      const date = `${local.getFullYear()}-${pad(local.getMonth() + 1)}-${pad(local.getDate())}`;
+      const time = `${pad(local.getHours())}:${pad(local.getMinutes())}`;
+      let iso: string;
+      try {
+        iso = parseInput({ date, time, tz });
+      } catch {
+        iso = now.toISOString();
+      }
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'datetime',
+          attrs: { iso, tz, display_format: DEFAULT_DISPLAY_FORMAT },
+        })
+        .run();
+    });
+  },
+};
+
+export const pdfSlashItem: SlashItem = {
+  title: 'PDF',
+  description: 'Upload a PDF and annotate it inline',
+  command: (editor) => {
+    void (async () => {
+      await ensureLazyExtension(editor, 'pdf');
+      if (editor.isDestroyed) return;
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/pdf';
+      input.onchange = async () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.set('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) return;
+        const { file: meta } = (await res.json()) as { file: { id: string; name: string } };
+        editor.chain().focus().setPdf({ fileId: meta.id, defaultPage: 1 }).run();
+      };
+      input.click();
+    })();
+  },
+};
 
 const items: SlashItem[] = [
   {
@@ -235,6 +390,38 @@ const items: SlashItem[] = [
     command: (editor) => editor.chain().focus().setVideo().run(),
   },
   {
+    title: 'Audio',
+    description: 'Upload and embed an audio file (mp3/wav/ogg/flac/aac)',
+    command: (editor) => {
+      // v0.9.0 G3 P22: load the React node-view first so the inserted node
+      // renders with the signed-URL `<audio>` element instead of the bare
+      // schema div. Pattern mirrors the embed/math slash entries.
+      void ensureLazyExtension(editor, 'cairnAudio').then(() => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/aac';
+        input.onchange = async () => {
+          const file = input.files?.[0];
+          if (!file) return;
+          const fd = new FormData();
+          fd.set('file', file);
+          const res = await fetch('/api/upload', { method: 'POST', body: fd });
+          if (!res.ok) return;
+          const { file: meta } = (await res.json()) as {
+            signedUrl: string;
+            file: { id: string; name: string; mimeType: string };
+          };
+          editor
+            .chain()
+            .focus()
+            .setAudio({ fileId: meta.id, mime: meta.mimeType, name: meta.name })
+            .run();
+        };
+        input.click();
+      });
+    },
+  },
+  {
     title: 'Equation',
     description: 'Block math rendered with KaTeX',
     command: (editor) => {
@@ -258,6 +445,54 @@ const items: SlashItem[] = [
     command: (editor) => {
       void ensureLazyExtension(editor, 'mermaid').then(() => {
         editor.chain().focus().setMermaid().run();
+      });
+    },
+  },
+  {
+    title: 'PlantUML diagram',
+    description: 'Render PlantUML (sequence, use-case, class) via public or self-hosted server',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'plantuml').then(() => {
+        editor.chain().focus().setPlantUml().run();
+      });
+    },
+  },
+  {
+    title: 'drawio diagram',
+    description: 'Embed a viewer-only diagrams.net diagram (XML or public URL)',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'drawio').then(() => {
+        editor.chain().focus().setDrawio().run();
+      });
+    },
+  },
+  {
+    title: 'Image gallery',
+    description: 'Drop multiple images into a responsive grid with click-to-zoom',
+    command: (editor) => {
+      void ensureLazyExtension(editor, 'gallery').then(() => {
+        editor.chain().focus().setGallery().run();
+      });
+    },
+  },
+  pdfSlashItem,
+  toSlashItem(footnoteMenuItem),
+  toSlashItem(citationMenuItem),
+  toSlashItem(datetimeMenuItem),
+  {
+    title: 'Flashcard',
+    description: 'Spaced-repetition flashcard (front / back / deck tag)',
+    command: (editor) => {
+      const front = window.prompt('Front (question)') ?? '';
+      const back = window.prompt('Back (answer)') ?? '';
+      if (!front || !back) return;
+      const deck = window.prompt('Deck tag (optional)') ?? '';
+      void ensureLazyExtension(editor, 'flashcard').then(() => {
+        editor
+          .chain()
+          .focus()
+          .setFlashcard({ front, back, deckTag: deck || null })
+          .run();
       });
     },
   },

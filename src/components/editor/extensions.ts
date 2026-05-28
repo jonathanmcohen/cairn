@@ -8,13 +8,22 @@ import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
+import { AudioNode } from './blocks/audio-node';
 import { Bookmark } from './blocks/bookmark';
 import { ButtonBlock } from './blocks/button';
+import { CitationNode } from './blocks/citation-node';
 import { Column, ColumnList } from './blocks/columns';
+import { DateTimeNode } from './blocks/datetime-node';
 import { DividerNode } from './blocks/divider-node';
+import { DrawioNode } from './blocks/drawio-node';
 import { EmbedNode } from './blocks/embed-node';
+import { FlashcardNode } from './blocks/flashcard-node';
+import { FootnoteMark } from './blocks/footnote-mark';
+import { GalleryNode } from './blocks/gallery-node';
 import { MathBlockNode } from './blocks/math-node';
 import { MermaidNode } from './blocks/mermaid-node';
+import { PdfNode } from './blocks/pdf-node';
+import { PlantUmlNode } from './blocks/plantuml-node';
 import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
@@ -44,7 +53,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
   return [
     StarterKit.configure({
       codeBlock: false,
-      heading: { levels: [1, 2, 3] },
+      // v0.9 P28: widen to h4 so the TOC sidebar + inline TOC block can render
+      // a fourth nesting level. Keyboard shortcuts (Ctrl/Cmd-Alt-4) become
+      // available automatically.
+      heading: { levels: [1, 2, 3, 4] },
       ...(undoRedo ? {} : { undoRedo: false as const }),
     }),
     CodeBlockLowlight.configure({ lowlight }),
@@ -64,9 +76,28 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     MathBlockNode,
     SyncedBlockNode,
     MermaidNode,
+    PlantUmlNode,
+    DrawioNode,
+    GalleryNode,
+    PdfNode,
     DividerNode,
     ButtonBlock,
     VideoBlock,
+    // v0.9.0 G3 P22 — `cairnAudio` schema-only registration. The React node-
+    // view loads lazily via `extensions-lazy.ts#audio` so the bundle stays
+    // slim until a doc actually contains audio (or the user types `/audio`).
+    AudioNode,
+    // v0.9.0 G3 P18 — citation block + inline footnote mark. Both are schema-
+    // pure (no React node-view in this list; the style-aware `CitationView`
+    // lives in `extensions/citation.tsx` and is wired by editor.tsx when a
+    // page-level `citationStyle` prop is provided).
+    CitationNode,
+    FootnoteMark,
+    // v0.9.0 G3 P19 + P20 — schema-only static reg so server-side document
+    // parsers don't silently drop these nodes when loading content. The
+    // React node-views still load lazily via extensions-lazy.ts.
+    FlashcardNode,
+    DateTimeNode,
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
@@ -150,6 +181,13 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     React node-view is a label/href/variant editor that writes
  *                     EVERY edit back to attrs via `updateAttributes` (no node-
  *                     local persistence). v0.8.0 P24.                            SAFE
+ *  - AudioNode     — block atom, attrs `{ fileId, mime, name, src }` only.
+ *                     The React node-view fetches a session signed URL via
+ *                     `/api/files/<id>/signed-url` on mount; `src` is a
+ *                     transient public-render override read in the same shape
+ *                     as `VideoBlock` (peers re-derive at view time, never
+ *                     persisting a stale URL). No node-local mutable state.
+ *                     v0.9.0 G3 P22.                                          SAFE
  *  - VideoBlock     — block atom, attrs `{ fileId, mimeType, src }` only. The
  *                     React node-view shows a file picker until `fileId` lands,
  *                     then renders `<video controls>` whose `<source src>` is

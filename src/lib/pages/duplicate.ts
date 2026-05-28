@@ -24,6 +24,11 @@ export async function duplicatePublicPage(
           eq(schema.pages.id, sourcePageId),
           eq(schema.pages.published, true),
           eq(schema.pages.allowDuplication, true),
+          // v0.9.0 G1 P6 — defense-in-depth: encrypted pages can never be
+          // duplicated via the public surface (server has no DEK). The public
+          // gate already blocks the page render; this filter keeps the
+          // duplicate-helper safe if anyone calls it from a non-public surface.
+          eq(schema.pages.encrypted, false),
           isNull(schema.pages.deletedAt),
         ),
       )

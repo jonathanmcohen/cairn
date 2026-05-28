@@ -151,7 +151,10 @@ describe('resolveEmbed — refusals on bad schemes for the new providers', () =>
 });
 
 describe('EMBED_FRAME_HOSTS — extended set', () => {
-  it('exposes all 10 allowed iframe origins (no Mermaid — it renders inline SVG)', () => {
+  it('exposes all 11 allowed iframe origins (Mermaid + PlantUML render inline / via <img>)', () => {
+    // v0.8 P22 added Mermaid (no entry — inline SVG) and v0.8 P22 grew the list
+    // to 10. v0.9 P15 adds drawio's viewer.diagrams.net (the only iframe in the
+    // diagram-blocks expansion; PlantUML uses <img>).
     expect(EMBED_FRAME_HOSTS).toEqual([
       'https://www.youtube.com',
       'https://player.vimeo.com',
@@ -163,6 +166,7 @@ describe('EMBED_FRAME_HOSTS — extended set', () => {
       'https://open.spotify.com',
       'https://vimeo.com',
       'https://excalidraw.com',
+      'https://viewer.diagrams.net',
     ]);
   });
 });

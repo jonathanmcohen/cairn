@@ -1,4 +1,5 @@
-import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { index, jsonb, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { users } from './users';
 import { workspaces } from './workspaces';
 
@@ -15,10 +16,14 @@ export const savedSearches = pgTable(
     name: text('name').notNull(),
     query: text('query').notNull().default(''),
     filters: jsonb('filters').notNull().default({}),
+    templateName: text('template_name'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => ({
     byWorkspaceUser: index('saved_searches_workspace_id_user_id_idx').on(t.workspaceId, t.userId),
+    templateNameUq: uniqueIndex('saved_searches_template_name_uq')
+      .on(t.workspaceId, t.userId, t.templateName)
+      .where(sql`${t.templateName} IS NOT NULL`),
   }),
 );
 

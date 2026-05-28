@@ -27,6 +27,7 @@ afterAll(async () => {
 describe('page update on-write embedding hook', () => {
   let workspaceId: string;
   let pageId: string;
+  let actorUserId: string;
 
   beforeEach(async () => {
     await sql`TRUNCATE page_embeddings, pages, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
@@ -34,6 +35,7 @@ describe('page update on-write embedding hook', () => {
     process.env.CAIRN_DISABLE_EMBED_HOOK = '1';
     const u = await createTestWorkspaceWithUser(db);
     workspaceId = u.workspaceId;
+    actorUserId = u.userId;
     const p = await createPage(db, { workspaceId, createdBy: u.userId, title: 'P' });
     pageId = p.id;
     // Now enable the hook for the actual test body.
@@ -59,6 +61,8 @@ describe('page update on-write embedding hook', () => {
     const updated = await reloadedUpdate(db, {
       pageId,
       workspaceId,
+      byUserId: actorUserId,
+      adminOverride: true,
       patch: { title: 'New' },
     });
     const tReturned = Date.now() - t0;
@@ -82,7 +86,13 @@ describe('page update on-write embedding hook', () => {
     }));
     const { updatePage: reloadedUpdate } = await import('@/lib/pages/update');
     await expect(
-      reloadedUpdate(db, { pageId, workspaceId, patch: { title: 'X' } }),
+      reloadedUpdate(db, {
+        pageId,
+        workspaceId,
+        byUserId: actorUserId,
+        adminOverride: true,
+        patch: { title: 'X' },
+      }),
     ).resolves.toBeDefined();
     await flushSetImmediate();
     await new Promise((r) => setTimeout(r, 20));

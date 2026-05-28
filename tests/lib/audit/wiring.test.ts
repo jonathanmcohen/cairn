@@ -183,6 +183,7 @@ describe('audit wiring (P18 T2): sensitive helpers write exactly one audit row e
       pageId: p.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const rows = await rowsFor(u.workspaceId, 'page.deleted');
     expect(rows).toHaveLength(1);
@@ -298,6 +299,7 @@ describe('audit wiring (P18 T2): sensitive helpers write exactly one audit row e
       actorUserId: u.userId,
       rootPageId: p.id,
       name: 'My Template',
+      visibility: 'workspace',
     });
     const rows = await rowsFor(u.workspaceId, 'template.created');
     expect(rows).toHaveLength(1);

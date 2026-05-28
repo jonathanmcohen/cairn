@@ -4,7 +4,7 @@
  */
 
 export type HeadingEntry = {
-  /** Heading level, 1–3 (StarterKit is configured for levels [1,2,3]). */
+  /** Heading level, 1–4 (extended in v0.9 P28; StarterKit is configured for levels [1,2,3,4]). */
   level: number;
   /** Concatenated plain-text content of the heading. */
   text: string;
@@ -52,7 +52,12 @@ export function collectHeadings(doc: unknown): HeadingEntry[] {
   const walk = (node: PmNode): void => {
     if (node.type === 'heading') {
       const level = typeof node.attrs?.level === 'number' ? node.attrs.level : 1;
-      out.push({ level, text: textOf(node).trim() });
+      // v0.9 P28: extend to h4. Drop h5/h6 — outline sidebar (and inline TOC
+      // block) only render the four levels covered by StarterKit's keyboard
+      // shortcuts.
+      if (level >= 1 && level <= 4) {
+        out.push({ level, text: textOf(node).trim() });
+      }
       return; // headings don't nest headings
     }
     if (Array.isArray(node.content)) for (const child of node.content) walk(child);

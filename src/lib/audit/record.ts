@@ -97,6 +97,41 @@ export function assertAuditMetadataClean(metadata: Record<string, unknown> | und
  * `assertAuditMetadataClean` guard is defense-in-depth, not a substitute for
  * caller discipline.
  */
+/**
+ * v0.9.0 G8 P39 — Post-write hook. Lazily imported to avoid a cycle (`dispatch`
+ * imports `db/client` which transitively imports the schema; `recordAudit` is
+ * imported deep in route handlers). Schedules a best-effort SIEM fan-out via
+ * `setImmediate` so the dispatcher runs AFTER the surrounding `db.transaction`
+ * commits — otherwise the SIEM read on a different connection would not see
+ * the uncommitted audit row and the delivery-log insert would fail FK.
+ *
+ * Meta-audit recursion is blocked inside the dispatcher itself
+ * (action === 'siem.delivery_failed' short-circuits), so callers don't have
+ * to remember the exclusion list.
+ */
+function scheduleSiemDispatch(row: typeof schema.auditLog.$inferSelect): void {
+  // Mirror the v0.7.0 P12 embed-hook escape hatch (tests/setup.ts): SIEM
+  // dispatch fires via setImmediate against the singleton `getDb()` pool,
+  // which races the per-file pool teardown in integration tests. Tests that
+  // exercise the dispatcher pass an explicit `db` handle into
+  // `dispatchAuditEvent` directly; everything else gets the no-op.
+  if (process.env.CAIRN_DISABLE_SIEM_HOOK === '1') return;
+  setImmediate(() => {
+    void import('@/lib/siem/dispatch').then(({ dispatchAuditEventSafe }) =>
+      dispatchAuditEventSafe({
+        id: row.id,
+        workspaceId: row.workspaceId,
+        actorUserId: row.actorUserId,
+        action: row.action,
+        targetType: row.targetType,
+        targetId: row.targetId,
+        metadata: (row.metadata ?? {}) as Record<string, unknown>,
+        createdAt: row.createdAt,
+      }),
+    );
+  });
+}
+
 export async function recordAudit(
   tx: DbOrTx,
   input: RecordAuditInput,
@@ -115,5 +150,6 @@ export async function recordAudit(
     })
     .returning();
   if (!row) throw new Error('recordAudit: insert returned no row');
+  scheduleSiemDispatch(row);
   return row;
 }

@@ -33,7 +33,7 @@ export function CommentsToggle({
         <MessageSquare aria-hidden="true" className="h-4 w-4" />
       </Button>
       {open && (
-        <div className="fixed inset-y-0 right-0 z-30 shadow-lg">
+        <div data-cairn-comments-rail="" className="fixed inset-y-0 right-0 z-30 shadow-lg">
           <CommentPanel
             pageId={pageId}
             canComment={canComment}

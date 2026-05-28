@@ -238,3 +238,180 @@ returns the PDF base64-encoded inside a JSON-RPC resource envelope. The
 tool rejects `format=pdf` with `INVALID_REQUEST` when `CAIRN_NATIVE_PDF`
 is unset (to keep the tool truthful — there is no MCP shape that can
 deliver an HTML "save as" dialog).
+
+## WebAuthn / passkeys (v0.9.0 G1 P8)
+
+Cairn supports passkeys (WebAuthn FIDO2 credentials) as a complement to the
+v0.6 P19 TOTP authenticator. Users can enroll either, both, or neither —
+subject to the per-workspace MFA policy (see Admin enforce below).
+
+**Required env vars (only when WebAuthn is exposed):**
+
+- `CAIRN_RP_ID` — the **registrable domain** of your deployment. Host only,
+  no scheme or port (e.g. `cairn.example.com`). Credentials bind to this
+  value forever; **changing it after enrollment invalidates every passkey**.
+- `CAIRN_RP_ORIGIN` — the **full origin** (scheme + host + port) that the
+  browser sends in the WebAuthn ceremony (e.g. `https://cairn.example.com`).
+  **Must match the origin of `NEXTAUTH_URL`.** A mismatch causes the same
+  permanent invalidation as changing `CAIRN_RP_ID`.
+- `CAIRN_RP_NAME` — human-readable name shown in the authenticator prompt
+  during enrollment. Defaults to `Cairn`.
+
+Leaving these unset is supported and means the `/api/webauthn/*` routes
+respond with 503 — the enrollment page at `/settings/security/passkeys`
+likewise short-circuits to an "operator has not enabled WebAuthn" banner.
+
+**Startup sanity check:** `src/server/entrypoint.ts` parses
+`CAIRN_RP_ORIGIN` and `NEXTAUTH_URL` at container start and logs a
+structured warning to stderr if the origins disagree. Inspect every fresh
+container's log line zero for the warning before letting users enroll.
+
+**Recommended values for the default docker-compose deployment:**
+
+```
+CAIRN_RP_ID=cairn.example.com         # NOT https://...., NOT a port
+CAIRN_RP_NAME=Cairn
+CAIRN_RP_ORIGIN=https://cairn.example.com
+NEXTAUTH_URL=https://cairn.example.com
+```
+
+**Admin-enforce policy:** workspace admins can require MFA enrollment for
+all members via `PUT /api/admin/workspaces/<workspaceId>/mfa-policy`
+(surfaced at `/settings/admin/mfa`). When enabled, sign-in for a member
+without any enrolled MFA method (TOTP or WebAuthn) returns
+403 `mfa-enrollment-required` and the login screen links them to the
+enrollment page.
+
+**Step-up:** the workspace-delete admin action (and any future
+opt-in destructive surface) requires a fresh WebAuthn assertion (within
+5 minutes). Missing / stale returns 403 `stepup-required`; the UI triggers
+the assertion inline and retries the request on success.
+
+## Release watch (v0.9.0 G8 P42)
+
+When `CAIRN_SCHEDULER_ENABLED=1` is set and the scheduler is running, the
+boot path registers a global `release-watch:tick` row in `cron_schedules`
+(daily at 04:30 UTC). Each tick fetches `CAIRN_RELEASE_FEED_URL`, finds
+the highest stable semver tag in the response, and inserts one
+`upgrade_available` notification per (admin/owner, workspace) whose
+latest known version is older than the upstream tag. The fan-out is
+idempotent per (user, workspace, version): re-runs at the same version
+insert zero rows; a newer feed inserts only the missing rows. The
+notification bell + `/notifications` drawer render the
+`upgrade_available` type with a link to `/settings/admin/upgrade`.
+
+```env
+# Defaults (no config needed unless you want a mirror or to opt out):
+CAIRN_RELEASE_FEED_URL=https://api.github.com/repos/jonathanmcohen/cairn/releases
+CAIRN_RELEASE_WATCH_ENABLED=true
+```
+
+**Auto-apply is OFF.** The daemon only inserts notifications. The
+`/settings/admin/upgrade` page renders current vs available version and
+exposes an "Apply upgrade now" button that streams `cairn-upgrade apply`
+via SSE — that is the *only* path that actually runs `applyUpgrade`.
+
+**Air-gapped deploys** set `CAIRN_RELEASE_WATCH_ENABLED=false`; the cron
+registration is skipped at boot and operators upgrade out-of-band.
+
+**Mirrors / private feeds:** point `CAIRN_RELEASE_FEED_URL` at any
+endpoint returning a JSON array of
+`{ tag_name, html_url, draft, prerelease }` objects (the GitHub Releases
+v3 shape). Drafts and prereleases are filtered out; the highest
+semver-valid stable tag wins. GitHub API rate-limit responses
+(`X-RateLimit-Remaining: 0`) and non-2xx responses are surfaced as
+`feedError` on the tick result and never crash the cron.
+
+## Encrypted backup passphrase rotation
+
+Cairn's backup CLI (v0.5 P5 — see `cli backup`) optionally wraps every
+on-disk artefact in an AES-256-GCM envelope when
+`CAIRN_BACKUP_ENCRYPTION_PASSPHRASE` is set (v0.9.0 G8 P43). The dump
+(`cairn-backup-<ts>.dump`) and the uploads tar
+(`cairn-uploads-<ts>.tar.gz`) gain a `.enc` suffix; the manifest stays in
+plaintext and gains an `"encrypted": true` flag. The passphrase is the
+**only** thing that can decrypt the archives — there is no recovery path
+if you lose it. Rotation must be a planned operation.
+
+### Envelope format
+
+`[magic: 16][salt: 16][nonce: 12][ciphertext: variable][auth tag: 16]`,
+where `magic = "CAIRN-ENC-BAK-v1"`. The salt feeds Argon2id
+(`memoryCost=64 MB`, `timeCost=3`, `parallelism=1`) to derive a 256-bit
+key. The nonce is the GCM IV. The auth tag is appended at the tail and
+detects any single-bit tamper or wrong-passphrase attempt on `decrypt`.
+
+### Procedure
+
+1. **Snapshot current state.** Confirm the NEW passphrase is stored in
+   your secret manager (1Password, AWS Secrets Manager, etc.) BEFORE
+   rotating, and that the OLD passphrase is still accessible.
+2. **Run a fresh backup** with the OLD passphrase still set, and verify
+   it restores end-to-end (see "Verify" below). Don't rotate until you
+   trust the current passphrase round-trips.
+3. **Decrypt every retained archive to local plaintext.** For each
+   `<dir>/cairn-backup-<ts>.dump.enc` and matching
+   `cairn-uploads-<ts>.tar.gz.enc`:
+
+   ```sh
+   # The CLI handles this transparently on restore — but for offline
+   # re-encryption you can stream-decrypt with a one-liner:
+   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE="$OLD" \
+     node -e 'require("./dist/lib/backups/encryption.js")
+       .decryptBackup(process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE)
+       .pipe(process.stdout)' \
+     < /backups/cairn-backup-<ts>.dump.enc \
+     > /tmp/rotation/cairn-backup-<ts>.dump
+   ```
+4. **Re-encrypt with the NEW passphrase**:
+
+   ```sh
+   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE="$NEW" \
+     node -e 'process.stdin
+       .pipe(require("./dist/lib/backups/encryption.js")
+         .encryptBackup(process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE))
+       .pipe(process.stdout)' \
+     < /tmp/rotation/cairn-backup-<ts>.dump \
+     > /backups/cairn-backup-<ts>.dump.enc
+   ```
+5. **Update the env var on the Cairn host** to the new passphrase. The
+   next scheduled `cli backup` run encrypts with the new key.
+6. **Securely shred the plaintext** in `/tmp/rotation/`
+   (`shred -u` on Linux, `rm -P` on macOS) before reboot.
+
+### Verify
+
+```sh
+CAIRN_BACKUP_ENCRYPTION_PASSPHRASE="$NEW" \
+  node dist/server/cli.js restore --in /backups/cairn-backup-<ts>.dump.enc --force
+```
+
+A wrong passphrase exits non-zero with
+`decryption failed: auth tag mismatch (wrong passphrase or tampered
+ciphertext)`. No partial plaintext lands on disk.
+
+### Failure modes
+
+- **Wrong passphrase on decrypt.** The CLI exits non-zero with the
+  message above. The original `.enc` file is left intact; no partial
+  plaintext is produced.
+- **Tampered envelope.** Same failure mode — GCM's auth tag detects any
+  flipped bit in the ciphertext.
+- **Missing magic.** `envelope magic mismatch (not a CAIRN-ENC-BAK-v1
+  stream)`. You are pointing the CLI at a raw dump from before the
+  encryption env was set; restore that one without
+  `CAIRN_BACKUP_ENCRYPTION_PASSPHRASE` in the environment.
+- **`.enc` bundle, env var unset.** The restore path refuses outright
+  rather than attempt the dump: `bundle ... is encrypted (.enc) but
+  CAIRN_BACKUP_ENCRYPTION_PASSPHRASE is unset`.
+
+### Notes
+
+- The passphrase env name is in the v0.7 secret-leak `FORBIDDEN_KEYS`
+  set + the `pino` redact list — Cairn does not log or echo it via any
+  API surface.
+- This procedure is **distinct from v0.9.0 G1 P5–P7 E2E page-content
+  encryption**. Per-page encryption protects the `pages.content` jsonb
+  inside the DB; the envelope protects the entire `.dump` (which
+  contains the ciphertext rows AND every other table) at rest on disk.
+  Both can coexist for defense-in-depth.

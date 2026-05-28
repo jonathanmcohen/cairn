@@ -2,12 +2,17 @@ import { sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import type * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { requireUnlocked } from '@/lib/pages/lock';
 import { emit } from '@/lib/webhooks/dispatch';
 
 export type SoftDeleteInput = {
   pageId: string;
   workspaceId: string;
   actorUserId: string;
+  // v0.9.0 G2 P14 — admin override flag for the page-lock gate. Required so
+  // callers can't accidentally bypass a lock by omission; default it to
+  // `hasMinRole(ctx.role, 'admin')` at the API surface.
+  adminOverride: boolean;
 };
 
 /**
@@ -19,6 +24,11 @@ export async function softDeletePage(
   db: PostgresJsDatabase<typeof schema>,
   input: SoftDeleteInput,
 ): Promise<void> {
+  await requireUnlocked(db, {
+    pageId: input.pageId,
+    byUserId: input.actorUserId,
+    adminOverride: input.adminOverride,
+  });
   await db.transaction(async (tx) => {
     // Verify the page exists in this workspace and is not already deleted.
     const target = (await tx.execute(rawSql`

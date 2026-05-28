@@ -46,6 +46,7 @@ describe('hardDeletePage', () => {
       pageId: root.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await hardDeletePage(db, { pageId: root.id, workspaceId: u.workspaceId });
     const rows = await db.select().from(schema.pages);
@@ -68,6 +69,7 @@ describe('hardDeletePage', () => {
       pageId: p.id,
       workspaceId: b.workspaceId,
       actorUserId: b.userId,
+      adminOverride: true,
     });
     await expect(hardDeletePage(db, { pageId: p.id, workspaceId: a.workspaceId })).rejects.toThrow(
       /not in trash/i,

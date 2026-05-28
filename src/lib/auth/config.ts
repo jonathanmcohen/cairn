@@ -9,6 +9,7 @@ import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { env } from '@/lib/env';
 import { ipKey, loginLimiter } from '@/lib/security/rate-limit';
+import { checkMfaEnrollmentForSignIn } from './mfa-policy';
 import { applyOAuthGate } from './oauth-gate';
 import { verifyPassword } from './password';
 import { isTwoFactorEnabled, verifySecondFactor } from './two-factor';
@@ -58,6 +59,13 @@ function buildProviders(): NextAuthConfig['providers'] {
           });
           if (!passed) return null;
         }
+        // v0.9.0 G1 P8 — admin-enforce: block sign-in when at least one
+        // member workspace's policy requires MFA and the user has no
+        // enrolled method from the workspace's allow-list. Falls AFTER
+        // TOTP verification so a user with TOTP enabled satisfies a
+        // TOTP-permitting policy on the very same sign-in.
+        const mfaCheck = await checkMfaEnrollmentForSignIn(db, { userId: user.id });
+        if (!mfaCheck.ok) return null;
         return { id: user.id, email: user.email, name: user.name };
       },
     }),
@@ -101,13 +109,28 @@ export const authConfig: NextAuthConfig = {
       if (!user.email || !user.id) return false;
       return applyOAuthGate(getDb(), { email: user.email, userId: user.id });
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user?.id) token.id = user.id;
+      // v0.9.0 G1 P8 — step-up assertion timestamp. Mirrored into the JWT so
+      // requireStepUp can read it from the session object on subsequent
+      // requests. /api/webauthn/assert sets the `cairn_stepup` cookie AND
+      // calls session.update({ stepUpAt }) (client side) — either path
+      // converges to the JWT carrying the claim.
+      if (trigger === 'update') {
+        const stepUpAt = (session as { stepUpAt?: number } | undefined)?.stepUpAt;
+        if (typeof stepUpAt === 'number') {
+          (token as Record<string, unknown>).stepUpAt = stepUpAt;
+        }
+      }
       return token;
     },
     async session({ session, token }) {
       if (session.user && typeof token.id === 'string') {
         session.user.id = token.id;
+      }
+      const stepUpAt = (token as Record<string, unknown>).stepUpAt;
+      if (typeof stepUpAt === 'number') {
+        (session as { stepUpAt?: number }).stepUpAt = stepUpAt;
       }
       return session;
     },

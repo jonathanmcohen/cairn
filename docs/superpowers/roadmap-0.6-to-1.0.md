@@ -96,7 +96,7 @@ Two releases remain to 1.0.
 
 **Theme:** finish every remaining feature on the pre-1.0 roadmap *except* the AI cluster (set aside for the third time). After v0.9.0, v1.0.0 is pure stabilization with one open question (ship AI or drop permanently).
 
-**Scope:** 38 features. Single release. Single `release/v0.9.0` branch (no direct-to-main commits — per the v0.7-v0.8 retrospective). 43 numbered plans across 9 groups (G1-G9). 15 migrations (`0034`-`0048`).
+**Scope:** 38 features. Single release. Single `release/v0.9.0` branch (no direct-to-main commits — per the v0.7-v0.8 retrospective). 44 numbered plans across 9 groups (G1-G9). 15 migrations (`0034`-`0048`).
 
 | # | Feature | Group | Notes / risk |
 |---|---|---|---|
@@ -154,7 +154,54 @@ Two releases remain to 1.0.
 
 **Constraints:** every v0.6/v0.7/v0.8 overlap ships as a *delta*, no rebuilds. Every new env var documented in `docs/operations.md`. Encrypted pages skip search / embeddings / public-share / template-instantiation (explicit refuse). Plan-review subagent dispatched between plan write + implementer dispatch (retrospective rule).
 
-**Rough size:** 9 plan groups, 43 numbered plans. Migrations `0034`–`0048` (15 additive). Largest release in the line.
+**Rough size:** 9 plan groups, 44 numbered plans. Migrations `0034`–`0048` (15 additive). Largest release in the line.
+
+**Per-plan progress** (tick as plans land on `release/v0.9.0`):
+
+- [x] G1 P1 — SSO migration `0034` + Drizzle tables (`idp_configurations`, `external_identities`, `scim_tokens`)
+- [x] G1 P2 — OIDC adapter
+- [x] G1 P3 — SAML adapter
+- [x] G1 P4 — SCIM 2.0 endpoint + admin IdP-config UI
+- [x] G1 P5 — E2E migration `0035` + crypto core (X25519 + key-wrap)
+- [x] G1 P6 — E2E per-page mode (migration `0036`)
+- [x] G1 P7 — E2E workspace-wide mode (migration `0037`)
+- [x] G1 P8 — MFA WebAuthn + step-up + admin enforce (migration `0038`)
+- [x] G1 P9 — PAT quotas (migration `0039`) + scope rate-limits
+- [x] G1 P10 — PAT quota admin dashboard
+- [x] G2 P11 — Spaces (migration `0040`) + sidebar grouping + ACL chain
+- [x] G2 P12 — Workspace-pinned (migration `0041`) + admin UI
+- [x] G2 P13 — Trash retention (migration `0042`) + admin UI + cron + audit
+- [x] G2 P14 — Page lock (migration `0043`) + audit + auto-unlock
+- [x] G3 P15 — Diagram blocks expansion (PlantUML + drawio)
+- [x] G3 P16 — Image gallery + lightbox
+- [x] G3 P17 — PDF viewer + annotation (migration `0044`)
+- [x] G3 P18 — Citation + footnote blocks + bibliography aggregator
+- [x] G3 P19 — Flashcards (migration `0045`) + SM-2 + due-queue + notifs + digest
+- [x] G3 P20 — Date/time block with timezone (luxon)
+- [x] G3 P21 — DOI / PubMed citation lookup (APA/MLA/Chicago)
+- [x] G3 P22 — Bulk file drag-drop + audio block + MIME allowlist
+- [x] G4 P23 — Tasks hub (`/my-tasks` aggregator)
+- [x] G4 P24 — Page approval + signed audit (migration `0048`)
+- [x] G4 P25 — Save-as-template + sharing controls
+- [x] G4 P26 — Page lifecycle status + translations (migration `0047`)
+- [x] G5 P27 — "See also" related-pages panel
+- [x] G5 P28 — TOC sidebar
+- [x] G5 P29 — Search operators parser + chip UI + saved templates
+- [x] G5 P30 — Federated multi-workspace + cross-instance search (migration `0050`)
+- [x] G6 P31 — i18n framework polish + Biome rule + es translations
+- [x] G6 P32 — Side-by-side version diff
+- [x] G6 P33 — Focus mode + reader mode + share-password verify
+- [x] G7 P34 — Static export pipeline + CLI + UI + MkDocs target
+- [x] G7 P35 — Static export Docusaurus target + per-format frontmatter
+- [x] G7 P36 — Chat bridge outbound + inbound (Slack + Discord) (migration `0051`)
+- [x] G7 P37 — Chat bridge slash commands + channel↔page sync (migration `0052`)
+- [x] G7 P38 — OpenAPI generator + `/openapi.json` + Swagger UI
+- [x] G8 P39 — SIEM forwarder (migration `0053`) + syslog + HTTP webhook
+- [x] G8 P40 — SIEM native Splunk HEC + Datadog Logs + S3 NDJSON archive
+- [x] G8 P41 — `cairn-upgrade` CLI + compose orchestration
+- [x] G8 P42 — Release-watch daemon + admin upgrade UI
+- [x] G8 P43 — Encrypted workspace backups (AES-256-GCM envelope)
+- [x] G9 P44 — Combined smoke + release (single PR `release/v0.9.0 → main` + tag)
 
 ---
 

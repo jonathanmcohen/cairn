@@ -1,16 +1,11 @@
 import { and, desc, eq, isNull, lt, or, sql } from 'drizzle-orm';
-import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { pageResult, parseListQuery } from '@/lib/api/pagination';
 import { withApiKey } from '@/lib/api/rate-limit';
 import { HttpError, hasMinRole, requireWorkspace } from '@/lib/auth/require-role';
 import { createDatabase } from '@/lib/databases/create';
-
-const CreateInput = z.object({
-  pageId: z.uuid(),
-  name: z.string().min(1).max(200).optional(),
-});
+import { CreateDatabaseRequest } from '@/lib/schemas/databases';
 
 export const GET = withApiKey(async (req, ctx) => {
   const ws = requireWorkspace(ctx);
@@ -47,7 +42,7 @@ export const GET = withApiKey(async (req, ctx) => {
 export const POST = withApiKey(async (req, ctx) => {
   const ws = requireWorkspace(ctx);
   if (!hasMinRole(ws.role, 'editor')) throw new HttpError(403, 'Requires role editor');
-  const parsed = CreateInput.parse(await req.json().catch(() => ({})));
+  const parsed = CreateDatabaseRequest.parse(await req.json().catch(() => ({})));
   const database = await createDatabase(getDb(), {
     workspaceId: ws.workspaceId,
     pageId: parsed.pageId,

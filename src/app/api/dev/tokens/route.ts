@@ -31,6 +31,16 @@ const MintSchema = z.object({
   scopes: z.array(z.enum(SCOPES)).min(1),
   mcpTools: z.array(z.string().min(1).max(120)).default([]),
   expiresInDays: z.number().int().positive().max(365).optional(),
+  // v0.9.0 G1 P9 — optional quotas. Omit/null = no cap.
+  dailyRequestLimit: z.number().int().positive().max(10_000_000).nullable().optional(),
+  monthlyRequestLimit: z.number().int().positive().max(100_000_000).nullable().optional(),
+  scopeRateLimits: z
+    .record(
+      z.string().min(1).max(120),
+      z.object({ perMinute: z.number().int().positive().max(10_000) }),
+    )
+    .nullable()
+    .optional(),
 });
 
 /** Active workspace cookie set by the workspace-switcher; mirrors v0.6 admin routes. */
@@ -124,6 +134,9 @@ export async function POST(req: Request): Promise<Response> {
     scopes: parsed.data.scopes,
     mcpTools: parsed.data.mcpTools,
     expiresAt,
+    dailyRequestLimit: parsed.data.dailyRequestLimit ?? null,
+    monthlyRequestLimit: parsed.data.monthlyRequestLimit ?? null,
+    scopeRateLimits: parsed.data.scopeRateLimits ?? null,
   });
   // Plaintext token returned ONCE; never persisted/retrievable after this response.
   return NextResponse.json(

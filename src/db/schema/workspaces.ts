@@ -1,4 +1,4 @@
-import { boolean, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { boolean, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
 export const workspaces = pgTable('workspaces', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -17,6 +17,21 @@ export const workspaces = pgTable('workspaces', {
   // circular-FK situation as homePageId — FK constraint added by hand in the
   // generated migration SQL.
   inboxPageId: uuid('inbox_page_id'),
+  // v0.9.0 G1 P7 — workspace-wide E2E encryption mode discriminator.
+  // 'off' | 'per_page' | 'workspace_wide'; no DB-level CHECK — API rejects
+  // unknown values. Set to 'workspace_wide' by /api/workspaces/[id]/e2e/enable.
+  e2eMode: text('e2e_mode').notNull().default('off'),
+  // v0.9.0 G2 P13 — trash retention. The daily cron purges trashed pages
+  // older than this many days. 0 = never auto-purge (manual only).
+  // CAIRN_TRASH_RETENTION_DAYS env stays the GLOBAL default for fresh
+  // workspaces; once set per-workspace, this column wins.
+  trashRetentionDays: integer('trash_retention_days').notNull().default(30),
+  // v0.9.0 G2 P13 — forward-declared for P26 (page lifecycle). Default for
+  // newly-created pages when the editor does not pass an explicit status.
+  defaultPageStatus: text('default_page_status').notNull().default('published'),
+  // v0.9.0 G2 P13 — forward-declared for P30 (federated search). When true,
+  // this workspace participates in peer-instance search routing.
+  enableFederatedSearch: boolean('enable_federated_search').notNull().default(false),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

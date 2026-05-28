@@ -383,6 +383,47 @@ bucket out-of-band (bucket versioning or your provider's snapshot/replication).
 > uploaded file. Treat bundles as secrets: encrypt them at rest and restrict who
 > can read the backup directory. The CLI never transmits bundles anywhere.
 
+### Static-site export
+
+Cairn can emit a buildable [MkDocs](https://www.mkdocs.org/) project from any
+workspace — every page becomes a Markdown file under `docs/`, every referenced
+image/file is bundled into `docs/assets/`, and a `mkdocs.yml` with the Material
+theme + nav tree is generated.
+
+The pipeline is exposed two ways:
+
+```sh
+# CLI — emit a ZIP to disk:
+pnpm export:static -- --workspace <workspace-uuid> --target mkdocs --out cairn-site.zip
+unzip cairn-site.zip -d ./cairn-site && cd ./cairn-site && mkdocs serve
+
+# Admin UI: Settings → Workspace → Static-site export → "Generate".
+# The browser downloads the same ZIP via POST /api/exports/static-site.
+```
+
+Workspaces containing any encrypted page (E2E per-page or workspace-wide mode)
+are **refused** — static export is public-share-equivalent and must not leak
+ciphertext.
+
+#### Docusaurus
+
+The same pipeline can emit a [Docusaurus](https://docusaurus.io/) project. A
+minimal `docusaurus.config.js` + `sidebars.js` are generated alongside the
+`docs/*.md` tree; each page picks up Docusaurus frontmatter (`id`, `slug`,
+`sidebar_position`, `title`).
+
+```sh
+pnpm export:static -- --workspace <workspace-uuid> --target docusaurus --out site.zip
+unzip site.zip -d ./site && cd ./site
+npm install
+npm run start
+```
+
+Parallel-translation pages (per `pages.translation_of_page_id` +
+`pages.translation_locale`, added in P26) land under
+`i18n/<locale>/docusaurus-plugin-content-docs/current/` and Docusaurus's i18n
+routing renders them at `/<locale>/<slug>`.
+
 ## Local development
 
 For `pnpm dev`, `pnpm build`, or `pnpm test` run outside the container, the

@@ -1,11 +1,15 @@
 import { and, eq, isNull, sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { requireUnlocked } from '@/lib/pages/lock';
 
 export type MovePageInput = {
   pageId: string;
   workspaceId: string;
   newParentId: string | null;
+  // v0.9.0 G2 P14 — page-lock gate.
+  byUserId: string;
+  adminOverride: boolean;
 };
 
 export async function movePage(
@@ -15,6 +19,12 @@ export async function movePage(
   if (input.newParentId === input.pageId) {
     throw new Error('Cannot move a page under itself (cycle)');
   }
+
+  await requireUnlocked(db, {
+    pageId: input.pageId,
+    byUserId: input.byUserId,
+    adminOverride: input.adminOverride,
+  });
 
   await db.transaction(async (tx) => {
     const [target] = await tx

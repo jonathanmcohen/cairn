@@ -9,6 +9,12 @@ import { vi } from 'vitest';
 // it explicitly with vi.doMock + delete process.env.CAIRN_DISABLE_EMBED_HOOK.
 process.env.CAIRN_DISABLE_EMBED_HOOK = '1';
 
+// v0.9.0 G8 P39 mirrors the embed-hook escape hatch: the SIEM fan-out fires
+// via setImmediate against the singleton db pool, which races per-file pool
+// teardown in integration tests. Tests that exercise the dispatcher pass an
+// explicit `db` handle to `dispatchAuditEvent` directly.
+process.env.CAIRN_DISABLE_SIEM_HOOK = '1';
+
 // getAuthContext() now reads/writes the `cairn_ws` cookie via next/headers.
 // Outside a Next.js request scope (i.e. in unit/integration tests) `cookies()`
 // throws. Provide a per-test in-memory cookie store so existing tests that drive

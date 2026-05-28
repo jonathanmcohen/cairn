@@ -1,4 +1,4 @@
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNull, notInArray, or } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 
@@ -59,21 +59,44 @@ export type FlatPageNode = {
   title: string;
   icon: string | null;
   depth: number;
+  // v0.9.0 G2 P11 — optional space pointer used by the sidebar to group rows
+  // under a space-header row. `null` (or undefined) means the page lives in
+  // the synthetic "Unfiled" bucket at the bottom of the tree.
+  spaceId?: string | null;
 };
 
 export async function flattenedPageTree(
   db: PostgresJsDatabase<typeof schema>,
   workspaceId: string,
+  viewerUserId?: string,
 ): Promise<FlatPageNode[]> {
+  // v0.9.0 G4 P26 — lifecycle status visibility:
+  //   - `archived` pages are hidden from the sidebar entirely (still reachable
+  //     via /archived);
+  //   - `draft` pages are visible only to their author (viewerUserId match);
+  //   - `review` + `published` are always visible to workspace members.
+  // When viewerUserId is undefined (callers that don't have an auth context —
+  // e.g. background jobs, fixtures), we fall back to the strict view: only
+  // non-draft, non-archived pages.
+  const statusFilter = viewerUserId
+    ? or(
+        notInArray(schema.pages.status, ['draft', 'archived']),
+        and(eq(schema.pages.status, 'draft'), eq(schema.pages.createdBy, viewerUserId)),
+      )
+    : notInArray(schema.pages.status, ['draft', 'archived']);
+
   const rows = await db
     .select({
       id: schema.pages.id,
       parentId: schema.pages.parentId,
       title: schema.pages.title,
       icon: schema.pages.icon,
+      spaceId: schema.pages.spaceId,
     })
     .from(schema.pages)
-    .where(and(eq(schema.pages.workspaceId, workspaceId), isNull(schema.pages.deletedAt)))
+    .where(
+      and(eq(schema.pages.workspaceId, workspaceId), isNull(schema.pages.deletedAt), statusFilter),
+    )
     .orderBy(asc(schema.pages.createdAt));
 
   // Bucket children-by-parent so the DFS doesn't re-scan rows per node.

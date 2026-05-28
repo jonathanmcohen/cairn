@@ -1,9 +1,12 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
+import { Bibliography } from '@/components/editor/extensions/bibliography';
 import { ReadOnlyView } from '@/components/editor/read-only-view';
 import { CoverBanner } from '@/components/pages/cover-banner';
+import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
 import { getDb } from '@/db/client';
+import type { CitationStyle } from '@/lib/citations/format';
 import { env } from '@/lib/env';
 import { getPageCover } from '@/lib/pages/cover';
 import { resignDocumentImages } from '@/lib/pages/public';
@@ -52,6 +55,16 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
   const authorPrefs = await getThemePrefs(db, page.createdBy);
   const cover = await getPageCover(db, page.id, page.workspaceId);
 
+  // v0.9.0 G3 P18 — Per-page citation prefs ride on `pages.metadata` jsonb
+  // (no migration in this plan). `citation_style` defaults to 'apa';
+  // `disable_bibliography` lets authors hide the auto-aggregated section.
+  const meta = (page.metadata ?? {}) as {
+    citation_style?: CitationStyle;
+    disable_bibliography?: boolean;
+  };
+  const citationStyle: CitationStyle = meta.citation_style ?? 'apa';
+  const showBibliography = !meta.disable_bibliography;
+
   return (
     <UserThemeProvider initialPrefs={authorPrefs}>
       <CoverBanner cover={cover} alt={page.title} />
@@ -61,6 +74,7 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
           {page.title}
         </h1>
         <ReadOnlyView content={content} />
+        {showBibliography && <Bibliography doc={content} style={citationStyle} />}
         {page.allowDuplication && (
           <form
             action={`/api/pages/${page.id}/duplicate-public`}
@@ -72,6 +86,12 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
             </button>
           </form>
         )}
+        {/* v0.9.0 G5 P27 — "See also" related-pages panel. ACL is bypassed on
+            the public-reader path (page is already published + slug-gated);
+            encrypted, deleted, draft, and archived pages remain excluded. */}
+        <div className="mt-10">
+          <SeeAlsoPanel pageId={page.id} viewerUserId={null} publicViewer={true} />
+        </div>
       </div>
     </UserThemeProvider>
   );

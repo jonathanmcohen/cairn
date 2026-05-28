@@ -188,7 +188,13 @@ export const registry: ToolDescriptor[] = [
     handler: async (ctx, args) => {
       const { getDb } = await import('@/db/client');
       const { updatePage } = await import('@/lib/pages/update');
+      const { HttpError } = await import('@/lib/auth/require-role');
       const parsed = UpdatePageArg.parse(args);
+      // v0.9.0 G2 P14 — page-lock gate. Tokens without a user identity can't
+      // write through a lock; api_keys carry their createdBy, PATs their
+      // minting user. PAT-driven tools NEVER admin-override another user's
+      // lock; the admin-override flow lives exclusively in the UI route.
+      if (!ctx.userId) throw new HttpError(403, 'Token missing user identity');
       const patch: { title?: string; icon?: string | null; content?: unknown } = {};
       if (parsed.title !== undefined) patch.title = parsed.title;
       if (parsed.icon !== undefined) patch.icon = parsed.icon;
@@ -197,6 +203,8 @@ export const registry: ToolDescriptor[] = [
         pageId: parsed.pageId,
         workspaceId: ctx.workspaceId,
         patch,
+        byUserId: ctx.userId,
+        adminOverride: false,
       });
     },
   },
@@ -216,6 +224,8 @@ export const registry: ToolDescriptor[] = [
         pageId: parsed.pageId,
         workspaceId: ctx.workspaceId,
         actorUserId: ctx.userId,
+        // v0.9.0 G2 P14 — PAT-driven deletes never override another user's lock.
+        adminOverride: false,
       });
       return { ok: true };
     },
@@ -229,11 +239,16 @@ export const registry: ToolDescriptor[] = [
     handler: async (ctx, args) => {
       const { getDb } = await import('@/db/client');
       const { movePage } = await import('@/lib/pages/move');
+      const { HttpError } = await import('@/lib/auth/require-role');
       const parsed = MovePageArg.parse(args);
+      // v0.9.0 G2 P14 — page-lock gate (see pages.update for rationale).
+      if (!ctx.userId) throw new HttpError(403, 'Token missing user identity');
       await movePage(getDb(), {
         pageId: parsed.pageId,
         workspaceId: ctx.workspaceId,
         newParentId: parsed.newParentId,
+        byUserId: ctx.userId,
+        adminOverride: false,
       });
       return { ok: true };
     },

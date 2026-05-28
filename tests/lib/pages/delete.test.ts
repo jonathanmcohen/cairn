@@ -53,6 +53,7 @@ describe('softDeletePage', () => {
       pageId: root.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
 
     const rows = await db.select().from(schema.pages);
@@ -75,6 +76,7 @@ describe('softDeletePage', () => {
       pageId: a.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const [bRow] = await db.select().from(schema.pages).where(eq(schema.pages.id, b.id));
     expect(bRow?.deletedAt).toBeNull();
@@ -89,6 +91,7 @@ describe('softDeletePage', () => {
         pageId: p.id,
         workspaceId: a.workspaceId,
         actorUserId: a.userId,
+        adminOverride: true,
       }),
     ).rejects.toThrow(/not found/i);
   });

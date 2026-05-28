@@ -80,6 +80,9 @@ const FORBIDDEN_KEYS = [
   'recoveryCodes',
   'CAIRN_METRICS_TOKEN',
   'CAIRN_EMBEDDING_API_KEY',
+  // v0.9.0 G8 P43 — encrypted-backup passphrase env var name; no Cairn API
+  // surface should ever echo this back.
+  'CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
 ];
 
 // Full-secret prefixes. These MUST never appear in audit metadata or in the
@@ -134,6 +137,38 @@ describe('secret non-leakage in API responses', () => {
     expect(body).not.toContain('"secret"'); // and no `secret` field at all
     // Sanity: the webhook itself was returned.
     expect(body).toContain('example.com/hook');
+  });
+
+  it('CAIRN_BACKUP_ENCRYPTION_PASSPHRASE (env var name + literal value) never appears on any covered API surface', async () => {
+    // v0.9.0 G8 P43 — set the env var to a unique literal, then re-exercise the
+    // same admin/listing endpoints the rest of this suite covers and assert the
+    // literal never appears. The env var name itself is in FORBIDDEN_KEYS so
+    // assertNoSecrets() already covers that side; this case adds the value-leak
+    // assertion (which is the realistic risk if a route ever dumped process.env).
+    const literal = `cairn-backup-pp-${randomBytes(8).toString('hex')}`;
+    const prev = process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE;
+    process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE = literal;
+    try {
+      const ws = await createTestWorkspaceWithUser(db);
+      await actAs(ws.userId);
+
+      // Members listing.
+      const members = await import('@/app/api/workspaces/members/route');
+      const membersRes = await members.GET(new Request('http://t/api/workspaces/members?q='));
+      const membersBody = await membersRes.text();
+      assertNoSecrets(membersBody);
+      expect(membersBody).not.toContain(literal);
+
+      // Webhook listing.
+      const webhooks = await import('@/app/api/webhooks/route');
+      const whRes = await webhooks.GET();
+      const whBody = await whRes.text();
+      assertNoSecrets(whBody);
+      expect(whBody).not.toContain(literal);
+    } finally {
+      if (prev === undefined) delete process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE;
+      else process.env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE = prev;
+    }
   });
 
   it('api-key list serializer projects out token_hash', async () => {

@@ -123,6 +123,27 @@ describe('resignDocumentImages', () => {
     ).toBe(true);
   });
 
+  it("re-signs a cairnAudio node's src from its fileId (v0.9.0 G3 P22)", () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        {
+          type: 'cairnAudio',
+          attrs: { fileId: 'aud', mime: 'audio/mpeg', name: 'song.mp3', src: null },
+        },
+      ],
+    };
+    const out = resignDocumentImages(doc, SECRET) as {
+      content: Array<{ attrs?: { src?: unknown } }>;
+    };
+    const src = out.content[0]?.attrs?.src as string;
+    const parsed = parseSignedUrl(src);
+    expect(parsed.id).toBe('aud');
+    expect(
+      verifyFileUrl({ fileId: 'aud', expiresAt: parsed.exp, sig: parsed.sig, secret: SECRET }),
+    ).toBe(true);
+  });
+
   it("re-signs a fileAttachment node's href from its fileId", () => {
     const doc = {
       type: 'doc',

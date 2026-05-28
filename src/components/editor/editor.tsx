@@ -6,15 +6,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useAnnounce } from '@/components/a11y/live-region';
+import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
+import { BulkUploader } from './bulk-uploader';
 import { DragHandle } from './drag-handle';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
+import { composeGalleryInsert } from './image-extension';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { SuggestionToolbar } from './suggestion-toolbar';
+import { useBulkDropHandler } from './use-bulk-drop-handler';
 import { useCollabDoc } from './use-collab-doc';
 
 export type EditorProps = {
@@ -39,6 +43,14 @@ export type EditorProps = {
    * so viewers broadcast no caret). Derived from the caller's page role.
    */
   editable: boolean;
+  /**
+   * v0.9.0 G3 P15 review fix — when true, diagram blocks (PlantUML/drawio)
+   * that would otherwise ship the decrypted source to a 3rd-party server
+   * (www.plantuml.com / viewer.diagrams.net) render a placeholder instead.
+   * Stamped onto `editor.storage.cairn.encrypted` for the React node views.
+   * Defaults to false; pass `page.encrypted` from the page-detail shell.
+   */
+  encrypted?: boolean;
 };
 
 const STATUS_LABEL = {
@@ -54,10 +66,17 @@ export function Editor({
   initialContent,
   currentUser,
   editable,
+  encrypted = false,
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
   const announce = useAnnounce();
+  // v0.9.0 G6 P33 — reader mode forces the surface into read-only even for
+  // editor-role users. Optional because `/p/<slug>` mounts <Editor> outside
+  // the PageModeShell (public viewers don't carry the toggle).
+  const pageMode = usePageModeOptional();
+  const readerMode = pageMode?.reader ?? false;
+  const effectiveEditable = editable && !readerMode;
 
   // Announce collab connection-status transitions through the shell's polite
   // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
@@ -86,23 +105,61 @@ export function Editor({
     uploadAllowedRef.current = uploadAllowed;
   }, [uploadAllowed]);
 
-  const uploadAndInsert = useCallback(async (files: File[]) => {
+  // v0.9.0 G3 P22 — Bulk multi-file drop handler. The hook owns the modal's
+  // open/files/onComplete state; `bulkOpenRef.current` is read inside the
+  // useEditor `handleDrop` closure (declared BEFORE the editor exists) so we
+  // route ≥2-file drops through the BulkUploader. Single-file drops fall
+  // through to the legacy P16/P17 image-gallery + PDF handlers.
+  const bulkOpenRef = useRef<((files: File[], dropPos: number | null) => void) | null>(null);
+
+  // v0.9.0 G3 P17 — `.pdf` files dropped (or pasted) on the editor surface
+  // upload via /api/upload and insert a `pdf` block at the caret. The lazy
+  // extension is loaded first so the schema accepts the insert + the React
+  // node-view mounts immediately. Non-PDF, non-image files still fall through
+  // to the existing image-gallery handler so behavior for unrelated drops is
+  // unchanged.
+  const uploadAndInsertPdfs = useCallback(async (files: File[]) => {
     if (!uploadAllowedRef.current) return;
+    const ed = editorRef.current;
+    if (!ed) return;
+    const { loadEditorExtension } = await import('./extensions-lazy');
+    const ext = await loadEditorExtension('pdf');
+    if (!ed.extensionManager.extensions.some((e) => e.name === ext.name)) {
+      ed.setOptions({ extensions: [...ed.extensionManager.extensions, ext] });
+    }
     for (const file of files) {
       const fd = new FormData();
       fd.set('file', file);
       const res = await fetch('/api/upload', { method: 'POST', body: fd });
       if (!res.ok) continue;
-      const body = (await res.json()) as {
-        signedUrl: string;
-        file: { id: string; name: string };
-      };
-      editorRef.current
-        ?.chain()
-        .focus()
-        .insertCairnImage({ src: body.signedUrl, alt: body.file.name, fileId: body.file.id })
-        .run();
+      const body = (await res.json()) as { file: { id: string; name: string } };
+      ed.chain().focus().setPdf({ fileId: body.file.id, defaultPage: 1 }).run();
     }
+  }, []);
+
+  const uploadAndInsert = useCallback(async (files: File[]) => {
+    if (!uploadAllowedRef.current) return;
+    // v0.9.0 G3 P16 — composeGalleryInsert collapses N>=2 image files into a
+    // single `gallery` node containing N `cairnImage` children; single-file
+    // drops still produce one bare `cairnImage` for back-compat. Non-image
+    // files are filtered upstream, so a heterogeneous drop becomes a clean
+    // gallery of just the images.
+    const result = await composeGalleryInsert({
+      files,
+      uploadFn: async (file) => {
+        const fd = new FormData();
+        fd.set('file', file);
+        const res = await fetch('/api/upload', { method: 'POST', body: fd });
+        if (!res.ok) throw new Error(`upload failed: ${res.status}`);
+        const body = (await res.json()) as {
+          signedUrl: string;
+          file: { id: string; name: string };
+        };
+        return { fileId: body.file.id, src: body.signedUrl, alt: body.file.name };
+      },
+    });
+    if (result.type === 'gallery' && result.content.length === 0) return;
+    editorRef.current?.chain().focus().insertContent(result).run();
   }, []);
 
   // The editor is only built once the provider exists, so the Collaboration
@@ -116,13 +173,13 @@ export function Editor({
   const editor = useEditor(
     provider
       ? {
-          editable,
+          editable: effectiveEditable,
           extensions: collabExtensions({
             ydoc,
             provider,
             user: currentUser,
-            // viewers: no CollaborationCursor → no awareness writes
-            withCursor: editable,
+            // viewers + reader-mode users: no CollaborationCursor → no awareness writes
+            withCursor: effectiveEditable,
           }),
           immediatelyRender: false,
           editorProps: {
@@ -139,15 +196,34 @@ export function Editor({
               'aria-label': 'Page content',
               'aria-multiline': 'true',
             },
-            handleDrop(_view, event, _slice, moved) {
+            handleDrop(view, event, _slice, moved) {
               if (moved) return false;
               const dataTransfer = (event as DragEvent).dataTransfer;
-              const droppedFiles = Array.from(dataTransfer?.files ?? []).filter((f) =>
-                f.type.startsWith('image/'),
-              );
-              if (droppedFiles.length === 0) return false;
+              const allFiles = Array.from(dataTransfer?.files ?? []);
+              if (allFiles.length === 0) return false;
+              // v0.9.0 G3 P22 — multi-file drops (>=2 files of any kind) route
+              // through the BulkUploader modal so each file lands as the right
+              // block type (image → cairnImage / gallery, audio → cairnAudio,
+              // video → video, pdf → pdf, other → fileAttachment). Single-file
+              // drops keep the legacy P16/P17 fast paths below.
+              if (allFiles.length >= 2) {
+                if (!uploadAllowedRef.current) return false;
+                event.preventDefault();
+                const ev = event as DragEvent;
+                const dropPos =
+                  view.posAtCoords({ left: ev.clientX, top: ev.clientY })?.pos ?? null;
+                bulkOpenRef.current?.(allFiles, dropPos);
+                return true;
+              }
+              // v0.9.0 G3 P17 — PDFs route to the PDF block; image drops keep
+              // the existing gallery composer; mixed drops produce one PDF
+              // node per .pdf + one gallery for the images.
+              const pdfFiles = allFiles.filter((f) => f.type === 'application/pdf');
+              const imageFiles = allFiles.filter((f) => f.type.startsWith('image/'));
+              if (pdfFiles.length === 0 && imageFiles.length === 0) return false;
               event.preventDefault();
-              void uploadAndInsert(droppedFiles);
+              if (pdfFiles.length > 0) void uploadAndInsertPdfs(pdfFiles);
+              if (imageFiles.length > 0) void uploadAndInsert(imageFiles);
               return true;
             },
             handlePaste(_view, event) {
@@ -181,18 +257,29 @@ export function Editor({
           // from their sibling components.
         }
       : { extensions: baseExtensions(), editable: false, immediatelyRender: false },
-    [provider, editable],
+    [provider, effectiveEditable],
   );
 
   useEffect(() => {
     editorRef.current = editor;
   }, [editor]);
 
+  // v0.9.0 G3 P22 — Wire the bulk drop handler. Must follow the useEditor
+  // call (the hook needs the editor instance) but precedes the JSX render of
+  // <BulkUploader/>.
+  const bulk = useBulkDropHandler({ editor });
+  useEffect(() => {
+    bulkOpenRef.current = bulk.openWith;
+  }, [bulk.openWith]);
+
   useEffect(() => {
     if (editor) {
-      (editor.storage as { cairn?: { pageId: string } }).cairn = { pageId };
+      (editor.storage as { cairn?: { pageId: string; encrypted: boolean } }).cairn = {
+        pageId,
+        encrypted,
+      };
     }
-  }, [editor, pageId]);
+  }, [editor, pageId, encrypted]);
 
   // Lazy-load heavy editor extensions (math/syncedBlock/embed) only when the
   // initial doc actually contains them. The static `baseExtensions()` carries
@@ -216,6 +303,29 @@ export function Editor({
     })();
     return () => {
       cancelled = true;
+    };
+  }, [editor]);
+
+  // v0.9.0 G5 P28 — emit a `cairn:editor:doc-changed` CustomEvent on the
+  // window each time the editor doc mutates, so out-of-tree consumers (the
+  // sticky <TocSidebar>) can recompute their headings list without
+  // subscribing to the Yjs document directly. Throttle-free: the listeners
+  // are passive and `collectHeadings()` is O(nodes) with no allocations
+  // per heading. Skips when there's no editor yet (StrictMode double-mount).
+  useEffect(() => {
+    if (!editor) return;
+    const emit = () => {
+      window.dispatchEvent(
+        new CustomEvent('cairn:editor:doc-changed', { detail: { doc: editor.getJSON() } }),
+      );
+    };
+    editor.on('update', emit);
+    // Fire once on mount so a listener that attaches AFTER the editor is
+    // ready still gets an initial snapshot (the sidebar's initialDoc prop
+    // already covers the SSR path, but client-only mounts benefit).
+    emit();
+    return () => {
+      editor.off('update', emit);
     };
   }, [editor]);
 
@@ -249,7 +359,7 @@ export function Editor({
 
   // Load the open-suggestion count once the editable editor exists.
   useEffect(() => {
-    if (!editable || !pageId) return;
+    if (!effectiveEditable || !pageId) return;
     let cancelled = false;
     void (async () => {
       const res = await fetch(`/api/pages/${pageId}/suggestions`);
@@ -260,11 +370,11 @@ export function Editor({
     return () => {
       cancelled = true;
     };
-  }, [editable, pageId]);
+  }, [effectiveEditable, pageId]);
 
   // Track the suggestionId under the selection so Accept/Reject can target it.
   useEffect(() => {
-    if (!editor || !editable) return;
+    if (!editor || !effectiveEditable) return;
     const update = () => {
       const id =
         (editor.getAttributes('suggestionInsert').suggestionId as string | undefined) ||
@@ -279,7 +389,7 @@ export function Editor({
       editor.off('selectionUpdate', update);
       editor.off('transaction', update);
     };
-  }, [editor, editable]);
+  }, [editor, effectiveEditable]);
 
   // Toggle suggestion mode. Turning ON proposes a new open suggestion (the
   // marks applied while suggesting share its id); turning OFF clears the active
@@ -354,7 +464,7 @@ export function Editor({
   return (
     <div className="relative">
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-        {editable && (
+        {effectiveEditable && (
           <SuggestionToolbar
             editor={editor}
             active={suggestionMode}
@@ -387,6 +497,12 @@ export function Editor({
           <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
         )}
       </div>
+      <BulkUploader
+        open={bulk.open}
+        files={bulk.files}
+        onOpenChange={bulk.onOpenChange}
+        onComplete={bulk.onComplete}
+      />
     </div>
   );
 }

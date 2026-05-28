@@ -1,9 +1,10 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { ChevronDown, ChevronRight, Folder } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { EmptyPageTree } from '@/components/empty-state/variants';
 import type { FlatPageNode } from '@/lib/pages/tree';
 
@@ -11,25 +12,124 @@ const ROW_HEIGHT_PX = 32; // Matches the existing sidebar row.
 const DEPTH_INDENT_PX = 16; // 16px per level; matches the v0.7 visual.
 const OVERSCAN = 8; // Extra rows above/below the viewport for smooth scroll.
 
+/** v0.9.0 G2 P11 — minimal space descriptor consumed by the sidebar. */
+export type SidebarSpace = {
+  id: string;
+  name: string;
+  icon: string | null;
+  position: number;
+};
+
+/** Internal row union: either a space-header divider or a page link. */
+type Row =
+  | {
+      kind: 'space-header';
+      key: string;
+      spaceId: string | null;
+      name: string;
+      icon: string | null;
+    }
+  | { kind: 'page'; key: string; page: FlatPageNode };
+
+const UNFILED_SPACE_ID = '__unfiled__';
+
+/**
+ * Build the flat row sequence the virtualizer iterates over. Spaces appear in
+ * (position asc, name asc) order; empty spaces are omitted. Pages with NULL
+ * `spaceId` are bucketed into a synthetic "Unfiled" group at the bottom.
+ *
+ * When `spaces` is empty/undefined we fall back to the legacy flat list so
+ * the sidebar keeps working pre-spaces-adoption.
+ */
+function buildRows(pages: FlatPageNode[], spaces: SidebarSpace[] | undefined): Row[] {
+  if (!spaces || spaces.length === 0) {
+    return pages.map((p) => ({ kind: 'page' as const, key: p.id, page: p }));
+  }
+  const sortedSpaces = [...spaces].sort(
+    (a, b) => a.position - b.position || a.name.localeCompare(b.name),
+  );
+  const rows: Row[] = [];
+  for (const sp of sortedSpaces) {
+    const inSpace = pages.filter((p) => p.spaceId === sp.id);
+    if (inSpace.length === 0) continue;
+    rows.push({
+      kind: 'space-header',
+      key: `space-${sp.id}`,
+      spaceId: sp.id,
+      name: sp.name,
+      icon: sp.icon,
+    });
+    for (const p of inSpace) rows.push({ kind: 'page' as const, key: p.id, page: p });
+  }
+  const unfiled = pages.filter((p) => p.spaceId === null || p.spaceId === undefined);
+  if (unfiled.length > 0) {
+    rows.push({
+      kind: 'space-header',
+      key: 'space-unfiled',
+      spaceId: null,
+      name: 'Unfiled',
+      icon: null,
+    });
+    for (const p of unfiled) rows.push({ kind: 'page' as const, key: p.id, page: p });
+  }
+  return rows;
+}
+
 /**
  * Windowed render of the page-tree sidebar. The server pre-flattens the tree
  * via `flattenedPageTree(workspaceId)` so this component never recurses; the
- * virtualizer keys rendering by index, with `paddingLeft: depth * 16px` for
- * visual nesting. Sustains 10k+ pages without DOM jank (the recursive shape
- * grew O(n) DOM nodes; this stays O(viewport)).
+ * virtualizer keys rendering by index. v0.9.0 G2 P11 layered space grouping on
+ * top — pass `spaces` and rows are grouped under collapsible space headers.
  *
  * The scroll container is THIS component's own <ul> wrapped in a fixed-height
  * <div> (`h-full overflow-y-auto`). The parent sidebar <nav> owns layout
  * (flex-1 minus header/footer); this component fills its parent.
  */
-export function VirtualizedPageTree({ initial }: { initial: FlatPageNode[] }) {
+export function VirtualizedPageTree({
+  initial,
+  spaces,
+}: {
+  initial: FlatPageNode[];
+  spaces?: SidebarSpace[];
+}) {
   const parentRef = useRef<HTMLDivElement>(null);
+  // Local-only collapse state keyed by spaceId (or `__unfiled__`). Persists
+  // for the component lifetime; remembering it across navigations is left to
+  // a future plan (would need `user_page_prefs.collapsed_spaces`).
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const toggle = (key: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+
+  const rows = useMemo(() => {
+    const allRows = buildRows(initial, spaces);
+    if (collapsed.size === 0) return allRows;
+    // Hide page rows for collapsed sections. Walk linearly: any page row that
+    // follows a collapsed header is skipped until the next header.
+    const out: Row[] = [];
+    let collapseCurrent = false;
+    for (const r of allRows) {
+      if (r.kind === 'space-header') {
+        const key = r.spaceId ?? UNFILED_SPACE_ID;
+        collapseCurrent = collapsed.has(key);
+        out.push(r);
+      } else if (!collapseCurrent) {
+        out.push(r);
+      }
+    }
+    return out;
+  }, [initial, spaces, collapsed]);
+
   const rowVirtualizer = useVirtualizer({
-    count: initial.length,
+    count: rows.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => ROW_HEIGHT_PX,
     overscan: OVERSCAN,
-    getItemKey: (index) => initial[index]?.id ?? index,
+    getItemKey: (index) => rows[index]?.key ?? index,
     // Seed the viewport so the initial render window isn't empty before the
     // ResizeObserver fires (matters for SSR hydration and jsdom tests where
     // layout never measures). 600px ≈ one sidebar viewport on a laptop.
@@ -46,28 +146,56 @@ export function VirtualizedPageTree({ initial }: { initial: FlatPageNode[] }) {
 
   return (
     <div ref={parentRef} className="h-full overflow-y-auto">
-      <ul
-        className="relative w-full"
-        // The virtualizer needs a tall spacer so the scrollbar reflects the
-        // total list height even though only the windowed rows are mounted.
-        style={{ height: `${rowVirtualizer.getTotalSize()}px` }}
-      >
+      <ul className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
         {rowVirtualizer.getVirtualItems().map((virtual) => {
-          const node = initial[virtual.index];
-          if (!node) return null;
+          const row = rows[virtual.index];
+          if (!row) return null;
+          const baseStyle = {
+            position: 'absolute' as const,
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: `${virtual.size}px`,
+            transform: `translateY(${virtual.start}px)`,
+          };
+          if (row.kind === 'space-header') {
+            const key = row.spaceId ?? UNFILED_SPACE_ID;
+            const isCollapsed = collapsed.has(key);
+            return (
+              <li
+                key={row.key}
+                data-virtual-row=""
+                data-row-kind="space-header"
+                data-space-id={row.spaceId ?? ''}
+                style={baseStyle}
+              >
+                <button
+                  type="button"
+                  onClick={() => toggle(key)}
+                  className="flex w-full items-center gap-1.5 px-2 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground hover:bg-accent"
+                  aria-expanded={!isCollapsed}
+                >
+                  {isCollapsed ? (
+                    <ChevronRight aria-hidden="true" className="h-3 w-3" />
+                  ) : (
+                    <ChevronDown aria-hidden="true" className="h-3 w-3" />
+                  )}
+                  <span className="w-4 shrink-0 text-center" aria-hidden="true">
+                    {row.icon ?? <Folder className="inline h-3 w-3" />}
+                  </span>
+                  <span className="truncate">{row.name}</span>
+                </button>
+              </li>
+            );
+          }
+          const node = row.page;
           return (
             <li
-              key={node.id}
+              key={row.key}
               data-virtual-row=""
+              data-row-kind="page"
               data-depth={node.depth}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                width: '100%',
-                height: `${virtual.size}px`,
-                transform: `translateY(${virtual.start}px)`,
-              }}
+              style={baseStyle}
             >
               <Link
                 href={`/pages/${node.id}` as Route}

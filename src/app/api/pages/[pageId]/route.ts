@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
-import { HttpError } from '@/lib/auth/require-role';
+import { HttpError, hasMinRole } from '@/lib/auth/require-role';
 import { requirePageAccess } from '@/lib/pages/access';
 import { softDeletePage } from '@/lib/pages/delete';
 import { PageConflictError, updatePage } from '@/lib/pages/update';
@@ -42,6 +42,10 @@ export async function PATCH(req: Request, { params }: RouteCtx): Promise<Respons
         content: parsed.content,
       },
       expectedUpdatedAt: parsed.expectedUpdatedAt ? new Date(parsed.expectedUpdatedAt) : undefined,
+      // v0.9.0 G2 P14 — page-lock gate. Editors can only write through their
+      // own lock; admins implicitly bypass.
+      byUserId: ctx.userId,
+      adminOverride: hasMinRole(ctx.role, 'admin'),
     });
     if (parsed.content !== undefined) {
       try {
@@ -71,6 +75,7 @@ export async function DELETE(_req: Request, { params }: RouteCtx): Promise<Respo
       pageId,
       workspaceId: ctx.workspaceId,
       actorUserId: ctx.userId,
+      adminOverride: hasMinRole(ctx.role, 'admin'),
     });
     return new NextResponse(null, { status: 204 });
   } catch (err) {
@@ -80,7 +85,14 @@ export async function DELETE(_req: Request, { params }: RouteCtx): Promise<Respo
 
 function errorToResponse(err: unknown): Response {
   if (err instanceof HttpError) {
-    return NextResponse.json({ error: err.message }, { status: err.status });
+    // v0.9.0 G2 P14 review — PageLockedError extends HttpError, so the lock
+    // state surfaces here too. Include `code` + `state` when present so the
+    // client can render a "Locked by <name>" banner without a round-trip.
+    const body: { error: string; code?: string; state?: unknown } = { error: err.message };
+    const maybe = err as { code?: string; state?: unknown };
+    if (typeof maybe.code === 'string') body.code = maybe.code;
+    if (maybe.state !== undefined) body.state = maybe.state;
+    return NextResponse.json(body, { status: err.status });
   }
   if (err instanceof z.ZodError) {
     return NextResponse.json({ error: 'validation', issues: err.issues }, { status: 400 });

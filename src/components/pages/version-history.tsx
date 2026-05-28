@@ -1,6 +1,8 @@
 'use client';
 
 import { History, RotateCcw, X } from 'lucide-react';
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -199,6 +201,22 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
                   );
                 })}
               </ul>
+
+              {a && b && a.id !== b.id && (
+                <div className="mt-3">
+                  {/* v0.9.0 G6 P32 — full side-by-side ProseMirror diff route.
+                      The inline JSON diff below stays as a quick raw preview;
+                      this button opens the structural block-level view. */}
+                  <Link
+                    href={`/pages/${pageId}/versions/diff?a=${slotA}&b=${slotB}` as Route}
+                    aria-label="Open side-by-side diff"
+                  >
+                    <Button size="sm" variant="default" className="h-7 text-xs">
+                      Compare selected
+                    </Button>
+                  </Link>
+                </div>
+              )}
 
               {diff && (
                 <div className="mt-3">

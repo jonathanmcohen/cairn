@@ -85,5 +85,75 @@ export async function register(): Promise<void> {
     };
     process.on('SIGTERM', stop);
     process.on('SIGINT', stop);
+
+    // v0.9.0 G2 P14 — register the global pages:auto-unlock cron row (every 5
+    // minutes). Tied to the scheduler enable-flag because the schedule is
+    // useless without a process to consume it.
+    const { registerPageAutoUnlockCron, registerFlashcardsNotifyDueCron } = await import(
+      '@/server/cron-register'
+    );
+    void registerPageAutoUnlockCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[pages] auto-unlock cron registered (*/5 * * * *)');
+      })
+      .catch((err) => {
+        console.error('[pages] auto-unlock cron registration failed', err);
+      });
+
+    // v0.9.0 G3 P19 — register the global flashcards:notify-due cron row
+    // (daily at 09:00 UTC). Same scheduler-flag gating.
+    void registerFlashcardsNotifyDueCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[flashcards] notify-due cron registered (0 9 * * *)');
+      })
+      .catch((err) => {
+        console.error('[flashcards] notify-due cron registration failed', err);
+      });
+
+    // v0.9.0 G8 P39 — register the global siem:retry-sweep cron row
+    // (every minute). The sweep is a no-op when the delivery log is clean.
+    const { registerSiemRetrySweepCron, registerSiemDailyArchiveCron } = await import(
+      '@/server/cron-register'
+    );
+    void registerSiemRetrySweepCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[siem] retry-sweep cron registered (* * * * *)');
+      })
+      .catch((err) => {
+        console.error('[siem] retry-sweep cron registration failed', err);
+      });
+
+    // v0.9.0 G8 P40 — register the global siem:daily-archive cron row
+    // (daily at 01:15 UTC). Iterates every enabled kind=s3 forwarder and
+    // archives yesterday's audit_log rows. Empty days are a no-op.
+    void registerSiemDailyArchiveCron(getDb())
+      .then(() => {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[siem] daily-archive cron registered (15 1 * * *)');
+      })
+      .catch((err) => {
+        console.error('[siem] daily-archive cron registration failed', err);
+      });
+
+    // v0.9.0 G8 P42 — register the global release-watch:tick cron row
+    // (daily at 04:30 UTC). Polls CAIRN_RELEASE_FEED_URL and notifies
+    // every admin/owner when a newer stable tag ships. Gated by
+    // CAIRN_RELEASE_WATCH_ENABLED so air-gapped deploys can opt out.
+    // Auto-apply remains OFF; the admin button at /settings/admin/upgrade
+    // is the only path to `applyUpgrade`.
+    if (env().CAIRN_RELEASE_WATCH_ENABLED) {
+      const { registerReleaseWatchTickCron } = await import('@/server/cron-register');
+      void registerReleaseWatchTickCron(getDb())
+        .then(() => {
+          // biome-ignore lint/suspicious/noConsole: server startup
+          console.log('[release-watch] tick cron registered (30 4 * * *)');
+        })
+        .catch((err) => {
+          console.error('[release-watch] tick cron registration failed', err);
+        });
+    }
   }
 }

@@ -47,6 +47,7 @@ describe('restorePage', () => {
       pageId: root.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await restorePage(db, { pageId: root.id, workspaceId: u.workspaceId });
     const rows = await db.select().from(schema.pages);
@@ -73,11 +74,13 @@ describe('restorePage', () => {
       pageId: a.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await softDeletePage(db, {
       pageId: b.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await restorePage(db, { pageId: a.id, workspaceId: u.workspaceId });
     const [bRow] = await db.select().from(schema.pages).where(eq(schema.pages.id, b.id));
@@ -93,6 +96,7 @@ describe('restorePage', () => {
       pageId: p.id,
       workspaceId: b.workspaceId,
       actorUserId: b.userId,
+      adminOverride: true,
     });
     await expect(restorePage(db, { pageId: p.id, workspaceId: a.workspaceId })).rejects.toThrow(
       /not in trash/i,

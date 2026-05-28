@@ -1,34 +1,35 @@
-import { asc, desc, eq, or } from 'drizzle-orm';
 import { redirect } from 'next/navigation';
 import { type TemplateCard, TemplatesGallery } from '@/components/templates/templates-gallery';
 import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
 import { getAuthContext } from '@/lib/auth/require-role';
+import { listVisibleTemplates } from '@/lib/templates/access';
 
 export default async function TemplatesPage() {
   const ctx = await getAuthContext();
   if (!ctx?.workspaceId || !ctx.role) redirect('/login');
 
-  // Built-in (global) templates are visible to everyone; workspace templates
-  // only to their own workspace. Built-ins float to the top.
-  const rows = await getDb()
-    .select({
-      id: schema.templates.id,
-      name: schema.templates.name,
-      kind: schema.templates.kind,
-      builtIn: schema.templates.builtIn,
-    })
-    .from(schema.templates)
-    .where(
-      or(eq(schema.templates.builtIn, true), eq(schema.templates.workspaceId, ctx.workspaceId)),
-    )
-    .orderBy(desc(schema.templates.builtIn), asc(schema.templates.name));
+  // v0.9 G4 P25 — gallery now sources from the visibility ACL: public rows
+  // (including builtins where workspaceId IS NULL) plus workspace/private rows
+  // belonging to any workspace the viewer is a member of. The component groups
+  // by visibility tier for rendering.
+  const rows = await listVisibleTemplates(getDb(), {
+    viewerUserId: ctx.userId,
+    viewerWorkspaceId: ctx.workspaceId,
+  });
 
-  const templates: TemplateCard[] = rows.map((r) => ({
+  // Sort: builtins first (legacy expectation), then alphabetic by name.
+  const sorted = [...rows].sort((a, b) => {
+    if (a.builtIn !== b.builtIn) return a.builtIn ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  const templates: TemplateCard[] = sorted.map((r) => ({
     id: r.id,
     name: r.name,
     kind: r.kind === 'database' ? 'database' : 'page',
     builtIn: r.builtIn,
+    visibility: r.visibility,
+    workspaceId: r.workspaceId,
   }));
 
   return (
@@ -39,7 +40,7 @@ export default async function TemplatesPage() {
         workspace with fresh pages and databases, then opens the new copy. Save any page or database
         as a template from its menu.
       </p>
-      <TemplatesGallery initialTemplates={templates} />
+      <TemplatesGallery initialTemplates={templates} activeWorkspaceId={ctx.workspaceId} />
     </div>
   );
 }

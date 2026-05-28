@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
+import { buildPageWebhookPayload } from '@/lib/webhooks/payload';
 import { randomDefaultIcon } from './default-icon';
 import { emptyDocument } from './empty-document';
 import { formatIcon } from './icon-format';
@@ -12,6 +13,9 @@ export type CreatePageInput = {
   parentId?: string;
   title?: string;
   icon?: string | null;
+  // v0.9.0 G2 P11 — optional space pointer. Null/undefined → "Unfiled" in the
+  // sidebar. Caller (route) verifies space access before invoking createPage.
+  spaceId?: string | null;
 };
 
 export async function createPage(
@@ -31,14 +35,26 @@ export async function createPage(
         throw new Error('parent page is missing or belongs to a different workspace');
       }
     }
+    // v0.9.0 G4 P26 — honor the workspace's `default_page_status` so admins
+    // who set the default to 'draft' get drafts on new pages. The column
+    // default is 'published' (matches column default), so this branch is a
+    // no-op for fresh installs.
+    const [ws] = await tx
+      .select({ defaultPageStatus: schema.workspaces.defaultPageStatus })
+      .from(schema.workspaces)
+      .where(eq(schema.workspaces.id, input.workspaceId))
+      .limit(1);
+    const defaultStatus = (ws?.defaultPageStatus ?? 'published') as schema.PageStatus;
     const [page] = await tx
       .insert(schema.pages)
       .values({
         workspaceId: input.workspaceId,
         parentId: input.parentId ?? null,
+        spaceId: input.spaceId ?? null,
         title: input.title ?? 'Untitled',
         icon: input.icon ?? formatIcon({ kind: 'emoji', value: randomDefaultIcon() }),
         content: emptyDocument(),
+        status: defaultStatus,
         createdBy: input.createdBy,
       })
       .returning();
@@ -46,7 +62,16 @@ export async function createPage(
     return page;
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
-  void emit('page.created', page.workspaceId, { id: page.id, title: page.title });
+  // Newly created pages are never encrypted (the create path bypasses E2E),
+  // but the payload builder normalizes the shape for downstream consumers.
+  void emit(
+    'page.created',
+    page.workspaceId,
+    buildPageWebhookPayload({
+      event: 'page.created',
+      page: { id: page.id, title: page.title, encrypted: page.encrypted },
+    }),
+  );
   // Fire-and-forget: regenerate the embedding off the request path. Never
   // blocks the create; errors logged but never thrown. (v0.7.0 G4 P12.)
   // The CAIRN_DISABLE_EMBED_HOOK escape hatch mirrors update.ts — see

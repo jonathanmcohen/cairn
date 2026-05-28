@@ -46,6 +46,7 @@ describe('listTrash', () => {
       pageId: root.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const trash = await listTrash(db, u.workspaceId);
     expect(trash).toHaveLength(1);
@@ -67,12 +68,14 @@ describe('listTrash', () => {
       pageId: a.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     await new Promise((r) => setTimeout(r, 30));
     await softDeletePage(db, {
       pageId: b.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
     const trash = await listTrash(db, u.workspaceId);
     expect(trash.map((t) => t.title)).toEqual(['B', 'A']);
@@ -86,6 +89,7 @@ describe('listTrash', () => {
       pageId: p.id,
       workspaceId: b.workspaceId,
       actorUserId: b.userId,
+      adminOverride: true,
     });
     const trash = await listTrash(db, a.workspaceId);
     expect(trash).toEqual([]);

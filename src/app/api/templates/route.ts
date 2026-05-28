@@ -71,6 +71,10 @@ export async function POST(req: Request): Promise<Response> {
         actorUserId: ctx.userId,
         rootPageId: parsed.pageId,
         name: parsed.name,
+        // Legacy /api/templates endpoint pre-dates v0.9 visibility — defaults
+        // to workspace tier. v0.9 G4 P25 callers use /api/templates/save-from-page
+        // and pass a visibility selector.
+        visibility: 'workspace',
       });
       return NextResponse.json(
         { template: { id: tpl.id, name: tpl.name, kind: tpl.kind, builtIn: tpl.builtIn } },

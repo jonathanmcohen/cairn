@@ -3,6 +3,11 @@ import { cookies } from 'next/headers';
 import { cache } from 'react';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { HttpError } from './http-error';
+
+// Re-export so existing consumers that already import `HttpError` from
+// `@/lib/auth/require-role` keep working without a churn-only rename.
+export { HttpError };
 
 export type MemberRole = schema.MemberRole;
 
@@ -85,11 +90,8 @@ export async function requireRole(required: MemberRole): Promise<WorkspaceContex
   return ctx;
 }
 
-export class HttpError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-  ) {
-    super(message);
-  }
-}
+// HttpError was previously defined here; moved to ./http-error so lib helpers
+// (e.g. src/lib/pages/lock.ts) can import it without dragging the `next/headers`
+// import above into Playwright's source-loaded test graph. The top-of-file
+// `import { HttpError } from './http-error'` + value re-export keeps existing
+// consumers working.

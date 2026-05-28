@@ -2,6 +2,26 @@ import { describe, expect, it } from 'vitest';
 import { EMBED_FRAME_HOSTS } from '@/lib/editor/embed-allowlist';
 import { buildCsp, cspNonce, cspOrigin, headersFor, securityHeaders } from '@/lib/security/headers';
 
+describe('EMBED_FRAME_HOSTS', () => {
+  it('includes viewer.diagrams.net (v0.9.0 G3 P15 — drawio block)', () => {
+    // The host list is consumed by both the embed-allowlist resolver and the
+    // CSP builder (the latter inlines it). v0.9.0 P15 adds the drawio viewer.
+    expect(EMBED_FRAME_HOSTS).toEqual([
+      'https://www.youtube.com',
+      'https://player.vimeo.com',
+      'https://www.figma.com',
+      'https://gist.github.com',
+      'https://codesandbox.io',
+      'https://www.loom.com',
+      'https://codepen.io',
+      'https://open.spotify.com',
+      'https://vimeo.com',
+      'https://excalidraw.com',
+      'https://viewer.diagrams.net',
+    ]);
+  });
+});
+
 describe('cspOrigin', () => {
   it('normalizes a ws url to scheme//host', () => {
     expect(cspOrigin('ws://collab.local:1234')).toBe('ws://collab.local:1234');
@@ -28,8 +48,11 @@ describe('buildCsp', () => {
     expect(csp).toContain("frame-src 'self' https://www.youtube.com");
     expect(csp).toContain('https://player.vimeo.com');
     expect(csp).toContain('https://codesandbox.io');
+    // v0.9.0 G3 P15 — drawio viewer is iframed via viewer.diagrams.net.
+    expect(csp).toContain('https://viewer.diagrams.net');
     // the public render keeps the same embed allowlist (embeds render read-only on /p)
     expect(buildCsp({ publicPath: true })).toContain("frame-src 'self' https://www.youtube.com");
+    expect(buildCsp({ publicPath: true })).toContain('https://viewer.diagrams.net');
   });
   it('frame-src exactly matches the embed-allowlist host set (drift guard)', () => {
     // headers.ts inlines the host list (import-free for the next.config loader);

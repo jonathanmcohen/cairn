@@ -7,8 +7,20 @@ import {
 } from '@/components/editor/extensions-lazy';
 
 describe('extensions-lazy', () => {
-  it('exposes the lazy node names (math/syncedBlock/embed/mermaid)', () => {
-    expect(EDITOR_NODE_NAMES).toEqual(['math', 'syncedBlock', 'embed', 'mermaid']);
+  it('exposes the lazy node names (math/syncedBlock/embed/mermaid/plantuml/drawio/gallery/pdf/flashcard/datetime/cairnAudio)', () => {
+    expect(EDITOR_NODE_NAMES).toEqual([
+      'math',
+      'syncedBlock',
+      'embed',
+      'mermaid',
+      'plantuml',
+      'drawio',
+      'gallery',
+      'pdf',
+      'flashcard',
+      'datetime',
+      'cairnAudio',
+    ]);
   });
 
   it('loadEditorExtension("math") returns a TipTap-extension-shaped object', async () => {
@@ -33,6 +45,36 @@ describe('extensions-lazy', () => {
     const ext = await loadEditorExtension('mermaid');
     expect(ext).toBeDefined();
     expect((ext as { name?: string }).name).toBe('mermaid');
+  });
+
+  it('loadEditorExtension("plantuml") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('plantuml');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('plantuml');
+  });
+
+  it('loadEditorExtension("drawio") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('drawio');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('drawio');
+  });
+
+  it('loadEditorExtension("flashcard") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('flashcard');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('flashcard');
+  });
+
+  it('loadEditorExtension("datetime") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('datetime');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('datetime');
+  });
+
+  it('loadEditorExtension("cairnAudio") loads its module on demand', async () => {
+    const ext = await loadEditorExtension('cairnAudio');
+    expect(ext).toBeDefined();
+    expect((ext as { name?: string }).name).toBe('cairnAudio');
   });
 
   it('loadEditorExtension throws on an unknown name', async () => {

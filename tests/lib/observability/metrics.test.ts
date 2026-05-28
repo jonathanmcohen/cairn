@@ -119,6 +119,10 @@ describe('metrics registry', () => {
       'provider',
       'action_type',
       'kind',
+      // v0.9.0 G8 P39 — SIEM forwarder delivery labels. Closed-enum sets:
+      //   forwarder_kind ∈ {syslog,http,splunk_hec,datadog,s3} (migration CHECK)
+      //   status ∈ {success,retry,failed} (siem_delivery_log CHECK)
+      'forwarder_kind',
     ]);
     const json = metricsRegistry().getMetricsAsArray() as Array<{
       name: string;

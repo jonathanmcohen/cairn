@@ -1,0 +1,5464 @@
+{
+  "findings": [
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 80,
+      "text": "No chat-bridge installs yet. Configure Slack or Discord on the main",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 82,
+      "text": "chat bridge",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 84,
+      "text": "page first.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 88,
+      "text": "Add channel link",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 91,
+      "text": "Install",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 97,
+      "text": "Chat bridge install",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 107,
+      "text": "Channel id",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 113,
+      "text": "C0123ABC or 1100000000000000000",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 117,
+      "text": "Page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 123,
+      "text": "Target page",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 133,
+      "text": "Mode",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 139,
+      "text": "Link mode",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 141,
+      "text": "Notify (outbound only)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 142,
+      "text": "Sync (bidirectional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 153,
+      "text": "Add link",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 161,
+      "text": "Existing links",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 164,
+      "text": "No channel links yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 170,
+      "text": "Platform",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 171,
+      "text": "Channel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 172,
+      "text": "Page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 173,
+      "text": "Mode",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/channel-link-form.tsx",
+      "line": 195,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 66,
+      "text": "Chat bridge — channel links",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 68,
+      "text": "Connect a Slack or Discord channel to a Cairn page. In",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 68,
+      "text": "mode, messages from the\n          channel append as comments and new comments post back to the channel. In",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 68,
+      "text": "sync",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 69,
+      "text": "notify",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/channels/page.tsx",
+      "line": 70,
+      "text": "mode, only outbound notifications fire.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 90,
+      "text": "Slack",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 109,
+      "text": "Disconnect",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 131,
+      "text": "Incoming webhook URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 135,
+      "text": "Signing secret",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 140,
+      "text": "Team ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 144,
+      "text": "Channel ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 175,
+      "text": "Discord",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 194,
+      "text": "Disconnect",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 216,
+      "text": "Webhook URL (append ?wait=true for posted-log)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 220,
+      "text": "Application public key (hex)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 225,
+      "text": "Application ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/chat-bridge-form.tsx",
+      "line": 229,
+      "text": "Channel ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/page.tsx",
+      "line": 44,
+      "text": "Chat bridge",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/chat-bridge/page.tsx",
+      "line": 46,
+      "text": "Forward page + comment events to Slack or Discord, and let teammates reply in-thread to\n          create Cairn comments. Paste your incoming webhook URL and signing secret below; full\n          OAuth install is coming in v0.10.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 136,
+      "text": "Kind",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 151,
+      "text": "Each kind speaks its native protocol:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 151,
+      "text": "splunk_hec",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 151,
+      "text": "uses the HTTP Event\n          Collector;",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "datadog",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "s3",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "uploads a\n          gzipped NDJSON object per workspace per UTC day.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 152,
+      "text": "uses the Logs Intake API;",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 158,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 170,
+      "text": "Endpoint",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 193,
+      "text": "Sourcetype",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 198,
+      "text": "cairn:audit",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 202,
+      "text": "cairn:audit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 202,
+      "text": "Splunk indexing classifier. Defaults to",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 206,
+      "text": "Source",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 211,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 220,
+      "text": "Service",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 225,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 229,
+      "text": "Hostname",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 234,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 238,
+      "text": "Extra tags (comma-separated)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 243,
+      "text": "env:prod,team:platform",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 247,
+      "text": "alongside the per-event",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 247,
+      "text": "ddtags",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 247,
+      "text": "Joined into",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 248,
+      "text": "tag.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 248,
+      "text": "workspace:&lt;id&gt;",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 256,
+      "text": "Object prefix",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 261,
+      "text": "cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 265,
+      "text": "Object key shape:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 266,
+      "text": "&lt;prefix&gt;/&lt;workspaceId&gt;/audit/YYYY-MM-DD.ndjson.gz",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 275,
+      "text": "(optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/forwarder-form.tsx",
+      "line": 298,
+      "text": "Enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 40,
+      "text": "SIEM forwarders",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 42,
+      "text": "Forward every audit event to a syslog endpoint or HTTP webhook. Use this to feed your SOC,\n          observability platform, or compliance log archive. Failed deliveries retry on an\n          exponential backoff and the per-attempt history is recorded for review.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 50,
+      "text": "Configured forwarders",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 53,
+      "text": "No forwarders configured yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 72,
+      "text": "enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 75,
+      "text": "disabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/siem/page.tsx",
+      "line": 87,
+      "text": "Add a forwarder",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/oidc/[idpId]/edit/page.tsx",
+      "line": 30,
+      "text": "Edit OIDC provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/oidc/new/page.tsx",
+      "line": 12,
+      "text": "New OIDC provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 75,
+      "text": "Single sign-on",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 77,
+      "text": "Configure OIDC, SAML, and SCIM provisioning for this workspace.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 83,
+      "text": "Identity providers",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 86,
+      "text": "Add OIDC",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 89,
+      "text": "Add SAML",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 94,
+      "text": "No identity providers configured.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 102,
+      "text": "· Created",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 114,
+      "text": "Edit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 124,
+      "text": "SCIM 2.0 provisioning tokens",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 126,
+      "text": "/api/scim/v2/Users",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 126,
+      "text": "and",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 126,
+      "text": "Bearer tokens for the SCIM 2.0 endpoint at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 127,
+      "text": ". Filters:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 127,
+      "text": "/Groups",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 127,
+      "text": "and",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 127,
+      "text": "userName eq",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 128,
+      "text": "meta.lastModified gt",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 128,
+      "text": "only.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 134,
+      "text": "Recent SSO audit entries",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/page.tsx",
+      "line": 136,
+      "text": "No recent SSO audit events.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/saml/[idpId]/edit/page.tsx",
+      "line": 33,
+      "text": "Edit SAML provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/admin/sso/saml/new/page.tsx",
+      "line": 12,
+      "text": "New SAML provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/inbox/page.tsx",
+      "line": 52,
+      "text": "Inbox",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/inbox/page.tsx",
+      "line": 54,
+      "text": "Quick captures land here. Drag a row into a folder, or mark it done to leave it in place.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/page.tsx",
+      "line": 64,
+      "text": "My tasks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/page.tsx",
+      "line": 66,
+      "text": "Every task assigned to you or where you were @mentioned, across every workspace you can\n          read.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 61,
+      "text": "Filter by status",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 62,
+      "text": "Filter by status",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 77,
+      "text": "Due by",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 83,
+      "text": "No tasks.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 104,
+      "text": "due",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/notifications/page.tsx",
+      "line": 54,
+      "text": "Notifications",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/notifications/page.tsx",
+      "line": 56,
+      "text": "All your inbox events. Filter and triage from here.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/page.tsx",
+      "line": 30,
+      "text": "Welcome back",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/page.tsx",
+      "line": 32,
+      "text": "Select a page from the sidebar, or create a new one.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/page.tsx",
+      "line": 39,
+      "text": "Your workspace is empty",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/page.tsx",
+      "line": 40,
+      "text": "Create your first page to get started.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/not-found.tsx",
+      "line": 6,
+      "text": "Page not found",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/not-found.tsx",
+      "line": 8,
+      "text": "This page doesn't exist or you don't have access to it.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/not-found.tsx",
+      "line": 11,
+      "text": "Back to workspace",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/page.tsx",
+      "line": 78,
+      "text": "— version diff",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 101,
+      "text": "(added in B)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 125,
+      "text": "(removed from A)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 150,
+      "text": "Snapshot A ·",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 153,
+      "text": "Snapshot B ·",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 182,
+      "text": "identical blocks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/pages/[pageId]/versions/diff/viewer.tsx",
+      "line": 182,
+      "text": "Show",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/profile/page.tsx",
+      "line": 16,
+      "text": "Profile",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/profile/page.tsx",
+      "line": 18,
+      "text": "Your account profile. Email and display name come from your authentication provider.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/profile/page.tsx",
+      "line": 22,
+      "text": "User ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/page.tsx",
+      "line": 20,
+      "text": "Theme",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/page.tsx",
+      "line": 22,
+      "text": "Accent color, font family, and page width. Applies to your view of every page, including\n        published pages you author.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/page.tsx",
+      "line": 31,
+      "text": "Editor",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/theme-form.tsx",
+      "line": 57,
+      "text": "Accent",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/theme-form.tsx",
+      "line": 78,
+      "text": "Custom hex",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/theme-form.tsx",
+      "line": 84,
+      "text": "#abcdef",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/theme-form.tsx",
+      "line": 91,
+      "text": "Font family",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/theme/theme-form.tsx",
+      "line": 107,
+      "text": "Page width",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 35,
+      "text": "API keys (workspace-wide)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 37,
+      "text": "Every personal access token in this workspace. Reset usage counters without revoking the\n          token.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 43,
+      "text": "No personal access tokens have been minted in this workspace yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 51,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 54,
+      "text": "Owner",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 57,
+      "text": "Scopes",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 60,
+      "text": "Daily",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 63,
+      "text": "Monthly",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 66,
+      "text": "14d",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 69,
+      "text": "Last used",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/page.tsx",
+      "line": 72,
+      "text": "Actions",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/api-keys/sparkline.tsx",
+      "line": 23,
+      "text": "No usage data",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/admin/audit/page.tsx",
+      "line": 17,
+      "text": "Audit log",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/encryption/page.tsx",
+      "line": 38,
+      "text": "Workspace encryption",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/encryption/page.tsx",
+      "line": 40,
+      "text": "Encrypt every page in this workspace under a single workspace key (WSK). The server never\n        holds the key — only its wrapped form for each member.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/encryption/page.tsx",
+      "line": 47,
+      "text": "End-to-end encryption is disabled in this build\n          (NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=false).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/mfa/page.tsx",
+      "line": 34,
+      "text": "Workspace MFA policy",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/mfa/page.tsx",
+      "line": 36,
+      "text": "When enabled, members without an enrolled method from the accepted list will be blocked at\n        sign-in and redirected to the enrollment page. Members can enroll TOTP at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/mfa/page.tsx",
+      "line": 38,
+      "text": "/settings/security",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/mfa/page.tsx",
+      "line": 38,
+      "text": "/settings/security/passkeys",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/mfa/page.tsx",
+      "line": 38,
+      "text": "and passkeys at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 50,
+      "text": "Cairn upgrade",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 52,
+      "text": "The release-watch daemon polls the configured release feed and inserts a notification when a\n        newer stable tag is published. Use the button below to apply the upgrade in place (snapshot\n        → migrate → restart → healthcheck). Auto-apply is off by default.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 57,
+      "text": "Current version",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 59,
+      "text": "Available version",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 70,
+      "text": "Release notes",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/upgrade/page.tsx",
+      "line": 74,
+      "text": "none — up to date",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 76,
+      "text": "← Admin",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 83,
+      "text": "Webhooks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 86,
+      "text": "Deliveries",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 88,
+      "text": "Deliveries",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 90,
+      "text": "· active:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 90,
+      "text": "· events:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 98,
+      "text": "Created",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 99,
+      "text": "Event",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 100,
+      "text": "Status",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 101,
+      "text": "Attempts",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 102,
+      "text": "HTTP",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 103,
+      "text": "Delivered",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 104,
+      "text": "Actions",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/[id]/deliveries/page.tsx",
+      "line": 111,
+      "text": "No deliveries yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/page.tsx",
+      "line": 75,
+      "text": "Webhooks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/page.tsx",
+      "line": 77,
+      "text": "Webhooks POST a JSON payload to your endpoint when subscribed events occur. Each request is\n        signed with an",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/page.tsx",
+      "line": 78,
+      "text": "header keyed by the hook&apos;s\n        secret — verify it on your receiver. The secret is shown only once when created.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/webhooks/page.tsx",
+      "line": 78,
+      "text": "X-Cairn-Signature: sha256=…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 47,
+      "text": "API keys",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 49,
+      "text": "/api/v1",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 49,
+      "text": "HTTP API via",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 49,
+      "text": "Keys authenticate requests to the",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 50,
+      "text": ". A key acts with the role you assign and on\n        behalf of its creator. The full token is shown only once when created.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 50,
+      "text": "Authorization: Bearer cairn_sk_…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/automation/page.tsx",
+      "line": 70,
+      "text": "Automation",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/automation/page.tsx",
+      "line": 72,
+      "text": "Run actions when events fire in this workspace. Rules evaluate trigger payloads against\n        their condition; matching rules run their action and record the outcome.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 46,
+      "text": "Conflicts",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 48,
+      "text": "unresolved",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 52,
+      "text": "No unresolved conflicts.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 57,
+      "text": "Row",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 58,
+      "text": "Property",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 59,
+      "text": "Cairn value",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 60,
+      "text": "External value",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 61,
+      "text": "Action",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 81,
+      "text": "Use Cairn",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/[connectorId]/conflicts/page.tsx",
+      "line": 84,
+      "text": "Use External",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/page.tsx",
+      "line": 34,
+      "text": "Connectors",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/page.tsx",
+      "line": 37,
+      "text": "Adapter wiring lands in v0.7.0 P20 (Sheets) / P21 (Airtable) / P22 (CSV).",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/page.tsx",
+      "line": 41,
+      "text": "Add connector",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/page.tsx",
+      "line": 45,
+      "text": "No connectors configured.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/page.tsx",
+      "line": 53,
+      "text": "last synced:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/connectors/page.tsx",
+      "line": 69,
+      "text": "Conflicts",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/export/page.tsx",
+      "line": 14,
+      "text": "Export workspace",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/export/page.tsx",
+      "line": 16,
+      "text": "Generate a re-importable archive of every page, database, and file in this workspace.\n        Secrets (API keys, webhook signatures, TOTP material) are intentionally excluded.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/import/page.tsx",
+      "line": 14,
+      "text": "Import workspace data",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/import/page.tsx",
+      "line": 16,
+      "text": "Import a Notion export, a folder of Markdown files, or a Cairn workspace archive into this\n        workspace. Pages, databases, and files are remapped to fresh ids; secrets are never\n        imported.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/tokens/page.tsx",
+      "line": 55,
+      "text": "Personal access tokens",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/tokens/page.tsx",
+      "line": 57,
+      "text": "Personal access tokens for the Cairn API + MCP server. Tokens are scoped to your account\n          and obey your workspace permissions.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/notifications/page.tsx",
+      "line": 18,
+      "text": "Notifications",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/notifications/page.tsx",
+      "line": 20,
+      "text": "Choose how you&apos;re notified per event type in this workspace. In-app notifications\n        always appear in your inbox; email delivery requires a configured SMTP server.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/page.tsx",
+      "line": 19,
+      "text": "Security",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 34,
+      "text": "Passkeys",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 36,
+      "text": "The operator of this Cairn instance has not configured WebAuthn. Set",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 37,
+      "text": "CAIRN_RP_ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 38,
+      "text": "CAIRN_RP_ORIGIN",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 38,
+      "text": "in the deployment env\n          to enable passkey enrollment. See",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 39,
+      "text": "docs/operations.md",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 63,
+      "text": "Passkeys",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 65,
+      "text": "Add a hardware key, platform authenticator, or browser-managed passkey. They sign you in\n        without a password and are used for step-up confirmation on destructive actions.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 69,
+      "text": "You have no passkeys yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/passkeys/page.tsx",
+      "line": 71,
+      "text": "Registered passkeys",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 55,
+      "text": "Two-factor authentication is on",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 57,
+      "text": "Enter a current code or a recovery code to turn it off.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 62,
+      "text": "123456 or recovery",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 67,
+      "text": "Disable 2FA",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 76,
+      "text": "Two-factor authentication",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 80,
+      "text": "Protect your account with an authenticator app.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 82,
+      "text": "Set up 2FA",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 88,
+      "text": "Scan this QR code",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 91,
+      "text": "Can&apos;t scan? Enter this key",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 95,
+      "text": "Recovery codes (save these now — shown once):",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 105,
+      "text": "6-digit code",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/security/two-factor-card.tsx",
+      "line": 109,
+      "text": "Confirm &amp; enable",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 102,
+      "text": "Transfer ownership",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 104,
+      "text": "admin",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 104,
+      "text": "Promote another member to owner. You will be demoted to",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 117,
+      "text": "New owner",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 121,
+      "text": "No other members yet — invite someone first.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 141,
+      "text": "to confirm",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 141,
+      "text": "Type",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 164,
+      "text": "Delete workspace",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 167,
+      "text": "Permanently delete this workspace and everything in it: pages, databases, files, comments,\n          and history. This cannot be undone.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 181,
+      "text": "to confirm",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/danger-zone.tsx",
+      "line": 181,
+      "text": "Type",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/page.tsx",
+      "line": 22,
+      "text": "Danger zone",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/page.tsx",
+      "line": 24,
+      "text": "Only the workspace owner can transfer ownership or delete this workspace.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/danger/page.tsx",
+      "line": 41,
+      "text": "Danger zone",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 43,
+      "text": "Target",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 50,
+      "text": "MkDocs (Material)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 51,
+      "text": "Docusaurus",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/export-static-site-form.tsx",
+      "line": 59,
+      "text": "Building the project tree and bundling assets. This can take a minute on large workspaces.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 20,
+      "text": "Static-site export",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 22,
+      "text": "Generate a buildable static-site project from this workspace. The download is a ZIP archive\n        — unpack it, then run",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 23,
+      "text": "in the unpacked folder to preview the site.\n        Workspaces containing any end-to-end-encrypted page cannot be exported.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/export-static-site/page.tsx",
+      "line": 23,
+      "text": "mkdocs serve",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/page.tsx",
+      "line": 33,
+      "text": "General",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 81,
+      "text": "Settings saved.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 87,
+      "text": "Workspace name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 103,
+      "text": "Home page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 111,
+      "text": "(none)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 119,
+      "text": "The page members land on after sign-in. Leave as \"(none)\" to use the default.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 133,
+      "text": "Require two-factor authentication",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/general/settings-form.tsx",
+      "line": 136,
+      "text": "Persists the flag now; enforcement at sign-in ships with TOTP support in a later\n            release.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 100,
+      "text": "Email",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 109,
+      "text": "user@example.com",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 114,
+      "text": "Role",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 131,
+      "text": "Expires (days)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 150,
+      "text": "Invite link created — share it with the invitee:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 155,
+      "text": "Pending invites",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 157,
+      "text": "No pending invites.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 162,
+      "text": "Email",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 163,
+      "text": "Role",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 164,
+      "text": "Expires",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/invites-manager.tsx",
+      "line": 182,
+      "text": "Revoke",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/invites/page.tsx",
+      "line": 26,
+      "text": "Invites",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/members/members-table.tsx",
+      "line": 82,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/members/members-table.tsx",
+      "line": 83,
+      "text": "Email",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/members/members-table.tsx",
+      "line": 84,
+      "text": "Role",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/members/members-table.tsx",
+      "line": 129,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/members/page.tsx",
+      "line": 17,
+      "text": "Members",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/page.tsx",
+      "line": 25,
+      "text": "Pinned pages",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/page.tsx",
+      "line": 27,
+      "text": "Pinned pages appear at the top of the sidebar for every member of this workspace, above each\n        user&apos;s personal favorites. Drag to reorder.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 52,
+      "text": "Drag handle",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 69,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 196,
+      "text": "Add a pin",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 201,
+      "text": "Search pages…",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 206,
+      "text": "Searching…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 209,
+      "text": "No results",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 221,
+      "text": "(already pinned)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/pinned-pages/pinned-manager.tsx",
+      "line": 231,
+      "text": "No pinned pages yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/page.tsx",
+      "line": 34,
+      "text": "Spaces",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/page.tsx",
+      "line": 36,
+      "text": "Spaces group pages inside this workspace. Each space has its own membership and role chain —\n        workspace admins always have full access; other members see only the public spaces plus the\n        private spaces they belong to.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 137,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 142,
+      "text": "Engineering",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 147,
+      "text": "Slug",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 152,
+      "text": "engineering",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 157,
+      "text": "Icon (emoji, optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 176,
+      "text": "No spaces yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 206,
+      "text": "Delete",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 216,
+      "text": "No explicit members — every workspace member can see this space.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 231,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 245,
+      "text": "user id",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 254,
+      "text": "viewer",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 255,
+      "text": "editor",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 256,
+      "text": "admin",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 257,
+      "text": "owner",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/spaces/spaces-manager.tsx",
+      "line": 260,
+      "text": "Add",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/page.tsx",
+      "line": 37,
+      "text": "Trash retention",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/page.tsx",
+      "line": 39,
+      "text": "Trashed pages are kept for this many days before they are permanently deleted by the daily\n        purge job. Set to",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/page.tsx",
+      "line": 40,
+      "text": "to disable auto-purge entirely (manual empty-trash still\n        works). The global default is",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/trash-settings-form.tsx",
+      "line": 89,
+      "text": "Days to retain trashed pages before auto-purge",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/trash-settings-form.tsx",
+      "line": 111,
+      "text": "Empty trash now",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/trash-settings-form.tsx",
+      "line": 114,
+      "text": "Permanently deletes every page currently in this workspace's trash, regardless of age,\n          along with any attached files. This cannot be undone.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/trash-settings-form.tsx",
+      "line": 118,
+      "text": "empty trash",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/trash-settings-form.tsx",
+      "line": 118,
+      "text": "to confirm",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/trash/trash-settings-form.tsx",
+      "line": 118,
+      "text": "Type",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/templates/page.tsx",
+      "line": 37,
+      "text": "Templates",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/templates/page.tsx",
+      "line": 39,
+      "text": "Start from a built-in or workspace template. &ldquo;Use template&rdquo; copies it into this\n        workspace with fresh pages and databases, then opens the new copy. Save any page or database\n        as a template from its menu.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/trash/page.tsx",
+      "line": 19,
+      "text": "Trash",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/trash/page.tsx",
+      "line": 21,
+      "text": "Items here are recoverable for 30 days, then permanently removed.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 45,
+      "text": "Sign in to Cairn",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 46,
+      "text": "Use your workspace credentials.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 51,
+      "text": "This account isn't invited to any workspace. Ask an admin for an invite, then try again.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 56,
+      "text": "Email",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 60,
+      "text": "Password",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 76,
+      "text": "or",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/login/page.tsx",
+      "line": 85,
+      "text": "Continue with",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/signup/page.tsx",
+      "line": 53,
+      "text": "Create your Cairn account",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/signup/page.tsx",
+      "line": 55,
+      "text": "If you&apos;re the first user, you&apos;ll create the workspace. Otherwise an invite token\n          is required.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/signup/page.tsx",
+      "line": 79,
+      "text": "or",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(auth)/signup/page.tsx",
+      "line": 88,
+      "text": "Continue with",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/api-docs/page.tsx",
+      "line": 17,
+      "text": "API documentation",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/api-docs/page.tsx",
+      "line": 18,
+      "text": "Cairn API documentation",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/api-docs/swagger-ui-client.tsx",
+      "line": 48,
+      "text": "Swagger UI",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 44,
+      "text": "Loading…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 49,
+      "text": "No cards due",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 51,
+      "text": "Add a flashcard to any page with the `/flashcard` slash command.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 59,
+      "text": "Session complete",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 60,
+      "text": "card(s).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 60,
+      "text": "Reviewed",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 86,
+      "text": "Card",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 86,
+      "text": "of",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 98,
+      "text": "Show answer",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 108,
+      "text": "Again",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 116,
+      "text": "Hard",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 124,
+      "text": "Good",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/flashcards/study/page.tsx",
+      "line": 132,
+      "text": "Easy",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/invite/[token]/page.tsx",
+      "line": 41,
+      "text": "Invalid or expired invite",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/invite/[token]/page.tsx",
+      "line": 43,
+      "text": "This invite link is no longer valid. Ask whoever invited you to send a new one.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/invite/[token]/page.tsx",
+      "line": 48,
+      "text": "Join",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/invite/[token]/page.tsx",
+      "line": 50,
+      "text": "workspace.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/invite/[token]/page.tsx",
+      "line": 50,
+      "text": "You&apos;ve been invited to the",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/offline/page.tsx",
+      "line": 6,
+      "text": "You&rsquo;re offline",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/offline/page.tsx",
+      "line": 8,
+      "text": "Cairn can&rsquo;t reach the server right now. Check your connection and try again — any\n        changes you made while offline will sync once you&rsquo;re back online.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/p/[slug]/gate-form.tsx",
+      "line": 30,
+      "text": "This page is protected",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/p/[slug]/gate-form.tsx",
+      "line": 33,
+      "text": "Password",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/p/[slug]/not-found.tsx",
+      "line": 4,
+      "text": "Page not found",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/p/[slug]/not-found.tsx",
+      "line": 6,
+      "text": "This page may be unpublished or the link is incorrect.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/p/[slug]/page.tsx",
+      "line": 85,
+      "text": "Duplicate to my workspace",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/s/[slug]/not-found.tsx",
+      "line": 4,
+      "text": "Site not found",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/s/[slug]/not-found.tsx",
+      "line": 5,
+      "text": "This public site does not exist or is disabled.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 251,
+      "text": "Action",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 253,
+      "text": "Filter by action",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 258,
+      "text": "All actions",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 267,
+      "text": "Target type",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 269,
+      "text": "Filter by target type",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 274,
+      "text": "All targets",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 283,
+      "text": "From",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 286,
+      "text": "Filter from date",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 293,
+      "text": "To",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 296,
+      "text": "Filter to date",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 317,
+      "text": "Action",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 318,
+      "text": "Actor",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 319,
+      "text": "Target",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 320,
+      "text": "When",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 321,
+      "text": "Metadata",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/audit-viewer.tsx",
+      "line": 328,
+      "text": "No audit entries match these filters.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/mfa-policy-form.tsx",
+      "line": 66,
+      "text": "Require MFA enrollment for all members",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/mfa-policy-form.tsx",
+      "line": 69,
+      "text": "Accepted methods",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/mfa-policy-form.tsx",
+      "line": 77,
+      "text": "TOTP (authenticator app)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/mfa-policy-form.tsx",
+      "line": 86,
+      "text": "WebAuthn (passkey / hardware key)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/mfa-policy-form.tsx",
+      "line": 93,
+      "text": "Saved.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 78,
+      "text": "Display name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 87,
+      "text": "Issuer URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 97,
+      "text": "Client ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 106,
+      "text": "Client secret",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 118,
+      "text": "Email claim",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 126,
+      "text": "Name claim",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/oidc-form.tsx",
+      "line": 140,
+      "text": "Enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 77,
+      "text": "Cairn SP metadata XML",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 88,
+      "text": "Upload this URL (or its content) into your IdP&apos;s &ldquo;service provider\n            metadata&rdquo; field.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 94,
+      "text": "Display name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 103,
+      "text": "IdP entity ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 112,
+      "text": "IdP SSO URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 122,
+      "text": "IdP X.509 certificate (PEM body, base64)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 135,
+      "text": "Email attribute name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 143,
+      "text": "Display-name attribute",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/saml-form.tsx",
+      "line": 157,
+      "text": "Enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 73,
+      "text": "New SCIM token (copy now — won't be shown again)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 82,
+      "text": "Dismiss",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 88,
+      "text": "New token name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 93,
+      "text": "Okta SCIM",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 102,
+      "text": "No SCIM tokens minted yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 110,
+      "text": "Created",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 116,
+      "text": "Scopes:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/scim-token-list.tsx",
+      "line": 126,
+      "text": "Revoke",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/workspace-e2e-toggle.tsx",
+      "line": 161,
+      "text": "Workspace-wide encryption is enabled. All pages are stored as ciphertext.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/workspace-e2e-toggle.tsx",
+      "line": 164,
+      "text": "To remove a member or rotate the workspace key, use the rekey flow (separate action).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/workspace-e2e-toggle.tsx",
+      "line": 177,
+      "text": "Encrypted",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/workspace-e2e-toggle.tsx",
+      "line": 177,
+      "text": "pages",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/workspace-e2e-toggle.tsx",
+      "line": 182,
+      "text": "This action cannot be undone in v0.9. Once enabled, every existing page is encrypted under a\n        workspace key that the server never sees. To rotate the key or remove a member, use the\n        rekey flow.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 209,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 214,
+      "text": "Notify on new high-priority row",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 220,
+      "text": "Trigger event",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 238,
+      "text": "Condition (optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 242,
+      "text": "Property",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 246,
+      "text": "row.cells.status",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 253,
+      "text": "Operator",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 272,
+      "text": "Value",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 276,
+      "text": "value",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 283,
+      "text": "Leave property blank to match every event. Numeric/boolean values are auto-coerced.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 288,
+      "text": "Action",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 306,
+      "text": "Action config (JSON)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 315,
+      "text": "Shape depends on the action — see",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 315,
+      "text": "src/lib/automation/actions/",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-form.tsx",
+      "line": 331,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 106,
+      "text": "New rule",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 121,
+      "text": "No automation rules yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 127,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 128,
+      "text": "Trigger",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 129,
+      "text": "Action",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 130,
+      "text": "Last run",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 131,
+      "text": "Enabled",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 181,
+      "text": "Edit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/automation/rule-list.tsx",
+      "line": 191,
+      "text": "Delete",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 153,
+      "text": "Resolve",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 163,
+      "text": "Reopen",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 174,
+      "text": "Delete",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 190,
+      "text": "Jump to block",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 193,
+      "text": "range anchor",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 194,
+      "text": "range anchor",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 204,
+      "text": "Comments",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 205,
+      "text": "Close",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 213,
+      "text": "No comments yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/comment-panel.tsx",
+      "line": 223,
+      "text": "resolved (",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/comments-toggle.tsx",
+      "line": 29,
+      "text": "Comments",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/target-comment-panel.tsx",
+      "line": 139,
+      "text": "Resolve",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/target-comment-panel.tsx",
+      "line": 149,
+      "text": "Reopen",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/target-comment-panel.tsx",
+      "line": 160,
+      "text": "Delete",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/comments/target-comment-panel.tsx",
+      "line": 177,
+      "text": "No comments yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/comments/target-comment-panel.tsx",
+      "line": 187,
+      "text": "resolved (",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 86,
+      "text": "Airtable Personal Access Token",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 96,
+      "text": "Stored encrypted at rest. Leave blank to keep the existing token; paste a new value to\n          rotate.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 103,
+      "text": "Base ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 109,
+      "text": "appXXXXXXXX",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 113,
+      "text": "Table ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 119,
+      "text": "tblXXXXXXXX",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 125,
+      "text": "External-ID property",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 139,
+      "text": "Which Cairn property uniquely identifies a row across both systems.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 144,
+      "text": "Property → Airtable field name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/airtable-config-form.tsx",
+      "line": 149,
+      "text": "Field name (case-sensitive)",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 82,
+      "text": "Relative file path (under mount)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 88,
+      "text": "projects.csv",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 91,
+      "text": ". Paths that escape the mount are\n          rejected at sync time.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 91,
+      "text": "CAIRN_CONNECTOR_CSV_PATH",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 91,
+      "text": "Resolved under",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 98,
+      "text": "Delimiter",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 105,
+      "text": "Comma (,)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 106,
+      "text": "Semicolon (;)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 107,
+      "text": "Tab",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 111,
+      "text": "Encoding",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 118,
+      "text": "UTF-8",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 119,
+      "text": "Latin-1 (ISO-8859-1)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 120,
+      "text": "UTF-16 LE",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 126,
+      "text": "External-ID property",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 140,
+      "text": "Which Cairn property uniquely identifies a row across both systems.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 145,
+      "text": "Property → CSV column header",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/csv-config-form.tsx",
+      "line": 150,
+      "text": "Column header (case-sensitive)",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 77,
+      "text": "Spreadsheet ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 83,
+      "text": "1abc...xyz",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 86,
+      "text": "/d/",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 86,
+      "text": "and",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 86,
+      "text": "The Drive file id — visible in the spreadsheet URL between",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 87,
+      "text": "/edit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 93,
+      "text": "Sheet tab name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 102,
+      "text": "Header row (1-based)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 114,
+      "text": "External-ID property",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 128,
+      "text": "Which Cairn property uniquely identifies a row across both systems.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/connectors/sheets-config-form.tsx",
+      "line": 133,
+      "text": "Property → Column letter",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/cover-image.tsx",
+      "line": 44,
+      "text": "+ Add cover",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/cover-image.tsx",
+      "line": 55,
+      "text": "Change",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/cover-image.tsx",
+      "line": 58,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/calendar-view.tsx",
+      "line": 22,
+      "text": "Configure a date property to use the calendar view.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/calendar-view.tsx",
+      "line": 69,
+      "text": "‹ Prev",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/calendar-view.tsx",
+      "line": 76,
+      "text": "Next ›",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/cell-editor.tsx",
+      "line": 41,
+      "text": "⚠ error",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/cell-editor.tsx",
+      "line": 56,
+      "text": "no target db",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/database-block.tsx",
+      "line": 34,
+      "text": "No views configured.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/export-menu.tsx",
+      "line": 16,
+      "text": "Export",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/export-menu.tsx",
+      "line": 25,
+      "text": "CSV",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/export-menu.tsx",
+      "line": 32,
+      "text": "JSON",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/full-page-database.tsx",
+      "line": 37,
+      "text": "No views configured.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/gallery-view.tsx",
+      "line": 17,
+      "text": "No rows yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/kanban-view.tsx",
+      "line": 15,
+      "text": "Configure a “group by” select property to use the kanban view.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/list-view.tsx",
+      "line": 129,
+      "text": "Add sub-item",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/list-view.tsx",
+      "line": 204,
+      "text": "+ Add",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/list-view.tsx",
+      "line": 240,
+      "text": "No rows yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/list-view.tsx",
+      "line": 248,
+      "text": "+ Add",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 148,
+      "text": "+ Add property",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 158,
+      "text": "Property name",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 176,
+      "text": "Target database",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 181,
+      "text": "Target database…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 192,
+      "text": "Add",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 195,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 212,
+      "text": "Create a reverse property on the target database",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 221,
+      "text": "Reverse property name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 238,
+      "text": "Expression",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 244,
+      "text": "e.g. Price * Qty  or  if(Done, \"✓\", \"\")",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 263,
+      "text": "Computed at read time. Filtering/sorting on formulas is not supported in this\n                version.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 273,
+      "text": "Relation property",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 281,
+      "text": "Relation property…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 289,
+      "text": "Target property",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 295,
+      "text": "Target property…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 303,
+      "text": "Aggregation function",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/property-panel.tsx",
+      "line": 315,
+      "text": "Computed at read time. Filtering/sorting on rollups is not supported in this version.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/public-database-view.tsx",
+      "line": 40,
+      "text": "Loading database…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/public-database-view.tsx",
+      "line": 47,
+      "text": "Database unavailable",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/relation-cell.tsx",
+      "line": 97,
+      "text": "Remove relation",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/relation-cell.tsx",
+      "line": 109,
+      "text": "Search rows…",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/relation-cell.tsx",
+      "line": 136,
+      "text": "+ Link",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 54,
+      "text": "Sort",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 59,
+      "text": "No sorts.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 65,
+      "text": "Sort by property",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 87,
+      "text": "Move up",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 95,
+      "text": "Move down",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 103,
+      "text": "Remove",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/sort-config.tsx",
+      "line": 115,
+      "text": "+ Add sort",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 76,
+      "text": "Row actions",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 85,
+      "text": "Duplicate row",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 92,
+      "text": "Delete row",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 299,
+      "text": "No rows yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 331,
+      "text": "+ New row",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 335,
+      "text": "New row from template",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/databases/table-view.tsx",
+      "line": 345,
+      "text": "Templates…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/timeline-view.tsx",
+      "line": 33,
+      "text": "Configure a date property (or a start/end pair) to use the timeline view.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/timeline-view.tsx",
+      "line": 55,
+      "text": "No rows with a date to place.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/timeline-view.tsx",
+      "line": 87,
+      "text": "Drag-to-reschedule is not available in this version (read-only timeline).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 87,
+      "text": "+ Table",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 95,
+      "text": "+ Gallery",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 103,
+      "text": "+ List",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 112,
+      "text": "+ Calendar",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 121,
+      "text": "+ Timeline",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 128,
+      "text": "date property:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 147,
+      "text": "Add",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/view-switcher.tsx",
+      "line": 154,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/databases/virtualized-row-body.tsx",
+      "line": 168,
+      "text": "Add sub-item",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/dev-settings/mcp-connection-info.tsx",
+      "line": 47,
+      "text": "MCP connection info",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mcp-connection-info.tsx",
+      "line": 51,
+      "text": "Server URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mcp-connection-info.tsx",
+      "line": 57,
+      "text": "Claude Desktop config",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mcp-connection-info.tsx",
+      "line": 89,
+      "text": "Cursor config",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 174,
+      "text": "Mint a new token",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 177,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 182,
+      "text": "CI bot, my-laptop, Cursor, ...",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 186,
+      "text": "Preset",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 201,
+      "text": "Custom scopes (",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 218,
+      "text": "MCP-tool allowlist (",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 235,
+      "text": "Expires in (days)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 248,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/mint-token-dialog.tsx",
+      "line": 251,
+      "text": "Mint",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 44,
+      "text": "Personal access tokens",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 50,
+      "text": "Mint new token",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 56,
+      "text": "No active tokens. Mint one to call the Cairn API or connect an MCP client.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 62,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 63,
+      "text": "Prefix",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 64,
+      "text": "Scopes",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 65,
+      "text": "Last used",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 66,
+      "text": "Expires",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 67,
+      "text": "Actions",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 88,
+      "text": "Revoke",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 131,
+      "text": "Save this token now — it will not be shown again.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 143,
+      "text": "Copy",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-list.tsx",
+      "line": 146,
+      "text": "I&apos;ve saved it",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 49,
+      "text": "Usage",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 51,
+      "text": "No calls yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 56,
+      "text": "Time",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 57,
+      "text": "Route",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 58,
+      "text": "Status",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 59,
+      "text": "MCP tool",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/dev-settings/token-usage-timeline.tsx",
+      "line": 76,
+      "text": "Load more",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/audio-view.tsx",
+      "line": 61,
+      "text": "Audio pending upload",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/audio-view.tsx",
+      "line": 68,
+      "text": "Audio unavailable:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/bookmark.tsx",
+      "line": 77,
+      "text": "Empty bookmark.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/bookmark.tsx",
+      "line": 88,
+      "text": "Paste a link to bookmark",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/button.tsx",
+      "line": 26,
+      "text": "Label",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/button.tsx",
+      "line": 31,
+      "text": "https://example.com",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/button.tsx",
+      "line": 40,
+      "text": "Primary",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/button.tsx",
+      "line": 48,
+      "text": "Secondary",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/button.tsx",
+      "line": 63,
+      "text": "Save",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/button.tsx",
+      "line": 89,
+      "text": "Edit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 115,
+      "text": "Add citation",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 118,
+      "text": "DOI or PubMed ID",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 123,
+      "text": "10.1234/abc or 12345678",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 130,
+      "text": "Style",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 152,
+      "text": "Looking up…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 157,
+      "text": "Paste a DOI (e.g. 10.1234/abc) or PubMed ID to preview.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 163,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/citation-add-dialog.tsx",
+      "line": 175,
+      "text": "Insert",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 53,
+      "text": "Diagram rendering disabled on encrypted pages (would expose source to external server).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 68,
+      "text": "Diagram XML",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 74,
+      "text": "<mxGraphModel>...</mxGraphModel>",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 79,
+      "text": "— or —",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 85,
+      "text": "Public URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 92,
+      "text": "https://example.com/diagram.drawio",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 105,
+      "text": "Render",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 113,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 137,
+      "text": "drawio diagram",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/drawio.tsx",
+      "line": 153,
+      "text": "Edit diagram",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/embed.tsx",
+      "line": 36,
+      "text": "Empty embed.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/embed.tsx",
+      "line": 47,
+      "text": "Paste a YouTube/Vimeo/Loom/Figma/gist/CodeSandbox/Codepen/Spotify/Excalidraw URL",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/embed.tsx",
+      "line": 58,
+      "text": "Embed",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/embed.tsx",
+      "line": 62,
+      "text": "Only allowlisted providers can be embedded.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/gallery.tsx",
+      "line": 46,
+      "text": "Drop images here or use the image button.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/mermaid.tsx",
+      "line": 62,
+      "text": "Render",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/mermaid.tsx",
+      "line": 70,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/mermaid.tsx",
+      "line": 82,
+      "text": "Mermaid error:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/mermaid.tsx",
+      "line": 103,
+      "text": "Edit diagram",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/plantuml.tsx",
+      "line": 75,
+      "text": "Diagram rendering disabled on encrypted pages (would expose source to external server).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/plantuml.tsx",
+      "line": 100,
+      "text": "Render",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/plantuml.tsx",
+      "line": 108,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/plantuml.tsx",
+      "line": 120,
+      "text": "PlantUML error:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/plantuml.tsx",
+      "line": 134,
+      "text": "PlantUML diagram",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/blocks/plantuml.tsx",
+      "line": 150,
+      "text": "Edit diagram",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/video-upload-button.tsx",
+      "line": 50,
+      "text": "Uploading…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/video.tsx",
+      "line": 24,
+      "text": "Empty video.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/video.tsx",
+      "line": 44,
+      "text": "Your browser does not support video playback.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/bulk-uploader.tsx",
+      "line": 189,
+      "text": "file",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/bulk-uploader.tsx",
+      "line": 189,
+      "text": "Uploading",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/drag-handle.tsx",
+      "line": 136,
+      "text": "Block actions",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/editor.tsx",
+      "line": 488,
+      "text": "Outline",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/bibliography.tsx",
+      "line": 27,
+      "text": "References",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/citation.tsx",
+      "line": 43,
+      "text": "Add citation",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/datetime.tsx",
+      "line": 99,
+      "text": "Edit date/time",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/extensions/datetime.tsx",
+      "line": 102,
+      "text": "Date",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/datetime.tsx",
+      "line": 111,
+      "text": "Time",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/datetime.tsx",
+      "line": 120,
+      "text": "Timezone",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/datetime.tsx",
+      "line": 138,
+      "text": "Apply",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/flashcard.tsx",
+      "line": 24,
+      "text": "Flashcard",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/pdf-renderer.tsx",
+      "line": 157,
+      "text": "PDF annotation tools",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/extensions/pdf-renderer.tsx",
+      "line": 175,
+      "text": "Loading PDF…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/pdf.tsx",
+      "line": 36,
+      "text": "Inline PDFs are not rendered on encrypted pages.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/pdf.tsx",
+      "line": 44,
+      "text": "Empty PDF block. Drop a `.pdf` file or use the slash command.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/extensions/pdf.tsx",
+      "line": 54,
+      "text": "Loading PDF…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/lightbox.tsx",
+      "line": 103,
+      "text": "Close lightbox",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/lightbox.tsx",
+      "line": 123,
+      "text": "Previous image",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/lightbox.tsx",
+      "line": 137,
+      "text": "Next image",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/lightbox.tsx",
+      "line": 141,
+      "text": "+/- to zoom · Esc to close",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/mention-list.tsx",
+      "line": 57,
+      "text": "No members",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/mention-list.tsx",
+      "line": 71,
+      "text": "Members",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/outline-panel.tsx",
+      "line": 30,
+      "text": "Outline",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/outline-panel.tsx",
+      "line": 34,
+      "text": "Outline",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/outline-panel.tsx",
+      "line": 40,
+      "text": "Hide outline",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/outline-panel.tsx",
+      "line": 47,
+      "text": "No headings.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/page-link-list.tsx",
+      "line": 51,
+      "text": "No pages",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/page-link-list.tsx",
+      "line": 65,
+      "text": "Pages",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/page-link-popover.tsx",
+      "line": 48,
+      "text": "Loading preview…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/page-link-popover.tsx",
+      "line": 49,
+      "text": "Couldn't load preview.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/page-link-popover.tsx",
+      "line": 69,
+      "text": "Open page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/slash-menu.tsx",
+      "line": 58,
+      "text": "No results",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/slash-menu.tsx",
+      "line": 75,
+      "text": "Slash commands",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/editor/suggestion-toolbar.tsx",
+      "line": 48,
+      "text": "Mark insert",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/suggestion-toolbar.tsx",
+      "line": 56,
+      "text": "Mark delete",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/suggestion-toolbar.tsx",
+      "line": 67,
+      "text": "Accept",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/suggestion-toolbar.tsx",
+      "line": 74,
+      "text": "Reject",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/suggestion-toolbar.tsx",
+      "line": 78,
+      "text": "open",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/toc-node-view.tsx",
+      "line": 37,
+      "text": "Table of contents",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/toc-node-view.tsx",
+      "line": 39,
+      "text": "No headings yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/export/export-form.tsx",
+      "line": 49,
+      "text": "KB) —",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/export/export-form.tsx",
+      "line": 49,
+      "text": "Ready (",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/export/export-form.tsx",
+      "line": 51,
+      "text": "download from S3",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/export/export-form.tsx",
+      "line": 53,
+      "text": "(link expires in 5 minutes).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/export/export-form.tsx",
+      "line": 56,
+      "text": "Error:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 90,
+      "text": "Change icon",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 104,
+      "text": "Emoji",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 112,
+      "text": "Upload",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 124,
+      "text": "Remove",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 133,
+      "text": "Search emoji",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 135,
+      "text": "Search emoji",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 139,
+      "text": "Recently used",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/import/import-form.tsx",
+      "line": 121,
+      "text": "Source",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/import/import-form.tsx",
+      "line": 139,
+      "text": "File",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/import/import-form.tsx",
+      "line": 159,
+      "text": "Error:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/inbox/inbox-triage-list.tsx",
+      "line": 64,
+      "text": "Captured",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/new-page-button.tsx",
+      "line": 37,
+      "text": "New page",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/no-workspace.tsx",
+      "line": 28,
+      "text": "You&apos;re not in any workspace yet",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/no-workspace.tsx",
+      "line": 30,
+      "text": "Create a workspace to get started, or ask a teammate to send you an invite.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 148,
+      "text": "Notifications",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 153,
+      "text": "Close notifications",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 163,
+      "text": "Loading…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 165,
+      "text": "You're all caught up.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 193,
+      "text": "Mark as read",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 212,
+      "text": "Mark all read",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 219,
+      "text": "See all",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 149,
+      "text": "Filter",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 153,
+      "text": "Status",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 163,
+      "text": "All",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 164,
+      "text": "Unread",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 165,
+      "text": "Read",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 170,
+      "text": "Type",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 200,
+      "text": "From",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 219,
+      "text": "To",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 248,
+      "text": "Mark as read",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 259,
+      "text": "No notifications match the current filter.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/onboarding/welcome-template-pick.tsx",
+      "line": 76,
+      "text": "Loading templates…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/onboarding/welcome-template-pick.tsx",
+      "line": 81,
+      "text": "(showing fallback)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/onboarding/wizard.tsx",
+      "line": 160,
+      "text": "Workspace name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 114,
+      "text": "Page menu",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 130,
+      "text": "Page actions",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 140,
+      "text": "Publish to web",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 151,
+      "text": "Unpublish",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 154,
+      "text": "/p/",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 181,
+      "text": "Export as .md",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 191,
+      "text": "Export subtree as .zip",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-menu.tsx",
+      "line": 201,
+      "text": "Import markdown…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/page-title-input.tsx",
+      "line": 34,
+      "text": "Untitled",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/activity-feed.tsx",
+      "line": 78,
+      "text": "Loading activity…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/activity-feed.tsx",
+      "line": 84,
+      "text": "No activity yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/activity-feed.tsx",
+      "line": 103,
+      "text": "view history",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 86,
+      "text": "Page approval",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 89,
+      "text": "Approval",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 93,
+      "text": "Comment (optional)",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 96,
+      "text": "Approval comment",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 102,
+      "text": "Approve",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 110,
+      "text": "Request changes",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 118,
+      "text": "Reject",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/approval-panel.tsx",
+      "line": 132,
+      "text": "by",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 75,
+      "text": "Backlinks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 76,
+      "text": "Close",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 86,
+      "text": "Linked references",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 89,
+      "text": "No linked references yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 114,
+      "text": "Unlinked mentions",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 117,
+      "text": "No unlinked mentions.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 131,
+      "text": "Mentions this page in text",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/backlinks-panel.tsx",
+      "line": 134,
+      "text": "Link",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/cover-picker-unsplash-tab.tsx",
+      "line": 57,
+      "text": "Search Unsplash",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/cover-picker-unsplash-tab.tsx",
+      "line": 83,
+      "text": "Photos via Unsplash — please credit photographers per Unsplash terms.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 99,
+      "text": "Close cover picker",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 105,
+      "text": "Page cover",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 109,
+      "text": "Page cover",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 135,
+      "text": "Custom hex",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 141,
+      "text": "#abcdef",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 152,
+      "text": "Use",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 157,
+      "text": "Remove cover",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/cover-picker.tsx",
+      "line": 179,
+      "text": "Images are stored locally and served through signed URLs.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/custom-icon-upload.tsx",
+      "line": 39,
+      "text": "Uploading…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/export-menu.tsx",
+      "line": 20,
+      "text": "Export",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/export-menu.tsx",
+      "line": 29,
+      "text": "Markdown (.md)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/export-menu.tsx",
+      "line": 36,
+      "text": "JSON",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/export-menu.tsx",
+      "line": 44,
+      "text": "PDF (via browser print)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/lock-banner.tsx",
+      "line": 65,
+      "text": "Locked by",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/lock-banner.tsx",
+      "line": 67,
+      "text": "· auto-unlocks in",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/lock-banner.tsx",
+      "line": 69,
+      "text": "· indefinite",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/lock-toggle.tsx",
+      "line": 89,
+      "text": "Lock page",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/lock-toggle.tsx",
+      "line": 100,
+      "text": "Lock page menu",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/lock-toggle.tsx",
+      "line": 110,
+      "text": "Lock indefinitely",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/lock-toggle.tsx",
+      "line": 119,
+      "text": "Lock for 1 hour",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/lock-toggle.tsx",
+      "line": 128,
+      "text": "Lock for 24 hours",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 26,
+      "text": "Focus mode",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 27,
+      "text": "Focus mode (hide sidebar + header + comments)",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 38,
+      "text": "Reader mode",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/page-mode-toggles.tsx",
+      "line": 39,
+      "text": "Reader mode (read-only prose view)",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/save-as-template-dialog.tsx",
+      "line": 92,
+      "text": "Save as template",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/save-as-template-dialog.tsx",
+      "line": 96,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/save-as-template-dialog.tsx",
+      "line": 107,
+      "text": "Visibility",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/save-as-template-dialog.tsx",
+      "line": 131,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/see-also-panel.tsx",
+      "line": 45,
+      "text": "See also",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/see-also-panel.tsx",
+      "line": 47,
+      "text": "See also",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 80,
+      "text": "Allow duplication",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 84,
+      "text": "Link password",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 97,
+      "text": "Remove password",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 102,
+      "text": "Rotate password",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 107,
+      "text": "Rotate password",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 116,
+      "text": "Set a password",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 133,
+      "text": "Set",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 140,
+      "text": "Expires",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/share-panel.tsx",
+      "line": 157,
+      "text": "Save",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/toc-sidebar.tsx",
+      "line": 70,
+      "text": "Table of contents",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/toc-sidebar.tsx",
+      "line": 71,
+      "text": "No headings yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/toc-sidebar.tsx",
+      "line": 79,
+      "text": "On this page",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/toc-sidebar.tsx",
+      "line": 81,
+      "text": "Table of contents",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 129,
+      "text": "Version history",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 139,
+      "text": "Version history",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 144,
+      "text": "Close version history",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 154,
+      "text": "No saved versions yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 172,
+      "text": "Restore this version",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 188,
+      "text": "Compare A",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 197,
+      "text": "Compare B",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 212,
+      "text": "Open side-by-side diff",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 215,
+      "text": "Compare selected",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pages/version-history.tsx",
+      "line": 223,
+      "text": "Diff (A → B)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/pwa/offline-indicator.tsx",
+      "line": 18,
+      "text": "Offline — changes to open pages sync when you reconnect",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/quick-capture/modal.tsx",
+      "line": 102,
+      "text": "Close quick capture",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/quick-capture/modal.tsx",
+      "line": 114,
+      "text": "Title",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/quick-capture/modal.tsx",
+      "line": 126,
+      "text": "Note",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/quick-capture/modal.tsx",
+      "line": 138,
+      "text": "URL (optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/quick-capture/modal.tsx",
+      "line": 146,
+      "text": "https://…",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/search-palette.tsx",
+      "line": 154,
+      "text": "Close search",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/search-palette.tsx",
+      "line": 234,
+      "text": "Searching…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/search-palette.tsx",
+      "line": 274,
+      "text": "Save this search",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/search/search-chip-input.tsx",
+      "line": 76,
+      "text": "Search",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/search/search-chip-input.tsx",
+      "line": 92,
+      "text": "Add filter",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/search/search-chip-input.tsx",
+      "line": 97,
+      "text": "Add filter",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/search/search-chip-input.tsx",
+      "line": 122,
+      "text": "Unknown filter:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/security/passkey-enrollment.tsx",
+      "line": 52,
+      "text": "Nickname (optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/security/passkey-enrollment.tsx",
+      "line": 55,
+      "text": "e.g. YubiKey 5C",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/security/passkey-list-item.tsx",
+      "line": 49,
+      "text": "Added",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/security/stepup-modal.tsx",
+      "line": 86,
+      "text": "Confirm with your passkey",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/security/stepup-modal.tsx",
+      "line": 89,
+      "text": "This action requires a recent passkey assertion (within 5 minutes).",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/security/stepup-modal.tsx",
+      "line": 93,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 125,
+      "text": "Your new API key",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 129,
+      "text": "Copy this now — it won&apos;t be shown again. Only its prefix is stored.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 139,
+      "text": "Done",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 156,
+      "text": "Create key",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 165,
+      "text": "Create API key",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 170,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 175,
+      "text": "e.g. CI deploy bot",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 181,
+      "text": "Role",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 196,
+      "text": "Expires in (days, optional)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 204,
+      "text": "Never",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 221,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 230,
+      "text": "No API keys yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 236,
+      "text": "Name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 237,
+      "text": "Prefix",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 238,
+      "text": "Role",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 239,
+      "text": "Last used",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 240,
+      "text": "Expires",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/api-keys-manager.tsx",
+      "line": 261,
+      "text": "Revoke",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/breadcrumb.tsx",
+      "line": 12,
+      "text": "Breadcrumb",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/settings/breadcrumb.tsx",
+      "line": 19,
+      "text": "Settings",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/notification-prefs.tsx",
+      "line": 99,
+      "text": "Loading…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/notification-prefs.tsx",
+      "line": 105,
+      "text": "Notifications",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/notification-prefs.tsx",
+      "line": 110,
+      "text": "Email notifications are disabled — no SMTP server is configured. In-app notifications\n            still work.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/sidebar.tsx",
+      "line": 50,
+      "text": "Settings sections",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/settings/toc-sidebar-toggle.tsx",
+      "line": 44,
+      "text": "Show table-of-contents sidebar",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/settings/toc-sidebar-toggle.tsx",
+      "line": 47,
+      "text": "Show table-of-contents sidebar",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/toc-sidebar-toggle.tsx",
+      "line": 49,
+      "text": "(per-device; appears on every /pages/&lt;id&gt; with headings)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 208,
+      "text": "New webhook signing secret",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 212,
+      "text": "Rotated. Copy now — Cairn won&apos;t show it again. Existing receivers must adopt this\n              secret immediately or signatures will start failing.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 225,
+      "text": "Copy",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 228,
+      "text": "I copied it",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 239,
+      "text": "Your webhook signing secret",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 243,
+      "text": "Copy this secret now — it signs your deliveries and won&apos;t be shown again.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 253,
+      "text": "Done",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 270,
+      "text": "Add webhook",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 279,
+      "text": "Add webhook",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 284,
+      "text": "Endpoint URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 290,
+      "text": "https://example.com/hooks/cairn",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 295,
+      "text": "Events",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 324,
+      "text": "Cancel",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 333,
+      "text": "No webhooks yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 339,
+      "text": "URL",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 340,
+      "text": "Events",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 341,
+      "text": "Active",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 375,
+      "text": "Deliveries",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 394,
+      "text": "Delete",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 406,
+      "text": "Recent deliveries",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 408,
+      "text": "No deliveries yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 414,
+      "text": "Event",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 415,
+      "text": "Status",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 416,
+      "text": "HTTP",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 417,
+      "text": "Attempts",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 418,
+      "text": "When",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-content.tsx",
+      "line": 58,
+      "text": "Pages",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-content.tsx",
+      "line": 71,
+      "text": "My tasks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-content.tsx",
+      "line": 78,
+      "text": "Templates",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-content.tsx",
+      "line": 85,
+      "text": "Trash",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-content.tsx",
+      "line": 89,
+      "text": "Sign out",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-drawer.tsx",
+      "line": 33,
+      "text": "Open navigation",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar-drawer.tsx",
+      "line": 55,
+      "text": "Navigation",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar-drawer.tsx",
+      "line": 62,
+      "text": "Close navigation",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar-favorites.tsx",
+      "line": 101,
+      "text": "Favorite pages",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar-favorites.tsx",
+      "line": 104,
+      "text": "Favorites",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-recents.tsx",
+      "line": 15,
+      "text": "Recent pages",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar-recents.tsx",
+      "line": 18,
+      "text": "Recents",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar.tsx",
+      "line": 14,
+      "text": "Workspace sidebar",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar/pinned-section.tsx",
+      "line": 50,
+      "text": "Pinned",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar/review-due-counter.tsx",
+      "line": 41,
+      "text": "Review due",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar/saved-searches.tsx",
+      "line": 47,
+      "text": "Saved searches",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/sidebar/saved-searches.tsx",
+      "line": 50,
+      "text": "Saved searches",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/skip-link.tsx",
+      "line": 16,
+      "text": "Skip to main content",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 107,
+      "text": "Save a page or database as a template to see it here.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 133,
+      "text": "Built-in",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 138,
+      "text": "In this workspace",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 146,
+      "text": "Preview",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 168,
+      "text": "Delete",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/theme-toggle.tsx",
+      "line": 12,
+      "text": "Toggle theme",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/trash-list.tsx",
+      "line": 41,
+      "text": "Trash is empty.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/trash-list.tsx",
+      "line": 53,
+      "text": "Deleted",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/trash-list.tsx",
+      "line": 64,
+      "text": "Restore",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/trash-list.tsx",
+      "line": 73,
+      "text": "Delete forever",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/workspace-switcher.tsx",
+      "line": 65,
+      "text": "Workspaces",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/workspace-switcher.tsx",
+      "line": 84,
+      "text": "Create workspace",
+      "kind": "jsx_text"
+    }
+  ]
+}

@@ -26,28 +26,35 @@ describe('emit wiring (pages)', () => {
     const emit = vi.spyOn(dispatch, 'emit').mockResolvedValue(undefined);
 
     const page = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
+    // v0.9.0 G1 P6 — page.created / page.updated now carry the
+    // redaction-aware payload { page: { id, title, encrypted }, body }.
     expect(emit).toHaveBeenCalledWith(
       'page.created',
       u.workspaceId,
-      expect.objectContaining({ id: page.id }),
+      expect.objectContaining({ page: expect.objectContaining({ id: page.id }) }),
     );
 
     await updatePage(getDb(), {
       pageId: page.id,
       workspaceId: u.workspaceId,
+      byUserId: u.userId,
+      adminOverride: true,
       patch: { title: 'X' },
     });
     expect(emit).toHaveBeenCalledWith(
       'page.updated',
       u.workspaceId,
-      expect.objectContaining({ id: page.id }),
+      expect.objectContaining({ page: expect.objectContaining({ id: page.id }) }),
     );
 
     await softDeletePage(getDb(), {
       pageId: page.id,
       workspaceId: u.workspaceId,
       actorUserId: u.userId,
+      adminOverride: true,
     });
+    // page.deleted intentionally keeps the legacy `{id}` shape — there's no
+    // content/body to redact at delete time.
     expect(emit).toHaveBeenCalledWith(
       'page.deleted',
       u.workspaceId,

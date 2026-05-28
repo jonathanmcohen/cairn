@@ -1,16 +1,12 @@
 import { eq } from 'drizzle-orm';
-import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { withApiKey } from '@/lib/api/rate-limit';
 import { HttpError, hasMinRole, type MemberRole, requireWorkspace } from '@/lib/auth/require-role';
 import { getDatabaseWithMeta } from '@/lib/databases/get';
+import { UpdateDatabaseRequest } from '@/lib/schemas/databases';
 
 type Params = { params: Promise<{ databaseId: string }> };
-
-const PatchInput = z.object({
-  name: z.string().min(1).max(200).optional(),
-});
 
 /** Load a database scoped to the caller's workspace, enforcing a minimum role.
  *  Cross-workspace (or missing) ids 404 — never leaking existence. */
@@ -39,7 +35,7 @@ export const PATCH = (req: Request, { params }: Params): Promise<Response> =>
     const ws = requireWorkspace(ctx);
     const { databaseId } = await params;
     await loadScoped(ws.workspaceId, ws.role, databaseId, 'editor');
-    const parsed = PatchInput.parse(await r.json().catch(() => ({})));
+    const parsed = UpdateDatabaseRequest.parse(await r.json().catch(() => ({})));
     const values: { name?: string } = {};
     if (parsed.name !== undefined) values.name = parsed.name;
     const [updated] = await getDb()

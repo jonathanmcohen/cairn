@@ -110,6 +110,12 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      # Hard gate: no NEW hardcoded user-facing strings outside the baseline.
+      # Baseline lives at i18n-audit.baseline.json — bump it by running
+      # `pnpm i18n:baseline` after lifting strings into messages/en.json.
+      - name: i18n hardcoded-string check
+        run: pnpm i18n:check
+
       - name: Typecheck
         run: pnpm typecheck
 
@@ -130,7 +136,11 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: 'true'
 
       - name: Build smoke
-        run: pnpm build
+        # Self-hosted runners persist .next/ between runs. A stale standalone
+        # bundle from a prior commit can include source .ts files that Next 16's
+        # NFT tracer has since started excluding — Node 22 then loads those .ts
+        # files at runtime and crashes. Clean before each build to dodge that.
+        run: rm -rf .next && pnpm build
 
   security:
     runs-on: [self-hosted, linux, x64]
@@ -256,7 +266,12 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Build
-        run: pnpm build
+        # Self-hosted runners persist .next/ between runs. A stale standalone
+        # bundle from a prior commit can include source .ts files that Next 16's
+        # NFT tracer has since started excluding — the a11y webServer then loads
+        # those .ts at runtime and chokes on `next/headers` resolution. Clean
+        # before each build to dodge that. Mirrors the ci job's Build smoke step.
+        run: rm -rf .next && pnpm build
 
       - name: a11y gate
         run: pnpm test:a11y

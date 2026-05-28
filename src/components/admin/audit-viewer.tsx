@@ -32,6 +32,16 @@ const TARGET_TYPES: AuditTargetType[] = [
   'template',
   'personal_access_token',
   'page_acl',
+  'webauthn_credential',
+  'mfa_policy',
+  // v0.9.0 G2 P11 — Spaces target types.
+  'space',
+  'space_member',
+  // v0.9.0 G7 P36/P37 — chat-bridge events target either a comment (inbound),
+  // an install row (slash + outbound config), or a channel-link row (sync UI).
+  'comment',
+  'chat_install',
+  'chat_channel_link',
 ];
 
 // Human-readable labels for the documented action vocabulary (spec §2.27, §3 G1).
@@ -59,12 +69,86 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'pat.created': 'Personal access token created',
   'pat.revoked': 'Personal access token revoked',
   'pat.expired': 'Personal access token expired',
+  // v0.9.0 G1 P9 — PAT quota events.
+  'pat.quota_exceeded': 'Personal access token quota exceeded',
+  // v0.9.0 G1 P10 — admin cleared a PAT's day+month rollup rows.
+  'pat.quota_reset': 'Personal access token quota reset',
   'page_acl.created': 'Page ACL granted',
   'page_acl.changed': 'Page ACL permission changed',
   'page_acl.removed': 'Page ACL removed',
   // v0.8.0 G3 P8 — quick-capture inbox events.
   'inbox.captured': 'Inbox capture saved',
   'inbox.triaged': 'Inbox item triaged',
+  // v0.9.0 G1 P1 — SSO bundle events.
+  'sso.idp.created': 'SSO identity provider created',
+  'sso.idp.updated': 'SSO identity provider updated',
+  'sso.idp.deleted': 'SSO identity provider deleted',
+  'sso.scim.token.minted': 'SCIM token minted',
+  'sso.scim.token.revoked': 'SCIM token revoked',
+  // v0.9.0 G1 P5-P7 — E2E encryption lifecycle events.
+  'e2e.keypair.created': 'E2E keypair created',
+  'e2e.page.encrypted': 'Page encrypted (E2E)',
+  'e2e.workspace.encrypted': 'Workspace encrypted (E2E)',
+  'e2e.workspace.member_added': 'E2E workspace member added',
+  'e2e.workspace.member_removed': 'E2E workspace member removed',
+  'e2e.workspace.rekey_started': 'E2E workspace rekey started',
+  'e2e.workspace.rekey_completed': 'E2E workspace rekey completed',
+  // v0.9.0 G1 P8 — WebAuthn + step-up + admin-enforce events.
+  'mfa.passkey_added': 'Passkey added',
+  'mfa.passkey_removed': 'Passkey removed',
+  'mfa.passkey_used': 'Passkey used',
+  'mfa.stepup_required': 'Step-up required',
+  'mfa.policy_changed': 'MFA policy changed',
+  // v0.9.0 G2 P11 — Spaces lifecycle + per-space ACL events.
+  'space.created': 'Space created',
+  'space.updated': 'Space updated',
+  'space.deleted': 'Space deleted',
+  'space.member_added': 'Space member added',
+  'space.member_removed': 'Space member removed',
+  'page.moved_space': 'Page moved between spaces',
+  // v0.9.0 G2 P12 — Workspace-pinned pages lifecycle.
+  'workspace.pin_added': 'Workspace pin added',
+  'workspace.pin_removed': 'Workspace pin removed',
+  'workspace.pins_reordered': 'Workspace pins reordered',
+  // v0.9.0 G2 P13 — Trash retention auto-purge cron + admin "Empty trash now".
+  'trash.purged_auto': 'Trash auto-purged',
+  'trash.purged_manual': 'Trash manually purged',
+  // v0.9.0 G2 P14 — Page lock lifecycle (manual lock/unlock + cron expiry + admin override).
+  'page.locked': 'Page locked',
+  'page.unlocked': 'Page unlocked',
+  'page.auto_unlocked': 'Page auto-unlocked',
+  'page.unlock_overridden_by_admin': 'Page unlock overridden by admin',
+  // v0.9.0 G4 P23 — Tasks hub toggle event.
+  'task.toggled': 'Task toggled',
+  // v0.9.0 G4 P26 — page lifecycle + translation linkage events.
+  'page.status_changed': 'Page status changed',
+  'page.translation_linked': 'Page translation linked',
+  // v0.9.0 G4 P24 — page approval workflow events.
+  'page.approval_requested': 'Page approval requested',
+  'page.approved': 'Page approved',
+  'page.approval_rejected': 'Page approval rejected',
+  'page.changes_requested': 'Page changes requested',
+  // v0.9.0 G5 P30 — admin pierced workspace membership via federated search.
+  'search.cross_workspace_admin': 'Admin cross-workspace search',
+  // v0.9.0 G6 P33 — fine-grained share-password lifecycle events.
+  'share.password_set': 'Share password set',
+  'share.password_cleared': 'Share password cleared',
+  'share.password_used': 'Share password used',
+  // v0.9.0 G7 P36 — chat-bridge lifecycle events.
+  'chat.outbound_posted': 'Chat bridge — outbound message posted',
+  'chat.inbound_comment_created': 'Chat bridge — inbound reply ingested',
+  'chat.signature_rejected': 'Chat bridge — invalid signature rejected',
+  'chat.install_changed': 'Chat bridge — install changed',
+  // v0.9.0 G7 P37 — slash command + channel-link events.
+  'chat.slash_invoked': 'Chat bridge — slash command invoked',
+  'chat.channel_linked': 'Chat bridge — channel linked to page',
+  'chat.channel_unlinked': 'Chat bridge — channel unlinked from page',
+  // v0.9.0 G8 P39 — SIEM-forwarder delivery exhausted its retry budget.
+  'siem.delivery_failed': 'SIEM — delivery failed after retries',
+  // v0.9.0 G8 P41 — cairn-upgrade CLI lifecycle events.
+  'upgrade.applied': 'Upgrade applied',
+  'upgrade.failed': 'Upgrade failed',
+  'upgrade.rolled_back': 'Upgrade rolled back',
 };
 
 function actionLabel(action: string): string {

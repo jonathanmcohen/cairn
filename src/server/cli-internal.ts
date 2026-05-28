@@ -31,7 +31,13 @@ export interface CliArgs {
     | 'reconcile'
     | 'reminders:scan'
     | 'reindex-embeddings'
-    | 'connector:sync';
+    | 'connector:sync'
+    | 'trash:purge'
+    | 'pages:auto-unlock'
+    | 'flashcards:notify-due'
+    | 'siem:retry-sweep'
+    | 'siem:daily-archive'
+    | 'release-watch:tick';
   out?: string;
   in?: string;
   fromS3?: string;
@@ -39,6 +45,13 @@ export interface CliArgs {
   retentionDays?: number;
   target?: 'local' | 's3';
   workspace?: string;
+  /**
+   * v0.9.0 G2 P13 — explicit workspace-id flag used by the trash:purge cron
+   * command. Kept separate from `workspace` so callers can't accidentally mix
+   * `--workspace <id>` (export/import semantics) with `--workspace-id=<id>`
+   * (cron-managed schedule rows).
+   */
+  workspaceId?: string;
   source?: 'notion' | 'markdown-folder' | 'workspace-archive';
   file?: string;
   batchSize?: number;
@@ -54,6 +67,29 @@ const KNOWN_COMMANDS = [
   'reminders:scan',
   'reindex-embeddings',
   'connector:sync',
+  'trash:purge',
+  // v0.9.0 G2 P14 — single global cron sweep that auto-unlocks pages whose
+  // `locked_until` has passed. No flags; reads DATABASE_URL like every other
+  // CLI subcommand.
+  'pages:auto-unlock',
+  // v0.9.0 G3 P19 — global daily sweep that inserts one `flashcards_due`
+  // notification per (user, workspace) with at least one due card. Idempotent
+  // within a UTC day; no flags.
+  'flashcards:notify-due',
+  // v0.9.0 G8 P39 — every-minute sweep that re-runs retry-status SIEM
+  // deliveries whose next_attempt_at has passed. Per-attempt rows append to
+  // siem_delivery_log; the scheduler logs the swept count.
+  'siem:retry-sweep',
+  // v0.9.0 G8 P40 — daily sweep that gzips yesterday's audit_log rows per
+  // workspace + writes them to s3 for every enabled `kind='s3'` forwarder.
+  // One delivery-log row per non-empty archive; empty days produce nothing.
+  'siem:daily-archive',
+  // v0.9.0 G8 P42 — daily poll of CAIRN_RELEASE_FEED_URL; inserts one
+  // `upgrade_available` notification per (admin/owner, workspace) when the
+  // bundled `package.json#version` lags the latest stable tag. Idempotent
+  // per (user, workspace, version). Auto-apply is OFF — the admin button
+  // is the only path to `applyUpgrade`.
+  'release-watch:tick',
 ] as const;
 type Command = (typeof KNOWN_COMMANDS)[number];
 
@@ -77,6 +113,7 @@ export function parseArgs(argv: string[]): CliArgs {
   let file: string | undefined;
   let batchSize: number | undefined;
   let connectorId: string | undefined;
+  let workspaceId: string | undefined;
 
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -96,7 +133,13 @@ export function parseArgs(argv: string[]): CliArgs {
       if (t !== 'local' && t !== 's3') throw new Error("--target must be 'local' or 's3'");
       target = t;
     } else if (a === '--workspace') workspace = rest[++i];
-    else if (a === '--source') {
+    else if (a?.startsWith('--workspace-id=')) {
+      // v0.9.0 G2 P13 — cron-managed `--workspace-id=<id>` flag (single token,
+      // matches the canonical command string the scheduler stores).
+      workspaceId = a.slice('--workspace-id='.length);
+    } else if (a === '--workspace-id') {
+      workspaceId = rest[++i];
+    } else if (a === '--source') {
       const s = rest[++i];
       if (s !== 'notion' && s !== 'markdown-folder' && s !== 'workspace-archive') {
         throw new Error("--source must be 'notion' | 'markdown-folder' | 'workspace-archive'");
@@ -128,6 +171,9 @@ export function parseArgs(argv: string[]): CliArgs {
   if (cmd === 'import' && (!source || !file || !workspace)) {
     throw new Error('import requires --source <kind> --file <path> --workspace <id>');
   }
+  if (cmd === 'trash:purge' && !workspaceId) {
+    throw new Error('trash:purge requires --workspace-id=<id>');
+  }
   return {
     command: cmd,
     out,
@@ -137,6 +183,7 @@ export function parseArgs(argv: string[]): CliArgs {
     retentionDays,
     target: cmd === 'backup' ? (target ?? 'local') : target,
     workspace,
+    workspaceId,
     source,
     file,
     batchSize,

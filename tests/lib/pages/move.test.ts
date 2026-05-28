@@ -33,7 +33,13 @@ describe('movePage', () => {
     const u = await createTestWorkspaceWithUser(db);
     const a = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'A' });
     const b = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'B' });
-    await movePage(db, { pageId: b.id, workspaceId: u.workspaceId, newParentId: a.id });
+    await movePage(db, {
+      pageId: b.id,
+      workspaceId: u.workspaceId,
+      newParentId: a.id,
+      byUserId: u.userId,
+      adminOverride: true,
+    });
     const [moved] = await db.select().from(schema.pages).where(eq(schema.pages.id, b.id));
     expect(moved?.parentId).toBe(a.id);
   });
@@ -47,7 +53,13 @@ describe('movePage', () => {
       parentId: a.id,
       title: 'B',
     });
-    await movePage(db, { pageId: b.id, workspaceId: u.workspaceId, newParentId: null });
+    await movePage(db, {
+      pageId: b.id,
+      workspaceId: u.workspaceId,
+      newParentId: null,
+      byUserId: u.userId,
+      adminOverride: true,
+    });
     const [moved] = await db.select().from(schema.pages).where(eq(schema.pages.id, b.id));
     expect(moved?.parentId).toBeNull();
   });
@@ -62,7 +74,13 @@ describe('movePage', () => {
       title: 'B',
     });
     await expect(
-      movePage(db, { pageId: a.id, workspaceId: u.workspaceId, newParentId: b.id }),
+      movePage(db, {
+        pageId: a.id,
+        workspaceId: u.workspaceId,
+        newParentId: b.id,
+        byUserId: u.userId,
+        adminOverride: true,
+      }),
     ).rejects.toThrow(/cycle/i);
   });
 
@@ -72,7 +90,13 @@ describe('movePage', () => {
     const p = await createPage(db, { workspaceId: x.workspaceId, createdBy: x.userId });
     const foreign = await createPage(db, { workspaceId: y.workspaceId, createdBy: y.userId });
     await expect(
-      movePage(db, { pageId: p.id, workspaceId: x.workspaceId, newParentId: foreign.id }),
+      movePage(db, {
+        pageId: p.id,
+        workspaceId: x.workspaceId,
+        newParentId: foreign.id,
+        byUserId: x.userId,
+        adminOverride: true,
+      }),
     ).rejects.toThrow(/workspace/i);
   });
 
@@ -80,7 +104,13 @@ describe('movePage', () => {
     const u = await createTestWorkspaceWithUser(db);
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
     await expect(
-      movePage(db, { pageId: p.id, workspaceId: u.workspaceId, newParentId: p.id }),
+      movePage(db, {
+        pageId: p.id,
+        workspaceId: u.workspaceId,
+        newParentId: p.id,
+        byUserId: u.userId,
+        adminOverride: true,
+      }),
     ).rejects.toThrow(/cycle|self/i);
   });
 });

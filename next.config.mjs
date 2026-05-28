@@ -1,5 +1,12 @@
 /** @type {import('next').NextConfig} */
-import { securityHeaders } from './src/lib/security/headers.ts';
+// IMPORTANT: import from the JS sibling (next-headers.mjs) — NOT from
+// `./src/lib/security/headers.ts`. Importing the .ts module here causes the
+// Next 16 output-file tracer to follow the dependency graph into `src/**` and
+// drag SOURCE .ts files into `.next/standalone/`, which then crashes at runtime
+// (e.g. "Cannot find module 'next/headers'" from a .ts route). The .ts module
+// re-exports from this same .mjs so callers under @/lib/security/headers are
+// unaffected.
+import { securityHeaders } from './next-headers.mjs';
 
 const isProd = process.env.NODE_ENV === 'production';
 
@@ -8,6 +15,29 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  // Next 16's NFT tracer pulls source `.ts/.tsx` files (and other repo-root
+  // content like CHANGELOG.md, tests/, Dockerfile) into `.next/standalone/`.
+  // At runtime on Node 22+ these `.ts` files can be picked up by Node's
+  // experimental TS loader and shadow the compiled `.js` outputs, crashing with
+  // "Cannot find module 'next/headers' imported from .../src/.../*.ts" because
+  // the runtime tries to load the source `.ts` instead of the Next-compiled JS.
+  // We exclude the source tree and repo-root chaff from the standalone trace.
+  // The compiled JS still lives in `.next/server/app/...` which is what server.js
+  // actually requires.
+  outputFileTracingExcludes: {
+    '*': [
+      './src/**/*.ts',
+      './src/**/*.tsx',
+      './tests/**/*',
+      './docs/**/*',
+      './*.md',
+      './Dockerfile*',
+      './collab/**/*.ts',
+      './scripts/**/*',
+      './drizzle/**/*',
+      './.github/**/*',
+    ],
+  },
   async headers() {
     // Static, request-independent hardening headers (nosniff, frame-DENY,
     // referrer, permissions-policy, HSTS, X-Robots-Tag). The Content-Security-
