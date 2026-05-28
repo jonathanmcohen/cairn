@@ -6,7 +6,11 @@ RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+# pnpm-workspace.yaml carries the pnpm 10+ allowBuilds + minimumReleaseAgeExclude
+# policy; without it the in-container `pnpm install --frozen-lockfile` applies
+# pnpm's default minimum-release-age policy and rejects freshly-published deps
+# (ERR_PNPM_MINIMUM_RELEASE_AGE_VIOLATION).
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 

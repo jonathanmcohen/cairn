@@ -6,7 +6,9 @@ RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+# See Dockerfile: pnpm-workspace.yaml carries the allowBuilds +
+# minimumReleaseAgeExclude policy needed for the in-container frozen install.
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
