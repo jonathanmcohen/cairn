@@ -1,0 +1,37 @@
+# Cairn reverse proxy with automatic HTTPS.
+#
+# CAIRN_DOMAIN is injected from the caddy service's environment (see
+# docker-compose.proxy.yml, which reads it from .env). Set it to the hostname
+# or IP you reach Cairn at, e.g. `cairn.example.com` or `10.1.50.109`.
+{$CAIRN_DOMAIN} {
+	# Real-time collaboration websocket (Hocuspocus). The browser connects to
+	# wss://<domain>/collab, so set COLLAB_URL=wss://<domain>/collab in .env.
+	# Hocuspocus ignores the request path (the document id travels in-band),
+	# so no prefix rewrite is needed. Caddy upgrades the connection to a
+	# websocket automatically.
+	@collab path /collab /collab/*
+	reverse_proxy @collab cairn-collab:1234
+
+	# Everything else → the Next.js app.
+	reverse_proxy cairn:3000
+
+	# --- TLS ---------------------------------------------------------------
+	# LAN / homelab default: issue a cert from Caddy's own internal CA. This
+	# works for a bare IP or any hostname with zero external dependencies, but
+	# browsers show a warning until you trust Caddy's root CA. Export it from
+	# the caddy_data volume once and import it into your devices:
+	#   docker compose -f docker-compose.yml -f docker-compose.proxy.yml \
+	#     exec caddy cat /data/caddy/pki/authorities/local/root.crt
+	tls internal
+
+	# Public domain that resolves to this box with ports 80+443 reachable?
+	# Delete the `tls internal` line above and Caddy auto-provisions a free,
+	# browser-trusted Let's Encrypt certificate — nothing else to configure.
+	#
+	# Behind NAT (no inbound 80/443)? Keep a public domain but switch to a
+	# DNS-01 challenge instead of `tls internal`:
+	#   tls {
+	#     dns <provider> {env.DNS_API_TOKEN}
+	#   }
+	# (requires a Caddy build with the DNS-provider plugin).
+}

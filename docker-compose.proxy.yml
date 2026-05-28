@@ -1,0 +1,41 @@
+# Optional TLS reverse proxy overlay for the default docker-compose.yml.
+#
+# Apply it alongside the base file:
+#   docker compose -f docker-compose.yml -f docker-compose.proxy.yml up -d
+#
+# It adds a Caddy service that terminates HTTPS on :443 and proxies to the
+# app (cairn:3000) and the collab websocket (cairn-collab:1234) over the
+# internal compose network. The app + collab containers stop publishing their
+# raw HTTP ports to the host so the only externally reachable surface is Caddy.
+#
+# Requires CAIRN_DOMAIN in .env, plus PUBLIC_URL/NEXTAUTH_URL on https:// and
+# COLLAB_URL on wss://<domain>/collab. See docs/deployment.md.
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp" # HTTP/3 (QUIC)
+    environment:
+      CAIRN_DOMAIN: ${CAIRN_DOMAIN}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - cairn
+      - cairn-collab
+
+  # Stop exposing the raw HTTP ports to the host — Caddy reaches both services
+  # over the compose network and is the only public entrypoint.
+  cairn:
+    ports: !reset []
+
+  cairn-collab:
+    ports: !reset []
+
+volumes:
+  caddy_data:
+  caddy_config:
