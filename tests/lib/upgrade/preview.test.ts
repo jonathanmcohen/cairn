@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import { previewUpgrade } from '@/lib/upgrade/preview';
 import { startPostgres, stopPostgres } from '../../helpers/db';
+import { hasPgDump } from '../../helpers/has-pg-dump';
 
 let connectionString = '';
 
@@ -17,7 +18,7 @@ afterAll(async () => {
   await stopPostgres();
 });
 
-describe('previewUpgrade', () => {
+describe.skipIf(!hasPgDump)('previewUpgrade', () => {
   it('returns ok=true with empty pending when DB is already current', async () => {
     const result = await previewUpgrade({ databaseUrl: connectionString });
     expect(result.ok).toBe(true);

@@ -266,7 +266,12 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Build
-        run: pnpm build
+        # Self-hosted runners persist .next/ between runs. A stale standalone
+        # bundle from a prior commit can include source .ts files that Next 16's
+        # NFT tracer has since started excluding — the a11y webServer then loads
+        # those .ts at runtime and chokes on `next/headers` resolution. Clean
+        # before each build to dodge that. Mirrors the ci job's Build smoke step.
+        run: rm -rf .next && pnpm build
 
       - name: a11y gate
         run: pnpm test:a11y

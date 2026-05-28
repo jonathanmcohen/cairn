@@ -1,9 +1,28 @@
 // @vitest-environment jsdom
 import { Editor } from '@tiptap/core';
 import StarterKit from '@tiptap/starter-kit';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import * as Y from 'yjs';
 import { AudioNode } from '@/components/editor/blocks/audio-node';
+
+// Editors created in each test get tracked here so afterEach can destroy them.
+// Without destroy, prosemirror-view's DOMObserver schedules a deferred flush
+// (setTimeout 20ms) that fires AFTER vitest tears down jsdom — at which point
+// `document` is undefined and the unhandled `ReferenceError` escalates the
+// suite to "1 unhandled error" and can fail CI.
+const editors: Editor[] = [];
+const makeEditor = (opts: ConstructorParameters<typeof Editor>[0]) => {
+  const e = new Editor(opts);
+  editors.push(e);
+  return e;
+};
+
+afterEach(() => {
+  while (editors.length > 0) {
+    const e = editors.pop();
+    e?.destroy();
+  }
+});
 
 describe('AudioNode schema', () => {
   it('declares the `cairnAudio` node name, block group, atom', () => {
@@ -13,7 +32,7 @@ describe('AudioNode schema', () => {
   });
 
   it('inserts an audio node with attributes', () => {
-    const editor = new Editor({ extensions: [StarterKit, AudioNode] });
+    const editor = makeEditor({ extensions: [StarterKit, AudioNode] });
     editor.commands.insertContent({
       type: 'cairnAudio',
       attrs: { fileId: 'abc-123', mime: 'audio/mpeg', name: 'song.mp3' },
@@ -26,7 +45,7 @@ describe('AudioNode schema', () => {
   });
 
   it('renders to HTML with data-* attrs for static export', () => {
-    const editor = new Editor({ extensions: [StarterKit, AudioNode] });
+    const editor = makeEditor({ extensions: [StarterKit, AudioNode] });
     editor.commands.insertContent({
       type: 'cairnAudio',
       attrs: { fileId: 'abc-123', mime: 'audio/mpeg' },
@@ -38,7 +57,7 @@ describe('AudioNode schema', () => {
   });
 
   it('parses HTML round-trip', () => {
-    const editor = new Editor({ extensions: [StarterKit, AudioNode] });
+    const editor = makeEditor({ extensions: [StarterKit, AudioNode] });
     editor.commands.setContent(
       '<div data-cairn-audio data-file-id="xyz" data-mime="audio/wav"></div>',
     );
@@ -48,7 +67,7 @@ describe('AudioNode schema', () => {
   });
 
   it('defaults fileId to empty string and mime to audio/mpeg', () => {
-    const editor = new Editor({ extensions: [StarterKit, AudioNode] });
+    const editor = makeEditor({ extensions: [StarterKit, AudioNode] });
     editor.commands.setContent({
       type: 'doc',
       content: [{ type: 'cairnAudio', attrs: {} }],

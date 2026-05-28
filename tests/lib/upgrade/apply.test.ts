@@ -10,6 +10,7 @@ import * as schema from '@/db/schema';
 import { applyUpgrade } from '@/lib/upgrade/apply';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
+import { hasPgDump } from '../../helpers/has-pg-dump';
 
 let connectionString = '';
 let workspaceId = '';
@@ -35,7 +36,7 @@ beforeEach(async () => {
   }
 });
 
-describe('applyUpgrade', () => {
+describe.skipIf(!hasPgDump)('applyUpgrade', () => {
   it('snapshots, migrates, then emits upgrade.applied (happy path)', async () => {
     const dir = mkdtempSync(join(tmpdir(), 'cairn-apply-'));
     const client = postgres(connectionString, { max: 1 });

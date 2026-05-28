@@ -7,6 +7,7 @@ import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { dumpDatabase, restoreDatabase } from '@/lib/upgrade/snapshot';
 import { startPostgres, stopPostgres } from '../../helpers/db';
+import { hasPgDump } from '../../helpers/has-pg-dump';
 
 let connectionString = '';
 
@@ -18,7 +19,7 @@ afterAll(async () => {
   await stopPostgres();
 });
 
-describe('snapshot', () => {
+describe.skipIf(!hasPgDump)('snapshot', () => {
   it('dumps a database to a gzipped SQL file', async () => {
     const client = postgres(connectionString, { max: 1 });
     const db = drizzle(client);
