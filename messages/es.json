@@ -200,5 +200,9 @@
   "cover.use": "Usar",
   "cover.remove": "Quitar portada",
   "cover.uploadHint": "Las imágenes se almacenan localmente y se sirven mediante URL firmadas.",
-  "cover.useColor": "Usar {hex}"
+  "cover.useColor": "Usar {hex}",
+  "slash.group.basic": "Básico",
+  "slash.group.media": "Multimedia",
+  "slash.group.database": "Base de datos",
+  "slash.group.advanced": "Avanzado"
 }

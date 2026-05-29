@@ -200,5 +200,9 @@
   "cover.use": "Use",
   "cover.remove": "Remove cover",
   "cover.uploadHint": "Images are stored locally and served through signed URLs.",
-  "cover.useColor": "Use {hex}"
+  "cover.useColor": "Use {hex}",
+  "slash.group.basic": "Basic",
+  "slash.group.media": "Media",
+  "slash.group.database": "Database",
+  "slash.group.advanced": "Advanced"
 }

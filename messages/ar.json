@@ -200,5 +200,9 @@
   "cover.use": "استخدام",
   "cover.remove": "إزالة الغلاف",
   "cover.uploadHint": "تُخزَّن الصور محليًا وتُقدَّم عبر روابط موقَّعة.",
-  "cover.useColor": "استخدام {hex}"
+  "cover.useColor": "استخدام {hex}",
+  "slash.group.basic": "أساسي",
+  "slash.group.media": "وسائط",
+  "slash.group.database": "قاعدة بيانات",
+  "slash.group.advanced": "متقدم"
 }
