@@ -200,3 +200,17 @@ pre code.hljs {
 .prose [data-type="callout"] :is(h4, h5, h6) {
   font-size: 0.9375rem;
 }
+
+/* v0.9.4 P29 #116/#117 — inline editor link styling. The Link mark renders an
+   <a class="cairn-editor-link">; color/underline read as a link in both themes.
+   In the editable surface (contenteditable) clicking places the caret rather
+   than navigating (openOnClick:false), so the cursor stays text-like. Read-only
+   / public renders keep the default anchor pointer + navigation. */
+.cairn-editor-link {
+  color: var(--color-primary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+[contenteditable="true"] .cairn-editor-link {
+  cursor: text;
+}

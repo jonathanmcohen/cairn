@@ -15,6 +15,24 @@ import { highlightMatch } from '@/lib/palette/highlight';
 import { getRecents, pushRecent } from '@/lib/palette/recents';
 import { prettyKeys, shortcutFor } from '@/lib/shortcuts/format';
 
+/**
+ * #117 — true when keyboard focus is inside an editable ProseMirror surface and
+ * the current DOM selection spans a non-empty range. In that case ⌘K is the
+ * editor's insert-link shortcut (EditorLinkShortcut), so the global palette
+ * handler bails. A collapsed caret, or focus outside the editor, returns false
+ * and the palette opens as before.
+ */
+function editorHasRangedSelection(): boolean {
+  if (typeof document === 'undefined') return false;
+  const active = document.activeElement;
+  // The editable editor surface is a `[contenteditable=true]` ProseMirror node.
+  const inEditor =
+    active instanceof HTMLElement && active.closest('.ProseMirror[contenteditable="true"]');
+  if (!inEditor) return false;
+  const sel = window.getSelection();
+  return !!sel && !sel.isCollapsed && sel.toString().length > 0;
+}
+
 type SearchResult = {
   id: string;
   title: string;
@@ -119,6 +137,13 @@ export function SearchPalette({
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        // #117 — tie-break with the editor's insert-link shortcut. When the
+        // focused element is an editable ProseMirror surface AND the user has a
+        // non-empty (ranged) text selection, ⌘K means "insert link" and is
+        // handled by the EditorLinkShortcut extension — so the palette must NOT
+        // open. With a collapsed caret (or focus outside the editor) ⌘K still
+        // opens the palette unchanged.
+        if (editorHasRangedSelection()) return;
         e.preventDefault();
         setOpen((v) => !v);
       }

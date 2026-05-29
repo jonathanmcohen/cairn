@@ -12,6 +12,7 @@ import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BulkUploader } from './bulk-uploader';
 import { DragHandle } from './drag-handle';
+import { EditorBubbleMenu } from './editor-bubble-menu';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
 import { composeGalleryInsert } from './image-extension';
@@ -98,6 +99,16 @@ export function Editor({
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // #117 — the EditorLinkShortcut extension (and the ⌘/ sheet registry entry)
+  // dispatch a `cairn:editor:open-link` window event when the user presses the
+  // insert-link shortcut. Bumping this counter lets <EditorBubbleMenu> open its
+  // link input without holding React state inside the ProseMirror extension.
+  const [openLinkSignal, setOpenLinkSignal] = useState(0);
+  useEffect(() => {
+    const onOpen = () => setOpenLinkSignal((n) => n + 1);
+    window.addEventListener('cairn:editor:open-link', onOpen);
+    return () => window.removeEventListener('cairn:editor:open-link', onOpen);
+  }, []);
   // Suggestion mode (editor+ only). `activeSuggestionId` is the open proposal
   // that new insert/delete marks attach to while suggesting; `resolvable` is the
   // suggestionId under the current selection (drives the Accept/Reject buttons).
@@ -545,6 +556,12 @@ export function Editor({
       <div className="flex gap-4">
         <div className="relative min-w-0 flex-1">
           {editor && <DragHandle editor={editor} />}
+          {/* #116 — inline formatting bubble menu. Only the editable, collab-
+              bound editor gets it (viewers / reader-mode never see formatting
+              controls). It surfaces on text selection; see shouldShow. */}
+          {editor && effectiveEditable && (
+            <EditorBubbleMenu editor={editor} openLinkSignal={openLinkSignal} />
+          )}
           <EditorContent editor={editor} />
         </div>
       </div>
