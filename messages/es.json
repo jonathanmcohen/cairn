@@ -36,5 +36,8 @@
   "pageMenu.confirmTrash": "¿Mover esta página a la papelera?",
   "workspaceSwitcher.heading": "Espacios de trabajo",
   "workspaceSwitcher.switch": "Cambiar de espacio",
-  "workspaceSwitcher.create": "Crear espacio de trabajo"
+  "workspaceSwitcher.create": "Crear espacio de trabajo",
+  "outline.title": "Esquema",
+  "outline.hide": "Ocultar esquema",
+  "outline.empty": "Sin encabezados."
 }

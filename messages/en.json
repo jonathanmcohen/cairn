@@ -36,5 +36,8 @@
   "pageMenu.confirmTrash": "Move this page to trash?",
   "workspaceSwitcher.heading": "Workspaces",
   "workspaceSwitcher.switch": "Switch workspace",
-  "workspaceSwitcher.create": "Create workspace"
+  "workspaceSwitcher.create": "Create workspace",
+  "outline.title": "Outline",
+  "outline.hide": "Hide outline",
+  "outline.empty": "No headings."
 }

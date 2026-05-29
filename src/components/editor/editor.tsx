@@ -528,10 +528,13 @@ export function Editor({
           {editor && <DragHandle editor={editor} />}
           <EditorContent editor={editor} />
         </div>
-        {editor && outlineOpen && (
-          <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
-        )}
       </div>
+      {/* P19 #80 — the outline is an overlay flyout anchored to the outer
+          `relative` wrapper, not an in-flow column, so the editor body keeps
+          full width and a page with few headings doesn't waste a 14rem column. */}
+      {editor && outlineOpen && (
+        <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
+      )}
       <BulkUploader
         open={bulk.open}
         files={bulk.files}

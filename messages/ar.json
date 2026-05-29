@@ -36,5 +36,8 @@
   "pageMenu.confirmTrash": "نقل هذه الصفحة إلى المهملات؟",
   "workspaceSwitcher.heading": "مساحات العمل",
   "workspaceSwitcher.switch": "تبديل مساحة العمل",
-  "workspaceSwitcher.create": "إنشاء مساحة عمل"
+  "workspaceSwitcher.create": "إنشاء مساحة عمل",
+  "outline.title": "المخطط",
+  "outline.hide": "إخفاء المخطط",
+  "outline.empty": "لا توجد عناوين."
 }
