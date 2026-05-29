@@ -57,6 +57,8 @@
   "security.sessions.signOut": "تسجيل الخروج من هذا المتصفح",
   "notifications.type.mention": "الإشارات",
   "notifications.type.commentReply": "ردود التعليقات",
+  "notifications.smtp.disabledBanner": "إشعارات البريد الإلكتروني معطّلة — لم يتم تكوين خادم SMTP. لا تزال إشعارات التطبيق تعمل.",
+  "notifications.smtp.disabledReason": "يتطلب البريد الإلكتروني خادم SMTP مُكوَّنًا، وهو غير متوفر في نسخة كَيرن هذه.",
   "sidebar.releaseNotes": "ملاحظات إصدار v{version}",
   "sidebar.resize": "تغيير حجم الشريط الجانبي",
   "sidebar.signOut": "تسجيل الخروج"

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 // Import the canonical type from the server source of truth instead of
@@ -43,6 +43,7 @@ function choiceOf(pref: Pref): Choice {
 
 export function NotificationPrefs() {
   const t = useT();
+  const bannerId = useId();
   const [prefs, setPrefs] = useState<Pref[] | null>(null);
   const [smtpEnabled, setSmtpEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -112,9 +113,12 @@ export function NotificationPrefs() {
       </CardHeader>
       <CardContent className="space-y-4">
         {!smtpEnabled && (
-          <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200">
-            Email notifications are disabled — no SMTP server is configured. In-app notifications
-            still work.
+          <div
+            id={bannerId}
+            role="status"
+            className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
+          >
+            {t('notifications.smtp.disabledBanner')}
           </div>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -139,6 +143,11 @@ export function NotificationPrefs() {
                       size="sm"
                       variant={current === c.value ? 'default' : 'outline'}
                       disabled={disabled}
+                      // Non-color, screen-reader-available reason for the disabled
+                      // state (#74): a title tooltip + aria-describedby pointing at
+                      // the SMTP banner, so the "why" isn't conveyed by color alone.
+                      title={disabled ? t('notifications.smtp.disabledReason') : undefined}
+                      aria-describedby={disabled ? bannerId : undefined}
                       onClick={() => select(pref.notificationType, c.value)}
                     >
                       {c.label}

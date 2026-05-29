@@ -57,6 +57,8 @@
   "security.sessions.signOut": "Sign out of this browser",
   "notifications.type.mention": "Mentions",
   "notifications.type.commentReply": "Comment replies",
+  "notifications.smtp.disabledBanner": "Email notifications are disabled — no SMTP server is configured. In-app notifications still work.",
+  "notifications.smtp.disabledReason": "Email requires a configured SMTP server, which this Cairn instance does not have.",
   "sidebar.releaseNotes": "Release notes for v{version}",
   "sidebar.resize": "Resize sidebar",
   "sidebar.signOut": "Sign out"
