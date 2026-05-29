@@ -7,14 +7,17 @@ import { SettingsSidebar } from '@/components/settings/sidebar';
 // auto-register its afterEach cleanup. Without it, repeated render() calls
 // accumulate in document.body across tests.
 
-// next/navigation is heavy; mock the bits we use.
+// next/navigation is heavy; mock the bits we use. The pathname is mutable so
+// the sub-page-expansion tests can target different active routes.
+const pathnameMock = vi.fn(() => '/settings/workspace/members');
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/settings/workspace/members',
+  usePathname: () => pathnameMock(),
   useRouter: () => ({ push: vi.fn() }),
 }));
 
 afterEach(() => {
   cleanup();
+  pathnameMock.mockReturnValue('/settings/workspace/members');
 });
 
 describe('<SettingsSidebar>', () => {
@@ -40,12 +43,22 @@ describe('<SettingsSidebar>', () => {
     }
   });
 
-  it('marks the active section with aria-current="page"', () => {
+  it('marks the active section with aria-current="page" on an exact match', () => {
+    pathnameMock.mockReturnValue('/settings/workspace');
     render(<SettingsSidebar />);
     const workspace = screen.getByRole('link', { name: 'Workspace' });
     expect(workspace.getAttribute('aria-current')).toBe('page');
     const account = screen.getByRole('link', { name: 'Account' });
     expect(account.getAttribute('aria-current')).toBeNull();
+  });
+
+  it('moves aria-current="page" to the active sub-page (parent no longer claims it)', () => {
+    pathnameMock.mockReturnValue('/settings/workspace/members');
+    render(<SettingsSidebar />);
+    // The parent is highlighted as active but the sub-page owns the
+    // current-page semantic — no two aria-current="page" in one nav.
+    expect(screen.getByRole('link', { name: 'Workspace' }).getAttribute('aria-current')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Members' }).getAttribute('aria-current')).toBe('page');
   });
 
   it('arrow-down moves focus to the next item', () => {
@@ -70,5 +83,18 @@ describe('<SettingsSidebar>', () => {
     security.focus();
     fireEvent.keyDown(security, { key: 'ArrowDown' });
     expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Account' }));
+  });
+
+  it('reveals Workspace sub-pages when a Workspace route is active', () => {
+    pathnameMock.mockReturnValue('/settings/workspace/members');
+    render(<SettingsSidebar />);
+    expect(screen.getByRole('link', { name: 'Members' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'General' })).toBeTruthy();
+  });
+
+  it('does not show Workspace sub-pages when a different section is active', () => {
+    pathnameMock.mockReturnValue('/settings/account');
+    render(<SettingsSidebar />);
+    expect(screen.queryByRole('link', { name: 'Members' })).toBeNull();
   });
 });
