@@ -34,8 +34,18 @@ export type MentionListRef = {
  */
 export const MentionList = forwardRef<
   MentionListRef,
-  { items: MentionItem[]; command: (item: MentionItem) => void }
->(function MentionList({ items, command }, ref) {
+  {
+    items: MentionItem[];
+    command: (item: MentionItem) => void;
+    /**
+     * v0.9.4 P26 #108 — trigger-clarity footer ("@ for people · [[ for pages").
+     * Passed in (already translated) by the suggestion extension because this
+     * component mounts via ReactRenderer detached from the <I18nProvider> tree,
+     * so `useT()` can't resolve here. Optional so existing call sites/tests work.
+     */
+    hint?: string;
+  }
+>(function MentionList({ items, command, hint }, ref) {
   const [index, setIndex] = useState(0);
   const listId = useId();
 
@@ -64,10 +74,19 @@ export const MentionList = forwardRef<
     },
   }));
 
+  // v0.9.4 P26 #108 — footer hint is aria-hidden so it doesn't pollute the
+  // aria-activedescendant option set; it is a purely visual affordance.
+  const footer = hint ? (
+    <div className="border-t px-3 py-1.5 text-xs text-muted-foreground" aria-hidden>
+      {hint}
+    </div>
+  ) : null;
+
   if (items.length === 0) {
     return (
-      <div className="rounded-md border bg-popover p-2 text-sm text-muted-foreground shadow-md">
-        No members
+      <div className="w-64 rounded-md border bg-popover shadow-md">
+        <div className="p-2 text-sm text-muted-foreground">No members</div>
+        {footer}
       </div>
     );
   }
@@ -116,6 +135,7 @@ export const MentionList = forwardRef<
           </div>
         ))}
       </div>
+      {footer}
     </div>
   );
 });

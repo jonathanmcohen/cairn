@@ -103,4 +103,29 @@ export function ensureAppShortcuts(): void {
       }
     },
   });
+
+  // v0.9.4 P26 #108 — document the two editor suggestion triggers in the ⌘/
+  // shortcuts sheet so the `@` (people) vs `[[`/`@@` (pages) split is
+  // discoverable. These are typed-character triggers, not keystroke handlers,
+  // so `run` is a no-op (the actual behavior lives in the TipTap suggestion
+  // plugins); they appear purely as documentation rows. `keys` carries the
+  // literal trigger glyphs (no `+`, so they never collide with the modifier
+  // shortcuts in this scope).
+  registerShortcut({
+    id: 'editor.mentionPerson',
+    keys: '@',
+    scope: 'editor',
+    kind: 'command',
+    labelKey: 'shortcut.mentionPerson',
+    run: () => {},
+  });
+
+  registerShortcut({
+    id: 'editor.linkPage',
+    keys: '[[',
+    scope: 'editor',
+    kind: 'command',
+    labelKey: 'shortcut.linkPage',
+    run: () => {},
+  });
 }

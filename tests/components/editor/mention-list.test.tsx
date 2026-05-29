@@ -18,4 +18,16 @@ describe('<MentionList>', () => {
     expect(screen.getByText('Ada Lovelace')).toBeTruthy();
     expect(screen.getByText('AL')).toBeTruthy(); // initials fallback
   });
+
+  it('renders the trigger hint footer', () => {
+    render(
+      <MentionList
+        ref={createRef<MentionListRef>()}
+        items={[{ id: 'u1', name: 'Ada Lovelace', email: 'ada@example.com', image: null }]}
+        command={() => {}}
+        hint="@ for people · [[ for pages"
+      />,
+    );
+    expect(screen.getByText(/for pages/i)).toBeTruthy();
+  });
 });

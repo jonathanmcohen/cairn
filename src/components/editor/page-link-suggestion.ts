@@ -3,7 +3,16 @@ import { PluginKey } from '@tiptap/pm/state';
 import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
+import enMessages from '../../../messages/en.json';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
+
+// v0.9.4 P26 #108 — the page-link popup mounts via ReactRenderer detached from
+// the <I18nProvider> tree, so `useT()` can't resolve inside <PageLinkList>. The
+// hint is sourced from the i18n key here (the en value) and threaded in as a
+// prop. NOTE: this renders the en string regardless of the active locale — a
+// known, documented limitation of the detached mount (full locale-aware hint
+// is deferred with the larger @-unify follow-up).
+const PAGES_HINT: string = enMessages['editor.pageLink.hintPages'];
 
 // Each Suggestion plugin MUST have a distinct PluginKey — `@tiptap/suggestion`
 // defaults to `PluginKey('suggestion')`, so two instances with that default key
@@ -27,7 +36,7 @@ function makeRenderer(): SuggestionOptions<PageItem, PageItem>['render'] {
   return () => {
     let component: ReactRenderer<
       PageLinkListRef,
-      { items: PageItem[]; command: (i: PageItem) => void }
+      { items: PageItem[]; command: (i: PageItem) => void; hint?: string }
     >;
     let popup: Instance<TippyProps>;
     return {
@@ -36,6 +45,7 @@ function makeRenderer(): SuggestionOptions<PageItem, PageItem>['render'] {
           props: {
             items: props.items,
             command: (i: PageItem) => props.command(i),
+            hint: PAGES_HINT,
           },
           editor: props.editor,
         });
@@ -53,6 +63,7 @@ function makeRenderer(): SuggestionOptions<PageItem, PageItem>['render'] {
         component.updateProps({
           items: props.items,
           command: (i: PageItem) => props.command(i),
+          hint: PAGES_HINT,
         });
         popup.setProps({ getReferenceClientRect: props.clientRect as () => DOMRect });
       },
