@@ -29,6 +29,11 @@
   "pageMenu.showActivity": "إظهار النشاط",
   "pageMenu.hideActivity": "إخفاء النشاط",
   "pageMenu.unavailableOffline": "غير متاح دون اتصال",
+  "pageMenu.copyLink": "نسخ الرابط",
+  "pageMenu.linkCopied": "تم نسخ الرابط!",
+  "pageMenu.duplicate": "تكرار الصفحة",
+  "pageMenu.moveToTrash": "النقل إلى المهملات",
+  "pageMenu.confirmTrash": "نقل هذه الصفحة إلى المهملات؟",
   "workspaceSwitcher.heading": "مساحات العمل",
   "workspaceSwitcher.switch": "تبديل مساحة العمل",
   "workspaceSwitcher.create": "إنشاء مساحة عمل"

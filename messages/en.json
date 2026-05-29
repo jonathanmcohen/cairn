@@ -29,6 +29,11 @@
   "pageMenu.showActivity": "Show activity",
   "pageMenu.hideActivity": "Hide activity",
   "pageMenu.unavailableOffline": "Unavailable offline",
+  "pageMenu.copyLink": "Copy link",
+  "pageMenu.linkCopied": "Link copied!",
+  "pageMenu.duplicate": "Duplicate page",
+  "pageMenu.moveToTrash": "Move to trash",
+  "pageMenu.confirmTrash": "Move this page to trash?",
   "workspaceSwitcher.heading": "Workspaces",
   "workspaceSwitcher.switch": "Switch workspace",
   "workspaceSwitcher.create": "Create workspace"

@@ -2,6 +2,8 @@
 
 import {
   Activity,
+  Copy,
+  CopyPlus,
   Download,
   FilePlus2,
   FileStack,
@@ -9,6 +11,7 @@ import {
   Globe,
   Link as LinkIcon,
   MoreHorizontal,
+  Trash2,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { PageActivityFeed } from '@/components/pages/activity-feed';
@@ -49,6 +52,7 @@ export function PageMenu({
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [saveTplOpen, setSaveTplOpen] = useState(false);
+  const [linkCopied, setLinkCopied] = useState(false);
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -117,6 +121,27 @@ export function PageMenu({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     });
+  }
+
+  function copyInternalLink() {
+    const url = `${window.location.origin}/pages/${pageId}`;
+    void navigator.clipboard.writeText(url).then(() => {
+      setLinkCopied(true);
+      setTimeout(() => setLinkCopied(false), 1500);
+    });
+  }
+
+  async function duplicate() {
+    const res = await fetch(`/api/pages/${pageId}/duplicate`, { method: 'POST' });
+    if (!res.ok) return;
+    const { id } = (await res.json()) as { id: string };
+    window.location.href = `/pages/${id}`;
+  }
+
+  async function moveToTrash() {
+    if (!window.confirm(t('pageMenu.confirmTrash'))) return;
+    const res = await fetch(`/api/pages/${pageId}`, { method: 'DELETE' });
+    if (res.ok) window.location.href = '/';
   }
 
   return (
@@ -231,6 +256,42 @@ export function PageMenu({
           >
             <FilePlus2 aria-hidden="true" className="h-4 w-4 shrink-0" />
             {savedAsTemplate ? t('pageMenu.savedTemplate') : t('pageMenu.saveTemplate')}
+          </button>
+          <div className="my-1 border-t" />
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            onClick={() => {
+              copyInternalLink();
+            }}
+          >
+            <Copy aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {linkCopied ? t('pageMenu.linkCopied') : t('pageMenu.copyLink')}
+          </button>
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            onClick={() => {
+              void duplicate();
+            }}
+          >
+            <CopyPlus aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('pageMenu.duplicate')}
+          </button>
+          {/* TODO(move-to): follow-up — the "Move to…" (reparent) action needs a
+              self-contained page-picker popover (reuse PageLinkList + fetchPages +
+              a "Move to top level" option). That picker UX exceeds the ~30-line
+              off-ramp threshold in the P19 plan, so it ships as a follow-up. The
+              backend (POST /api/pages/[id]/move { newParentId }) already exists. */}
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            onClick={() => {
+              void moveToTrash();
+            }}
+          >
+            <Trash2 aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('pageMenu.moveToTrash')}
           </button>
           <div className="my-1 border-t" />
           <button

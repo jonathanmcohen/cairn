@@ -29,6 +29,11 @@
   "pageMenu.showActivity": "Mostrar actividad",
   "pageMenu.hideActivity": "Ocultar actividad",
   "pageMenu.unavailableOffline": "No disponible sin conexión",
+  "pageMenu.copyLink": "Copiar enlace",
+  "pageMenu.linkCopied": "¡Enlace copiado!",
+  "pageMenu.duplicate": "Duplicar página",
+  "pageMenu.moveToTrash": "Mover a la papelera",
+  "pageMenu.confirmTrash": "¿Mover esta página a la papelera?",
   "workspaceSwitcher.heading": "Espacios de trabajo",
   "workspaceSwitcher.switch": "Cambiar de espacio",
   "workspaceSwitcher.create": "Crear espacio de trabajo"
