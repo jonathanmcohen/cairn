@@ -1,8 +1,7 @@
 'use client';
-import { Check, ChevronsUpDown, Plus } from 'lucide-react';
+import { Check, ChevronDown, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import type { MemberRole } from '@/lib/auth/require-role';
 
 export type SwitcherWorkspace = { id: string; name: string; role: MemberRole };
@@ -48,18 +47,12 @@ export function WorkspaceSwitcher({
 
   return (
     <details className="group relative">
-      <summary className="list-none [&::-webkit-details-marker]:hidden">
-        <Button
-          asChild
-          variant="ghost"
-          className="w-full cursor-pointer justify-between font-semibold"
-          disabled={busy}
-        >
-          <span>
-            <span className="truncate">{active?.name ?? 'No workspace'}</span>
-            <ChevronsUpDown className="h-4 w-4 shrink-0 opacity-60" />
-          </span>
-        </Button>
+      <summary
+        aria-label="Switch workspace"
+        className="flex min-h-9 cursor-pointer select-none list-none items-center justify-between gap-2 rounded px-2 py-1.5 text-sm font-medium hover:bg-accent [&::-webkit-details-marker]:hidden"
+      >
+        <span className="truncate">{active?.name ?? 'No workspace'}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
       </summary>
       <div className="absolute left-0 z-50 mt-1 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
         <p className="px-2 py-1.5 text-sm font-semibold">Workspaces</p>
