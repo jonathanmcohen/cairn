@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.3] - Unreleased
+
+> UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No schema changes expected; one templates seed/listing fix. Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-*.md`.
+
+### Fixed
+- _(accumulated as patches land — see PR for the per-issue list)_
+
+### Changed
+- _(accumulated as patches land)_
+
+### Added
+- Themed `Select` + `DateField` UI primitives (`src/components/ui/`).
+
 ## [0.9.2] - 2026-05-28
 
 > Hotfix for the `cairn-collab` sidecar image, which crash-looped on startup in v0.9.1. The app image (`cairn`), database schema, and env vars are unchanged — only the collab container is affected. Upgraders pull the new `cairn-collab:0.9.2` image (compose does this on redeploy); no migrations.
