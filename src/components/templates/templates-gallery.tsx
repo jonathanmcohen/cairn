@@ -44,8 +44,6 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const onlyBuiltIns = templates.every((t) => t.builtIn);
-
   async function onUse(id: string) {
     setBusy(id);
     setError(null);
@@ -102,11 +100,16 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
     <div className="space-y-4">
       {error ? <p className="text-sm text-destructive">{error}</p> : null}
 
-      {onlyBuiltIns ? (
-        <p className="text-sm text-muted-foreground">
-          Save a page or database as a template to see it here.
+      {/* P08 #37 — discoverable "Save as template" CTA. The save flow needs a
+          source page, so the gallery (which has no current page) guides the
+          user to the per-page menu rather than launching the dialog blind. */}
+      <div className="rounded-lg border border-dashed p-4 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">Create your own template</p>
+        <p className="mt-1">
+          Open any page, click the <span className="font-medium">⋯</span> menu, and choose{' '}
+          <span className="font-medium">“Save as template…”</span> to add it here.
         </p>
-      ) : null}
+      </div>
 
       {VISIBILITY_ORDER.map((v) => {
         const rows = grouped.get(v) ?? [];
