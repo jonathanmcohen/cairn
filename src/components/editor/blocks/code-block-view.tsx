@@ -33,7 +33,7 @@ export function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewP
             value={language}
             onValueChange={(v) => updateAttributes({ language: v === 'auto' ? null : v })}
           >
-            <SelectTrigger aria-label="Code language" className="h-7 w-36 text-xs">
+            <SelectTrigger aria-label="Code language" className="h-9 w-36 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -39,7 +39,7 @@ export function CalloutView({ node, updateAttributes, editor }: ReactNodeViewPro
               value={variant}
               onValueChange={(v) => updateAttributes({ variant: v as CalloutVariant })}
             >
-              <SelectTrigger aria-label="Callout type" className="h-7 w-28 text-xs">
+              <SelectTrigger aria-label="Callout type" className="h-9 w-28 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>

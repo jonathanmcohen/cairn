@@ -49,7 +49,7 @@ export function WorkspaceSwitcher({
     <details className="group relative">
       <summary
         aria-label="Switch workspace"
-        className="flex min-h-9 cursor-pointer select-none list-none items-center justify-between gap-2 rounded px-2 py-1.5 text-sm font-medium hover:bg-accent [&::-webkit-details-marker]:hidden"
+        className="flex min-h-11 cursor-pointer select-none list-none items-center justify-between gap-2 rounded px-2 py-1.5 text-sm font-medium hover:bg-accent [&::-webkit-details-marker]:hidden"
       >
         <span className="truncate">{active?.name ?? 'No workspace'}</span>
         <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />

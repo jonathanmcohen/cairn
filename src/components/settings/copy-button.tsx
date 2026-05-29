@@ -15,7 +15,8 @@ export function CopyButton({ value, label = 'Copy' }: { value: string; label?: s
     <Button
       type="button"
       variant="ghost"
-      size="sm"
+      size="icon"
+      className="h-11 w-11 shrink-0"
       aria-label={label}
       onClick={() => void onCopy()}
     >

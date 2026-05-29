@@ -85,8 +85,10 @@ export default async function ApiKeysSettingsPage() {
         <dl className="mt-3 space-y-2 text-sm">
           <div className="flex items-center gap-2">
             <dt className="w-24 shrink-0 text-muted-foreground">Endpoint</dt>
-            <dd className="break-all font-mono">{mcpUrl}</dd>
-            <CopyButton value={mcpUrl} label="Copy MCP endpoint" />
+            <dd className="flex flex-1 items-center gap-2 break-all font-mono">
+              {mcpUrl}
+              <CopyButton value={mcpUrl} label="Copy MCP endpoint" />
+            </dd>
           </div>
           <div className="flex gap-2">
             <dt className="w-24 shrink-0 text-muted-foreground">Scopes</dt>

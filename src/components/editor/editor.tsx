@@ -496,7 +496,7 @@ export function Editor({
         )}
         <PresenceAvatars users={presentUsers} />
         <span
-          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-muted-foreground text-xs"
+          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-foreground text-xs"
           title={STATUS_LABEL[status]}
         >
           <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />

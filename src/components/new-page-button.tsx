@@ -36,7 +36,7 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
       disabled={busy || !allowed}
       aria-label="New page"
       title={allowed ? 'New page' : 'Unavailable offline'}
-      className="h-6 w-6"
+      className="h-11 w-11"
     >
       <Plus aria-hidden="true" className="h-4 w-4" />
     </Button>

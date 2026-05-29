@@ -15,7 +15,7 @@ import { Button } from './ui/button';
  * as the primary "PAGES" tree items so the hierarchy reads as first-class.
  */
 const NAV_ITEM_CLASS =
-  'flex items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent';
+  'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent';
 
 export function SidebarFooterNav({ version }: { version: string }) {
   return (
@@ -39,7 +39,7 @@ export function SidebarFooterNav({ version }: { version: string }) {
       </Link>
       <div className="mt-2 flex items-center gap-2 border-t border-border pt-2">
         <form action="/api/auth/signout" method="post" className="flex-1">
-          <Button variant="ghost" size="sm" className="w-full justify-start" type="submit">
+          <Button variant="ghost" size="sm" className="min-h-11 w-full justify-start" type="submit">
             Sign out
           </Button>
         </form>
@@ -50,7 +50,7 @@ export function SidebarFooterNav({ version }: { version: string }) {
           href={`https://github.com/jonathanmcohen/cairn/releases/tag/v${version}`}
           target="_blank"
           rel="noreferrer"
-          className="hover:text-foreground hover:underline"
+          className="inline-flex min-h-11 items-center justify-center px-2 hover:text-foreground hover:underline"
         >
           v{version}
         </a>
