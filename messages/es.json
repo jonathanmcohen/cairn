@@ -188,5 +188,17 @@
   "database.rowCount.one": "{count} fila",
   "database.rowCount.other": "{count} filas",
   "database.addRow": "Añadir fila",
-  "database.emptyHint": "Aún no hay filas — añade tu primera fila."
+  "database.emptyHint": "Aún no hay filas — añade tu primera fila.",
+  "cover.add": "Añadir portada",
+  "cover.change": "Cambiar portada",
+  "cover.dialogTitle": "Portada de la página",
+  "cover.close": "Cerrar selector de portada",
+  "cover.tab.color": "Color",
+  "cover.tab.unsplash": "Unsplash",
+  "cover.tab.upload": "Subir",
+  "cover.customHex": "Hex personalizado",
+  "cover.use": "Usar",
+  "cover.remove": "Quitar portada",
+  "cover.uploadHint": "Las imágenes se almacenan localmente y se sirven mediante URL firmadas.",
+  "cover.useColor": "Usar {hex}"
 }

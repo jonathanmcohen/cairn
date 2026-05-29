@@ -188,5 +188,17 @@
   "database.rowCount.one": "{count} row",
   "database.rowCount.other": "{count} rows",
   "database.addRow": "Add row",
-  "database.emptyHint": "No rows yet — add your first row."
+  "database.emptyHint": "No rows yet — add your first row.",
+  "cover.add": "Add cover",
+  "cover.change": "Change cover",
+  "cover.dialogTitle": "Page cover",
+  "cover.close": "Close cover picker",
+  "cover.tab.color": "Color",
+  "cover.tab.unsplash": "Unsplash",
+  "cover.tab.upload": "Upload",
+  "cover.customHex": "Custom hex",
+  "cover.use": "Use",
+  "cover.remove": "Remove cover",
+  "cover.uploadHint": "Images are stored locally and served through signed URLs.",
+  "cover.useColor": "Use {hex}"
 }
