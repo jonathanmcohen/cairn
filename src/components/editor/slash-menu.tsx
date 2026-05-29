@@ -1,12 +1,14 @@
 'use client';
 
 import type { Editor } from '@tiptap/react';
+import type { LucideIcon } from 'lucide-react';
 import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
 
 export type SlashItem = {
   title: string;
   description: string;
   command: (editor: Editor) => void;
+  icon?: LucideIcon;
 };
 
 export type SlashMenuRef = {
@@ -89,12 +91,19 @@ export const SlashMenu = forwardRef<
               type="button"
               tabIndex={-1}
               onClick={() => command(item)}
-              className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-accent ${
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent ${
                 i === index ? 'bg-accent' : ''
               }`}
             >
-              <div className="font-medium">{item.title}</div>
-              <div className="text-xs text-muted-foreground">{item.description}</div>
+              {item.icon ? (
+                <item.icon aria-hidden="true" className="h-4 w-4 shrink-0 text-muted-foreground" />
+              ) : (
+                <span aria-hidden="true" className="h-4 w-4 shrink-0" />
+              )}
+              <span className="min-w-0">
+                <span className="block font-medium">{item.title}</span>
+                <span className="block text-xs text-muted-foreground">{item.description}</span>
+              </span>
             </button>
           </div>
         ))}
