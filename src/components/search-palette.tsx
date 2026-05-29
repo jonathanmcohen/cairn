@@ -10,6 +10,7 @@ import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
+import { highlightMatch } from '@/lib/palette/highlight';
 import { getRecents, pushRecent } from '@/lib/palette/recents';
 import { prettyKeys, shortcutFor } from '@/lib/shortcuts/format';
 
@@ -201,7 +202,7 @@ export function SearchPalette({
                   onSelect={() => onSelect(r.id)}
                   className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
                 >
-                  <div className="font-medium">{r.title}</div>
+                  <div className="font-medium">{highlightMatch(r.title, query)}</div>
                   {r.breadcrumb.length > 1 && (
                     <div className="text-xs text-muted-foreground">
                       {r.breadcrumb
@@ -212,7 +213,7 @@ export function SearchPalette({
                   )}
                   {r.snippet && (
                     <div
-                      className="mt-1 text-xs text-muted-foreground"
+                      className="palette-snippet mt-1 text-xs text-muted-foreground"
                       // biome-ignore lint/security/noDangerouslySetInnerHtml: ts_headline returns sanitized <b> markup; accepted v0.1.0 trust boundary
                       dangerouslySetInnerHTML={{ __html: r.snippet }}
                     />

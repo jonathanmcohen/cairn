@@ -209,3 +209,13 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
 [data-page-mode-shell][data-reader="true"] .ProseMirror {
   max-width: none;
 }
+
+/*
+ * #111 — the command palette injects ts_headline snippet markup (matches
+ * wrapped in <b>). Style that <b> with theme tokens so matches read clearly in
+ * both light and dark, rather than relying on the browser default bold.
+ */
+.palette-snippet b {
+  font-weight: 600;
+  color: var(--color-foreground);
+}
