@@ -472,11 +472,18 @@ export function Editor({
 
   return (
     <div className="relative">
-      {/* a30 #39 — top control strip: thin separators divide the logical
-          groups (suggest-edits / presence+status / outline) and toggles carry
-          explicit active states so the bar reads as distinct controls rather
-          than a row of bare labels. Presentation only — handlers/state are
-          unchanged. */}
+      {/* a30 #39 (round-2 styling) — top control strip. Thin `h-4 w-px bg-border`
+          separators divide the logical groups (suggest-edits / presence+status /
+          outline) and the toggles carry explicit active states (aria-pressed +
+          bg-primary fill) so the bar reads as distinct, structured controls
+          rather than a row of bare labels — IN EVERY ROLE. The
+          presence+status+outline group always renders (editor AND viewer); only
+          the suggest-edits group is gated on `effectiveEditable`, and its
+          trailing separator lives INSIDE that gate so it never dangles when a
+          viewer omits the group. The status pill rests as a hairline-bordered
+          chip (no `bg-muted` fill, which read as an active/selected state at
+          rest). Styling only — handlers/state are unchanged, and the
+          interactivity changes for these controls are owned by the -23- plan. */}
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {effectiveEditable && (
           <>
@@ -496,7 +503,7 @@ export function Editor({
         )}
         <PresenceAvatars users={presentUsers} />
         <span
-          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-foreground text-xs"
+          className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
           title={STATUS_LABEL[status]}
         >
           <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />

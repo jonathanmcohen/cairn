@@ -76,9 +76,14 @@ export function SuggestionToolbar({
         </>
       )}
       {openCount > 0 && (
-        // a30 #39 — render the open-suggestion count as a muted chip so it
-        // reads as a distinct status, not a bare label crowding the toggles.
-        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground text-xs">
+        // a30 #39 (round-2 styling) — the open-suggestion count is a quiet
+        // resting status, so it carries a hairline border instead of a filled
+        // `bg-muted` chip (the filled fill read as an active/selected state at
+        // rest, competing with the genuinely-active Suggesting toggle). The
+        // count badge itself stays a distinct, separated affordance — interactivity
+        // (click-to-open the resolve list) is owned by the -23- plan and slots
+        // onto this same element.
+        <span className="inline-flex items-center rounded-full border px-2 py-0.5 font-medium text-muted-foreground text-xs">
           {openCount} open
         </span>
       )}
