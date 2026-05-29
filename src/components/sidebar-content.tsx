@@ -12,7 +12,6 @@ import { VirtualizedPageTree } from './sidebar/virtualized-page-tree';
 import { SidebarFavorites } from './sidebar-favorites';
 import { SidebarFooterNav } from './sidebar-footer-nav';
 import { SidebarRecents } from './sidebar-recents';
-import { ThemeToggle } from './theme-toggle';
 import { WorkspaceSwitcher } from './workspace-switcher';
 
 /**
@@ -37,11 +36,8 @@ export async function SidebarContent({
   const tree = await flattenedPageTree(getDb(), workspaceId, ctx?.userId);
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="flex items-center justify-between gap-2 border-b p-2">
-        <div className="min-w-0 flex-1">
-          <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
-        </div>
-        <ThemeToggle />
+      <div className="border-b p-2">
+        <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
       </div>
       <nav aria-labelledby="sidebar-pages-heading" className="flex-1 overflow-y-auto p-3">
         <SearchHintButton />
