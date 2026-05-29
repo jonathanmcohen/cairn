@@ -40,5 +40,6 @@
   "outline.title": "Outline",
   "outline.hide": "Hide outline",
   "outline.empty": "No headings.",
-  "sidebar.releaseNotes": "Release notes for v{version}"
+  "sidebar.releaseNotes": "Release notes for v{version}",
+  "sidebar.resize": "Resize sidebar"
 }

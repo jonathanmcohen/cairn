@@ -40,5 +40,6 @@
   "outline.title": "Esquema",
   "outline.hide": "Ocultar esquema",
   "outline.empty": "Sin encabezados.",
-  "sidebar.releaseNotes": "Notas de la versión v{version}"
+  "sidebar.releaseNotes": "Notas de la versión v{version}",
+  "sidebar.resize": "Redimensionar la barra lateral"
 }
