@@ -1208,7 +1208,7 @@
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 92,
+      "line": 94,
       "text": "Scopes",
       "kind": "jsx_text"
     },
@@ -3776,7 +3776,7 @@
     },
     {
       "file": "components/editor/blocks/code-block-view.tsx",
-      "line": 36,
+      "line": 37,
       "text": "Code language",
       "kind": "jsx_attr"
     },
@@ -3928,6 +3928,12 @@
       "file": "components/editor/blocks/plantuml.tsx",
       "line": 150,
       "text": "Edit diagram",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/toggle-view.tsx",
+      "line": 45,
+      "text": "Empty — add content…",
       "kind": "jsx_text"
     },
     {
@@ -4976,25 +4982,25 @@
     },
     {
       "file": "components/search-hint-button.tsx",
-      "line": 23,
+      "line": 24,
       "text": "⌘K",
       "kind": "jsx_text"
     },
     {
       "file": "components/search-palette.tsx",
-      "line": 154,
+      "line": 155,
       "text": "Close search",
       "kind": "jsx_attr"
     },
     {
       "file": "components/search-palette.tsx",
-      "line": 234,
+      "line": 241,
       "text": "Searching…",
       "kind": "jsx_text"
     },
     {
       "file": "components/search-palette.tsx",
-      "line": 274,
+      "line": 281,
       "text": "Save this search",
       "kind": "jsx_text"
     },
@@ -5546,7 +5552,7 @@
     },
     {
       "file": "components/theme-toggle.tsx",
-      "line": 12,
+      "line": 13,
       "text": "Toggle theme",
       "kind": "jsx_attr"
     },
