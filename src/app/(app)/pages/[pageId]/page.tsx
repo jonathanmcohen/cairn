@@ -61,7 +61,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   return (
     <PageDetailShell>
-      <PageModeShell toggles={<PageModeToggles />}>
+      <PageModeShell>
         <CoverBanner cover={cover} alt={page.title} />
         {/* a7 #16 — the in-flow <CoverImage> button below is the single canonical
             "Add cover" / "Change" affordance; it sits where the cover renders.
@@ -73,6 +73,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           <div className="min-w-0 flex-1 basis-full sm:basis-auto">
             <PageTitleInput pageId={page.id} initial={page.title} />
           </div>
+          {/* a8 #17 — Focus/Reader mode toggles join the same action bar as the
+              page actions below, separated by a thin rule, so the header reads
+              as one coherent control group instead of two competing toolbars. */}
+          <PageModeToggles />
+          <span className="h-6 w-px shrink-0 self-center bg-border" aria-hidden="true" />
           <CommentsToggle
             pageId={page.id}
             canComment={hasMinRole(ctx.role, 'editor')}

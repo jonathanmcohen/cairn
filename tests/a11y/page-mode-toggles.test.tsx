@@ -19,8 +19,8 @@ afterEach(() => {
 describe('a11y: page-mode toggles (JSDOM smoke)', () => {
   it('both toggles expose role=button, aria-label, and aria-pressed', () => {
     render(
-      <PageModeShell toggles={<PageModeToggles />}>
-        <div />
+      <PageModeShell>
+        <PageModeToggles />
       </PageModeShell>,
     );
     const focus = screen.getByRole('button', { name: /focus mode/i });
@@ -37,8 +37,8 @@ describe('a11y: page-mode toggles (JSDOM smoke)', () => {
 
   it('both toggles carry the 44x44 touch-target Tailwind utility classes', () => {
     render(
-      <PageModeShell toggles={<PageModeToggles />}>
-        <div />
+      <PageModeShell>
+        <PageModeToggles />
       </PageModeShell>,
     );
     const focus = screen.getByRole('button', { name: /focus mode/i });

@@ -84,7 +84,6 @@ function writePrefs(next: PageMode): void {
 }
 
 type Props = {
-  toggles: ReactNode;
   children: ReactNode;
 };
 
@@ -100,8 +99,15 @@ type Props = {
  * localStorage on the first effect tick (a brief flicker is acceptable — the
  * default off→off case is a no-op, and on→off / off→on only affects users who
  * previously toggled).
+ *
+ * a8 #17: the Focus/Reader toggle buttons (`<PageModeToggles>`) no longer
+ * render in a dedicated bar here — they are placed directly into the title-row
+ * action cluster in `page.tsx` so there is a single coherent control group.
+ * The shell still owns the toggle STATE (context + `cairn-focus-mode` root
+ * class); `<PageModeToggles>` reads it via `usePageMode()` from anywhere under
+ * this provider.
  */
-export function PageModeShell({ toggles, children }: Props) {
+export function PageModeShell({ children }: Props) {
   const [mode, setMode] = useState<PageMode>(DEFAULTS);
 
   // Hydrate from localStorage on mount. Effect-scoped so SSR + the initial
@@ -147,7 +153,6 @@ export function PageModeShell({ toggles, children }: Props) {
   return (
     <Ctx.Provider value={value}>
       <div data-page-mode-shell="" data-focus={mode.focus} data-reader={mode.reader}>
-        <div className="mb-2 flex justify-end gap-1">{toggles}</div>
         {children}
       </div>
     </Ctx.Provider>
