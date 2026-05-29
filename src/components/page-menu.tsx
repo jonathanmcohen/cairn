@@ -17,7 +17,6 @@ import { useEffect, useRef, useState } from 'react';
 import { PageActivityFeed } from '@/components/pages/activity-feed';
 import { SaveAsTemplateDialog } from '@/components/pages/save-as-template-dialog';
 import { ShareDialog } from '@/components/pages/share-dialog';
-import { SharePanel } from '@/components/pages/share-panel';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
 import {
@@ -57,7 +56,6 @@ export function PageMenu({
   const shareAllowed = useActionAllowed('share');
   const [published, setPublished] = useState(initialPublished);
   const [slug, setSlug] = useState<string | null>(initialSlug);
-  const [copied, setCopied] = useState(false);
   const [savedAsTemplate, setSavedAsTemplate] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const [saveTplOpen, setSaveTplOpen] = useState(false);
@@ -123,15 +121,6 @@ export function PageMenu({
     const res = await fetch(`/api/pages/${pageId}/unpublish`, { method: 'POST' });
     if (!res.ok) return;
     setPublished(false);
-  }
-
-  function copyUrl() {
-    if (!slug) return;
-    const url = `${window.location.origin}/p/${slug}`;
-    void navigator.clipboard.writeText(url).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    });
   }
 
   function copyInternalLink() {
@@ -205,24 +194,19 @@ export function PageMenu({
                 <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
                 {t('pageMenu.unpublish')}
               </button>
-              <div className="px-3 py-1.5">
-                <div className="text-muted-foreground mb-1 truncate text-xs">/p/{slug}</div>
-                <button
-                  type="button"
-                  className="flex min-h-11 items-center gap-2 text-xs underline hover:no-underline"
-                  onClick={copyUrl}
-                >
-                  <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
-                  {copied ? t('pageMenu.copied') : t('pageMenu.copyPublicLink')}
-                </button>
-              </div>
-              <div className="my-1 border-t" />
-              <SharePanel
-                pageId={pageId}
-                initialAllowDuplication={initialAllowDuplication}
-                initialHasPassword={initialHasPassword}
-                initialExpiresAt={initialExpiresAt}
-              />
+              <button
+                type="button"
+                className={ITEM_CLASS}
+                disabled={!shareAllowed}
+                title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
+                onClick={() => {
+                  setShareOpen(true);
+                  setOpen(false);
+                }}
+              >
+                <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                {t('share.manage')}
+              </button>
             </>
           )}
           <div className="my-1 border-t" />
