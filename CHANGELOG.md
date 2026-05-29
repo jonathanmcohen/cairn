@@ -20,6 +20,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 - Friendly empty states for `/my-tasks` (#26) and `/notifications` (#31); discoverable **Save as template** guidance on the templates gallery (#37).
 
 ### Fixed
+- **Emoji picker now loads.** `emoji-picker-element` defaulted to fetching its dataset from the jsdelivr CDN, which Cairn's strict CSP (`connect-src 'self'`) blocks. The dataset is now self-hosted (`public/emoji-data.json`, copied from `emoji-picker-element-data` at dev/build, like `public/sw.js`) and the picker points at it same-origin — no external CDN, no CSP change (#49).
 - Sidebar page rows no longer leak the raw `emoji::` shortcode and no longer overlap icon/title (#10, #11).
 - Profile now shows **email + display name** (read from the users table), and the intro copy matches (#32).
 - **Built-in templates** now appear in the gallery — listing surfaced built-ins on the `builtIn` flag rather than only the `public` visibility tier (#36).

@@ -155,6 +155,9 @@ importers:
       emoji-picker-element:
         specifier: ^1.21.0
         version: 1.29.1
+      emoji-picker-element-data:
+        specifier: ^1.8.0
+        version: 1.8.0
       googleapis:
         specifier: ^172.0.0
         version: 172.0.0
@@ -4672,6 +4675,9 @@ packages:
 
   electron-to-chromium@1.5.361:
     resolution: {integrity: sha512-Q6Hts7N9FnJc5LeGRINFvLhCI9xZmNtTDe5ZbcVezQz7cU4a8Aua3GH1b8J2XY8Al9PF+OCwYqhgsOOheMdvkA==}
+
+  emoji-picker-element-data@1.8.0:
+    resolution: {integrity: sha512-VfRuRJNEDLS1JKlNS4olaqhjX5S1nnZ+ZHG73b/dV8QeZyi0yPruTPEE72EmF6XO3k/9hj3lybMIYMOYXb/57A==}
 
   emoji-picker-element@1.29.1:
     resolution: {integrity: sha512-TOiHzu9Dqib3x4MwcAi3wi3RdyT4SoeB4b15AvH1ks4SBwTl7DeebhZ0d3x6dNi4XfNU7IGRZ7NBQllj0RqwrQ==}
@@ -11638,6 +11644,8 @@ snapshots:
   ee-first@1.1.1: {}
 
   electron-to-chromium@1.5.361: {}
+
+  emoji-picker-element-data@1.8.0: {}
 
   emoji-picker-element@1.29.1: {}
 
