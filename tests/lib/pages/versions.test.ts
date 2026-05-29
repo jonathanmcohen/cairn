@@ -95,6 +95,26 @@ describe('snapshotIfChanged', () => {
   it('exposes a 60s debounce window', () => {
     expect(SNAPSHOT_DEBOUNCE_MS).toBe(60_000);
   });
+
+  it('force:true bypasses the debounce but still dedupes identical content', async () => {
+    await snapshotIfChanged(db, { pageId, content: doc('a'), authorId });
+    // Within the debounce window but content CHANGED → force inserts.
+    const forced = await snapshotIfChanged(
+      db,
+      { pageId, content: doc('b'), authorId },
+      { force: true },
+    );
+    expect(forced).not.toBeNull();
+    expect(await listVersions(db, pageId)).toHaveLength(2);
+    // Same content as the latest → dedupe still blocks even when forced.
+    const dup = await snapshotIfChanged(
+      db,
+      { pageId, content: doc('b'), authorId },
+      { force: true },
+    );
+    expect(dup).toBeNull();
+    expect(await listVersions(db, pageId)).toHaveLength(2);
+  });
 });
 
 describe('restoreVersion', () => {

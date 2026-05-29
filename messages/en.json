@@ -68,5 +68,14 @@
   "pageActions.comments.submitting": "Adding…",
   "pageActions.comments.empty.title": "No comments yet",
   "pageActions.comments.empty.body": "Start a discussion — comments are visible to everyone with access to this page.",
-  "pageActions.comments.close": "Close comments"
+  "pageActions.comments.close": "Close comments",
+  "pageActions.versions.title": "Version history",
+  "pageActions.versions.close": "Close version history",
+  "pageActions.versions.autosaveHint": "Versions are saved automatically as you edit (about once a minute). Save a snapshot now to capture the current state.",
+  "pageActions.versions.saveNow": "Save snapshot now",
+  "pageActions.versions.saving": "Saving…",
+  "pageActions.versions.saved": "Snapshot saved",
+  "pageActions.versions.saveFailed": "Failed to save snapshot",
+  "pageActions.versions.empty.title": "No saved versions yet",
+  "pageActions.versions.empty.body": "Edits are snapshotted automatically. Once you start editing, versions will appear here."
 }

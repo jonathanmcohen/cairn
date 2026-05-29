@@ -1,11 +1,12 @@
 'use client';
 
-import { History, RotateCcw, X } from 'lucide-react';
+import { Camera, History, RotateCcw, X } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/provider';
 import type { VersionListItem } from '@/lib/pages/versions';
 
 type VersionHistoryProps = {
@@ -73,12 +74,14 @@ function relativeTime(date: Date): string {
 }
 
 export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [versions, setVersions] = useState<VersionListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [slotA, setSlotA] = useState<string | null>(null);
   const [slotB, setSlotB] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+  const [saving, setSaving] = useState(false);
 
   const refetch = useCallback(async () => {
     const res = await fetch(`/api/pages/${pageId}/versions`);
@@ -111,6 +114,21 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
     });
   }
 
+  // The component does NOT hold the live editor content — the route reads it
+  // server-side from the persisted page row (the editor autosaves on change),
+  // so a manual snapshot captures the persisted state and needs no payload.
+  async function saveSnapshotNow() {
+    setSaving(true);
+    const res = await fetch(`/api/pages/${pageId}/versions/snapshot`, { method: 'POST' });
+    setSaving(false);
+    if (!res.ok) {
+      toast.error(t('pageActions.versions.saveFailed'));
+      return;
+    }
+    toast.success(t('pageActions.versions.saved'));
+    await refetch();
+  }
+
   const a = versions.find((v) => v.id === slotA) ?? null;
   const b = versions.find((v) => v.id === slotB) ?? null;
   const diff =
@@ -136,12 +154,12 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
         <div className="fixed inset-y-0 right-0 z-30 shadow-lg">
           <aside className="bg-background flex h-full w-96 flex-col border-l">
             <div className="flex items-center justify-between border-b p-3">
-              <h2 className="text-sm font-medium">Version history</h2>
+              <h2 className="text-sm font-medium">{t('pageActions.versions.title')}</h2>
               <Button
                 variant="ghost"
                 size="icon"
                 className="h-7 w-7"
-                aria-label="Close version history"
+                aria-label={t('pageActions.versions.close')}
                 onClick={() => setOpen(false)}
               >
                 <X aria-hidden="true" className="h-4 w-4" />
@@ -149,9 +167,33 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
             </div>
 
             <div className="flex-1 space-y-2 overflow-y-auto p-3">
+              {canEdit && (
+                <div className="mb-3 rounded-md border bg-muted/30 p-3">
+                  <p className="text-muted-foreground text-xs">
+                    {t('pageActions.versions.autosaveHint')}
+                  </p>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    className="mt-2 min-h-9"
+                    disabled={saving}
+                    onClick={() => void saveSnapshotNow()}
+                  >
+                    <Camera aria-hidden="true" className="mr-1 h-3.5 w-3.5" />
+                    {saving ? t('pageActions.versions.saving') : t('pageActions.versions.saveNow')}
+                  </Button>
+                </div>
+              )}
               {error && <p className="text-destructive text-xs">{error}</p>}
               {versions.length === 0 && !error && (
-                <p className="text-muted-foreground text-xs">No saved versions yet.</p>
+                <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+                  <History aria-hidden="true" className="h-8 w-8 text-muted-foreground/60" />
+                  <p className="text-sm font-medium">{t('pageActions.versions.empty.title')}</p>
+                  <p className="text-muted-foreground text-xs">
+                    {t('pageActions.versions.empty.body')}
+                  </p>
+                </div>
               )}
               <ul className="space-y-2">
                 {versions.map((v) => {

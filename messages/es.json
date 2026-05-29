@@ -68,5 +68,14 @@
   "pageActions.comments.submitting": "Añadiendo…",
   "pageActions.comments.empty.title": "Aún no hay comentarios",
   "pageActions.comments.empty.body": "Inicia una conversación: los comentarios son visibles para todos los que tengan acceso a esta página.",
-  "pageActions.comments.close": "Cerrar comentarios"
+  "pageActions.comments.close": "Cerrar comentarios",
+  "pageActions.versions.title": "Historial de versiones",
+  "pageActions.versions.close": "Cerrar historial de versiones",
+  "pageActions.versions.autosaveHint": "Las versiones se guardan automáticamente mientras editas (aproximadamente una vez por minuto). Guarda una instantánea ahora para capturar el estado actual.",
+  "pageActions.versions.saveNow": "Guardar instantánea ahora",
+  "pageActions.versions.saving": "Guardando…",
+  "pageActions.versions.saved": "Instantánea guardada",
+  "pageActions.versions.saveFailed": "No se pudo guardar la instantánea",
+  "pageActions.versions.empty.title": "Aún no hay versiones guardadas",
+  "pageActions.versions.empty.body": "Las ediciones se guardan como instantáneas automáticamente. Cuando empieces a editar, las versiones aparecerán aquí."
 }

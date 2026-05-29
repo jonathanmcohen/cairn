@@ -68,5 +68,14 @@
   "pageActions.comments.submitting": "جارٍ الإضافة…",
   "pageActions.comments.empty.title": "لا توجد تعليقات بعد",
   "pageActions.comments.empty.body": "ابدأ نقاشًا — التعليقات مرئية لكل من لديه حق الوصول إلى هذه الصفحة.",
-  "pageActions.comments.close": "إغلاق التعليقات"
+  "pageActions.comments.close": "إغلاق التعليقات",
+  "pageActions.versions.title": "سجل الإصدارات",
+  "pageActions.versions.close": "إغلاق سجل الإصدارات",
+  "pageActions.versions.autosaveHint": "تُحفظ الإصدارات تلقائيًا أثناء التحرير (مرة كل دقيقة تقريبًا). احفظ لقطة الآن لالتقاط الحالة الراهنة.",
+  "pageActions.versions.saveNow": "حفظ لقطة الآن",
+  "pageActions.versions.saving": "جارٍ الحفظ…",
+  "pageActions.versions.saved": "تم حفظ اللقطة",
+  "pageActions.versions.saveFailed": "تعذّر حفظ اللقطة",
+  "pageActions.versions.empty.title": "لا توجد إصدارات محفوظة بعد",
+  "pageActions.versions.empty.body": "تُحفظ التعديلات كلقطات تلقائيًا. بمجرد أن تبدأ التحرير، ستظهر الإصدارات هنا."
 }

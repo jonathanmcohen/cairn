@@ -43,6 +43,7 @@ function canonicalJson(value: unknown): string {
 export async function snapshotIfChanged(
   db: PostgresJsDatabase<typeof schema>,
   input: SnapshotInput,
+  opts: { force?: boolean } = {},
 ): Promise<schema.PageVersion | null> {
   return db.transaction(async (tx) => {
     const [latest] = await tx
@@ -54,7 +55,11 @@ export async function snapshotIfChanged(
 
     if (latest) {
       const age = Date.now() - latest.createdAt.getTime();
-      if (age < SNAPSHOT_DEBOUNCE_MS) return null; // too soon
+      // A deliberate user action ("Save snapshot now") forces past the
+      // time-debounce; the content-dedupe still applies so we never write a
+      // duplicate version. The PATCH caller passes no opts, so its behavior is
+      // unchanged (debounce + dedupe).
+      if (!opts.force && age < SNAPSHOT_DEBOUNCE_MS) return null; // too soon
       if (canonicalJson(latest.content) === canonicalJson(input.content)) return null; // unchanged
     }
 
