@@ -134,6 +134,15 @@
    accent hex. Other UI surfaces inherit via the existing token chain. */
 html[data-accent="default"] {
   --cairn-accent: #0f172a;
+  /* Bind the shadcn primary/ring tokens like every named accent does, so a
+     `variant="default"` button is a saturated dark-slate pill (not the base
+     theme's --primary, which is near-white 0 0% 98% under `.dark`). Fixes #34:
+     the "Create key" button rendered as a light-grey pill in dark mode because
+     the default accent never remapped --primary. #0f172a → HSL 222 47% 11%;
+     near-white foreground gives ~14:1 contrast (WCAG AA). */
+  --primary: 222 47% 11%;
+  --primary-foreground: 0 0% 98%;
+  --ring: 222 47% 11%;
 }
 html[data-accent="blue"] {
   --cairn-accent: #2563eb;
