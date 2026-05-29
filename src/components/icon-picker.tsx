@@ -56,12 +56,18 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     void import('emoji-picker-element').then(() => {
       if (cancelled || !containerRef.current) return;
       type PickerEl = HTMLElement & {
+        dataSource?: string;
         addEventListener: (
           event: 'emoji-click',
           handler: (e: CustomEvent<{ unicode: string }>) => void,
         ) => void;
       };
       const picker = document.createElement('emoji-picker') as PickerEl;
+      // Self-hosted dataset (public/emoji-data.json, copied from
+      // emoji-picker-element-data at dev/build). Without this the component
+      // fetches from the jsdelivr CDN, which Cairn's strict CSP
+      // (`connect-src 'self'`) blocks — so the picker would never populate.
+      picker.dataSource = '/emoji-data.json';
       picker.addEventListener('emoji-click', (e) => {
         const next = formatIcon({ kind: 'emoji', value: e.detail.unicode });
         const dedup = [e.detail.unicode, ...recent.filter((r) => r !== e.detail.unicode)];

@@ -1,12 +1,20 @@
 'use client';
 
-import { Check } from 'lucide-react';
+import { BellOff, Check } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useId, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateField } from '@/components/ui/date-field';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 type SerializedNotification = {
   id: string;
@@ -152,18 +160,21 @@ export function NotificationsPageList({
           <label htmlFor={statusId} className="block text-xs">
             Status
           </label>
-          <select
-            id={statusId}
+          <Select
             value={filter.status ?? 'all'}
-            onChange={(e) =>
-              applyFilter({ ...filter, status: e.target.value as FilterState['status'] })
+            onValueChange={(next) =>
+              applyFilter({ ...filter, status: next as FilterState['status'] })
             }
-            className="min-h-11 rounded border bg-background px-3 py-2 text-sm"
           >
-            <option value="all">All</option>
-            <option value="unread">Unread</option>
-            <option value="read">Read</option>
-          </select>
+            <SelectTrigger id={statusId} aria-label="Status" className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="unread">Unread</SelectItem>
+              <SelectItem value="read">Read</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
@@ -172,11 +183,9 @@ export function NotificationsPageList({
             {ALL_TYPES.map((t) => {
               const selected = filter.type?.includes(t) ?? false;
               return (
-                <Button
+                <button
                   key={t}
                   type="button"
-                  variant={selected ? 'default' : 'outline'}
-                  size="sm"
                   aria-pressed={selected}
                   onClick={() => {
                     const next = new Set(filter.type ?? []);
@@ -187,79 +196,76 @@ export function NotificationsPageList({
                       type: next.size === 0 ? undefined : Array.from(next),
                     });
                   }}
+                  className={cn(
+                    'rounded-full border px-3 py-1 text-sm transition-colors',
+                    selected
+                      ? 'border-transparent bg-primary text-primary-foreground'
+                      : 'border-input bg-background text-muted-foreground hover:bg-accent',
+                  )}
                 >
                   {t === 'mention' ? 'Mentions' : 'Replies'}
-                </Button>
+                </button>
               );
             })}
           </div>
         </div>
 
-        <div>
-          <label htmlFor={fromId} className="block text-xs">
-            From
-          </label>
-          <Input
-            id={fromId}
-            type="date"
-            value={filter.dateFrom?.slice(0, 10) ?? ''}
-            onChange={(e) =>
-              applyFilter({
-                ...filter,
-                dateFrom: e.target.value
-                  ? new Date(`${e.target.value}T00:00:00Z`).toISOString()
-                  : undefined,
-              })
-            }
-          />
-        </div>
+        <DateField
+          id={fromId}
+          label="From"
+          value={filter.dateFrom?.slice(0, 10) ?? ''}
+          onChange={(next) =>
+            applyFilter({
+              ...filter,
+              dateFrom: next ? new Date(`${next}T00:00:00Z`).toISOString() : undefined,
+            })
+          }
+        />
 
-        <div>
-          <label htmlFor={toId} className="block text-xs">
-            To
-          </label>
-          <Input
-            id={toId}
-            type="date"
-            value={filter.dateTo?.slice(0, 10) ?? ''}
-            onChange={(e) =>
-              applyFilter({
-                ...filter,
-                dateTo: e.target.value
-                  ? new Date(`${e.target.value}T00:00:00Z`).toISOString()
-                  : undefined,
-              })
-            }
-          />
-        </div>
+        <DateField
+          id={toId}
+          label="To"
+          value={filter.dateTo?.slice(0, 10) ?? ''}
+          onChange={(next) =>
+            applyFilter({
+              ...filter,
+              dateTo: next ? new Date(`${next}T00:00:00Z`).toISOString() : undefined,
+            })
+          }
+        />
       </fieldset>
 
-      <ul className="divide-y rounded border">
-        {items.map((n) => (
-          <li key={n.id} className="flex items-start gap-2 p-3 hover:bg-accent">
-            <Link href={hrefFor(n)} className="flex-1 truncate">
-              <span className="block truncate">{describe(n.type)}</span>
-              <span className="text-muted-foreground text-xs">{relativeTime(n.createdAt)}</span>
-            </Link>
-            {n.readAt == null && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Mark as read"
-                onClick={() => void onMarkRead(n.id)}
-                className="h-11 w-11"
-              >
-                <Check aria-hidden="true" className="h-4 w-4" />
-              </Button>
-            )}
-          </li>
-        ))}
-        {items.length === 0 && (
-          <li className="p-8 text-center text-muted-foreground text-sm">
-            No notifications match the current filter.
-          </li>
-        )}
-      </ul>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded border py-12 text-center">
+          <BellOff className="h-8 w-8 text-muted-foreground" aria-hidden />
+          <p className="font-medium text-sm">You&rsquo;re all caught up</p>
+          <p className="max-w-xs text-muted-foreground text-sm">
+            New mentions and replies will appear here.
+          </p>
+        </div>
+      ) : (
+        <ul className="divide-y rounded border">
+          {items.map((n) => (
+            <li key={n.id} className="flex items-start gap-2 p-3 hover:bg-accent">
+              <Link href={hrefFor(n)} className="flex-1 truncate">
+                <span className="block truncate">{describe(n.type)}</span>
+                <span className="text-muted-foreground text-xs">{relativeTime(n.createdAt)}</span>
+              </Link>
+              {n.readAt == null && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Mark as read"
+                  onClick={() => void onMarkRead(n.id)}
+                  className="h-11 w-11"
+                >
+                  <Check aria-hidden="true" className="h-4 w-4" />
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {cursor && (
         <div className="mt-4 flex justify-center">

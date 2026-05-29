@@ -13,9 +13,16 @@ export function PageDetailShell({ children }: { children: ReactNode }) {
   const router = useRouter();
   const rootRef = useRef<HTMLDivElement>(null);
   useSwipeBack(rootRef, { onBack: () => router.back() });
+  // a9 #18 — the reading column is intentionally centered (`mx-auto max-w-3xl`)
+  // with responsive horizontal padding so it reads as a deliberate text column,
+  // and the page region fills the viewport height (`min-h-dvh bg-background`) so
+  // the area beside/below the column is part of the page surface, not a bare
+  // void.
   return (
-    <div ref={rootRef} className="mx-auto w-full max-w-3xl px-1 sm:px-0">
-      {children}
+    <div className="min-h-dvh bg-background">
+      <div ref={rootRef} className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
+        {children}
+      </div>
     </div>
   );
 }

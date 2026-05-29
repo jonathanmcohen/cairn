@@ -5,6 +5,37 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.3] - Unreleased
+
+> UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No migrations, no new env vars; one templates listing fix. Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-*.md`.
+
+### Added
+- Themed `Select` + `DateField` UI primitives (`src/components/ui/`), built on the unified `radix-ui` package (#38).
+- **Code block language selector** with lowlight syntax highlighting — pick a language from a styled dropdown, or "Auto" to let lowlight auto-detect untagged code (#47).
+- **Semantic callout types** — note / tip / warning / error / info, each with an icon + accent color, switchable via an in-block type picker; legacy `color` callouts map forward automatically (#48).
+- **Settings** navigation entry in the sidebar lower nav (#45) — `/settings` was previously only reachable by typing the URL.
+- Visible **search affordance with a ⌘K hint** in the sidebar (#43).
+- Themed app-root **404 page** with a home link (#23); `/tasks` now redirects to `/my-tasks` (#22).
+- Copy-to-clipboard for the profile **User ID** (#33); **MCP connection info** + scopes panel on developer settings (#35).
+- Friendly empty states for `/my-tasks` (#26) and `/notifications` (#31); discoverable **Save as template** guidance on the templates gallery (#37).
+
+### Fixed
+- **Emoji picker now loads.** `emoji-picker-element` defaulted to fetching its dataset from the jsdelivr CDN, which Cairn's strict CSP (`connect-src 'self'`) blocks. The dataset is now self-hosted (`public/emoji-data.json`, copied from `emoji-picker-element-data` at dev/build, like `public/sw.js`) and the picker points at it same-origin — no external CDN, no CSP change (#49).
+- Sidebar page rows no longer leak the raw `emoji::` shortcode and no longer overlap icon/title (#10, #11).
+- Profile now shows **email + display name** (read from the users table), and the intro copy matches (#32).
+- **Built-in templates** now appear in the gallery — listing surfaced built-ins on the `builtIn` flag rather than only the `public` visibility tier (#36).
+- Empty **database blocks** render a header row instead of a bare "+ New row" (#19); headings inside **callouts** are scaled down to keep hierarchy (#20).
+- Single **"Add cover"** affordance (was duplicated) (#16); page **mode toggles** consolidated into the title action bar (was a separate floating box) (#17).
+- Themed, dark-mode-safe **locale switcher** (#21), **/notifications status + date filters** (#28, #29), and **/my-tasks due-by** date control (#27) — replacing native `<select>`/`<input type=date>`.
+
+### Changed
+- Rebalanced sidebar lower-nav hierarchy + separated Sign out; relocated the theme toggle to the account group (#14, #44, #13).
+- Linked the sidebar version footer to the matching GitHub release (#15); clearer workspace-switcher affordance + larger hit target (#12, #41); visible sidebar boundary border (full drag-resize deferred) (#42).
+- Title-Case `/my-tasks` filter tabs with a clear active state (#24, #25); toggle semantics + active state for `/notifications` Mentions/Replies pills (#30); separators + active states on the editor top control strip (#39); intentional centered editor content column (#18).
+- Verified the notification bell drawer renders and links to `/notifications` (#40).
+
+> Remaining native form controls outside audit scope (databases, admin, connectors, automation) tracked for a follow-up pass under #38.
+
 ## [0.9.2] - 2026-05-28
 
 > Hotfix for the `cairn-collab` sidecar image, which crash-looped on startup in v0.9.1. The app image (`cairn`), database schema, and env vars are unchanged — only the collab container is affected. Upgraders pull the new `cairn-collab:0.9.2` image (compose does this on redeploy); no migrations.

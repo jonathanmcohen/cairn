@@ -1,11 +1,12 @@
 'use client';
 
+import { CheckSquare } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateField } from '@/components/ui/date-field';
 
 export type TasksTableRow = {
   pageId: string;
@@ -63,24 +64,32 @@ export function TasksTable(props: {
         {STATUSES.map((s) => (
           <Button
             key={s}
-            variant={props.initialStatus === s ? 'default' : 'outline'}
+            type="button"
+            variant={props.initialStatus === s ? 'default' : 'ghost'}
             size="sm"
+            aria-pressed={props.initialStatus === s}
             onClick={() => setQuery({ status: s })}
           >
-            {s}
+            {{ open: 'Open', done: 'Done', all: 'All' }[s]}
           </Button>
         ))}
-        <Input
-          type="date"
+        <DateField
+          label="Due by"
+          hideLabel
           className="ml-auto w-40"
           value={props.initialDue ?? ''}
-          aria-label="Due by"
-          onChange={(e) => setQuery({ due: e.target.value || null })}
+          onChange={(next) => setQuery({ due: next || null })}
         />
       </fieldset>
       <ul className="divide-y rounded border">
         {tasks.length === 0 && (
-          <li className="p-4 text-center text-muted-foreground text-sm">No tasks.</li>
+          <li className="flex flex-col items-center gap-2 py-10 text-center">
+            <CheckSquare className="h-8 w-8 text-muted-foreground" aria-hidden />
+            <p className="text-sm font-medium">No tasks yet</p>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Tasks you add inside pages show up here. Open a page and add a to-do to get started.
+            </p>
+          </li>
         )}
         {tasks.map((t) => (
           <li key={`${t.pageId}-${t.blockId}`} className="flex items-center gap-3 p-3">

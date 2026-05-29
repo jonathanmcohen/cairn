@@ -6,7 +6,20 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { EmptyPageTree } from '@/components/empty-state/variants';
+import { parseIcon } from '@/lib/pages/icon-format';
 import type { FlatPageNode } from '@/lib/pages/tree';
+
+/**
+ * Render a page row's stored icon string. Always routes through `parseIcon` so
+ * the `emoji::`/`file::` shortcode prefix never leaks into the DOM. File icons
+ * resolve to images server-side elsewhere; here we show a neutral placeholder.
+ */
+function renderNodeIcon(stored: string | null): React.ReactNode {
+  const parsed = parseIcon(stored);
+  if (!parsed) return '📄';
+  if (parsed.kind === 'emoji') return parsed.value;
+  return <span aria-hidden="true">🖼️</span>;
+}
 
 const ROW_HEIGHT_PX = 32; // Matches the existing sidebar row.
 const DEPTH_INDENT_PX = 16; // 16px per level; matches the v0.7 visual.
@@ -202,8 +215,10 @@ export function VirtualizedPageTree({
                 className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent"
                 style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
               >
-                <span className="w-4 shrink-0 text-center">{node.icon ?? '📄'}</span>
-                <span className="truncate">{node.title}</span>
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
+                  {renderNodeIcon(node.icon)}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{node.title}</span>
               </Link>
             </li>
           );

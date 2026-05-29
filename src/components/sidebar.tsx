@@ -12,7 +12,7 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
     <aside
       data-cairn-workspace-sidebar=""
       aria-label="Workspace sidebar"
-      className="hidden h-screen w-64 shrink-0 flex-col border-r bg-card text-card-foreground md:flex"
+      className="hidden h-screen w-64 shrink-0 flex-col border-r border-border bg-card text-card-foreground md:flex"
     >
       <SidebarContent workspaceId={workspaceId} workspaces={workspaces} />
     </aside>

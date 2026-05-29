@@ -60,6 +60,15 @@ const STATUS_LABEL = {
   error: 'Offline',
 } as const;
 
+// a30 #39 — status-pill dot color per collab connection state. Tailwind class
+// strings (not dynamic) so the JIT compiler keeps them.
+const STATUS_DOT = {
+  connecting: 'bg-amber-500',
+  connected: 'bg-emerald-500',
+  disconnected: 'bg-amber-500',
+  error: 'bg-destructive',
+} as const;
+
 export function Editor({
   pageId,
   workspaceId,
@@ -463,27 +472,46 @@ export function Editor({
 
   return (
     <div className="relative">
+      {/* a30 #39 — top control strip: thin separators divide the logical
+          groups (suggest-edits / presence+status / outline) and toggles carry
+          explicit active states so the bar reads as distinct controls rather
+          than a row of bare labels. Presentation only — handlers/state are
+          unchanged. */}
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {effectiveEditable && (
-          <SuggestionToolbar
-            editor={editor}
-            active={suggestionMode}
-            onToggle={() => void toggleSuggestion()}
-            openCount={openCount}
-            onMarkInsert={() => markSelection('insert')}
-            onMarkDelete={() => markSelection('delete')}
-            resolvable={resolvable}
-            onAccept={(id) => void resolve('accept', id)}
-            onReject={(id) => void resolve('reject', id)}
-          />
+          <>
+            <SuggestionToolbar
+              editor={editor}
+              active={suggestionMode}
+              onToggle={() => void toggleSuggestion()}
+              openCount={openCount}
+              onMarkInsert={() => markSelection('insert')}
+              onMarkDelete={() => markSelection('delete')}
+              resolvable={resolvable}
+              onAccept={(id) => void resolve('accept', id)}
+              onReject={(id) => void resolve('reject', id)}
+            />
+            <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+          </>
         )}
         <PresenceAvatars users={presentUsers} />
-        <span className="text-muted-foreground text-xs">{STATUS_LABEL[status]}</span>
+        <span
+          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-foreground text-xs"
+          title={STATUS_LABEL[status]}
+        >
+          <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
+          {STATUS_LABEL[status]}
+        </span>
+        <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
         <button
           type="button"
           onClick={() => setOutlineOpen((v) => !v)}
           aria-pressed={outlineOpen}
-          className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+          className={
+            outlineOpen
+              ? 'rounded bg-primary px-2 py-1 text-primary-foreground text-xs'
+              : 'rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent'
+          }
         >
           Outline
         </button>

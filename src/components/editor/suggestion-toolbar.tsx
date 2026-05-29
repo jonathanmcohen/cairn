@@ -75,7 +75,13 @@ export function SuggestionToolbar({
           </button>
         </>
       )}
-      {openCount > 0 && <span className="text-muted-foreground text-xs">{openCount} open</span>}
+      {openCount > 0 && (
+        // a30 #39 — render the open-suggestion count as a muted chip so it
+        // reads as a distinct status, not a bare label crowding the toggles.
+        <span className="inline-flex items-center rounded-full bg-muted px-2 py-0.5 font-medium text-muted-foreground text-xs">
+          {openCount} open
+        </span>
+      )}
     </div>
   );
 }

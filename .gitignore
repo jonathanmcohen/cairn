@@ -46,5 +46,8 @@ drizzle/.snapshot
 public/sw.js
 public/sw.js.map
 
+# Emoji dataset (copied from emoji-picker-element-data by `pnpm copy:emoji`)
+public/emoji-data.json
+
 # i18n audit per-run report (baseline IS committed; report is regenerated each run)
 i18n-audit.report.json

@@ -8,7 +8,6 @@ import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import { ApprovalPanel } from '@/components/pages/approval-panel';
 import { CoverBanner } from '@/components/pages/cover-banner';
-import { CoverPicker } from '@/components/pages/cover-picker';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
 import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockBanner } from '@/components/pages/lock-banner';
@@ -54,7 +53,6 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   // a client-side flicker.
   const cookieStore = await cookies();
   const showTocSidebar = cookieStore.get('cairn-toc-sidebar')?.value === '1';
-  const unsplashKey = env().NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY;
   // v0.9.0 G1 P6 — E2E "Encrypt page" affordance gates on the public mirror
   // of CAIRN_ENABLE_E2E_ENCRYPTION. Already-encrypted pages don't render
   // the action (re-encrypt is a separate flow not in this plan).
@@ -63,19 +61,23 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   return (
     <PageDetailShell>
-      <PageModeShell toggles={<PageModeToggles />}>
+      <PageModeShell>
         <CoverBanner cover={cover} alt={page.title} />
-        {canEdit && (
-          <div className="mb-2 flex justify-end">
-            <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
-          </div>
-        )}
+        {/* a7 #16 — the in-flow <CoverImage> button below is the single canonical
+            "Add cover" / "Change" affordance; it sits where the cover renders.
+            The previously floating <CoverPicker> mount was removed to avoid two
+            competing cover controls. */}
         <CoverImage pageId={page.id} initial={page.coverUrl} />
         <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
           <PageIconPicker pageId={page.id} initial={page.icon} />
           <div className="min-w-0 flex-1 basis-full sm:basis-auto">
             <PageTitleInput pageId={page.id} initial={page.title} />
           </div>
+          {/* a8 #17 — Focus/Reader mode toggles join the same action bar as the
+              page actions below, separated by a thin rule, so the header reads
+              as one coherent control group instead of two competing toolbars. */}
+          <PageModeToggles />
+          <span className="h-6 w-px shrink-0 self-center bg-border" aria-hidden="true" />
           <CommentsToggle
             pageId={page.id}
             canComment={hasMinRole(ctx.role, 'editor')}

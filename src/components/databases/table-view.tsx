@@ -296,7 +296,49 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
       ) : (
         <>
           {rows.length === 0 ? (
-            <div className="px-3 py-4 text-center text-sm text-muted-foreground">No rows yet.</div>
+            // a10 #19 — render the column header row even with zero rows so an
+            // empty database still reads as a table (Notion-parity), then show
+            // the empty-state hint in the body. Without this the block
+            // collapsed to a bare "No rows yet." with no column context.
+            <div className="overflow-x-auto">
+              {/* biome-ignore lint/a11y/useSemanticElements: matches the div-based ARIA grid header used by <VirtualizedRowBody>; a <table> cannot host the windowed body, so the empty header mirrors that shape for consistency. */}
+              <div role="grid">
+                {/* biome-ignore lint/a11y/useFocusableInteractive: header row is a screen-reader landmark; columns carry no sort/resize handles yet, so tabIndex would only confuse focus order. */}
+                {/* biome-ignore lint/a11y/useSemanticElements: <tr> requires a parent <table>; this header mirrors the div-based ARIA grid in <VirtualizedRowBody> so the empty and populated states share one shape. */}
+                <div
+                  data-virtual-header
+                  className="flex bg-card text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                  role="row"
+                >
+                  {columns.map((c) => (
+                    // biome-ignore lint/a11y/useFocusableInteractive: columnheader is a landmark role, not user-interactive here.
+                    // biome-ignore lint/a11y/useSemanticElements: <th> is forbidden outside a <table>; this header lives in a div-based ARIA grid.
+                    <div
+                      key={c.id}
+                      role="columnheader"
+                      className="border-b px-3 py-2"
+                      style={{
+                        width: c.width,
+                        minWidth: c.width,
+                        ...(c.frozen && c.insetInlineStart !== null
+                          ? {
+                              position: 'sticky',
+                              insetInlineStart: `${c.insetInlineStart}px`,
+                              zIndex: 3,
+                              background: 'inherit',
+                            }
+                          : null),
+                      }}
+                    >
+                      {c.prop.name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                No rows yet — add one with + New row.
+              </div>
+            </div>
           ) : (
             <div className="h-[600px] min-h-0">{body}</div>
           )}

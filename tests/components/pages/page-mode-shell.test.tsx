@@ -19,9 +19,10 @@ afterEach(() => {
 });
 
 describe('<PageModeShell>', () => {
-  it('renders the toggles slot + children slot', () => {
+  it('renders children (the toggles now live inside the body, not a slot)', () => {
     render(
-      <PageModeShell toggles={<div data-testid="hdr" />}>
+      <PageModeShell>
+        <div data-testid="hdr" />
         <div data-testid="body" />
       </PageModeShell>,
     );
@@ -31,8 +32,8 @@ describe('<PageModeShell>', () => {
 
   it('clicking the focus toggle adds the cairn-focus-mode class on the root + persists to localStorage', () => {
     render(
-      <PageModeShell toggles={<PageModeToggles />}>
-        <div />
+      <PageModeShell>
+        <PageModeToggles />
       </PageModeShell>,
     );
     const focusBtn = screen.getByRole('button', { name: /focus mode/i });
@@ -48,7 +49,8 @@ describe('<PageModeShell>', () => {
 
   it('reader toggle flips data-reader on the shell root', () => {
     render(
-      <PageModeShell toggles={<PageModeToggles />}>
+      <PageModeShell>
+        <PageModeToggles />
         <span data-testid="mode" />
       </PageModeShell>,
     );
@@ -65,8 +67,8 @@ describe('<PageModeShell>', () => {
       JSON.stringify({ focus: true, reader: true }),
     );
     render(
-      <PageModeShell toggles={<PageModeToggles />}>
-        <div />
+      <PageModeShell>
+        <PageModeToggles />
       </PageModeShell>,
     );
     expect(document.documentElement.classList.contains('cairn-focus-mode')).toBe(true);
@@ -81,8 +83,8 @@ describe('<PageModeShell>', () => {
 
   it('removes the focus-mode class on unmount', () => {
     const { unmount } = render(
-      <PageModeShell toggles={<PageModeToggles />}>
-        <div />
+      <PageModeShell>
+        <PageModeToggles />
       </PageModeShell>,
     );
     fireEvent.click(screen.getByRole('button', { name: /focus mode/i }));

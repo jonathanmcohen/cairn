@@ -662,31 +662,31 @@
     },
     {
       "file": "app/(app)/my-tasks/tasks-table.tsx",
-      "line": 61,
-      "text": "Filter by status",
-      "kind": "jsx_attr"
-    },
-    {
-      "file": "app/(app)/my-tasks/tasks-table.tsx",
       "line": 62,
       "text": "Filter by status",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/my-tasks/tasks-table.tsx",
-      "line": 77,
-      "text": "Due by",
       "kind": "jsx_attr"
     },
     {
       "file": "app/(app)/my-tasks/tasks-table.tsx",
-      "line": 83,
-      "text": "No tasks.",
+      "line": 63,
+      "text": "Filter by status",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/my-tasks/tasks-table.tsx",
-      "line": 104,
+      "line": 88,
+      "text": "No tasks yet",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 90,
+      "text": "Tasks you add inside pages show up here. Open a page and add a to-do to get started.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/my-tasks/tasks-table.tsx",
+      "line": 113,
       "text": "due",
       "kind": "jsx_text"
     },
@@ -788,19 +788,31 @@
     },
     {
       "file": "app/(app)/settings/account/profile/page.tsx",
-      "line": 16,
+      "line": 29,
       "text": "Profile",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/account/profile/page.tsx",
-      "line": 18,
-      "text": "Your account profile. Email and display name come from your authentication provider.",
+      "line": 30,
+      "text": "Your account profile.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/account/profile/page.tsx",
-      "line": 22,
+      "line": 33,
+      "text": "Email",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/profile/page.tsx",
+      "line": 37,
+      "text": "Display name",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/account/profile/page.tsx",
+      "line": 41,
       "text": "User ID",
       "kind": "jsx_text"
     },
@@ -1124,38 +1136,80 @@
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 47,
+      "line": 70,
       "text": "API keys",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 49,
+      "line": 72,
       "text": "/api/v1",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 49,
+      "line": 72,
       "text": "HTTP API via",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 49,
+      "line": 72,
       "text": "Keys authenticate requests to the",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 50,
+      "line": 73,
       "text": ". A key acts with the role you assign and on\n        behalf of its creator. The full token is shown only once when created.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/developer/api-keys/page.tsx",
-      "line": 50,
+      "line": 73,
       "text": "Authorization: Bearer cairn_sk_…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 79,
+      "text": "MCP connection",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 81,
+      "text": "Connect an MCP client (Claude Desktop, Cursor, …) over the streamable-HTTP transport using\n          a personal access token as a",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 82,
+      "text": "Bearer",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 82,
+      "text": "credential. Mint tokens under",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 83,
+      "text": "Settings → Developer → Personal tokens",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 87,
+      "text": "Endpoint",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/developer/api-keys/page.tsx",
+      "line": 92,
+      "text": "Scopes",
       "kind": "jsx_text"
     },
     {
@@ -2164,6 +2218,24 @@
       "file": "app/invite/[token]/page.tsx",
       "line": 50,
       "text": "You&apos;ve been invited to the",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/not-found.tsx",
+      "line": 8,
+      "text": "This page wandered off",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/not-found.tsx",
+      "line": 10,
+      "text": "The page you’re looking for doesn’t exist or may have been moved.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/not-found.tsx",
+      "line": 13,
+      "text": "Back to home",
       "kind": "jsx_text"
     },
     {
@@ -3296,25 +3368,25 @@
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 299,
-      "text": "No rows yet.",
+      "line": 339,
+      "text": "No rows yet — add one with + New row.",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 331,
+      "line": 373,
       "text": "+ New row",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 335,
+      "line": 377,
       "text": "New row from template",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 345,
+      "line": 387,
       "text": "Templates…",
       "kind": "jsx_text"
     },
@@ -3649,6 +3721,12 @@
       "kind": "jsx_text"
     },
     {
+      "file": "components/editor/blocks/callout-view.tsx",
+      "line": 42,
+      "text": "Callout type",
+      "kind": "jsx_attr"
+    },
+    {
       "file": "components/editor/blocks/citation-add-dialog.tsx",
       "line": 115,
       "text": "Add citation",
@@ -3695,6 +3773,12 @@
       "line": 175,
       "text": "Insert",
       "kind": "jsx_text"
+    },
+    {
+      "file": "components/editor/blocks/code-block-view.tsx",
+      "line": 36,
+      "text": "Code language",
+      "kind": "jsx_attr"
     },
     {
       "file": "components/editor/blocks/drawio.tsx",
@@ -3884,7 +3968,7 @@
     },
     {
       "file": "components/editor/editor.tsx",
-      "line": 488,
+      "line": 516,
       "text": "Outline",
       "kind": "jsx_text"
     },
@@ -3938,13 +4022,13 @@
     },
     {
       "file": "components/editor/extensions/pdf-renderer.tsx",
-      "line": 157,
+      "line": 159,
       "text": "PDF annotation tools",
       "kind": "jsx_attr"
     },
     {
       "file": "components/editor/extensions/pdf-renderer.tsx",
-      "line": 175,
+      "line": 177,
       "text": "Loading PDF…",
       "kind": "jsx_text"
     },
@@ -4094,7 +4178,7 @@
     },
     {
       "file": "components/editor/suggestion-toolbar.tsx",
-      "line": 78,
+      "line": 82,
       "text": "open",
       "kind": "jsx_text"
     },
@@ -4142,43 +4226,43 @@
     },
     {
       "file": "components/icon-picker.tsx",
-      "line": 90,
+      "line": 96,
       "text": "Change icon",
       "kind": "jsx_attr"
     },
     {
       "file": "components/icon-picker.tsx",
-      "line": 104,
+      "line": 110,
       "text": "Emoji",
       "kind": "jsx_text"
     },
     {
       "file": "components/icon-picker.tsx",
-      "line": 112,
+      "line": 118,
       "text": "Upload",
       "kind": "jsx_text"
     },
     {
       "file": "components/icon-picker.tsx",
-      "line": 124,
+      "line": 130,
       "text": "Remove",
       "kind": "jsx_text"
     },
     {
       "file": "components/icon-picker.tsx",
-      "line": 133,
-      "text": "Search emoji",
-      "kind": "jsx_attr"
-    },
-    {
-      "file": "components/icon-picker.tsx",
-      "line": 135,
-      "text": "Search emoji",
-      "kind": "jsx_attr"
-    },
-    {
-      "file": "components/icon-picker.tsx",
       "line": 139,
+      "text": "Search emoji",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 141,
+      "text": "Search emoji",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/icon-picker.tsx",
+      "line": 145,
       "text": "Recently used",
       "kind": "jsx_text"
     },
@@ -4268,63 +4352,63 @@
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 149,
+      "line": 157,
       "text": "Filter",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 153,
+      "line": 161,
       "text": "Status",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 163,
+      "line": 169,
+      "text": "Status",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/notifications/page-list.tsx",
+      "line": 173,
       "text": "All",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 164,
+      "line": 174,
       "text": "Unread",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 165,
+      "line": 175,
       "text": "Read",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 170,
+      "line": 181,
       "text": "Type",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 200,
-      "text": "From",
+      "line": 241,
+      "text": "You&rsquo;re all caught up",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 219,
-      "text": "To",
+      "line": 243,
+      "text": "New mentions and replies will appear here.",
       "kind": "jsx_text"
     },
     {
       "file": "components/notifications/page-list.tsx",
-      "line": 248,
+      "line": 258,
       "text": "Mark as read",
       "kind": "jsx_attr"
-    },
-    {
-      "file": "components/notifications/page-list.tsx",
-      "line": 259,
-      "text": "No notifications match the current filter.",
-      "kind": "jsx_text"
     },
     {
       "file": "components/onboarding/welcome-template-pick.tsx",
@@ -4885,6 +4969,18 @@
       "kind": "jsx_attr"
     },
     {
+      "file": "components/search-hint-button.tsx",
+      "line": 22,
+      "text": "Search…",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/search-hint-button.tsx",
+      "line": 23,
+      "text": "⌘K",
+      "kind": "jsx_text"
+    },
+    {
       "file": "components/search-palette.tsx",
       "line": 154,
       "text": "Close search",
@@ -4982,91 +5078,91 @@
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 156,
+      "line": 157,
       "text": "Create key",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 165,
+      "line": 166,
       "text": "Create API key",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 170,
+      "line": 171,
       "text": "Name",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 175,
+      "line": 176,
       "text": "e.g. CI deploy bot",
       "kind": "jsx_attr"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 181,
+      "line": 182,
       "text": "Role",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 196,
+      "line": 197,
       "text": "Expires in (days, optional)",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 204,
+      "line": 205,
       "text": "Never",
       "kind": "jsx_attr"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 221,
+      "line": 222,
       "text": "Cancel",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 230,
+      "line": 231,
       "text": "No API keys yet.",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 236,
+      "line": 237,
       "text": "Name",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 237,
+      "line": 238,
       "text": "Prefix",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 238,
+      "line": 239,
       "text": "Role",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 239,
+      "line": 240,
       "text": "Last used",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 240,
+      "line": 241,
       "text": "Expires",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/api-keys-manager.tsx",
-      "line": 261,
+      "line": 262,
       "text": "Revoke",
       "kind": "jsx_text"
     },
@@ -5282,32 +5378,8 @@
     },
     {
       "file": "components/sidebar-content.tsx",
-      "line": 58,
+      "line": 53,
       "text": "Pages",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/sidebar-content.tsx",
-      "line": 71,
-      "text": "My tasks",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/sidebar-content.tsx",
-      "line": 78,
-      "text": "Templates",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/sidebar-content.tsx",
-      "line": 85,
-      "text": "Trash",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/sidebar-content.tsx",
-      "line": 89,
-      "text": "Sign out",
       "kind": "jsx_text"
     },
     {
@@ -5338,6 +5410,36 @@
       "file": "components/sidebar-favorites.tsx",
       "line": 104,
       "text": "Favorites",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-footer-nav.tsx",
+      "line": 26,
+      "text": "My tasks",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-footer-nav.tsx",
+      "line": 30,
+      "text": "Templates",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-footer-nav.tsx",
+      "line": 34,
+      "text": "Settings",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-footer-nav.tsx",
+      "line": 38,
+      "text": "Trash",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/sidebar-footer-nav.tsx",
+      "line": 43,
+      "text": "Sign out",
       "kind": "jsx_text"
     },
     {
@@ -5391,30 +5493,54 @@
     {
       "file": "components/templates/templates-gallery.tsx",
       "line": 107,
-      "text": "Save a page or database as a template to see it here.",
+      "text": "Create your own template",
       "kind": "jsx_text"
     },
     {
       "file": "components/templates/templates-gallery.tsx",
-      "line": 133,
+      "line": 109,
+      "text": "menu, and choose",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 109,
+      "text": "Open any page, click the",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 110,
+      "text": "“Save as template…”",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 110,
+      "text": "to add it here.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/templates/templates-gallery.tsx",
+      "line": 136,
       "text": "Built-in",
       "kind": "jsx_text"
     },
     {
       "file": "components/templates/templates-gallery.tsx",
-      "line": 138,
+      "line": 141,
       "text": "In this workspace",
       "kind": "jsx_text"
     },
     {
       "file": "components/templates/templates-gallery.tsx",
-      "line": 146,
+      "line": 149,
       "text": "Preview",
       "kind": "jsx_text"
     },
     {
       "file": "components/templates/templates-gallery.tsx",
-      "line": 168,
+      "line": 171,
       "text": "Delete",
       "kind": "jsx_text"
     },
@@ -5450,13 +5576,19 @@
     },
     {
       "file": "components/workspace-switcher.tsx",
-      "line": 65,
+      "line": 51,
+      "text": "Switch workspace",
+      "kind": "jsx_attr"
+    },
+    {
+      "file": "components/workspace-switcher.tsx",
+      "line": 58,
       "text": "Workspaces",
       "kind": "jsx_text"
     },
     {
       "file": "components/workspace-switcher.tsx",
-      "line": 84,
+      "line": 77,
       "text": "Create workspace",
       "kind": "jsx_text"
     }
