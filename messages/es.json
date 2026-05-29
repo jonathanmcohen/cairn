@@ -87,5 +87,9 @@
   "pageActions.lock.customAmount": "Duración",
   "pageActions.lock.unitHours": "Horas",
   "pageActions.lock.unitDays": "Días",
-  "pageActions.lock.confirm": "Bloquear"
+  "pageActions.lock.confirm": "Bloquear",
+  "pageActions.export.trigger": "Exportar",
+  "pageActions.export.markdown": "Markdown (.md)",
+  "pageActions.export.json": "JSON",
+  "pageActions.export.pdf": "PDF"
 }
