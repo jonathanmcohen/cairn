@@ -19,4 +19,19 @@ describe('my-tasks filter tabs', () => {
     expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'All' })).toBeTruthy();
   });
+
+  // #27 (reopened): the "Due by" control must be the themed Popover trigger
+  // (a real <button>), not a bare native `<input type="date">`. The DateField
+  // primitive was rewritten to a themed calendar popover (#29), which resolves
+  // #27 transitively — this guards the my-tasks call site against a regression
+  // back to a native date input.
+  it('renders the "Due by" filter as a themed popover trigger, not a native date input', () => {
+    const { container } = render(<TasksTable initialTasks={[]} initialStatus="open" />);
+    expect(container.querySelector('input[type="date"]')).toBeNull();
+    const dueBy = screen.getByRole('button', { name: /due by/i });
+    expect(dueBy.tagName).toBe('BUTTON');
+    // themed surface + 44px touch target (WCAG 2.1 AA)
+    expect(dueBy.className).toContain('rounded-md');
+    expect(dueBy.className).toContain('min-h-11');
+  });
 });
