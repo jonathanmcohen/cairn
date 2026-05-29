@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
+import { CopyButton } from '@/components/settings/copy-button';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext } from '@/lib/auth/require-role';
@@ -38,7 +39,10 @@ export default async function AccountProfilePage() {
         </div>
         <div>
           <dt className="text-muted-foreground">User ID</dt>
-          <dd className="font-mono">{ctx.userId}</dd>
+          <dd className="flex items-center gap-2 font-mono">
+            {ctx.userId}
+            <CopyButton value={ctx.userId} label="Copy User ID" />
+          </dd>
         </div>
       </dl>
     </div>
