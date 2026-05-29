@@ -18,8 +18,16 @@ afterEach(() => {
 });
 
 describe('<SettingsSidebar>', () => {
-  it('renders all six section labels', () => {
+  it('hides the Admin item for non-admins (default)', () => {
     render(<SettingsSidebar />);
+    for (const label of ['Account', 'Workspace', 'Developer', 'Notifications', 'Security']) {
+      expect(screen.getByRole('link', { name: label })).toBeTruthy();
+    }
+    expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
+  });
+
+  it('shows the Admin item when isAdmin is true', () => {
+    render(<SettingsSidebar isAdmin />);
     for (const label of [
       'Account',
       'Workspace',
