@@ -14,6 +14,15 @@ type Member = {
 const EDITABLE_ROLES = ['viewer', 'editor', 'admin'] as const;
 type EditableRole = (typeof EDITABLE_ROLES)[number];
 
+// Roles are stored lowercase ('owner' | 'admin' | …). Display them Title-Cased
+// without ever changing the stored value or the <option value> (#63).
+const ROLE_LABELS: Record<Member['role'], string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  editor: 'Editor',
+  viewer: 'Viewer',
+};
+
 export function MembersTable({
   workspaceId,
   members,
@@ -92,16 +101,13 @@ export function MembersTable({
             // Owners are read-only here (transfer-ownership is a separate flow);
             // you can't modify yourself.
             const roleLocked = isOwner || isSelf;
-            // Removing owners is blocked by the API; removing yourself goes
-            // through the leave flow, not the admin console.
-            const removeDisabled = isOwner || isSelf || busyId === m.userId;
             return (
               <tr key={m.userId} className="border-b">
                 <td className="py-2">{m.name}</td>
                 <td className="py-2">{m.email}</td>
                 <td className="py-2">
                   {roleLocked ? (
-                    <span>{m.role}</span>
+                    <span>{ROLE_LABELS[m.role]}</span>
                   ) : (
                     <select
                       aria-label={`Change role for ${m.email}`}
@@ -112,22 +118,27 @@ export function MembersTable({
                     >
                       {EDITABLE_ROLES.map((r) => (
                         <option key={r} value={r}>
-                          {r}
+                          {ROLE_LABELS[r]}
                         </option>
                       ))}
                     </select>
                   )}
                 </td>
                 <td className="py-2 text-right">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    disabled={removeDisabled}
-                    aria-label={`Remove ${m.email}`}
-                    onClick={() => removeUser(m.userId)}
-                  >
-                    Remove
-                  </Button>
+                  {/* #62: never offer Remove on the owner row or your own row —
+                      removing the last owner / yourself is blocked server-side
+                      (admin-members.ts), but the control must not appear at all. */}
+                  {isOwner || isSelf ? null : (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      disabled={busyId === m.userId}
+                      aria-label={`Remove ${m.email}`}
+                      onClick={() => removeUser(m.userId)}
+                    >
+                      Remove
+                    </Button>
+                  )}
                 </td>
               </tr>
             );
