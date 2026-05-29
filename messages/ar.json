@@ -28,5 +28,8 @@
   "pageMenu.savedTemplate": "تم الحفظ في القوالب",
   "pageMenu.showActivity": "إظهار النشاط",
   "pageMenu.hideActivity": "إخفاء النشاط",
-  "pageMenu.unavailableOffline": "غير متاح دون اتصال"
+  "pageMenu.unavailableOffline": "غير متاح دون اتصال",
+  "workspaceSwitcher.heading": "مساحات العمل",
+  "workspaceSwitcher.switch": "تبديل مساحة العمل",
+  "workspaceSwitcher.create": "إنشاء مساحة عمل"
 }

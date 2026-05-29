@@ -28,5 +28,8 @@
   "pageMenu.savedTemplate": "Guardado en plantillas",
   "pageMenu.showActivity": "Mostrar actividad",
   "pageMenu.hideActivity": "Ocultar actividad",
-  "pageMenu.unavailableOffline": "No disponible sin conexión"
+  "pageMenu.unavailableOffline": "No disponible sin conexión",
+  "workspaceSwitcher.heading": "Espacios de trabajo",
+  "workspaceSwitcher.switch": "Cambiar de espacio",
+  "workspaceSwitcher.create": "Crear espacio de trabajo"
 }

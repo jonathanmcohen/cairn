@@ -28,5 +28,8 @@
   "pageMenu.savedTemplate": "Saved to templates",
   "pageMenu.showActivity": "Show activity",
   "pageMenu.hideActivity": "Hide activity",
-  "pageMenu.unavailableOffline": "Unavailable offline"
+  "pageMenu.unavailableOffline": "Unavailable offline",
+  "workspaceSwitcher.heading": "Workspaces",
+  "workspaceSwitcher.switch": "Switch workspace",
+  "workspaceSwitcher.create": "Create workspace"
 }

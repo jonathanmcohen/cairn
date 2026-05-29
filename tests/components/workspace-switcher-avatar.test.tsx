@@ -4,6 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }) }));
+vi.mock('@/lib/i18n/provider', async () => {
+  const en = (await import('@/../messages/en.json')).default as Record<string, string>;
+  return { useT: () => (key: string) => en[key] ?? key };
+});
 
 afterEach(cleanup);
 
