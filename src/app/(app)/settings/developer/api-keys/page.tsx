@@ -3,6 +3,7 @@ import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 import { type ApiKeyRow, ApiKeysManager } from '@/components/settings/api-keys-manager';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
+import { CopyButton } from '@/components/settings/copy-button';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext, hasMinRole } from '@/lib/auth/require-role';
@@ -38,6 +39,28 @@ export default async function ApiKeysSettingsPage() {
     createdAt: r.createdAt.toISOString(),
   }));
 
+  // Base origin: same source the existing /settings/developer/tokens MCP panel
+  // uses (docker-compose interpolates PUBLIC_URL). The MCP HTTP transport route
+  // is src/app/api/mcp/route.ts → `/api/mcp`.
+  const mcpUrl = `${process.env.PUBLIC_URL ?? 'http://localhost:3000'}/api/mcp`;
+  // Canonical PAT/MCP scope superset — source of truth: ROLE_SCOPES.owner in
+  // src/lib/auth/token.ts (kept in sync with that map).
+  const scopes = [
+    'pages:read',
+    'pages:write',
+    'pages:destructive',
+    'databases:read',
+    'databases:write',
+    'databases:destructive',
+    'comments:read',
+    'comments:write',
+    'comments:destructive',
+    'files:read',
+    'files:write',
+    'files:destructive',
+    'admin',
+  ];
+
   return (
     <div className="mx-auto max-w-3xl">
       <SettingsBreadcrumb
@@ -51,6 +74,26 @@ export default async function ApiKeysSettingsPage() {
         behalf of its creator. The full token is shown only once when created.
       </p>
       <ApiKeysManager initialKeys={initialKeys} />
+
+      <section className="mt-8 rounded-lg border p-4">
+        <h2 className="text-sm font-semibold">MCP connection</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Connect an MCP client (Claude Desktop, Cursor, …) over the streamable-HTTP transport using
+          a personal access token as a <code>Bearer</code> credential. Mint tokens under{' '}
+          <code>Settings → Developer → Personal tokens</code>.
+        </p>
+        <dl className="mt-3 space-y-2 text-sm">
+          <div className="flex items-center gap-2">
+            <dt className="w-24 shrink-0 text-muted-foreground">Endpoint</dt>
+            <dd className="break-all font-mono">{mcpUrl}</dd>
+            <CopyButton value={mcpUrl} label="Copy MCP endpoint" />
+          </div>
+          <div className="flex gap-2">
+            <dt className="w-24 shrink-0 text-muted-foreground">Scopes</dt>
+            <dd className="font-mono">{scopes.join(', ')}</dd>
+          </div>
+        </dl>
+      </section>
     </div>
   );
 }
