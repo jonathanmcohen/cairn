@@ -15,5 +15,18 @@
   "locale.label": "Idioma",
   "locale.en": "English",
   "locale.ar": "العربية",
-  "locale.es": "Español"
+  "locale.es": "Español",
+  "pageMenu.trigger": "Menú de página",
+  "pageMenu.publish": "Publicar en la web",
+  "pageMenu.unpublish": "Dejar de publicar",
+  "pageMenu.copyPublicLink": "Copiar enlace público",
+  "pageMenu.copied": "¡Copiado!",
+  "pageMenu.exportMd": "Exportar como .md",
+  "pageMenu.exportZip": "Exportar subárbol como .zip",
+  "pageMenu.importMd": "Importar markdown…",
+  "pageMenu.saveTemplate": "Guardar como plantilla…",
+  "pageMenu.savedTemplate": "Guardado en plantillas",
+  "pageMenu.showActivity": "Mostrar actividad",
+  "pageMenu.hideActivity": "Ocultar actividad",
+  "pageMenu.unavailableOffline": "No disponible sin conexión"
 }

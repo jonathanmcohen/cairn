@@ -1,12 +1,25 @@
 'use client';
 
-import { MoreHorizontal } from 'lucide-react';
+import {
+  Activity,
+  Download,
+  FilePlus2,
+  FileStack,
+  FileUp,
+  Globe,
+  Link as LinkIcon,
+  MoreHorizontal,
+} from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { PageActivityFeed } from '@/components/pages/activity-feed';
 import { SaveAsTemplateDialog } from '@/components/pages/save-as-template-dialog';
 import { SharePanel } from '@/components/pages/share-panel';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/provider';
+
+const ITEM_CLASS =
+  'flex min-h-11 w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50';
 
 type PageMenuProps = {
   pageId: string;
@@ -27,6 +40,7 @@ export function PageMenu({
   initialHasPassword = false,
   initialExpiresAt = null,
 }: PageMenuProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const shareAllowed = useActionAllowed('share');
   const [published, setPublished] = useState(initialPublished);
@@ -111,7 +125,7 @@ export function PageMenu({
         ref={triggerRef}
         variant="ghost"
         size="icon"
-        aria-label="Page menu"
+        aria-label={t('pageMenu.trigger')}
         aria-expanded={open}
         aria-haspopup="dialog"
         onClick={() => setOpen((v) => !v)}
@@ -132,32 +146,35 @@ export function PageMenu({
           {!published ? (
             <button
               type="button"
-              className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50"
+              className={ITEM_CLASS}
               onClick={() => void publish()}
               disabled={!shareAllowed}
-              title={shareAllowed ? undefined : 'Unavailable offline'}
+              title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
             >
-              Publish to web
+              <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {t('pageMenu.publish')}
             </button>
           ) : (
             <>
               <button
                 type="button"
-                className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50"
+                className={ITEM_CLASS}
                 onClick={() => void unpublish()}
                 disabled={!shareAllowed}
-                title={shareAllowed ? undefined : 'Unavailable offline'}
+                title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
               >
-                Unpublish
+                <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
+                {t('pageMenu.unpublish')}
               </button>
               <div className="px-3 py-1.5">
                 <div className="text-muted-foreground mb-1 truncate text-xs">/p/{slug}</div>
                 <button
                   type="button"
-                  className="text-xs underline hover:no-underline"
+                  className="flex min-h-11 items-center gap-2 text-xs underline hover:no-underline"
                   onClick={copyUrl}
                 >
-                  {copied ? 'Copied!' : 'Copy public link'}
+                  <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
+                  {copied ? t('pageMenu.copied') : t('pageMenu.copyPublicLink')}
                 </button>
               </div>
               <div className="my-1 border-t" />
@@ -172,53 +189,58 @@ export function PageMenu({
           <div className="my-1 border-t" />
           <button
             type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            className={ITEM_CLASS}
             onClick={() => {
               download(`/api/pages/${pageId}/export`);
               setOpen(false);
             }}
           >
-            Export as .md
+            <Download aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('pageMenu.exportMd')}
           </button>
           <button
             type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            className={ITEM_CLASS}
             onClick={() => {
               download(`/api/pages/${pageId}/export?recursive=true`);
               setOpen(false);
             }}
           >
-            Export subtree as .zip
+            <FileStack aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('pageMenu.exportZip')}
           </button>
           <button
             type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            className={ITEM_CLASS}
             onClick={() => {
               void importMd();
               setOpen(false);
             }}
           >
-            Import markdown…
+            <FileUp aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('pageMenu.importMd')}
           </button>
           <div className="my-1 border-t" />
           <button
             type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            className={ITEM_CLASS}
             onClick={() => {
               setSaveTplOpen(true);
               setOpen(false);
             }}
           >
-            {savedAsTemplate ? 'Saved to templates' : 'Save as template…'}
+            <FilePlus2 aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {savedAsTemplate ? t('pageMenu.savedTemplate') : t('pageMenu.saveTemplate')}
           </button>
           <div className="my-1 border-t" />
           <button
             type="button"
-            className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
+            className={ITEM_CLASS}
             aria-expanded={activityOpen}
             onClick={() => setActivityOpen((v) => !v)}
           >
-            {activityOpen ? 'Hide activity' : 'Show activity'}
+            <Activity aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {activityOpen ? t('pageMenu.hideActivity') : t('pageMenu.showActivity')}
           </button>
           {activityOpen ? (
             <div className="px-3 py-2">

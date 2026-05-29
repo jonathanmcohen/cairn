@@ -15,5 +15,18 @@
   "locale.label": "اللغة",
   "locale.en": "English",
   "locale.ar": "العربية",
-  "locale.es": "الإسبانية"
+  "locale.es": "الإسبانية",
+  "pageMenu.trigger": "قائمة الصفحة",
+  "pageMenu.publish": "النشر على الويب",
+  "pageMenu.unpublish": "إلغاء النشر",
+  "pageMenu.copyPublicLink": "نسخ الرابط العام",
+  "pageMenu.copied": "تم النسخ!",
+  "pageMenu.exportMd": "تصدير كـ .md",
+  "pageMenu.exportZip": "تصدير الشجرة الفرعية كـ .zip",
+  "pageMenu.importMd": "استيراد ماركداون…",
+  "pageMenu.saveTemplate": "حفظ كقالب…",
+  "pageMenu.savedTemplate": "تم الحفظ في القوالب",
+  "pageMenu.showActivity": "إظهار النشاط",
+  "pageMenu.hideActivity": "إخفاء النشاط",
+  "pageMenu.unavailableOffline": "غير متاح دون اتصال"
 }
