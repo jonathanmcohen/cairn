@@ -1,6 +1,7 @@
 'use client';
 
 import { Command } from 'cmdk';
+import { Bookmark } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -102,14 +103,17 @@ export function SearchPalette({
   async function saveCurrent() {
     const q = query.trim();
     if (!q) return;
-    const name = window.prompt('Name this saved search:', q);
+    const name = window.prompt(t('palette.saveSearch.namePrompt'), q);
     if (!name) return;
     const r = await fetch('/api/search/saved', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ name, query: q, filters: {} }),
     });
-    if (r.ok) void refreshSaved();
+    if (r.ok) {
+      void refreshSaved();
+      toast(t('palette.saveSearch.saved'));
+    }
   }
 
   useEffect(() => {
@@ -287,7 +291,7 @@ export function SearchPalette({
             </Command.Group>
           )}
           {saved.length > 0 && (
-            <Command.Group heading="Saved searches">
+            <Command.Group heading={t('palette.saved.heading')}>
               {saved.map((s) => (
                 <Command.Item
                   key={s.id}
@@ -306,9 +310,11 @@ export function SearchPalette({
             <button
               type="button"
               onClick={() => void saveCurrent()}
-              className="text-xs text-muted-foreground hover:text-foreground"
+              aria-label={t('palette.saveSearch')}
+              className="flex min-h-11 items-center gap-2 px-2 text-xs text-muted-foreground hover:text-foreground"
             >
-              Save this search
+              <Bookmark aria-hidden="true" className="h-3 w-3" />
+              {t('palette.saveSearch')}
             </button>
           </div>
         )}
