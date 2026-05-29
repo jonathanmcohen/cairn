@@ -150,7 +150,9 @@ function main(): void {
     console.warn(
       `i18n-audit: no baseline at ${baselinePath}; first run — writing baseline. Re-run to enforce.`,
     );
-    writeFileSync(baselinePath, JSON.stringify(report, null, 2));
+    // Trailing newline so the committed baseline passes `biome check`
+    // (the CI Lint step lints JSON too).
+    writeFileSync(baselinePath, `${JSON.stringify(report, null, 2)}\n`);
     return;
   }
   const baseline = JSON.parse(readFileSync(baselinePath, 'utf8')) as AuditReport;
