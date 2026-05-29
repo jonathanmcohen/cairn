@@ -45,26 +45,60 @@ pre code.hljs {
   background: hsl(var(--muted));
   margin: 0.5rem 0;
 }
-.callout-blue {
+/* a11 #48 — semantic callout variants. Each variant carries a tinted bg, an
+ * accent left-border, and an icon color (consumed by `.callout-icon` in the
+ * CalloutView node-view). Legacy `data-color` docs are mapped to a variant on
+ * parse (blue→note, green→tip, amber→warning, default→note) in
+ * callout-extension.ts, so old content keeps rendering. */
+.callout-note {
   background: rgb(219 234 254 / 0.6);
   border-left-color: rgb(59 130 246);
 }
-.callout-green {
+.callout-note .callout-icon {
+  color: rgb(59 130 246);
+}
+.callout-tip {
   background: rgb(220 252 231 / 0.6);
   border-left-color: rgb(34 197 94);
 }
-.callout-amber {
+.callout-tip .callout-icon {
+  color: rgb(34 197 94);
+}
+.callout-warning {
   background: rgb(254 243 199 / 0.6);
   border-left-color: rgb(245 158 11);
 }
-.dark .callout-blue {
+.callout-warning .callout-icon {
+  color: rgb(217 119 6);
+}
+.callout-error {
+  background: rgb(254 226 226 / 0.6);
+  border-left-color: rgb(239 68 68);
+}
+.callout-error .callout-icon {
+  color: rgb(220 38 38);
+}
+.callout-info {
+  background: rgb(241 245 249 / 0.7);
+  border-left-color: rgb(100 116 139);
+}
+.callout-info .callout-icon {
+  color: rgb(100 116 139);
+}
+.dark .callout-note {
   background: rgb(30 58 138 / 0.4);
 }
-.dark .callout-green {
+.dark .callout-tip {
   background: rgb(20 83 45 / 0.4);
 }
-.dark .callout-amber {
+.dark .callout-warning {
   background: rgb(120 53 15 / 0.4);
+}
+.dark .callout-error {
+  background: rgb(127 29 29 / 0.4);
+}
+.dark .callout-info {
+  background: rgb(30 41 59 / 0.5);
 }
 
 .file-attachment {

@@ -284,7 +284,7 @@ const items: SlashItem[] = [
   {
     title: 'Callout',
     description: 'Highlighted aside',
-    command: (editor) => editor.chain().focus().setCallout('default').run(),
+    command: (editor) => editor.chain().focus().setCallout('note').run(),
   },
   {
     title: 'Toggle',

@@ -11,6 +11,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ### Added
 - Themed `Select` + `DateField` UI primitives (`src/components/ui/`), built on the unified `radix-ui` package (#38).
+- **Code block language selector** with lowlight syntax highlighting — pick a language from a styled dropdown, or "Auto" to let lowlight auto-detect untagged code (#47).
+- **Semantic callout types** — note / tip / warning / error / info, each with an icon + accent color, switchable via an in-block type picker; legacy `color` callouts map forward automatically (#48).
 - **Settings** navigation entry in the sidebar lower nav (#45) — `/settings` was previously only reachable by typing the URL.
 - Visible **search affordance with a ⌘K hint** in the sidebar (#43).
 - Themed app-root **404 page** with a home link (#23); `/tasks` now redirects to `/my-tasks` (#22).

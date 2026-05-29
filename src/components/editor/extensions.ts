@@ -10,6 +10,7 @@ import type * as Y from 'yjs';
 import { AudioNode } from './blocks/audio-node';
 import { Bookmark } from './blocks/bookmark';
 import { ButtonBlock } from './blocks/button';
+import { CalloutWithView } from './blocks/callout';
 import { CitationNode } from './blocks/citation-node';
 import { createCairnCodeBlock } from './blocks/code-block';
 import { Column, ColumnList } from './blocks/columns';
@@ -28,7 +29,6 @@ import { SyncedBlockNode } from './blocks/synced-block-node';
 import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { VideoBlock } from './blocks/video';
-import { Callout } from './callout-extension';
 import { DatabaseNode } from './database-extension';
 import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
@@ -66,7 +66,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     createCairnCodeBlock(lowlight),
     TaskList,
     TaskItem.configure({ nested: true }),
-    Callout,
+    CalloutWithView,
     Toggle,
     ColumnList,
     Column,
@@ -136,7 +136,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *
  * Custom-node Yjs-safety review (y-prosemirror syncs any node whose state is
  * fully derived from ProseMirror attrs; node-local mutable state would desync):
- *  - Callout        — block, content `block+`, attr `color` only.            SAFE
+ *  - Callout        — block, content `block+`, attr `variant` only; its React
+ *                     node-view writes only `variant` via updateAttributes.   SAFE
  *  - CodeBlock      — block, content `text*`, attr `language` only; its React
  *                     NodeView (CodeBlockView) writes ONLY `language` via
  *                     updateAttributes (no node-local state) and derives the

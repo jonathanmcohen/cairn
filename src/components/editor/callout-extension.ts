@@ -1,6 +1,15 @@
 import { mergeAttributes, Node } from '@tiptap/core';
 
-export type CalloutColor = 'default' | 'blue' | 'green' | 'amber';
+export type CalloutVariant = 'note' | 'tip' | 'warning' | 'error' | 'info';
+
+const LEGACY_COLOR_TO_VARIANT: Record<string, CalloutVariant> = {
+  blue: 'note',
+  green: 'tip',
+  amber: 'warning',
+  default: 'note',
+};
+
+export const CALLOUT_VARIANTS: CalloutVariant[] = ['note', 'tip', 'warning', 'error', 'info'];
 
 export const Callout = Node.create({
   name: 'callout',
@@ -10,10 +19,16 @@ export const Callout = Node.create({
 
   addAttributes() {
     return {
-      color: {
-        default: 'default' as CalloutColor,
-        parseHTML: (el) => (el.getAttribute('data-color') as CalloutColor) ?? 'default',
-        renderHTML: (attrs) => ({ 'data-color': attrs.color }),
+      variant: {
+        default: 'note' as CalloutVariant,
+        parseHTML: (el) => {
+          const v = el.getAttribute('data-variant') as CalloutVariant | null;
+          if (v && CALLOUT_VARIANTS.includes(v)) return v;
+          // legacy fallback: map old data-color
+          const legacy = el.getAttribute('data-color') ?? 'default';
+          return LEGACY_COLOR_TO_VARIANT[legacy] ?? 'note';
+        },
+        renderHTML: (attrs) => ({ 'data-variant': attrs.variant }),
       },
     };
   },
@@ -23,11 +38,12 @@ export const Callout = Node.create({
   },
 
   renderHTML({ HTMLAttributes }) {
+    const variant = (HTMLAttributes['data-variant'] as string) ?? 'note';
     return [
       'div',
       mergeAttributes(HTMLAttributes, {
         'data-type': 'callout',
-        class: `callout callout-${HTMLAttributes['data-color'] ?? 'default'}`,
+        class: `callout callout-${variant}`,
       }),
       0,
     ];
@@ -36,13 +52,13 @@ export const Callout = Node.create({
   addCommands() {
     return {
       setCallout:
-        (color: CalloutColor = 'default') =>
+        (variant: CalloutVariant = 'note') =>
         ({ commands }) =>
-          commands.wrapIn(this.name, { color }),
+          commands.wrapIn(this.name, { variant }),
       toggleCallout:
-        (color: CalloutColor = 'default') =>
+        (variant: CalloutVariant = 'note') =>
         ({ commands }) =>
-          commands.toggleWrap(this.name, { color }),
+          commands.toggleWrap(this.name, { variant }),
     };
   },
 });
@@ -50,8 +66,8 @@ export const Callout = Node.create({
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     callout: {
-      setCallout: (color?: CalloutColor) => ReturnType;
-      toggleCallout: (color?: CalloutColor) => ReturnType;
+      setCallout: (variant?: CalloutVariant) => ReturnType;
+      toggleCallout: (variant?: CalloutVariant) => ReturnType;
     };
   }
 }
