@@ -7,6 +7,7 @@ import { CopyButton } from '@/components/settings/copy-button';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext, hasMinRole } from '@/lib/auth/require-role';
+import { publicOrigin } from '@/lib/url';
 
 export default async function ApiKeysSettingsPage() {
   const ctx = await getAuthContext();
@@ -39,10 +40,11 @@ export default async function ApiKeysSettingsPage() {
     createdAt: r.createdAt.toISOString(),
   }));
 
-  // Base origin: same source the existing /settings/developer/tokens MCP panel
-  // uses (docker-compose interpolates PUBLIC_URL). The MCP HTTP transport route
-  // is src/app/api/mcp/route.ts → `/api/mcp`.
-  const mcpUrl = `${process.env.PUBLIC_URL ?? 'http://localhost:3000'}/api/mcp`;
+  // Deploy-correct MCP endpoint. publicOrigin() resolves the real public origin
+  // from PUBLIC_URL / the forwarded request host / NEXTAUTH_URL (never the
+  // build-time localhost default — see GH #50 / src/lib/url.ts). The MCP HTTP
+  // transport route is src/app/api/mcp/route.ts → `/api/mcp`.
+  const mcpUrl = `${await publicOrigin()}/api/mcp`;
   // Canonical PAT/MCP scope superset — source of truth: ROLE_SCOPES.owner in
   // src/lib/auth/token.ts (kept in sync with that map).
   const scopes = [
