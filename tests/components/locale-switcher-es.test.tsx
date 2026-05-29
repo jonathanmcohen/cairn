@@ -36,4 +36,41 @@ describe('<LocaleSwitcher>', () => {
     const trigger = screen.getByRole('combobox', { name: 'Idioma' });
     expect(trigger.textContent).toMatch(/español/i);
   });
+
+  it('keeps an accessible Language name on the trigger regardless of viewport', () => {
+    render(
+      <I18nProvider locale="en" messages={enMessages as Record<string, string>}>
+        <LocaleSwitcher />
+      </I18nProvider>,
+    );
+    // aria-label is always present (it is the accessible name when the visible
+    // label/text is hidden below `sm`). This must NOT depend on the breakpoint.
+    const trigger = screen.getByRole('combobox', { name: /language/i });
+    expect(trigger.getAttribute('aria-label')).toMatch(/language/i);
+  });
+
+  it('renders a decorative globe icon that is hidden from assistive tech', () => {
+    const { container } = render(
+      <I18nProvider locale="en" messages={enMessages as Record<string, string>}>
+        <LocaleSwitcher />
+      </I18nProvider>,
+    );
+    // The collapsed (narrow) affordance is a Globe icon; it must be aria-hidden
+    // so SR users hear only the single "Language" accessible name.
+    const svg = container.querySelector('svg[aria-hidden="true"].lucide-globe');
+    expect(svg).toBeTruthy();
+  });
+
+  it('marks the standalone label as responsive-hidden (sr-safe) below sm', () => {
+    render(
+      <I18nProvider locale="en" messages={enMessages as Record<string, string>}>
+        <LocaleSwitcher />
+      </I18nProvider>,
+    );
+    // The visible "Language" span is present in the DOM but carries the
+    // hidden-below-sm utility, so wide viewports still show it.
+    const label = screen.getByText(/^Language$/);
+    expect(label.className).toContain('hidden');
+    expect(label.className).toContain('sm:inline');
+  });
 });
