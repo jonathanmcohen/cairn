@@ -50,12 +50,16 @@ pre code.hljs {
  * CalloutView node-view). Legacy `data-color` docs are mapped to a variant on
  * parse (blue→note, green→tip, amber→warning, default→note) in
  * callout-extension.ts, so old content keeps rendering. */
+/* #57 — the default `note` callout is intentionally neutral (quiet container);
+ * saturated blue moved to the explicit `info` variant below. Token-based so it
+ * inherits dark-mode + AA contrast from --muted/--foreground (the base .callout
+ * rule already renders body text over --muted, so contrast is inherited-safe). */
 .callout-note {
-  background: rgb(219 234 254 / 0.6);
-  border-left-color: rgb(59 130 246);
+  background: hsl(var(--muted));
+  border-left-color: hsl(var(--border));
 }
 .callout-note .callout-icon {
-  color: rgb(59 130 246);
+  color: hsl(var(--muted-foreground));
 }
 .callout-tip {
   background: rgb(220 252 231 / 0.6);
@@ -78,16 +82,16 @@ pre code.hljs {
 .callout-error .callout-icon {
   color: rgb(220 38 38);
 }
+/* #57 — `info` now carries the blue accent the default `note` used to have. */
 .callout-info {
-  background: rgb(241 245 249 / 0.7);
-  border-left-color: rgb(100 116 139);
+  background: rgb(219 234 254 / 0.6);
+  border-left-color: rgb(59 130 246);
 }
 .callout-info .callout-icon {
-  color: rgb(100 116 139);
+  color: rgb(59 130 246);
 }
-.dark .callout-note {
-  background: rgb(30 58 138 / 0.4);
-}
+/* #57 — note is token-based (--muted flips automatically in dark), so it needs
+ * no .dark override. */
 .dark .callout-tip {
   background: rgb(20 83 45 / 0.4);
 }
@@ -98,7 +102,7 @@ pre code.hljs {
   background: rgb(127 29 29 / 0.4);
 }
 .dark .callout-info {
-  background: rgb(30 41 59 / 0.5);
+  background: rgb(30 58 138 / 0.4);
 }
 
 .file-attachment {
