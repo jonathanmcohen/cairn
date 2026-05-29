@@ -21,10 +21,12 @@ export function SettingsForm({
   workspaceId,
   initial,
   pages,
+  twofaEnforcementAvailable = false,
 }: {
   workspaceId: string;
   initial: Initial;
   pages: { id: string; title: string }[];
+  twofaEnforcementAvailable?: boolean;
 }) {
   const router = useRouter();
   const nameId = useId();
@@ -130,24 +132,23 @@ export function SettingsForm({
         </p>
       </div>
 
-      <div className="flex items-start gap-2">
-        <input
-          id={twofaId}
-          type="checkbox"
-          checked={requireTwofa}
-          onChange={(e) => setRequireTwofa(e.target.checked)}
-          className="mt-1"
-        />
-        <div className="flex flex-col">
-          <label htmlFor={twofaId} className="text-sm font-medium">
-            Require two-factor authentication
-          </label>
-          <p className="text-xs text-muted-foreground">
-            Persists the flag now; enforcement at sign-in ships with TOTP support in a later
-            release.
-          </p>
+      {twofaEnforcementAvailable ? (
+        <div className="flex items-start gap-2">
+          <input
+            id={twofaId}
+            type="checkbox"
+            checked={requireTwofa}
+            onChange={(e) => setRequireTwofa(e.target.checked)}
+            className="mt-1 size-5"
+          />
+          <div className="flex flex-col">
+            <label htmlFor={twofaId} className="text-sm font-medium">
+              Require two-factor authentication
+            </label>
+            <p className="text-xs text-muted-foreground">Members must complete 2FA at sign-in.</p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div>
         <Button type="submit" disabled={submitting}>

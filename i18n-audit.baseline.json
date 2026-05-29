@@ -1682,8 +1682,8 @@
     },
     {
       "file": "app/(app)/settings/workspace/general/settings-form.tsx",
-      "line": 136,
-      "text": "Persists the flag now; enforcement at sign-in ships with TOTP support in a later\n            release.",
+      "line": 148,
+      "text": "Members must complete 2FA at sign-in.",
       "kind": "jsx_text"
     },
     {
@@ -1786,6 +1786,12 @@
       "file": "app/(app)/settings/workspace/members/page.tsx",
       "line": 17,
       "text": "Members",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/members/page.tsx",
+      "line": 22,
+      "text": "Invite member",
       "kind": "jsx_text"
     },
     {

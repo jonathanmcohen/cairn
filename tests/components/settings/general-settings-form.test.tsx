@@ -23,3 +23,28 @@ describe('<SettingsForm> home page picker', () => {
     expect(container.querySelector('select:not([aria-hidden="true"])')).toBeNull();
   });
 });
+
+describe('<SettingsForm> Require 2FA control', () => {
+  it('hides the Require 2FA control when enforcement is unavailable (default)', () => {
+    render(
+      <SettingsForm
+        workspaceId="ws-1"
+        initial={{ name: 'W', requireTwofa: false, homePageId: null }}
+        pages={[]}
+      />,
+    );
+    expect(screen.queryByLabelText(/two-factor/i)).toBeNull();
+  });
+
+  it('shows the Require 2FA control when enforcement is available', () => {
+    render(
+      <SettingsForm
+        workspaceId="ws-1"
+        initial={{ name: 'W', requireTwofa: false, homePageId: null }}
+        pages={[]}
+        twofaEnforcementAvailable
+      />,
+    );
+    expect(screen.getByLabelText(/two-factor/i)).toBeTruthy();
+  });
+});

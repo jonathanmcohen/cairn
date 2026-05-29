@@ -4,6 +4,7 @@ import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { requireRole } from '@/lib/auth/require-role';
+import { env } from '@/lib/env';
 import { searchWorkspacePages } from '@/lib/workspaces/pages';
 import { SettingsForm } from './settings-form';
 
@@ -39,6 +40,7 @@ export default async function AdminSettingsPage() {
           homePageId: row.homePageId,
         }}
         pages={pages.map((p) => ({ id: p.id, title: p.title }))}
+        twofaEnforcementAvailable={env().CAIRN_ENFORCE_2FA}
       />
     </section>
   );
