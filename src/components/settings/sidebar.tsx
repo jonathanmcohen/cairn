@@ -20,9 +20,13 @@ const SECTIONS: Section[] = [
   { id: 'security', label: 'Security', href: '/settings/security' as Route },
 ];
 
-export function SettingsSidebar() {
+export function SettingsSidebar({ isAdmin = false }: { isAdmin?: boolean }) {
   const pathname = usePathname() ?? '';
   const containerRef = useRef<HTMLElement>(null);
+  // Role-gate the Admin entry: /settings/admin redirects into
+  // requireRole('admin')-gated pages, so showing it to viewers/editors
+  // surfaces a tab that 403s. Mirror the server gate (see #60/#61).
+  const sections = SECTIONS.filter((s) => s.id !== 'admin' || isAdmin);
 
   // Arrow-up/down navigation. Listens on the nav container; wraps at edges.
   useEffect(() => {
@@ -50,7 +54,7 @@ export function SettingsSidebar() {
       aria-label="Settings sections"
       className="sticky top-4 w-48 shrink-0 space-y-1"
     >
-      {SECTIONS.map((s) => {
+      {sections.map((s) => {
         const active = pathname === s.href || pathname.startsWith(`${s.href}/`);
         return (
           <Link
