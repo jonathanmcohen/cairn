@@ -139,6 +139,36 @@ Audit labels #68–#102 → GitHub #81–#115 (these are audit-sequence labels, 
 
 > **Backlog is iterative** — the user expects further audit rounds after this lands.
 
+## Round-2 batch-3 findings (formatting / publish / covers / slash) — GitHub #116–#123
+
+Audit labels #103–#110 → GitHub #116–#123.
+
+| GH | summary | plan file |
+|---:|---------|-----------|
+| #116 | no inline formatting bubble menu | `-29-` |
+| #117 | ⌘K taken by palette vs insert-link | `-29-` |
+| #118 | publish-to-web no confirmation | `-30-` |
+| #119 | share password no visibility toggle | `-30-` |
+| #120 | publish settings cramped → Share modal | `-30-` |
+| #121 | "+ Add cover" non-functional | `-31-` |
+| #122 | slash menu initial list too small (typeahead-only) | `-31-` |
+| #123 | faint orange/red viewport glow (stuck focus) | `-32-` |
+
+### Batch-3 plan files
+- **`-29-editor-formatting.md`** — #116, #117 *(BubbleMenu via `@tiptap/react/menus` — already available, no new dep; ⌘⇧K link + ⌘K-when-selection)*
+- **`-30-publish-share.md`** — #118, #119, #120 *(dedicated Share modal; new `ui/password-input.tsx`; reuses `ui/dialog.tsx` from `-21-`)*
+- **`-31-cover-and-slash.md`** — #121, #122
+- **`-32-border-glow-bug.md`** — #123 *(diagnose-heavy)*
+
+### Batch-3 notable root-causes
+- **#121 cover dead:** round-1 #16 (1b80c1f) kept the **legacy** `CoverImage` (PATCHes `pages.cover_url`) but the page renders from the **new** `pages.cover` jsonb via `CoverBanner` — so uploads land in a column nothing reads. The working `CoverPicker` (writes `pages.cover`) is the one #16 unmounted. Fix = restore `CoverPicker`, delete `CoverImage`.
+- **#123 glow:** the global `:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset:2px }` paints around `.ProseMirror` after slash-popup teardown returns keyboard-focus; under the **amber/rose accents** `--ring` is orange/red → reads as an error glow. Fix = `focus-visible:outline-hidden` on the contenteditable (keep discrete-control rings for WCAG 2.4.7).
+- **#117:** the palette's global `(meta|ctrl)+k` window handler has no selection/focus check → intercept ⌘K when an editor text selection is active; add ⌘⇧K as the always-on link shortcut.
+
+### Batch-3 cross-plan deps
+- `-30-` reuses `ui/dialog.tsx` (from `-21-`) + the eye-toggle pattern (`-18-`/#71 area).
+- `-29-` bubble-menu link control + `-30-` share + `-22-` block-insert all add editor chrome — coordinate so they don't fight over the same toolbar/selection surfaces.
+
 ## Execution order
 
-Cosmetic/low-risk first (P11, P12, P13, P18, `-22-`, `-23-`, `-28-`), then settings surfaces (P15, P16, P17), data/flows (`-21-`, `-24-`, `-25-`, `-26-`, `-27-`), MCP (P14), reopened re-fixes (P19/`-20-`) interleaved. Respect the cross-plan dependencies above. Single branch → single PR → hold for review → v0.9.4.
+Cosmetic/low-risk first (P11, P12, P13, P18, `-22-`, `-23-`, `-28-`, `-31-`, `-32-`), then editor chrome (`-29-`), settings surfaces (P15, P16, P17), publish/data/flows (`-21-`, `-24-`, `-25-`, `-26-`, `-27-`, `-30-`), MCP (P14), reopened re-fixes (P19/`-20-`) interleaved. Respect the cross-plan dependencies above. Single branch → single PR → hold for review → v0.9.4.
