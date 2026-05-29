@@ -3,6 +3,7 @@ import { Check, ChevronDown, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DropdownMenu } from 'radix-ui';
 import { useState } from 'react';
+import { WorkspaceCreateDialog } from '@/components/workspace-create-dialog';
 import type { MemberRole } from '@/lib/auth/require-role';
 import { useT } from '@/lib/i18n/provider';
 
@@ -25,6 +26,7 @@ export function WorkspaceSwitcher({
   const t = useT();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
 
   async function switchTo(id: string) {
@@ -37,75 +39,65 @@ export function WorkspaceSwitcher({
     });
     setBusy(false);
     router.refresh();
-  }
-
-  async function createWorkspace() {
-    const name = window.prompt('New workspace name');
-    if (!name?.trim()) return;
-    setBusy(true);
-    const res = await fetch('/api/workspaces', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ name: name.trim() }),
-    });
-    setBusy(false);
-    if (res.ok) {
-      router.refresh();
-      router.push('/');
-    }
+    // #82 — land on the new workspace's home page (resolveLandingPage runs at
+    // '/'), not whatever route the user was on (e.g. /templates).
+    router.push('/');
   }
 
   return (
-    <DropdownMenu.Root>
-      <DropdownMenu.Trigger
-        aria-label={t('workspaceSwitcher.switch')}
-        className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 text-sm font-medium hover:bg-accent"
-      >
-        <span className="flex min-w-0 items-center gap-2">
-          <span
-            aria-hidden="true"
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
-          >
-            {initial(active?.name ?? '?')}
-          </span>
-          <span className="truncate">{active?.name ?? 'No workspace'}</span>
-        </span>
-        <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
-      </DropdownMenu.Trigger>
-      <DropdownMenu.Portal>
-        <DropdownMenu.Content
-          align="start"
-          sideOffset={4}
-          className="z-50 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+    <>
+      <DropdownMenu.Root>
+        <DropdownMenu.Trigger
+          aria-label={t('workspaceSwitcher.switch')}
+          className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 text-sm font-medium hover:bg-accent"
         >
-          <DropdownMenu.Label className="px-2 py-1.5 text-sm font-semibold">
-            {t('workspaceSwitcher.heading')}
-          </DropdownMenu.Label>
-          {workspaces.map((w) => (
-            <DropdownMenu.Item
-              key={w.id}
-              onSelect={() => void switchTo(w.id)}
-              className={ITEM_CLASS}
+          <span className="flex min-w-0 items-center gap-2">
+            <span
+              aria-hidden="true"
+              className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
             >
-              <Check
-                className={`mr-1 h-4 w-4 shrink-0 ${w.id === activeId ? 'opacity-100' : 'opacity-0'}`}
-              />
-              <span
-                aria-hidden="true"
-                className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
+              {initial(active?.name ?? '?')}
+            </span>
+            <span className="truncate">{active?.name ?? 'No workspace'}</span>
+          </span>
+          <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
+        </DropdownMenu.Trigger>
+        <DropdownMenu.Portal>
+          <DropdownMenu.Content
+            align="start"
+            sideOffset={4}
+            className="z-50 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+          >
+            <DropdownMenu.Label className="px-2 py-1.5 text-sm font-semibold">
+              {t('workspaceSwitcher.heading')}
+            </DropdownMenu.Label>
+            {workspaces.map((w) => (
+              <DropdownMenu.Item
+                key={w.id}
+                onSelect={() => void switchTo(w.id)}
+                className={ITEM_CLASS}
               >
-                {initial(w.name)}
-              </span>
-              <span className="truncate">{w.name}</span>
+                <Check
+                  className={`mr-1 h-4 w-4 shrink-0 ${w.id === activeId ? 'opacity-100' : 'opacity-0'}`}
+                />
+                <span
+                  aria-hidden="true"
+                  className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
+                >
+                  {initial(w.name)}
+                </span>
+                <span className="truncate">{w.name}</span>
+              </DropdownMenu.Item>
+            ))}
+            <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-muted" />
+            <DropdownMenu.Item onSelect={() => setCreateOpen(true)} className={ITEM_CLASS}>
+              <Plus className="mr-2 h-4 w-4 shrink-0" />
+              {t('workspaceSwitcher.create')}
             </DropdownMenu.Item>
-          ))}
-          <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-muted" />
-          <DropdownMenu.Item onSelect={() => void createWorkspace()} className={ITEM_CLASS}>
-            <Plus className="mr-2 h-4 w-4 shrink-0" />
-            {t('workspaceSwitcher.create')}
-          </DropdownMenu.Item>
-        </DropdownMenu.Content>
-      </DropdownMenu.Portal>
-    </DropdownMenu.Root>
+          </DropdownMenu.Content>
+        </DropdownMenu.Portal>
+      </DropdownMenu.Root>
+      <WorkspaceCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
+    </>
   );
 }
