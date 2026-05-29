@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import { useT } from '@/lib/i18n/provider';
+import { prettyKeys } from '@/lib/shortcuts/format';
 import { getShortcuts, type ShortcutScope } from '@/lib/shortcuts/registry';
 import { useShortcutSheet } from './dispatcher';
 
@@ -9,27 +10,6 @@ const SCOPES: { scope: ShortcutScope; titleKey: string }[] = [
   { scope: 'global', titleKey: 'shortcuts.group.global' },
   { scope: 'editor', titleKey: 'shortcuts.group.editor' },
 ];
-
-function isMac(): boolean {
-  if (typeof navigator === 'undefined') return false;
-  return /Mac|iPhone|iPad|iPod/i.test(navigator.platform);
-}
-
-export function prettyKeys(keys: string): string {
-  const mac = isMac();
-  const parts = keys
-    .split('+')
-    .map((p) => p.trim())
-    .filter((p) => p.length > 0);
-  const rendered = parts.map((part) => {
-    const lower = part.toLowerCase();
-    if (lower === 'mod') return mac ? '⌘' : 'Ctrl';
-    if (lower === 'shift') return mac ? '⇧' : 'Shift';
-    if (lower === 'alt') return mac ? '⌥' : 'Alt';
-    return part.toUpperCase();
-  });
-  return mac ? rendered.join('') : rendered.join('+');
-}
 
 export function ShortcutSheet() {
   const t = useT();
