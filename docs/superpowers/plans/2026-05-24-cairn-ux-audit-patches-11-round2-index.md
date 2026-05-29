@@ -172,3 +172,22 @@ Audit labels #103–#110 → GitHub #116–#123.
 ## Execution order
 
 Cosmetic/low-risk first (P11, P12, P13, P18, `-22-`, `-23-`, `-28-`, `-31-`, `-32-`), then editor chrome (`-29-`), settings surfaces (P15, P16, P17), publish/data/flows (`-21-`, `-24-`, `-25-`, `-26-`, `-27-`, `-30-`), MCP (P14), reopened re-fixes (P19/`-20-`) interleaved. Respect the cross-plan dependencies above. Single branch → single PR → hold for review → v0.9.4.
+
+## Full read-through audit (pre-execution)
+
+All 21 detailed plans were read end-to-end (5 reviewers). Result: **87/87 open issues covered** by concrete tasks (file paths + code + verify + `Closes #NN`). No TBD/placeholder, nothing dropped. Defects found were fixed in commit `0d22e0b` (plan-number H1 drift on `-14-`/`-15-`/`-18-` + cross-refs; `#119`/`#122` weak `refs`→`Closes` trailers).
+
+### Known deferrals / scope cuts (intentional — surfaced by the audit)
+
+These do NOT auto-close on merge; they stay open as follow-ups. Implementers + reviewers: do not treat as bugs.
+
+- **#70** (Security: active-sessions list / sign-out-everywhere) — blocked by the `jwt` session strategy (no server session store to enumerate). `-18-` ships only a minimal "sign out this browser" slice, commits `refs #70` (NOT `Closes`). Full feature (token_version / JWT denylist + migration + callbacks) = separate follow-up. **#70 stays open.**
+- **#61** (Admin sub-routes 404) — the admin UI exists at `/settings/admin/audit`; the 404 was a stale `audit-log` path + an Admin tab shown to non-admins. `-16-` resolves via role-gating (#60) + a verify-stale task + `gh issue comment 61`; if any admin page is genuinely unbuilt it's logged there, not silently fixed.
+- **#108** (`@` surfaces users only) — `-26-` **documents** the `@`(users) vs `[[`(pages) split; full unify into one switcher is deferred (logged via `gh issue comment 108`).
+- **#76** (page-menu Move-to) — `-19-` Task 5 has an explicit off-ramp: if the move-to *picker* exceeds ~30 lines, ship Delete/Duplicate/Copy-link and file Move-to as follow-up.
+- **Reopened #17 / #18 / #39** (`-14-`) — CSS/layout diagnose-first re-fixes verified by `pnpm build` + manual dark/light check (no automated test); #19 does add a real test.
+- **`-20-` diagnose checklist** — round-1 commit hashes are placeholders to resolve via `git log --grep` at implementation time (disclosed, not silent).
+- **Migration 0054** required by `-21-` (#81) — `workspaces` has no `icon` column yet.
+
+### Pending user decision
+- Audit items **3 → GH #12** ("switcher chevrons read as sort") and **32 → GH #41** ("chevron too small to click") were **closed in round 1** and not listed in the reopen set. Currently closed; reopen only on request.
