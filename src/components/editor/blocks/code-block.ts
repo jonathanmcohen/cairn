@@ -11,7 +11,7 @@ import { CodeBlockView } from './code-block-view';
  * The remaining ids are the popular lowlight `common` languages.
  */
 export const LANGUAGES: { value: string; label: string }[] = [
-  { value: 'auto', label: 'Auto' },
+  { value: 'auto', label: 'Auto-detect' },
   { value: 'plaintext', label: 'Plain text' },
   { value: 'typescript', label: 'TypeScript' },
   { value: 'tsx', label: 'TSX' },
