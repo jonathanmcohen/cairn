@@ -158,6 +158,8 @@ export function SearchPalette({
 
   if (!open) return null;
 
+  const hasQuery = query.trim().length > 0;
+
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[20vh]">
       <button
@@ -190,7 +192,43 @@ export function SearchPalette({
           className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
         <Command.List className="max-h-80 overflow-y-auto border-t">
-          {recentIds.length > 0 && (
+          {hasQuery && results.length > 0 && (
+            <Command.Group heading={t('palette.pages')}>
+              {results.map((r) => (
+                <Command.Item
+                  key={r.id}
+                  value={r.id}
+                  onSelect={() => onSelect(r.id)}
+                  className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
+                >
+                  <div className="font-medium">{r.title}</div>
+                  {r.breadcrumb.length > 1 && (
+                    <div className="text-xs text-muted-foreground">
+                      {r.breadcrumb
+                        .slice(0, -1)
+                        .map((b) => b.title)
+                        .join(' / ')}
+                    </div>
+                  )}
+                  {r.snippet && (
+                    <div
+                      className="mt-1 text-xs text-muted-foreground"
+                      // biome-ignore lint/security/noDangerouslySetInnerHtml: ts_headline returns sanitized <b> markup; accepted v0.1.0 trust boundary
+                      dangerouslySetInnerHTML={{ __html: r.snippet }}
+                    />
+                  )}
+                </Command.Item>
+              ))}
+            </Command.Group>
+          )}
+          {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}
+          {!loading && query && results.length === 0 && (
+            <div className="px-4 py-3 text-sm text-muted-foreground">
+              <div className="font-medium text-foreground">{copy('empty.search.headline')}</div>
+              <div className="mt-1">{copy('empty.search.guidance')}</div>
+            </div>
+          )}
+          {!hasQuery && recentIds.length > 0 && (
             <Command.Group heading={t('palette.recent')}>
               {recentIds
                 .map((id) => actions.find((a) => a.id === id))
@@ -261,38 +299,6 @@ export function SearchPalette({
               ))}
             </Command.Group>
           )}
-          {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}
-          {!loading && query && results.length === 0 && (
-            <div className="px-4 py-3 text-sm text-muted-foreground">
-              <div className="font-medium text-foreground">{copy('empty.search.headline')}</div>
-              <div className="mt-1">{copy('empty.search.guidance')}</div>
-            </div>
-          )}
-          {results.map((r) => (
-            <Command.Item
-              key={r.id}
-              value={r.id}
-              onSelect={() => onSelect(r.id)}
-              className="cursor-pointer px-4 py-2 text-sm aria-selected:bg-accent"
-            >
-              <div className="font-medium">{r.title}</div>
-              {r.breadcrumb.length > 1 && (
-                <div className="text-xs text-muted-foreground">
-                  {r.breadcrumb
-                    .slice(0, -1)
-                    .map((b) => b.title)
-                    .join(' / ')}
-                </div>
-              )}
-              {r.snippet && (
-                <div
-                  className="mt-1 text-xs text-muted-foreground"
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: ts_headline returns sanitized <b> markup; accepted v0.1.0 trust boundary
-                  dangerouslySetInnerHTML={{ __html: r.snippet }}
-                />
-              )}
-            </Command.Item>
-          ))}
         </Command.List>
         {query.trim().length > 0 && (
           <div className="flex justify-end border-t px-3 py-2">
