@@ -6,7 +6,14 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useCallback, useId, useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateField } from '@/components/ui/date-field';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type SerializedNotification = {
   id: string;
@@ -152,18 +159,21 @@ export function NotificationsPageList({
           <label htmlFor={statusId} className="block text-xs">
             Status
           </label>
-          <select
-            id={statusId}
+          <Select
             value={filter.status ?? 'all'}
-            onChange={(e) =>
-              applyFilter({ ...filter, status: e.target.value as FilterState['status'] })
+            onValueChange={(next) =>
+              applyFilter({ ...filter, status: next as FilterState['status'] })
             }
-            className="min-h-11 rounded border bg-background px-3 py-2 text-sm"
           >
-            <option value="all">All</option>
-            <option value="unread">Unread</option>
-            <option value="read">Read</option>
-          </select>
+            <SelectTrigger id={statusId} aria-label="Status" className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All</SelectItem>
+              <SelectItem value="unread">Unread</SelectItem>
+              <SelectItem value="read">Read</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
@@ -195,43 +205,29 @@ export function NotificationsPageList({
           </div>
         </div>
 
-        <div>
-          <label htmlFor={fromId} className="block text-xs">
-            From
-          </label>
-          <Input
-            id={fromId}
-            type="date"
-            value={filter.dateFrom?.slice(0, 10) ?? ''}
-            onChange={(e) =>
-              applyFilter({
-                ...filter,
-                dateFrom: e.target.value
-                  ? new Date(`${e.target.value}T00:00:00Z`).toISOString()
-                  : undefined,
-              })
-            }
-          />
-        </div>
+        <DateField
+          id={fromId}
+          label="From"
+          value={filter.dateFrom?.slice(0, 10) ?? ''}
+          onChange={(next) =>
+            applyFilter({
+              ...filter,
+              dateFrom: next ? new Date(`${next}T00:00:00Z`).toISOString() : undefined,
+            })
+          }
+        />
 
-        <div>
-          <label htmlFor={toId} className="block text-xs">
-            To
-          </label>
-          <Input
-            id={toId}
-            type="date"
-            value={filter.dateTo?.slice(0, 10) ?? ''}
-            onChange={(e) =>
-              applyFilter({
-                ...filter,
-                dateTo: e.target.value
-                  ? new Date(`${e.target.value}T00:00:00Z`).toISOString()
-                  : undefined,
-              })
-            }
-          />
-        </div>
+        <DateField
+          id={toId}
+          label="To"
+          value={filter.dateTo?.slice(0, 10) ?? ''}
+          onChange={(next) =>
+            applyFilter({
+              ...filter,
+              dateTo: next ? new Date(`${next}T00:00:00Z`).toISOString() : undefined,
+            })
+          }
+        />
       </fieldset>
 
       <ul className="divide-y rounded border">
