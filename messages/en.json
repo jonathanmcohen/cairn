@@ -41,6 +41,9 @@
   "outline.hide": "Hide outline",
   "outline.empty": "No headings.",
   "security.twoFactor.setup": "Set up 2FA",
+  "security.passkeys.title": "Passkeys",
+  "security.passkeys.blurb": "Sign in with Face ID, Touch ID, Windows Hello, or a hardware security key instead of a password.",
+  "security.passkeys.manage": "Manage passkeys",
   "sidebar.releaseNotes": "Release notes for v{version}",
   "sidebar.resize": "Resize sidebar",
   "sidebar.signOut": "Sign out"

@@ -41,6 +41,9 @@
   "outline.hide": "Ocultar esquema",
   "outline.empty": "Sin encabezados.",
   "security.twoFactor.setup": "Configurar 2FA",
+  "security.passkeys.title": "Claves de acceso",
+  "security.passkeys.blurb": "Inicia sesión con Face ID, Touch ID, Windows Hello o una llave de seguridad física en lugar de una contraseña.",
+  "security.passkeys.manage": "Gestionar claves de acceso",
   "sidebar.releaseNotes": "Notas de la versión v{version}",
   "sidebar.resize": "Redimensionar la barra lateral",
   "sidebar.signOut": "Cerrar sesión"
