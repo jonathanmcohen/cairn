@@ -63,7 +63,16 @@
 - **P06** — `…-06-notifications-polish.md` — Pills toggle state, empty state, bell-drawer verification.
 - **P07** — `…-07-settings-surfaces.md` — Profile fields + copy, UUID copy button, primary button, MCP info.
 - **P08** — `…-08-templates.md` — Built-in seed/listing fix, "Save as template" CTA.
+- **P09** — `…-09-codeblock-language.md` — Code block language selector + lowlight highlighting (#47). *(Added to batch.)*
+- **P10** — `…-10-callout-types.md` — Semantic callout variants note/tip/warning/error/info + picker (#48). *(Added to batch.)*
+
+## Later additions (beyond original 36-item audit)
+
+| GH issue | Summary | Plan |
+|---------:|---------|------|
+| #47 | Code blocks: no language selector / no highlighting | P09 |
+| #48 | Callouts: selectable semantic types | P10 |
 
 ## Suggested execution order
 
-P01 → P04 → (P02, P03, P05, P06, P07, P08 in any order). P05/P06 reuse the P01 `Select`/date primitives, so land P01 first.
+P01 → P04 → (P02, P03, P05, P06, P07, P08 in any order) → P09 → P10. P05/P06/P09/P10 reuse the P01 `Select` primitive, so land P01 first. P09 + P10 both edit `extensions.ts` — run them sequentially.
