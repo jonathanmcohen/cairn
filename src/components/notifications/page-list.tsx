@@ -197,12 +197,16 @@ export function NotificationsPageList({
                     });
                   }}
                   className={cn(
-                    'rounded-full border px-3 py-1 text-sm transition-colors',
+                    // #30: ≥44px touch target (min-h-11) and a NON-COLOR active
+                    // affordance (the leading check + a solid 2px border) so the
+                    // pressed state is perceivable without relying on fill colour.
+                    'inline-flex min-h-11 items-center gap-1 rounded-full border-2 px-3 py-1 text-sm transition-colors',
                     selected
-                      ? 'border-transparent bg-primary text-primary-foreground'
+                      ? 'border-primary bg-primary font-medium text-primary-foreground'
                       : 'border-input bg-background text-muted-foreground hover:bg-accent',
                   )}
                 >
+                  {selected && <Check aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />}
                   {t === 'mention' ? 'Mentions' : 'Replies'}
                 </button>
               );
