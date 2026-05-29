@@ -16,7 +16,7 @@
 
 **Yjs-safety note:** #96's transaction only inserts a standard empty `paragraph` node and moves the selection — it writes ProseMirror document structure (synced by y-prosemirror), never node-view-local state. #83/#84/#104 touch no document content at all. No custom node gains non-attr NodeView state.
 
-**Cross-reference:** P13 (`-14-editor-blocks.md`, "Covers" line `#17 …`) also edits `src/components/pages/page-mode-toggles.tsx` for the duplicate-top-right-control-box fix (#17). **Land P13's #17 fix first if both are in flight**, then rebase this plan's #104 change on top — both touch the same file but different concerns (P13 = where the toggles mount; P22 = how the Reader toggle looks/labels). If executed out of order, re-read the file before Task 4's edit and reconcile by hand.
+**Cross-reference:** P14 (`-14-editor-blocks.md`, "Covers" line `#17 …`) also edits `src/components/pages/page-mode-toggles.tsx` for the duplicate-top-right-control-box fix (#17). **Land P14's #17 fix first if both are in flight**, then rebase this plan's #104 change on top — both touch the same file but different concerns (P14 = where the toggles mount; P22 = how the Reader toggle looks/labels). If executed out of order, re-read the file before Task 4's edit and reconcile by hand.
 
 ---
 
@@ -399,7 +399,7 @@ git commit -m "feat(editor): add + insert button to block hover handle — Close
 - Modify: `messages/en.json`, `messages/es.json`, `messages/ar.json`
 - Test: `tests/a11y/page-mode-toggles.test.tsx` (extend the existing test)
 
-**Cross-ref:** see the plan header — P13 (`-14-editor-blocks.md`) edits this same file for #17 (single top-right control group). If P13 has landed, re-read the file before editing; the two changes are independent (P13 = mount site, P22 = button labels/active-state) and should compose cleanly.
+**Cross-ref:** see the plan header — P14 (`-14-editor-blocks.md`) edits this same file for #17 (single top-right control group). If P14 has landed, re-read the file before editing; the two changes are independent (P14 = mount site, P22 = button labels/active-state) and should compose cleanly.
 
 **Design:** The component currently uses `aria-label` + native `title` (which IS a browser tooltip) and `variant={reader ? 'default' : 'outline'}`. Audit feedback: the active state is too subtle and the labels/tooltips should be i18n'd and explicit. We (a) move the hard-coded strings to the i18n catalog, (b) keep `aria-pressed` (already correct), and (c) make the pressed state unmistakable with an added ring + retained `default` variant. No new Tooltip primitive — native `title` is the tooltip, `aria-label` is the accessible name (both already present; we keep both and i18n them).
 
@@ -550,5 +550,5 @@ git commit -m "fix(editor): accessible label + tooltip + stronger active state o
 - **Yjs-safety:** #96 inserts a standard `paragraph` node + moves selection (document structure, synced by y-prosemirror); no node-view-local state introduced. #83/#84/#104 touch no document content. ✓
 - **i18n:** every new user-facing string added to `en`/`es`/`ar` catalogs with key parity (the project's Biome i18n rule enforces parity). ✓
 - **WCAG AA + 44px:** Task 4 keeps the 44px touch targets and adds a redundant (fill + ring) state cue meeting 1.4.11. The #96 hover handle is intentionally NOT inflated to 44px (fine-pointer hover-only affordance) — rationale documented in Task 3's touch-target note. ✓
-- **Cross-ref to P13:** flagged in the header and Task 4 — both edit `page-mode-toggles.tsx` for different concerns; land #17 first if concurrent. ✓
+- **Cross-ref to P14:** flagged in the header and Task 4 — both edit `page-mode-toggles.tsx` for different concerns; land #17 first if concurrent. ✓
 - **Placeholders left for the implementer:** the `+` insert selection API (`setTextSelection` vs `TextSelection.create`) and the exact active-state assertion regex are called out as "verify against the live API / align with your choice" — the implementer must read the file first. ✓

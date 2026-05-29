@@ -1,4 +1,4 @@
-# P17 — Security & Notifications Surfaces Implementation Plan
+# P18 — Security & Notifications Surfaces Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax. Branch is `patches/ux-audit-v0.9.4` (do NOT switch). Prefix every shell command with `source ~/.zshenv && `.
 

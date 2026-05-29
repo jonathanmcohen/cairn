@@ -1,4 +1,4 @@
-# P14 — MCP Endpoint Origin (deploy-correct) Implementation Plan
+# P15 — MCP Endpoint Origin (deploy-correct) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
 

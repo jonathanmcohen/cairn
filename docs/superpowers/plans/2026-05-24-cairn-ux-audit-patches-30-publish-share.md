@@ -548,7 +548,7 @@ Expected: both PASS. If the rotate test fails on the status text, re-check the `
 
 ```bash
 git add src/components/pages/share-panel.tsx src/components/pages/share-dialog.tsx tests/components/pages/share-dialog.test.tsx
-git commit -m "feat(share): roomy labelled Share modal + themed password/date controls — refs #120 #119"
+git commit -m "feat(share): roomy labelled Share modal + themed password/date controls — Closes #120 Closes #119"
 ```
 
 ---

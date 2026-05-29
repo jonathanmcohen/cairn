@@ -1,4 +1,4 @@
-# P13 — Editor Blocks & Callouts (Round 2) Implementation Plan
+# P14 — Editor Blocks & Callouts (Round 2) Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development or superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
 

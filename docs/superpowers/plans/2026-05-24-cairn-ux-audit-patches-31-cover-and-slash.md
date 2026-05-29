@@ -545,7 +545,7 @@ Expected: clean.
 
 ```bash
 git add src/components/editor/slash-menu.tsx messages/en.json messages/es.json messages/ar.json
-git commit -m "feat(editor): grouped, scrollable slash menu (keyboard-nav across groups) — refs #122"
+git commit -m "feat(editor): grouped, scrollable slash menu (keyboard-nav across groups) — Closes #122"
 ```
 
 ---

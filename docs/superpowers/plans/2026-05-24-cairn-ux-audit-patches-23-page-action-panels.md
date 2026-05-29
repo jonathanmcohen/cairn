@@ -16,15 +16,15 @@ All four panel components currently render **hardcoded English** (none consume `
 
 ## Cross-plan coordination (READ FIRST)
 
-`src/components/editor/suggestion-toolbar.tsx` and `src/components/editor/editor.tsx` are **also touched by P13 (`-14-editor-blocks.md`) Task 8 (#39)**. P13 Task 8 is a *diagnose-and-re-fix* of the round-1 tab-strip separators + active states + the `N open` muted chip styling (the `bg-muted` pill at the bottom of `suggestion-toolbar.tsx`). This plan (#98/#101) changes **different concerns in the same file**:
+`src/components/editor/suggestion-toolbar.tsx` and `src/components/editor/editor.tsx` are **also touched by P14 (`-14-editor-blocks.md`) Task 8 (#39)**. P14 Task 8 is a *diagnose-and-re-fix* of the round-1 tab-strip separators + active states + the `N open` muted chip styling (the `bg-muted` pill at the bottom of `suggestion-toolbar.tsx`). This plan (#98/#101) changes **different concerns in the same file**:
 
-- **#39 (P13):** the *outer strip layout* in `editor.tsx` (`h-4 w-px bg-border` separators, status pill, Outline `aria-pressed`) and the *visual styling* of the `Suggesting` toggle + the `N open` chip in `suggestion-toolbar.tsx`.
+- **#39 (P14):** the *outer strip layout* in `editor.tsx` (`h-4 w-px bg-border` separators, status pill, Outline `aria-pressed`) and the *visual styling* of the `Suggesting` toggle + the `N open` chip in `suggestion-toolbar.tsx`.
 - **#98 / #101 (this plan):** makes the `N open` chip a **`<button>`** that focuses the first open suggestion, and adds **icons + tooltips + accessible labels** to the `Mark insert` / `Mark delete` buttons.
 
 **To avoid conflict:**
-1. Sequence-wise, **land P13 Task 8 before this plan's Task 6** if both are in flight (the index orders P13 before P23). If P13 Task 8 is not yet landed, this plan's Task 6 still applies cleanly because it edits distinct JSX nodes — but the implementer **must re-read the file at Step 1** and preserve any separator/active-state markup P13 added (do not revert the `bg-muted` → keep it as the button's resting style; do not remove separators in `editor.tsx`).
+1. Sequence-wise, **land P14 Task 8 before this plan's Task 6** if both are in flight (the index orders P14 before P23). If P14 Task 8 is not yet landed, this plan's Task 6 still applies cleanly because it edits distinct JSX nodes — but the implementer **must re-read the file at Step 1** and preserve any separator/active-state markup P14 added (do not revert the `bg-muted` → keep it as the button's resting style; do not remove separators in `editor.tsx`).
 2. This plan's Task 6 **must not touch** the outer `editor.tsx` strip separators or the Outline/status pill — those belong to #39. The only `editor.tsx` change here is adding one `onJumpToFirstOpen` callback passed into `SuggestionToolbar`.
-3. Note the shared file in the commit body so reviewers cross-check: `# touches suggestion-toolbar.tsx — also edited by P13 #39 (styling); this PR changes interactivity only`.
+3. Note the shared file in the commit body so reviewers cross-check: `# touches suggestion-toolbar.tsx — also edited by P14 #39 (styling); this PR changes interactivity only`.
 
 ---
 
@@ -509,7 +509,7 @@ git commit -m "fix(page-actions): single-open-panel controller + shared Escape d
 
 ### Task 6: Suggestion toolbar — interactive "N open" badge + Mark insert/delete icons & tooltips (#98, #101)
 
-> **COORDINATION:** This edits `src/components/editor/suggestion-toolbar.tsx` + a tiny `editor.tsx` callback — files also touched by **P13 #39** (styling/separators). Re-read both files at Step 1; preserve P13's separator/active-state markup. Change **interactivity only** here. See "Cross-plan coordination" at the top.
+> **COORDINATION:** This edits `src/components/editor/suggestion-toolbar.tsx` + a tiny `editor.tsx` callback — files also touched by **P14 #39** (styling/separators). Re-read both files at Step 1; preserve P14's separator/active-state markup. Change **interactivity only** here. See "Cross-plan coordination" at the top.
 
 **Files:**
 - Modify: `src/components/editor/suggestion-toolbar.tsx`
@@ -521,14 +521,14 @@ git commit -m "fix(page-actions): single-open-panel controller + shared Escape d
 
 - [ ] **Step 1: Re-read both files; write the failing test**
 
-Read `suggestion-toolbar.tsx` and `editor.tsx` (current state, post-P13 if landed). Create `tests/components/editor/suggestion-toolbar.test.tsx`: render with `openCount={3}` and a spy `onJumpToFirstOpen`; assert the `N open` element is a `<button>` (role button) with an accessible name, and clicking it calls the spy. Render with `active` and assert `Mark insert`/`Mark delete` buttons have accessible labels (aria-label) and an icon child.
+Read `suggestion-toolbar.tsx` and `editor.tsx` (current state, post-P14 if landed). Create `tests/components/editor/suggestion-toolbar.test.tsx`: render with `openCount={3}` and a spy `onJumpToFirstOpen`; assert the `N open` element is a `<button>` (role button) with an accessible name, and clicking it calls the spy. Render with `active` and assert `Mark insert`/`Mark delete` buttons have accessible labels (aria-label) and an icon child.
 
 Run: `source ~/.zshenv && pnpm vitest run tests/components/editor/suggestion-toolbar.test.tsx`
 Expected: FAIL.
 
 - [ ] **Step 2: Make the badge a button (#98)**
 
-Add `onJumpToFirstOpen: () => void` to the `SuggestionToolbar` props. Change the `openCount > 0` chip from `<span>` to a `<button type="button">` that keeps the muted-pill styling P13 set (`rounded-full bg-muted px-2 py-0.5 …`) but adds `hover:bg-muted/80 focus-visible:ring-1 focus-visible:ring-ring` + `aria-label={t('pageActions.suggest.openCountLabel', { count: openCount })}` and `onClick={onJumpToFirstOpen}`. Use the i18n count plural for the label. Keep the visible text `{openCount} {t('pageActions.suggest.open')}` (or a single pluralized key).
+Add `onJumpToFirstOpen: () => void` to the `SuggestionToolbar` props. Change the `openCount > 0` chip from `<span>` to a `<button type="button">` that keeps the muted-pill styling P14 set (`rounded-full bg-muted px-2 py-0.5 …`) but adds `hover:bg-muted/80 focus-visible:ring-1 focus-visible:ring-ring` + `aria-label={t('pageActions.suggest.openCountLabel', { count: openCount })}` and `onClick={onJumpToFirstOpen}`. Use the i18n count plural for the label. Keep the visible text `{openCount} {t('pageActions.suggest.open')}` (or a single pluralized key).
 
 - [ ] **Step 3: Add icons + tooltips + labels to Mark insert/delete (#101)**
 
@@ -536,7 +536,7 @@ Import `import { Plus, Minus } from 'lucide-react';` and the radix `Tooltip` (`i
 
 - [ ] **Step 4: Add the `editor.tsx` jump callback**
 
-In `editor.tsx`, add `jumpToFirstOpenSuggestion` (memoized) that queries the editor DOM for the first open-suggestion mark and scrolls+selects it, then pass `onJumpToFirstOpen={jumpToFirstOpenSuggestion}` into `<SuggestionToolbar>`. **Do not** alter the surrounding strip separators / status pill / Outline button (P13 #39 territory).
+In `editor.tsx`, add `jumpToFirstOpenSuggestion` (memoized) that queries the editor DOM for the first open-suggestion mark and scrolls+selects it, then pass `onJumpToFirstOpen={jumpToFirstOpenSuggestion}` into `<SuggestionToolbar>`. **Do not** alter the surrounding strip separators / status pill / Outline button (P14 #39 territory).
 
 - [ ] **Step 5: Add i18n strings**
 
@@ -561,7 +561,7 @@ Expected: PASS; build clean.
 git add src/components/editor/suggestion-toolbar.tsx src/components/editor/editor.tsx messages/en.json messages/es.json messages/ar.json tests/components/editor/suggestion-toolbar.test.tsx
 git commit -m "fix(editor): interactive open-suggestions badge + Mark insert/delete icons+tooltips — Closes #98 Closes #101
 
-# touches suggestion-toolbar.tsx + editor.tsx — also edited by P13 #39 (strip styling); this PR changes interactivity only"
+# touches suggestion-toolbar.tsx + editor.tsx — also edited by P14 #39 (strip styling); this PR changes interactivity only"
 ```
 
 ---
@@ -573,5 +573,5 @@ git commit -m "fix(editor): interactive open-suggestions badge + Mark insert/del
 - **WCAG AA + 44px:** comments submit uses primary `bg-primary/text-primary-foreground` (AA both themes) at `min-h-11`; lock menu items `min-h-11`; export trigger/items `min-h-11`; suggestion-strip controls stay at the established compact 36px (the strip is intentionally dense — AA contrast preserved, noted as a deliberate exception). ✓
 - **Escape handling accessible:** Task 5's single `keydown` listener dismisses the active panel; radix DropdownMenu (export) + radix Tooltip (suggest) bring their own AA-correct Escape/focus semantics; the controller's Escape is idempotent with radix's. ✓
 - **Reuse:** radix `DropdownMenu`/`Tooltip` (already in `radix-ui` dep — exports verified), `Button`/`Select` primitives, `useT`, `cn()`. CopyButton not needed here (no copy affordance in this cluster) — noted so reviewers don't expect it. ✓
-- **Cross-plan conflict (#39 vs #98/#101):** explicitly coordinated up top + in Task 6's banner + commit trailer; this plan changes interactivity, P13 changes strip styling — disjoint JSX concerns in the shared files. ✓
+- **Cross-plan conflict (#39 vs #98/#101):** explicitly coordinated up top + in Task 6's banner + commit trailer; this plan changes interactivity, P14 changes strip styling — disjoint JSX concerns in the shared files. ✓
 - **No unresolved placeholders:** each task says "re-read the file first / use the real state-variable names"; the snapshot route reads live content server-side (no client content payload), called out explicitly. ✓
