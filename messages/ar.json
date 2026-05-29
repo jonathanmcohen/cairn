@@ -39,5 +39,6 @@
   "workspaceSwitcher.create": "إنشاء مساحة عمل",
   "outline.title": "المخطط",
   "outline.hide": "إخفاء المخطط",
-  "outline.empty": "لا توجد عناوين."
+  "outline.empty": "لا توجد عناوين.",
+  "sidebar.releaseNotes": "ملاحظات إصدار v{version}"
 }

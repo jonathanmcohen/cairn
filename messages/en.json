@@ -39,5 +39,6 @@
   "workspaceSwitcher.create": "Create workspace",
   "outline.title": "Outline",
   "outline.hide": "Hide outline",
-  "outline.empty": "No headings."
+  "outline.empty": "No headings.",
+  "sidebar.releaseNotes": "Release notes for v{version}"
 }

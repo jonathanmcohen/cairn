@@ -2,6 +2,7 @@
 
 import { CheckSquare, LayoutTemplate, Settings, Trash } from 'lucide-react';
 import Link from 'next/link';
+import { useT } from '@/lib/i18n/provider';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
@@ -18,6 +19,7 @@ const NAV_ITEM_CLASS =
   'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent';
 
 export function SidebarFooterNav({ version }: { version: string }) {
+  const t = useT();
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
       <ReviewDueCounter />
@@ -50,7 +52,8 @@ export function SidebarFooterNav({ version }: { version: string }) {
           href={`https://github.com/jonathanmcohen/cairn/releases/tag/v${version}`}
           target="_blank"
           rel="noreferrer"
-          className="inline-flex min-h-11 items-center justify-center px-2 hover:text-foreground hover:underline"
+          aria-label={t('sidebar.releaseNotes', { version })}
+          className="inline-flex min-h-11 items-center justify-center rounded px-2 underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           v{version}
         </a>
