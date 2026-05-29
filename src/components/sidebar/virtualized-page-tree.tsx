@@ -6,8 +6,11 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { EmptyPageTree } from '@/components/empty-state/variants';
+import { useT } from '@/lib/i18n/provider';
 import { parseIcon } from '@/lib/pages/icon-format';
 import type { FlatPageNode } from '@/lib/pages/tree';
+import { PageRowActionsMenu } from './page-row-actions-menu';
+import { usePageRowActions } from './use-page-row-actions';
 
 /**
  * Render a page row's stored icon string. Always routes through `parseIcon` so
@@ -202,28 +205,79 @@ export function VirtualizedPageTree({
             );
           }
           const node = row.page;
-          return (
-            <li
-              key={row.key}
-              data-virtual-row=""
-              data-row-kind="page"
-              data-depth={node.depth}
-              style={baseStyle}
-            >
-              <Link
-                href={`/pages/${node.id}` as Route}
-                className="flex items-center gap-2 rounded px-2 py-1 text-sm hover:bg-accent"
-                style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
-              >
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
-                  {renderNodeIcon(node.icon)}
-                </span>
-                <span className="min-w-0 flex-1 truncate">{node.title}</span>
-              </Link>
-            </li>
-          );
+          return <PageTreeRow key={row.key} node={node} rowKey={row.key} style={baseStyle} />;
         })}
       </ul>
     </div>
+  );
+}
+
+/**
+ * A single page row: the `<Link>` and the trailing hover action cluster are
+ * siblings (nested interactive elements are invalid), so the depth indent moves
+ * to the row `<li>`. The cluster is always in the DOM (revealed via opacity on
+ * hover/focus, never `hidden`) so it stays keyboard- and SR-reachable. The
+ * action hook is called exactly once here so inline-rename state can live in
+ * the row (the title `<span>` swaps for an `<input>` while renaming).
+ */
+function PageTreeRow({
+  node,
+  rowKey,
+  style,
+}: {
+  node: FlatPageNode;
+  rowKey: string;
+  style: React.CSSProperties;
+}) {
+  const t = useT();
+  const api = usePageRowActions(node);
+  return (
+    <li key={rowKey} data-virtual-row="" data-row-kind="page" data-depth={node.depth} style={style}>
+      <div
+        className="group flex items-center gap-1 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
+        style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
+      >
+        {api.renaming ? (
+          <>
+            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
+              {renderNodeIcon(node.icon)}
+            </span>
+            <input
+              type="text"
+              // biome-ignore lint/a11y/noAutofocus: inline rename — focusing the input immediately is the expected UX when the user invokes "Rename"
+              autoFocus
+              aria-label={t('pageRow.rename')}
+              defaultValue={node.title}
+              className="min-w-0 flex-1 rounded border bg-background px-1 py-0.5 text-sm outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  void api.submitRename((e.target as HTMLInputElement).value);
+                } else if (e.key === 'Escape') {
+                  e.preventDefault();
+                  api.cancelRename();
+                }
+              }}
+              onBlur={(e) => void api.submitRename(e.target.value)}
+            />
+          </>
+        ) : (
+          <>
+            <Link
+              href={`/pages/${node.id}` as Route}
+              className="flex min-w-0 flex-1 items-center gap-2 py-1"
+            >
+              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
+                {renderNodeIcon(node.icon)}
+              </span>
+              <span className="min-w-0 flex-1 truncate">{node.title}</span>
+            </Link>
+            <span className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              <PageRowActionsMenu node={node} api={api} />
+            </span>
+          </>
+        )}
+      </div>
+    </li>
   );
 }
