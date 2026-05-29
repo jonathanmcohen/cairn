@@ -1,5 +1,3 @@
-import { CheckSquare, LayoutTemplate, Trash } from 'lucide-react';
-import Link from 'next/link';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { flattenedPageTree } from '@/lib/pages/tree';
@@ -8,13 +6,12 @@ import { appVersion } from '@/lib/version';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
 import { PinnedSection } from './sidebar/pinned-section';
-import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { SavedSearches } from './sidebar/saved-searches';
 import { VirtualizedPageTree } from './sidebar/virtualized-page-tree';
 import { SidebarFavorites } from './sidebar-favorites';
+import { SidebarFooterNav } from './sidebar-footer-nav';
 import { SidebarRecents } from './sidebar-recents';
 import { ThemeToggle } from './theme-toggle';
-import { Button } from './ui/button';
 import { WorkspaceSwitcher } from './workspace-switcher';
 
 /**
@@ -61,36 +58,7 @@ export async function SidebarContent({
         </div>
         <VirtualizedPageTree initial={tree} />
       </nav>
-      <div className="border-t p-3 text-xs text-muted-foreground">
-        <ReviewDueCounter />
-        <Link
-          href="/my-tasks"
-          className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-        >
-          <CheckSquare aria-hidden="true" className="h-3 w-3" />
-          My tasks
-        </Link>
-        <Link
-          href="/templates"
-          className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-        >
-          <LayoutTemplate aria-hidden="true" className="h-3 w-3" />
-          Templates
-        </Link>
-        <Link
-          href="/trash"
-          className="mb-2 flex items-center gap-2 rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-        >
-          <Trash aria-hidden="true" className="h-3 w-3" />
-          Trash
-        </Link>
-        <form action="/api/auth/signout" method="post">
-          <Button variant="ghost" size="sm" className="w-full justify-start" type="submit">
-            Sign out
-          </Button>
-        </form>
-        <div className="mt-2 text-center">v{appVersion()}</div>
-      </div>
+      <SidebarFooterNav version={appVersion()} />
     </div>
   );
 }
