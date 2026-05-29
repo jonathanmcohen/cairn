@@ -28,35 +28,47 @@ export function ViewSwitcher({
 
   async function addSimpleView(type: 'table' | 'gallery' | 'list') {
     setAdding(true);
-    await fetch(`/api/databases/${databaseId}/views`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        type,
-        name: type.charAt(0).toUpperCase() + type.slice(1),
-        config: {},
-      }),
-    });
-    setAdding(false);
-    onViewsChanged();
+    try {
+      const res = await fetch(`/api/databases/${databaseId}/views`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          name: type.charAt(0).toUpperCase() + type.slice(1),
+          config: {},
+        }),
+      });
+      if (!res.ok) return; // leave error UX to a later pass; do not silently "succeed"
+      const view = (await res.json()) as { id: string };
+      onViewsChanged();
+      onChange(view.id);
+    } finally {
+      setAdding(false);
+    }
   }
 
   async function addDateView() {
     if (!pendingType || !pickedDateProp) return;
     setAdding(true);
-    await fetch(`/api/databases/${databaseId}/views`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        type: pendingType,
-        name: pendingType.charAt(0).toUpperCase() + pendingType.slice(1),
-        config: { dateProperty: pickedDateProp },
-      }),
-    });
-    setAdding(false);
-    setPendingType(null);
-    setPickedDateProp('');
-    onViewsChanged();
+    try {
+      const res = await fetch(`/api/databases/${databaseId}/views`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type: pendingType,
+          name: pendingType.charAt(0).toUpperCase() + pendingType.slice(1),
+          config: { dateProperty: pickedDateProp },
+        }),
+      });
+      if (!res.ok) return;
+      const view = (await res.json()) as { id: string };
+      setPendingType(null);
+      setPickedDateProp('');
+      onViewsChanged();
+      onChange(view.id);
+    } finally {
+      setAdding(false);
+    }
   }
 
   function startDateView(type: 'calendar' | 'timeline') {
