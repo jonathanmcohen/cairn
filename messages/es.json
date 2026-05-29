@@ -166,5 +166,18 @@
   "share.status.saved": "Guardado",
   "share.status.error": "Error",
   "share.status.rotatedCopied": "Rotada + copiada al portapapeles",
-  "share.status.rotatedReveal": "Rotada. Nueva contraseña: {password}"
+  "share.status.rotatedReveal": "Rotada. Nueva contraseña: {password}",
+  "database.view.add": "Añadir vista",
+  "database.view.dateProperty": "Propiedad de fecha de {type}",
+  "database.view.type.table": "Tabla",
+  "database.view.type.gallery": "Galería",
+  "database.view.type.list": "Lista",
+  "database.view.type.calendar": "Calendario",
+  "database.view.type.timeline": "Cronología",
+  "database.view.type.kanban": "Tablero",
+  "common.add": "Añadir",
+  "database.rowCount.one": "{count} fila",
+  "database.rowCount.other": "{count} filas",
+  "database.addRow": "Añadir fila",
+  "database.emptyHint": "Aún no hay filas — añade tu primera fila."
 }

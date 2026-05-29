@@ -166,5 +166,18 @@
   "share.status.saved": "Saved",
   "share.status.error": "Error",
   "share.status.rotatedCopied": "Rotated + copied to clipboard",
-  "share.status.rotatedReveal": "Rotated. New password: {password}"
+  "share.status.rotatedReveal": "Rotated. New password: {password}",
+  "database.view.add": "Add view",
+  "database.view.dateProperty": "{type} date property",
+  "database.view.type.table": "Table",
+  "database.view.type.gallery": "Gallery",
+  "database.view.type.list": "List",
+  "database.view.type.calendar": "Calendar",
+  "database.view.type.timeline": "Timeline",
+  "database.view.type.kanban": "Board",
+  "common.add": "Add",
+  "database.rowCount.one": "{count} row",
+  "database.rowCount.other": "{count} rows",
+  "database.addRow": "Add row",
+  "database.emptyHint": "No rows yet — add your first row."
 }

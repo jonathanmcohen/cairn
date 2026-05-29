@@ -166,5 +166,18 @@
   "share.status.saved": "تم الحفظ",
   "share.status.error": "خطأ",
   "share.status.rotatedCopied": "تم التدوير + النسخ إلى الحافظة",
-  "share.status.rotatedReveal": "تم التدوير. كلمة المرور الجديدة: {password}"
+  "share.status.rotatedReveal": "تم التدوير. كلمة المرور الجديدة: {password}",
+  "database.view.add": "إضافة عرض",
+  "database.view.dateProperty": "خاصية تاريخ {type}",
+  "database.view.type.table": "جدول",
+  "database.view.type.gallery": "معرض",
+  "database.view.type.list": "قائمة",
+  "database.view.type.calendar": "تقويم",
+  "database.view.type.timeline": "مخطط زمني",
+  "database.view.type.kanban": "لوحة",
+  "common.add": "إضافة",
+  "database.rowCount.one": "صف {count}",
+  "database.rowCount.other": "{count} صفوف",
+  "database.addRow": "إضافة صف",
+  "database.emptyHint": "لا توجد صفوف بعد — أضف صفك الأول."
 }
