@@ -7,16 +7,31 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [0.9.3] - Unreleased
 
-> UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No schema changes expected; one templates seed/listing fix. Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-*.md`.
-
-### Fixed
-- _(accumulated as patches land — see PR for the per-issue list)_
-
-### Changed
-- _(accumulated as patches land)_
+> UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No migrations, no new env vars; one templates listing fix. Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-*.md`.
 
 ### Added
-- Themed `Select` + `DateField` UI primitives (`src/components/ui/`).
+- Themed `Select` + `DateField` UI primitives (`src/components/ui/`), built on the unified `radix-ui` package (#38).
+- **Settings** navigation entry in the sidebar lower nav (#45) — `/settings` was previously only reachable by typing the URL.
+- Visible **search affordance with a ⌘K hint** in the sidebar (#43).
+- Themed app-root **404 page** with a home link (#23); `/tasks` now redirects to `/my-tasks` (#22).
+- Copy-to-clipboard for the profile **User ID** (#33); **MCP connection info** + scopes panel on developer settings (#35).
+- Friendly empty states for `/my-tasks` (#26) and `/notifications` (#31); discoverable **Save as template** guidance on the templates gallery (#37).
+
+### Fixed
+- Sidebar page rows no longer leak the raw `emoji::` shortcode and no longer overlap icon/title (#10, #11).
+- Profile now shows **email + display name** (read from the users table), and the intro copy matches (#32).
+- **Built-in templates** now appear in the gallery — listing surfaced built-ins on the `builtIn` flag rather than only the `public` visibility tier (#36).
+- Empty **database blocks** render a header row instead of a bare "+ New row" (#19); headings inside **callouts** are scaled down to keep hierarchy (#20).
+- Single **"Add cover"** affordance (was duplicated) (#16); page **mode toggles** consolidated into the title action bar (was a separate floating box) (#17).
+- Themed, dark-mode-safe **locale switcher** (#21), **/notifications status + date filters** (#28, #29), and **/my-tasks due-by** date control (#27) — replacing native `<select>`/`<input type=date>`.
+
+### Changed
+- Rebalanced sidebar lower-nav hierarchy + separated Sign out; relocated the theme toggle to the account group (#14, #44, #13).
+- Linked the sidebar version footer to the matching GitHub release (#15); clearer workspace-switcher affordance + larger hit target (#12, #41); visible sidebar boundary border (full drag-resize deferred) (#42).
+- Title-Case `/my-tasks` filter tabs with a clear active state (#24, #25); toggle semantics + active state for `/notifications` Mentions/Replies pills (#30); separators + active states on the editor top control strip (#39); intentional centered editor content column (#18).
+- Verified the notification bell drawer renders and links to `/notifications` (#40).
+
+> Remaining native form controls outside audit scope (databases, admin, connectors, automation) tracked for a follow-up pass under #38.
 
 ## [0.9.2] - 2026-05-28
 
