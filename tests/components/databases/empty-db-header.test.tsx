@@ -41,6 +41,23 @@ const meta: DatabaseMeta = {
   views: [{ id: 'v1', type: 'table', name: 'Table', config: {}, position: 0 }],
 };
 
+// a10 #19 — meta with a `select` property so the grouped <table>/<thead> path
+// (grouped = groupByProp?.type === 'select' + config.groupBy set) is exercised.
+const groupedMeta: DatabaseMeta = {
+  database: { id: 'db1', name: 'Db', config: {} },
+  properties: [
+    { id: 'name', name: 'Name', type: 'text', config: {}, position: 0 },
+    {
+      id: 'status',
+      name: 'Status',
+      type: 'select',
+      config: { options: [{ id: 'a', name: 'A' }] },
+      position: 1,
+    },
+  ],
+  views: [{ id: 'v1', type: 'table', name: 'Table', config: { groupBy: 'status' }, position: 0 }],
+};
+
 describe('empty database rendering', () => {
   it('renders column header(s) even when there are zero rows', () => {
     const rows: RowData[] = [];
@@ -54,5 +71,23 @@ describe('empty database rendering', () => {
       />,
     );
     expect(screen.getByText('Name')).toBeTruthy();
+  });
+
+  // The grouped path is the other empty-state branch suspected for #19: with
+  // zero rows it produces zero group <tbody>s but the <thead> column header must
+  // still render so the empty grouped table reads as a table, not a void.
+  it('renders the column header for an empty GROUPED table view', () => {
+    const rows: RowData[] = [];
+    render(
+      <TableView
+        databaseId="db1"
+        meta={groupedMeta}
+        rows={rows}
+        view={{ id: 'v1', type: 'table', name: 'Table', config: { groupBy: 'status' } }}
+        onChange={() => {}}
+      />,
+    );
+    expect(screen.getByText('Name')).toBeTruthy();
+    expect(screen.getByText('Status')).toBeTruthy();
   });
 });
