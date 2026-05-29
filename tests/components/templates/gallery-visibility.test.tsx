@@ -86,4 +86,17 @@ describe('TemplatesGallery visibility grouping', () => {
     expect(screen.getByRole('heading', { name: 'public' })).toBeTruthy();
     expect(screen.getByText('Welcome to Cairn')).toBeTruthy();
   });
+
+  it('uses a 4-col grid at xl so a 4th card fills the row instead of orphaning', () => {
+    const fourPublicTemplates = [
+      tpl({ name: 'B1', builtIn: true, workspaceId: null, visibility: 'public' }),
+      tpl({ name: 'B2', builtIn: true, workspaceId: null, visibility: 'public' }),
+      tpl({ name: 'B3', builtIn: true, workspaceId: null, visibility: 'public' }),
+      tpl({ name: 'B4', builtIn: true, workspaceId: null, visibility: 'public' }),
+    ];
+    const { container } = render(<TemplatesGallery initialTemplates={fourPublicTemplates} />);
+    const grid = container.querySelector('section [class*="grid-cols"]');
+    expect(grid?.className).toContain('xl:grid-cols-4');
+    expect(grid?.className).toContain('sm:grid-cols-2');
+  });
 });

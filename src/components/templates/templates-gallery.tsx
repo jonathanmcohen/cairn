@@ -122,7 +122,7 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
             >
               {v}
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
               {rows.map((t) => (
                 <Card key={t.id} className="flex flex-col">
                   <CardHeader>
