@@ -3,7 +3,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
 import { buildPageWebhookPayload } from '@/lib/webhooks/payload';
-import { randomDefaultIcon } from './default-icon';
+import { DEFAULT_PAGE_ICON } from './default-icon';
 import { emptyDocument } from './empty-document';
 import { formatIcon } from './icon-format';
 
@@ -52,7 +52,7 @@ export async function createPage(
         parentId: input.parentId ?? null,
         spaceId: input.spaceId ?? null,
         title: input.title ?? 'Untitled',
-        icon: input.icon ?? formatIcon({ kind: 'emoji', value: randomDefaultIcon() }),
+        icon: input.icon ?? formatIcon({ kind: 'emoji', value: DEFAULT_PAGE_ICON }),
         content: emptyDocument(),
         status: defaultStatus,
         createdBy: input.createdBy,
