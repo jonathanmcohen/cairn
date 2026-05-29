@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export type MentionItem = {
   id: string;
@@ -8,6 +9,18 @@ export type MentionItem = {
   email: string;
   image: string | null;
 };
+
+// Kept in sync with presence-avatars.tsx#initials — a 6-line pure helper; not
+// abstracted into a shared module on purpose (avoids an import dependency from
+// the detached ReactRenderer mount).
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p[0] ?? '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export type MentionListRef = {
   onKeyDown: (event: KeyboardEvent) => boolean;
@@ -85,12 +98,20 @@ export const MentionList = forwardRef<
               type="button"
               tabIndex={-1}
               onClick={() => command(item)}
-              className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-accent ${
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent ${
                 i === index ? 'bg-accent' : ''
               }`}
             >
-              <div className="font-medium">{item.name}</div>
-              <div className="text-xs text-muted-foreground">{item.email}</div>
+              {/* Decorative: the row already announces name + email, so the
+                  avatar is aria-hidden / alt="" to avoid a double announcement. */}
+              <Avatar size="sm" aria-hidden>
+                {item.image ? <AvatarImage src={item.image} alt="" /> : null}
+                <AvatarFallback>{initials(item.name)}</AvatarFallback>
+              </Avatar>
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{item.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">{item.email}</span>
+              </span>
             </button>
           </div>
         ))}
