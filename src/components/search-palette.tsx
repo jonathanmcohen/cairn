@@ -169,6 +169,17 @@ export function SearchPalette({
       <Command
         className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
         shouldFilter={false}
+        onKeyDown={(e) => {
+          // #114: a single Escape always closes the palette. Stop here so the
+          // key never bubbles to page-level handlers and can't be swallowed by
+          // cmdk's list-nav handler (which ignores Escape) requiring a 2nd press.
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            e.stopPropagation();
+            setOpen(false);
+            setQuery('');
+          }
+        }}
       >
         <Command.Input
           ref={inputRef}
