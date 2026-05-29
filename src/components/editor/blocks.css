@@ -58,3 +58,27 @@
   position: absolute;
   z-index: 2;
 }
+
+/*
+ * v0.9.4 #84 — empty-paragraph placeholder ("Type '/' for commands").
+ *
+ * The @tiptap/extensions Placeholder extension adds a node decoration carrying
+ * `class="is-empty"` (+ `is-editor-empty` on the doc's first node) and a
+ * `data-placeholder` attribute to the empty block's DOM node. It injects NO
+ * text — the visible hint is produced entirely by this CSS. Without it the
+ * placeholder silently never renders (the bug). `showOnlyCurrent: true`
+ * (the extension default) means only the focused empty node paints, which is
+ * exactly what we want for a fresh page.
+ */
+.ProseMirror .is-empty::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  pointer-events: none;
+  color: hsl(var(--muted-foreground));
+}
+
+/* RTL: the placeholder hangs on the right when the doc direction is rtl. */
+.ProseMirror[dir="rtl"] .is-empty::before {
+  float: right;
+}
