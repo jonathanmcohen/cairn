@@ -43,7 +43,16 @@ export function SidebarFooterNav({ version }: { version: string }) {
           </Button>
         </form>
       </div>
-      <div className="mt-2 text-center text-xs text-muted-foreground">v{version}</div>
+      <div className="mt-2 text-center text-xs text-muted-foreground">
+        <a
+          href={`https://github.com/jonathanmcohen/cairn/releases/tag/v${version}`}
+          target="_blank"
+          rel="noreferrer"
+          className="hover:text-foreground hover:underline"
+        >
+          v{version}
+        </a>
+      </div>
     </div>
   );
 }
