@@ -5,14 +5,21 @@ import { getDb } from '@/db/client';
 import { ACTIVE_WORKSPACE_COOKIE, getAuthContext, HttpError } from '@/lib/auth/require-role';
 import { createWorkspace } from '@/lib/workspaces/create';
 
-const CreateInput = z.object({ name: z.string().min(1).max(120) });
+const CreateInput = z.object({
+  name: z.string().min(1).max(120),
+  icon: z.string().max(300).nullish(),
+});
 
 export async function POST(req: Request): Promise<Response> {
   try {
     const ctx = await getAuthContext();
     if (!ctx) throw new HttpError(401, 'Not authenticated');
     const parsed = CreateInput.parse(await req.json().catch(() => ({})));
-    const ws = await createWorkspace(getDb(), { name: parsed.name, ownerUserId: ctx.userId });
+    const ws = await createWorkspace(getDb(), {
+      name: parsed.name,
+      ownerUserId: ctx.userId,
+      icon: parsed.icon ?? null,
+    });
 
     const store = await cookies();
     store.set(ACTIVE_WORKSPACE_COOKIE, ws.id, {
