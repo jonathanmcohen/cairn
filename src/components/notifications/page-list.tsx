@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { cn } from '@/lib/utils';
 
 type SerializedNotification = {
   id: string;
@@ -182,11 +183,9 @@ export function NotificationsPageList({
             {ALL_TYPES.map((t) => {
               const selected = filter.type?.includes(t) ?? false;
               return (
-                <Button
+                <button
                   key={t}
                   type="button"
-                  variant={selected ? 'default' : 'outline'}
-                  size="sm"
                   aria-pressed={selected}
                   onClick={() => {
                     const next = new Set(filter.type ?? []);
@@ -197,9 +196,15 @@ export function NotificationsPageList({
                       type: next.size === 0 ? undefined : Array.from(next),
                     });
                   }}
+                  className={cn(
+                    'rounded-full border px-3 py-1 text-sm transition-colors',
+                    selected
+                      ? 'border-transparent bg-primary text-primary-foreground'
+                      : 'border-input bg-background text-muted-foreground hover:bg-accent',
+                  )}
                 >
                   {t === 'mention' ? 'Mentions' : 'Replies'}
-                </Button>
+                </button>
               );
             })}
           </div>
