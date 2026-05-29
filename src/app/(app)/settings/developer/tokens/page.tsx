@@ -7,6 +7,7 @@ import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
+import { publicOrigin } from '@/lib/url';
 
 export default async function DeveloperSettingsPage() {
   const session = await auth();
@@ -43,7 +44,8 @@ export default async function DeveloperSettingsPage() {
     createdAt: r.createdAt.toISOString(),
   }));
 
-  const publicUrl = process.env.PUBLIC_URL ?? 'http://localhost:3000';
+  // Real public origin (forwarded-host aware) — see src/lib/url.ts / GH #50.
+  const publicUrl = await publicOrigin();
 
   return (
     <main className="mx-auto max-w-3xl space-y-8 p-6">
