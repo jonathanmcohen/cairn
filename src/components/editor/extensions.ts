@@ -1,6 +1,5 @@
 import type { HocuspocusProvider } from '@hocuspocus/provider';
 import type { AnyExtension } from '@tiptap/core';
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
@@ -12,6 +11,7 @@ import { AudioNode } from './blocks/audio-node';
 import { Bookmark } from './blocks/bookmark';
 import { ButtonBlock } from './blocks/button';
 import { CitationNode } from './blocks/citation-node';
+import { createCairnCodeBlock } from './blocks/code-block';
 import { Column, ColumnList } from './blocks/columns';
 import { DateTimeNode } from './blocks/datetime-node';
 import { DividerNode } from './blocks/divider-node';
@@ -59,7 +59,11 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
       heading: { levels: [1, 2, 3, 4] },
       ...(undoRedo ? {} : { undoRedo: false as const }),
     }),
-    CodeBlockLowlight.configure({ lowlight }),
+    // v0.9.2 P09 — extended code block: a React NodeView adds a themed language
+    // selector (ui/select) bound to the `language` attr + lowlight highlighting.
+    // schema.ts intentionally keeps the plain CodeBlockLowlight (no NodeView)
+    // since server-side parsing never renders React views.
+    createCairnCodeBlock(lowlight),
     TaskList,
     TaskItem.configure({ nested: true }),
     Callout,
@@ -133,6 +137,10 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  * Custom-node Yjs-safety review (y-prosemirror syncs any node whose state is
  * fully derived from ProseMirror attrs; node-local mutable state would desync):
  *  - Callout        — block, content `block+`, attr `color` only.            SAFE
+ *  - CodeBlock      — block, content `text*`, attr `language` only; its React
+ *                     NodeView (CodeBlockView) writes ONLY `language` via
+ *                     updateAttributes (no node-local state) and derives the
+ *                     `<code>` highlight class from that attr. v0.9.2 P09.   SAFE
  *  - CairnImage     — atom/leaf, attrs `{ src, alt, fileId }`.               SAFE
  *  - FileAttachment — atom, attrs `{ href, name, mimeType, size, fileId }`.  SAFE
  *  - DatabaseNode   — atom, attr `databaseId` only; its React NodeView
