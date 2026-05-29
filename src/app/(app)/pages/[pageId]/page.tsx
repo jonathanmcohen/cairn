@@ -1,12 +1,12 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import { ApprovalPanel } from '@/components/pages/approval-panel';
 import { CoverBanner } from '@/components/pages/cover-banner';
+import { CoverPicker } from '@/components/pages/cover-picker';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
 import { LockBanner } from '@/components/pages/lock-banner';
 import { PageActionPanels } from '@/components/pages/page-action-panels';
@@ -50,6 +50,10 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   // a client-side flicker.
   const cookieStore = await cookies();
   const showTocSidebar = cookieStore.get('cairn-toc-sidebar')?.value === '1';
+  // #121 — build-time inlined Unsplash key (optional); passed to CoverPicker so
+  // it can render the Unsplash tab. Undefined-tolerant: the picker hides the tab
+  // when unset. (This read was removed by round-1 #16 and is restored here.)
+  const unsplashKey = env().NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY;
   // v0.9.0 G1 P6 — E2E "Encrypt page" affordance gates on the public mirror
   // of CAIRN_ENABLE_E2E_ENCRYPTION. Already-encrypted pages don't render
   // the action (re-encrypt is a separate flow not in this plan).
@@ -60,11 +64,16 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
     <PageDetailShell>
       <PageModeShell>
         <CoverBanner cover={cover} alt={page.title} />
-        {/* a7 #16 — the in-flow <CoverImage> button below is the single canonical
-            "Add cover" / "Change" affordance; it sits where the cover renders.
-            The previously floating <CoverPicker> mount was removed to avoid two
-            competing cover controls. */}
-        <CoverImage pageId={page.id} initial={page.coverUrl} />
+        {/* #121 — the in-flow CoverPicker is the single canonical "Add cover" /
+            "Change cover" affordance. It writes the live `pages.cover` jsonb via
+            /api/pages/[pageId]/cover and refreshes so CoverBanner re-renders.
+            (Round-1 #16 had left the legacy CoverImage button here, which wrote
+            the orphaned `cover_url` column the banner no longer reads.) */}
+        {canEdit && (
+          <div className="mb-2 flex justify-start">
+            <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
+          </div>
+        )}
         <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
           <PageIconPicker pageId={page.id} initial={page.icon} />
           <div className="min-w-0 flex-1 basis-full sm:basis-auto">
