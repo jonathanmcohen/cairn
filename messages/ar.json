@@ -77,5 +77,15 @@
   "pageActions.versions.saved": "تم حفظ اللقطة",
   "pageActions.versions.saveFailed": "تعذّر حفظ اللقطة",
   "pageActions.versions.empty.title": "لا توجد إصدارات محفوظة بعد",
-  "pageActions.versions.empty.body": "تُحفظ التعديلات كلقطات تلقائيًا. بمجرد أن تبدأ التحرير، ستظهر الإصدارات هنا."
+  "pageActions.versions.empty.body": "تُحفظ التعديلات كلقطات تلقائيًا. بمجرد أن تبدأ التحرير، ستظهر الإصدارات هنا.",
+  "pageActions.lock.trigger": "قفل الصفحة",
+  "pageActions.lock.menuLabel": "قائمة قفل الصفحة",
+  "pageActions.lock.indefinite": "القفل إلى أجل غير مسمى",
+  "pageActions.lock.oneHour": "القفل لمدة ساعة واحدة",
+  "pageActions.lock.oneDay": "القفل لمدة 24 ساعة",
+  "pageActions.lock.custom": "مخصّص…",
+  "pageActions.lock.customAmount": "المدة",
+  "pageActions.lock.unitHours": "ساعات",
+  "pageActions.lock.unitDays": "أيام",
+  "pageActions.lock.confirm": "قفل"
 }

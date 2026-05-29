@@ -77,5 +77,15 @@
   "pageActions.versions.saved": "Instantánea guardada",
   "pageActions.versions.saveFailed": "No se pudo guardar la instantánea",
   "pageActions.versions.empty.title": "Aún no hay versiones guardadas",
-  "pageActions.versions.empty.body": "Las ediciones se guardan como instantáneas automáticamente. Cuando empieces a editar, las versiones aparecerán aquí."
+  "pageActions.versions.empty.body": "Las ediciones se guardan como instantáneas automáticamente. Cuando empieces a editar, las versiones aparecerán aquí.",
+  "pageActions.lock.trigger": "Bloquear página",
+  "pageActions.lock.menuLabel": "Menú de bloqueo de página",
+  "pageActions.lock.indefinite": "Bloquear indefinidamente",
+  "pageActions.lock.oneHour": "Bloquear durante 1 hora",
+  "pageActions.lock.oneDay": "Bloquear durante 24 horas",
+  "pageActions.lock.custom": "Personalizado…",
+  "pageActions.lock.customAmount": "Duración",
+  "pageActions.lock.unitHours": "Horas",
+  "pageActions.lock.unitDays": "Días",
+  "pageActions.lock.confirm": "Bloquear"
 }

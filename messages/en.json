@@ -77,5 +77,15 @@
   "pageActions.versions.saved": "Snapshot saved",
   "pageActions.versions.saveFailed": "Failed to save snapshot",
   "pageActions.versions.empty.title": "No saved versions yet",
-  "pageActions.versions.empty.body": "Edits are snapshotted automatically. Once you start editing, versions will appear here."
+  "pageActions.versions.empty.body": "Edits are snapshotted automatically. Once you start editing, versions will appear here.",
+  "pageActions.lock.trigger": "Lock page",
+  "pageActions.lock.menuLabel": "Lock page menu",
+  "pageActions.lock.indefinite": "Lock indefinitely",
+  "pageActions.lock.oneHour": "Lock for 1 hour",
+  "pageActions.lock.oneDay": "Lock for 24 hours",
+  "pageActions.lock.custom": "Custom…",
+  "pageActions.lock.customAmount": "Duration",
+  "pageActions.lock.unitHours": "Hours",
+  "pageActions.lock.unitDays": "Days",
+  "pageActions.lock.confirm": "Lock"
 }
