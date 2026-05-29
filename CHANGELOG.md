@@ -5,7 +5,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-## [0.9.3] - Unreleased
+## [0.9.4] - Unreleased
+
+> UX-audit patch release, round 2. Deeper homelab-deploy review of v0.9.3 found ~half of the round-1 fixes didn't hold on a real deployment, plus a wave of new findings (GitHub #50–#123). This release re-fixes the 12 regressed items and resolves the new findings: production-only rendering/theming bugs, the create-then-switch flows that never activated, accent-token wiring, the cover/icon contract mismatch, and a broad sweep of empty/active-state and form-control polish. One migration (`0054` — `workspaces.icon`), one new env var (`CAIRN_ENFORCE_2FA`). Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-{11..32}-*.md`.
+
+### Added
+- **Workspace icons** — `workspaces.icon` column (migration `0054`) so workspaces, not just pages, carry an emoji/icon in the switcher and sidebar.
+- **`CAIRN_ENFORCE_2FA`** environment flag — admins can require all workspace members to enrol a second factor (#66).
+- **Themed `Dialog`, `PasswordInput`, and `Calendar` UI primitives** (`src/components/ui/`) on the unified `radix-ui` package; `DateField` rewritten as a radix Popover + calendar (#18, replacing leftover native controls).
+- **Keyboard-shortcut formatter** (`src/lib/shortcuts/format.ts`) — platform-aware (`⌘` vs `Ctrl`) shortcut rendering across the palette and menus (#13).
+- **Page duplication** — `POST /api/pages/[pageId]/duplicate` plus a "Duplicate" row action that deep-copies an owned page subtree (#19, #76).
+- **Forwarded-host-aware public origin helper** (`src/lib/url.ts`) so share/MCP/export URLs resolve correctly behind a reverse proxy even when `PUBLIC_URL` isn't injected into the container (#50).
+
+### Fixed
+- **Workspace switcher now actually switches.** Selecting a workspace only refreshed the current route; it now resolves the landing page and navigates to it (#82). Newly **created** workspaces/views are now activated on create instead of silently staying on the old context (#115).
+- **Default accent restored in dark mode.** The default accent never bound `--primary`, leaving a near-white primary button under the dark theme; the token is now wired (#34).
+- **Editor focus ring no longer tints the whole canvas.** A global `:focus-visible` accent ring was bleeding onto `.ProseMirror`, painting an orange/red glow under amber/rose accents (#123).
+- **Page covers persist again.** The cover picker wrote a legacy `cover_url` field instead of `pages.cover`; restored the `CoverPicker` mount and the correct write path (#121).
+- **Empty-page placeholder** ("Type / for commands…") reappears — the `.is-empty::before` rule had been purged (#84).
+- **Callout headings, empty database header row, and editor control-strip** rendering fixes from round 1 re-anchored on data-attributes so they survive the production CSS purge (#17, #19, #20, #39).
+- Re-surfaced the **passkeys page** (existed but was unlinked from Security) (#68); recovery-codes count + regenerate (#69); themed primary **Set-up-2FA** CTA (#71).
+- SMTP-off hardening + email-preference enum alignment (#72, #73, #74); themed status/date filters on `/notifications` (#29, #30) and `/my-tasks` (#27).
+- Broad form-control, badge, disclosure, slash-menu grouping, block-handle, and reader-toggle polish across the editor, templates gallery, and sidebar (#51–#59, #61–#65, #67, #75, #77–#81, #83, #85–#114, #116–#120, #122).
+
+### Changed
+- **Single-open-panel controller** for page action panels — opening one (cover, icon, share, …) closes the others (#93).
+- Sidebar lower-nav and version-footer refinements carried forward (#15, #42, #44).
+
+> **Deferred (tracked, intentionally still open):** sessions list (#70 — blocked on jwt session strategy, no DB session store); the move-to picker UI (backend `POST /api/pages/[pageId]/move` exists, picker unbuilt — follow-up issue); #108 unify pass. #12/#41 remain closed pending a product decision.
+
+## [0.9.3] - 2026-05-29
 
 > UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No migrations, no new env vars; one templates listing fix. Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-*.md`.
 
