@@ -12,6 +12,13 @@ import type { VersionListItem } from '@/lib/pages/versions';
 type VersionHistoryProps = {
   pageId: string;
   canEdit: boolean;
+  /**
+   * Optional controlled open-state (used by the shared page-action-panels
+   * controller for single-open mutual exclusion). When omitted the panel
+   * self-manages, so it stays usable standalone and in tests.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 type DiffLine = { kind: 'same' | 'add' | 'remove'; text: string };
@@ -73,9 +80,19 @@ function relativeTime(date: Date): string {
   return date.toLocaleDateString();
 }
 
-export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
+export function VersionHistory({
+  pageId,
+  canEdit,
+  open: controlledOpen,
+  onOpenChange,
+}: VersionHistoryProps) {
   const t = useT();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setInternalOpen(next);
+  };
   const [versions, setVersions] = useState<VersionListItem[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [slotA, setSlotA] = useState<string | null>(null);
@@ -146,7 +163,7 @@ export function VersionHistory({ pageId, canEdit }: VersionHistoryProps) {
         size="icon"
         aria-label="Version history"
         aria-pressed={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(!open)}
       >
         <History aria-hidden="true" className="h-4 w-4" />
       </Button>

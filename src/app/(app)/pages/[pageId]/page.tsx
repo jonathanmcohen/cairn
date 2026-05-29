@@ -1,6 +1,5 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { CommentsToggle } from '@/components/comments/comments-toggle';
 import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
@@ -9,15 +8,13 @@ import { PageTitleInput } from '@/components/page-title-input';
 import { ApprovalPanel } from '@/components/pages/approval-panel';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
-import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockBanner } from '@/components/pages/lock-banner';
-import { LockToggle } from '@/components/pages/lock-toggle';
+import { PageActionPanels } from '@/components/pages/page-action-panels';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { PageModeShell } from '@/components/pages/page-mode-shell';
 import { PageModeToggles } from '@/components/pages/page-mode-toggles';
 import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { TocSidebar } from '@/components/pages/toc-sidebar';
-import { VersionHistory } from '@/components/pages/version-history';
 import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
@@ -77,16 +74,17 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
               page actions below, separated by a thin rule, so the header reads
               as one coherent control group instead of two competing toolbars. */}
           <PageModeToggles />
-          <span className="h-6 w-px shrink-0 self-center bg-border" aria-hidden="true" />
-          <CommentsToggle
+          {/* v0.9.4 #93 — the comments / version-history / export / lock cluster
+              is now a single shared controller that keeps only one panel open
+              at a time and dismisses it on Escape. */}
+          <PageActionPanels
             pageId={page.id}
             canComment={hasMinRole(ctx.role, 'editor')}
             currentUserId={ctx.userId}
             currentRole={ctx.role}
+            canEditVersions={hasMinRole(ctx.role, 'editor')}
+            canLock={canEdit}
           />
-          <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
-          <PageExportMenu pageId={page.id} />
-          {canEdit && <LockToggle pageId={page.id} />}
           {showEncryptAction && (
             <EncryptPageAction
               pageId={page.id}
