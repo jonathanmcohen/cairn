@@ -2,7 +2,7 @@
 
 import { NodeViewContent, NodeViewWrapper, type ReactNodeViewProps } from '@tiptap/react';
 import { Command } from 'cmdk';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, Copy } from 'lucide-react';
 import { Popover as PopoverPrimitive } from 'radix-ui';
 import { useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
@@ -100,19 +100,23 @@ export function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewP
   const language = (node.attrs.language as string | null) || 'auto';
   return (
     <NodeViewWrapper className="cairn-codeblock group/codeblock relative">
-      {editor.isEditable && (
-        <div
-          contentEditable={false}
-          className="absolute right-2 top-2 z-10 flex items-center gap-1"
-        >
-          {/* Copy button is added in Task 2 (#106) — leave room here. */}
+      <div contentEditable={false} className="absolute right-2 top-2 z-10 flex items-center gap-1">
+        {/* v0.9.4 P26 #106 — Copy-code button. Reads node.textContent only (no
+            doc mutation → Yjs-safe) and is NOT gated on editor.isEditable, so
+            read-only viewers can copy too. */}
+        <CodeCopyButton
+          getText={() => node.textContent}
+          label={t('editor.codeBlock.copy')}
+          copiedLabel={t('editor.codeBlock.copied')}
+        />
+        {editor.isEditable && (
           <LanguagePicker
             value={language}
             label={t('editor.codeBlock.language')}
             onSelect={(v) => updateAttributes({ language: v === 'auto' ? null : v })}
           />
-        </div>
-      )}
+        )}
+      </div>
       <pre className="hljs">
         <NodeViewContent<'code'>
           as="code"
@@ -120,5 +124,40 @@ export function CodeBlockView({ node, updateAttributes, editor }: ReactNodeViewP
         />
       </pre>
     </NodeViewWrapper>
+  );
+}
+
+// v0.9.4 P26 #106 — mirrors the success-feedback pattern from
+// src/components/settings/copy-button.tsx (Copy → Check for 1.5s) but reads the
+// live text through a getter so it never holds a stale snapshot of the block.
+function CodeCopyButton({
+  getText,
+  label,
+  copiedLabel,
+}: {
+  getText: () => string;
+  label: string;
+  copiedLabel: string;
+}) {
+  const [copied, setCopied] = useState(false);
+  async function onCopy() {
+    await navigator.clipboard.writeText(getText());
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  }
+  return (
+    <button
+      type="button"
+      aria-label={copied ? copiedLabel : label}
+      onClick={() => void onCopy()}
+      className={cn(
+        'flex size-11 items-center justify-center rounded-md text-muted-foreground opacity-0 transition-opacity',
+        'hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring',
+        // reveal on block hover OR whenever focused (keyboard) — group set on the wrapper
+        'group-hover/codeblock:opacity-100 focus-visible:opacity-100',
+      )}
+    >
+      {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+    </button>
   );
 }
