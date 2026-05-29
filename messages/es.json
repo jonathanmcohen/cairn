@@ -52,6 +52,9 @@
   "security.recoveryCodes.confirm": "Regenerar invalidará tus códigos de recuperación actuales. ¿Continuar?",
   "security.recoveryCodes.savePrompt": "Guárdalos ahora: solo se muestran una vez:",
   "security.recoveryCodes.error": "No se pudieron regenerar los códigos de recuperación. Inténtalo de nuevo.",
+  "security.sessions.title": "Sesiones",
+  "security.sessions.note": "Las sesiones se basan en tokens (sin estado) con una duración máxima de 30 días. Puedes cerrar la sesión de este navegador abajo; el cierre de sesión remoto en todos los dispositivos está previsto para una versión futura.",
+  "security.sessions.signOut": "Cerrar sesión en este navegador",
   "sidebar.releaseNotes": "Notas de la versión v{version}",
   "sidebar.resize": "Redimensionar la barra lateral",
   "sidebar.signOut": "Cerrar sesión"
