@@ -16,9 +16,18 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { PageActivityFeed } from '@/components/pages/activity-feed';
 import { SaveAsTemplateDialog } from '@/components/pages/save-as-template-dialog';
+import { ShareDialog } from '@/components/pages/share-dialog';
 import { SharePanel } from '@/components/pages/share-panel';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useT } from '@/lib/i18n/provider';
 
 const ITEM_CLASS =
@@ -53,6 +62,8 @@ export function PageMenu({
   const [activityOpen, setActivityOpen] = useState(false);
   const [saveTplOpen, setSaveTplOpen] = useState(false);
   const [linkCopied, setLinkCopied] = useState(false);
+  const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -172,7 +183,10 @@ export function PageMenu({
             <button
               type="button"
               className={ITEM_CLASS}
-              onClick={() => void publish()}
+              onClick={() => {
+                setConfirmPublishOpen(true);
+                setOpen(false);
+              }}
               disabled={!shareAllowed}
               title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
             >
@@ -319,6 +333,37 @@ export function PageMenu({
           setSavedAsTemplate(true);
           setTimeout(() => setSavedAsTemplate(false), 2000);
         }}
+      />
+      <Dialog open={confirmPublishOpen} onOpenChange={setConfirmPublishOpen}>
+        <DialogContent closeLabel={t('common.close')}>
+          <DialogHeader>
+            <DialogTitle>{t('publishConfirm.title')}</DialogTitle>
+            <DialogDescription>{t('publishConfirm.body')}</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button type="button" variant="ghost" onClick={() => setConfirmPublishOpen(false)}>
+              {t('common.cancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setConfirmPublishOpen(false);
+                void publish();
+              }}
+            >
+              {t('publishConfirm.confirm')}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <ShareDialog
+        open={shareOpen}
+        onOpenChange={setShareOpen}
+        pageId={pageId}
+        slug={slug}
+        initialAllowDuplication={initialAllowDuplication}
+        initialHasPassword={initialHasPassword}
+        initialExpiresAt={initialExpiresAt}
       />
     </div>
   );
