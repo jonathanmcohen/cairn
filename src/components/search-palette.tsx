@@ -4,7 +4,7 @@ import { Command } from 'cmdk';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { copy } from '@/lib/copy/messages';
@@ -44,6 +44,16 @@ export function SearchPalette({
   const [actions, setActions] = useState<PaletteAction[]>([]);
   const [saved, setSaved] = useState<SavedSearch[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // #109: focus the input whenever the palette opens. autoFocus on
+  // Command.Input handles the common (fresh-mount) path; this effect covers
+  // the case where cmdk reuses the node across opens.
+  useEffect(() => {
+    if (!open) return;
+    const id = requestAnimationFrame(() => inputRef.current?.focus());
+    return () => cancelAnimationFrame(id);
+  }, [open]);
 
   useEffect(() => {
     ensureAppShortcuts();
@@ -161,6 +171,8 @@ export function SearchPalette({
         shouldFilter={false}
       >
         <Command.Input
+          ref={inputRef}
+          autoFocus
           value={query}
           onValueChange={setQuery}
           placeholder={t('palette.searchPlaceholder')}
