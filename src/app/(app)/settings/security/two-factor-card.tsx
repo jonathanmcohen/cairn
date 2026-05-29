@@ -2,6 +2,7 @@
 
 import QRCode from 'qrcode';
 import { useState } from 'react';
+import { RecoveryCodesCard } from '@/components/security/recovery-codes-card';
 import { Button } from '@/components/ui/button';
 import { useT } from '@/lib/i18n/provider';
 
@@ -69,6 +70,7 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
           Disable 2FA
         </Button>
         {error && <p className="text-destructive text-sm">{error}</p>}
+        <RecoveryCodesCard />
       </section>
     );
   }

@@ -99,6 +99,7 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'mfa.passkey_used': 'Passkey used',
   'mfa.stepup_required': 'Step-up required',
   'mfa.policy_changed': 'MFA policy changed',
+  'mfa.recovery_codes_regenerated': 'Recovery codes regenerated',
   // v0.9.0 G2 P11 — Spaces lifecycle + per-space ACL events.
   'space.created': 'Space created',
   'space.updated': 'Space updated',
