@@ -88,10 +88,16 @@ export async function listVisibleTemplates(
     );
     if (memberCondition) conditions.push(memberCondition);
   }
-  // Builtins (workspaceId IS NULL) are always public — keep them in the
-  // result set even when memberWorkspaces is empty.
-  const builtinPublic = and(isNull(schema.templates.workspaceId), publicCondition);
-  if (builtinPublic) conditions.push(builtinPublic);
+  // Built-ins are global/public-readable by convention (workspaceId IS NULL,
+  // builtIn=true). They're seeded with the schema-default visibility
+  // ('workspace'), so the publicCondition above does NOT catch them — surface
+  // them explicitly on the built-in flag regardless of visibility, even when
+  // memberWorkspaces is empty (e.g. a brand-new workspace).
+  const builtinCondition = and(
+    isNull(schema.templates.workspaceId),
+    eq(schema.templates.builtIn, true),
+  );
+  if (builtinCondition) conditions.push(builtinCondition);
 
   return db
     .select()
