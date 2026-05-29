@@ -1,6 +1,6 @@
 'use client';
 
-import { Check } from 'lucide-react';
+import { BellOff, Check } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -235,32 +235,37 @@ export function NotificationsPageList({
         />
       </fieldset>
 
-      <ul className="divide-y rounded border">
-        {items.map((n) => (
-          <li key={n.id} className="flex items-start gap-2 p-3 hover:bg-accent">
-            <Link href={hrefFor(n)} className="flex-1 truncate">
-              <span className="block truncate">{describe(n.type)}</span>
-              <span className="text-muted-foreground text-xs">{relativeTime(n.createdAt)}</span>
-            </Link>
-            {n.readAt == null && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Mark as read"
-                onClick={() => void onMarkRead(n.id)}
-                className="h-11 w-11"
-              >
-                <Check aria-hidden="true" className="h-4 w-4" />
-              </Button>
-            )}
-          </li>
-        ))}
-        {items.length === 0 && (
-          <li className="p-8 text-center text-muted-foreground text-sm">
-            No notifications match the current filter.
-          </li>
-        )}
-      </ul>
+      {items.length === 0 ? (
+        <div className="flex flex-col items-center gap-2 rounded border py-12 text-center">
+          <BellOff className="h-8 w-8 text-muted-foreground" aria-hidden />
+          <p className="font-medium text-sm">You&rsquo;re all caught up</p>
+          <p className="max-w-xs text-muted-foreground text-sm">
+            New mentions and replies will appear here.
+          </p>
+        </div>
+      ) : (
+        <ul className="divide-y rounded border">
+          {items.map((n) => (
+            <li key={n.id} className="flex items-start gap-2 p-3 hover:bg-accent">
+              <Link href={hrefFor(n)} className="flex-1 truncate">
+                <span className="block truncate">{describe(n.type)}</span>
+                <span className="text-muted-foreground text-xs">{relativeTime(n.createdAt)}</span>
+              </Link>
+              {n.readAt == null && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Mark as read"
+                  onClick={() => void onMarkRead(n.id)}
+                  className="h-11 w-11"
+                >
+                  <Check aria-hidden="true" className="h-4 w-4" />
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
 
       {cursor && (
         <div className="mt-4 flex justify-center">
