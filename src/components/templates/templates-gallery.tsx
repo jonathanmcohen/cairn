@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronRight, Database, FileText } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -128,11 +129,16 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                   <CardHeader>
                     <CardTitle className="text-base">{t.name}</CardTitle>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded border border-transparent bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                        {t.kind === 'database' ? (
+                          <Database aria-hidden className="size-3" />
+                        ) : (
+                          <FileText aria-hidden className="size-3" />
+                        )}
                         {t.kind}
                       </span>
                       {t.builtIn ? (
-                        <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                        <span className="rounded border border-transparent bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                           Built-in
                         </span>
                       ) : null}
