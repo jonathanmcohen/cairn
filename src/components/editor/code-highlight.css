@@ -125,3 +125,32 @@ pre code.hljs {
 .suggestion-block[data-kind="delete"] {
   border-inline-start-color: var(--destructive);
 }
+
+/*
+ * a11 #20 — Callout-scoped heading scale. Headings inside a callout should keep
+ * an internal hierarchy but read smaller than page-level headings. The editor
+ * body renders inside a `.prose` container, so these are prefixed with `.prose`
+ * to beat the Tailwind typography plugin's heading defaults (which would
+ * otherwise blow up an H1 inside a callout to full page size).
+ */
+.prose .callout :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+  line-height: 1.3;
+}
+.prose .callout h1 {
+  font-size: 1.125rem;
+  font-weight: 600;
+}
+.prose .callout h2 {
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+.prose .callout h3 {
+  font-size: 1rem;
+  font-weight: 600;
+}
+.prose .callout :is(h4, h5, h6) {
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
