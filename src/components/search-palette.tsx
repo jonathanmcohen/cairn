@@ -11,6 +11,7 @@ import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
 import { getRecents, pushRecent } from '@/lib/palette/recents';
+import { prettyKeys, shortcutFor } from '@/lib/shortcuts/format';
 
 type SearchResult = {
   id: string;
@@ -185,9 +186,12 @@ export function SearchPalette({
                   >
                     <div className="flex items-center justify-between">
                       <span>{a.label}</span>
-                      {a.shortcutKey ? (
-                        <kbd className="text-xs text-muted-foreground">{a.shortcutKey}</kbd>
-                      ) : null}
+                      {(() => {
+                        const keys = shortcutFor(a.id);
+                        return keys ? (
+                          <kbd className="text-xs text-muted-foreground">{prettyKeys(keys)}</kbd>
+                        ) : null;
+                      })()}
                     </div>
                   </Command.Item>
                 ))}
@@ -209,9 +213,12 @@ export function SearchPalette({
                 >
                   <div className="flex items-center justify-between">
                     <span>{a.label}</span>
-                    {a.shortcutKey ? (
-                      <kbd className="text-xs text-muted-foreground">{a.shortcutKey}</kbd>
-                    ) : null}
+                    {(() => {
+                      const keys = shortcutFor(a.id);
+                      return keys ? (
+                        <kbd className="text-xs text-muted-foreground">{prettyKeys(keys)}</kbd>
+                      ) : null;
+                    })()}
                   </div>
                 </Command.Item>
               ))}

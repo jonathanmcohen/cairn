@@ -3,9 +3,10 @@
  * cmdk palette can invoke. Each entry takes a PaletteContext (router, current
  * page id, theme setter, etc.) and exposes a `run()` that performs the action.
  *
- * The v0.6 P15 shortcut registry (`src/lib/shortcuts/registry.ts`) remains
- * the source of truth for keyboard bindings; an entry here that has a hotkey
- * also lists the same `shortcutKey` string for display next to the row.
+ * The v0.6 P15 shortcut registry (`src/lib/shortcuts/registry.ts`) is the
+ * single source of truth for keyboard bindings; the palette derives each
+ * row's hotkey hint from the registry by the action's `id` (via
+ * `shortcutFor`/`prettyKeys`), so there is no per-action shortcut string here.
  *
  * Context-gated entries (e.g. `page.copyLink`) are omitted from the returned
  * list when the required context isn't present — the palette never shows a
@@ -31,8 +32,6 @@ export type PaletteContext = {
 export type PaletteAction = {
   id: string;
   label: string;
-  /** Display string like "Cmd+K" — shown as a hotkey hint on the palette row. */
-  shortcutKey?: string;
   run: () => void;
 };
 
@@ -67,7 +66,6 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
     {
       id: 'nav.favorites',
       label: 'Open favorites',
-      shortcutKey: 'Mod+Shift+F',
       run: () => ctx.router.push('/favorites'),
     },
     {
@@ -103,13 +101,11 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
     {
       id: 'page.new',
       label: 'Create new page',
-      shortcutKey: 'Mod+N',
       run: () => ctx.router.push('/pages/new'),
     },
     {
       id: 'search.open',
       label: 'Search across workspace',
-      shortcutKey: 'Mod+K',
       run: () => {
         // The palette is already open when an action runs from it; this is a
         // no-op alias so the action shows in the catalog (and Recent group)
@@ -119,7 +115,6 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
     {
       id: 'theme.toggle',
       label: 'Toggle light/dark theme',
-      shortcutKey: 'Mod+Shift+L',
       run: () => {
         const next = ctx.currentTheme === 'dark' ? 'light' : 'dark';
         ctx.setTheme(next);
@@ -128,7 +123,6 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
     {
       id: 'workspace.switch',
       label: 'Switch workspace',
-      shortcutKey: 'Mod+Shift+O',
       run: () => ctx.router.push('/workspaces'),
     },
     {
