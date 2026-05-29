@@ -91,5 +91,10 @@
   "pageActions.export.trigger": "Exportar",
   "pageActions.export.markdown": "Markdown (.md)",
   "pageActions.export.json": "JSON",
-  "pageActions.export.pdf": "PDF"
+  "pageActions.export.pdf": "PDF",
+  "pageActions.suggest.open": "abierta",
+  "pageActions.suggest.openCountLabel.one": "{count} sugerencia abierta — ir a ella",
+  "pageActions.suggest.openCountLabel.other": "{count} sugerencias abiertas — ir a la primera",
+  "pageActions.suggest.markInsert": "Marcar la selección como insertada",
+  "pageActions.suggest.markDelete": "Marcar la selección como eliminada"
 }

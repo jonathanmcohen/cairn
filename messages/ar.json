@@ -91,5 +91,10 @@
   "pageActions.export.trigger": "تصدير",
   "pageActions.export.markdown": "Markdown (.md)",
   "pageActions.export.json": "JSON",
-  "pageActions.export.pdf": "PDF"
+  "pageActions.export.pdf": "PDF",
+  "pageActions.suggest.open": "مفتوحة",
+  "pageActions.suggest.openCountLabel.one": "{count} اقتراح مفتوح — الانتقال إليه",
+  "pageActions.suggest.openCountLabel.other": "{count} اقتراحات مفتوحة — الانتقال إلى الأول",
+  "pageActions.suggest.markInsert": "وضع علامة على التحديد كمُدرَج",
+  "pageActions.suggest.markDelete": "وضع علامة على التحديد كمحذوف"
 }

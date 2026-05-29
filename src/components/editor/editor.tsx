@@ -419,6 +419,24 @@ export function Editor({
     setOpenCount((c) => c + 1);
   }, [suggestionMode, pageId]);
 
+  // #98 — jump to the first open suggestion: find the first rendered
+  // suggestion mark (`[data-suggestion-id]`) in the editor DOM, scroll it into
+  // view, and move the ProseMirror selection there so keyboard focus follows.
+  const jumpToFirstOpenSuggestion = useCallback(() => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    const root = ed.view.dom as HTMLElement;
+    const el = root.querySelector<HTMLElement>('[data-suggestion-id]');
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const pos = ed.view.posAtDOM(el, 0);
+    if (pos >= 0) {
+      ed.chain().focus().setTextSelection(pos).run();
+    } else {
+      ed.commands.focus();
+    }
+  }, []);
+
   const markSelection = useCallback(
     (kind: 'insert' | 'delete') => {
       const ed = editorRef.current;
@@ -497,6 +515,7 @@ export function Editor({
               resolvable={resolvable}
               onAccept={(id) => void resolve('accept', id)}
               onReject={(id) => void resolve('reject', id)}
+              onJumpToFirstOpen={jumpToFirstOpenSuggestion}
             />
             <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
           </>

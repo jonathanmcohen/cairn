@@ -91,5 +91,10 @@
   "pageActions.export.trigger": "Export",
   "pageActions.export.markdown": "Markdown (.md)",
   "pageActions.export.json": "JSON",
-  "pageActions.export.pdf": "PDF"
+  "pageActions.export.pdf": "PDF",
+  "pageActions.suggest.open": "open",
+  "pageActions.suggest.openCountLabel.one": "{count} open suggestion — jump to it",
+  "pageActions.suggest.openCountLabel.other": "{count} open suggestions — jump to the first",
+  "pageActions.suggest.markInsert": "Mark selection as inserted",
+  "pageActions.suggest.markDelete": "Mark selection as deleted"
 }
