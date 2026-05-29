@@ -39,6 +39,8 @@
   "pageRow.rename": "Rename",
   "pageRow.addChild": "Add subpage",
   "pageRow.actions": "Page actions",
+  "searchHint.label": "Search or jump to…",
+  "searchHint.aria": "Open command palette",
   "workspaceSwitcher.heading": "Workspaces",
   "workspaceSwitcher.switch": "Switch workspace",
   "workspaceSwitcher.create": "Create workspace",
