@@ -1,11 +1,12 @@
 'use client';
 
-import { Check, RotateCcw, Trash2, X } from 'lucide-react';
+import { Check, MessageSquarePlus, RotateCcw, Trash2, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Comment } from '@/db/schema';
 import type { MemberRole } from '@/lib/auth/require-role';
 import type { CommentAnchor } from '@/lib/comments/anchor';
+import { useT } from '@/lib/i18n/provider';
 import { CommentComposer } from './comment-composer';
 
 const ROLE_RANK: Record<MemberRole, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
@@ -62,6 +63,7 @@ export function CommentPanel({
   open,
   onClose,
 }: CommentPanelProps) {
+  const t = useT();
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -201,16 +203,26 @@ export function CommentPanel({
   return (
     <aside className="bg-background flex h-full w-80 flex-col border-l">
       <div className="flex items-center justify-between border-b p-3">
-        <h2 className="text-sm font-medium">Comments</h2>
-        <Button variant="ghost" size="icon" className="h-7 w-7" title="Close" onClick={onClose}>
+        <h2 className="text-sm font-medium">{t('pageActions.comments.title')}</h2>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-7 w-7"
+          aria-label={t('pageActions.comments.close')}
+          onClick={onClose}
+        >
           <X className="h-4 w-4" />
         </Button>
       </div>
 
       <div className="flex-1 space-y-2 overflow-y-auto p-3">
         {error && <p className="text-destructive text-xs">{error}</p>}
-        {unresolved.length === 0 && resolved.length === 0 && (
-          <p className="text-muted-foreground text-xs">No comments yet.</p>
+        {unresolved.length === 0 && resolved.length === 0 && !error && (
+          <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+            <MessageSquarePlus aria-hidden="true" className="h-8 w-8 text-muted-foreground/60" />
+            <p className="text-sm font-medium">{t('pageActions.comments.empty.title')}</p>
+            <p className="text-muted-foreground text-xs">{t('pageActions.comments.empty.body')}</p>
+          </div>
         )}
         <ul className="space-y-2">{unresolved.map(renderRow)}</ul>
         {resolved.length > 0 && (
@@ -231,14 +243,20 @@ export function CommentPanel({
 
       {canComment && (
         <div className="space-y-2 border-t p-3">
-          <CommentComposer value={draft} onChange={setDraft} onSubmit={() => void addComment()} />
+          <CommentComposer
+            value={draft}
+            onChange={setDraft}
+            onSubmit={() => void addComment()}
+            placeholder={t('pageActions.comments.placeholder')}
+          />
           <Button
-            size="sm"
-            className="w-full"
+            type="button"
+            size="default"
+            className="min-h-11 w-full"
             disabled={submitting || draft.trim().length === 0}
             onClick={() => void addComment()}
           >
-            {submitting ? 'Adding…' : 'Comment'}
+            {submitting ? t('pageActions.comments.submitting') : t('pageActions.comments.submit')}
           </Button>
         </div>
       )}

@@ -69,7 +69,7 @@ export function CommentComposer({
   }, [editor, value]);
 
   return (
-    <div className="border-input bg-background focus-within:ring-ring w-full rounded-md border px-2 py-1.5 focus-within:ring-1">
+    <div className="w-full rounded-md border border-border bg-background px-2 py-1.5 transition-colors focus-within:border-ring focus-within:ring-2 focus-within:ring-ring/40">
       <EditorContent editor={editor} />
     </div>
   );

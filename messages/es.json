@@ -61,5 +61,12 @@
   "notifications.smtp.disabledReason": "El correo requiere un servidor SMTP configurado, del que esta instancia de Cairn carece.",
   "sidebar.releaseNotes": "Notas de la versión v{version}",
   "sidebar.resize": "Redimensionar la barra lateral",
-  "sidebar.signOut": "Cerrar sesión"
+  "sidebar.signOut": "Cerrar sesión",
+  "pageActions.comments.title": "Comentarios",
+  "pageActions.comments.placeholder": "Añadir un comentario…",
+  "pageActions.comments.submit": "Comentar",
+  "pageActions.comments.submitting": "Añadiendo…",
+  "pageActions.comments.empty.title": "Aún no hay comentarios",
+  "pageActions.comments.empty.body": "Inicia una conversación: los comentarios son visibles para todos los que tengan acceso a esta página.",
+  "pageActions.comments.close": "Cerrar comentarios"
 }

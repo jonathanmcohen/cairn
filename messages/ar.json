@@ -61,5 +61,12 @@
   "notifications.smtp.disabledReason": "يتطلب البريد الإلكتروني خادم SMTP مُكوَّنًا، وهو غير متوفر في نسخة كَيرن هذه.",
   "sidebar.releaseNotes": "ملاحظات إصدار v{version}",
   "sidebar.resize": "تغيير حجم الشريط الجانبي",
-  "sidebar.signOut": "تسجيل الخروج"
+  "sidebar.signOut": "تسجيل الخروج",
+  "pageActions.comments.title": "التعليقات",
+  "pageActions.comments.placeholder": "أضف تعليقًا…",
+  "pageActions.comments.submit": "تعليق",
+  "pageActions.comments.submitting": "جارٍ الإضافة…",
+  "pageActions.comments.empty.title": "لا توجد تعليقات بعد",
+  "pageActions.comments.empty.body": "ابدأ نقاشًا — التعليقات مرئية لكل من لديه حق الوصول إلى هذه الصفحة.",
+  "pageActions.comments.close": "إغلاق التعليقات"
 }

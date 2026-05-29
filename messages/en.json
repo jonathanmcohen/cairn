@@ -61,5 +61,12 @@
   "notifications.smtp.disabledReason": "Email requires a configured SMTP server, which this Cairn instance does not have.",
   "sidebar.releaseNotes": "Release notes for v{version}",
   "sidebar.resize": "Resize sidebar",
-  "sidebar.signOut": "Sign out"
+  "sidebar.signOut": "Sign out",
+  "pageActions.comments.title": "Comments",
+  "pageActions.comments.placeholder": "Add a comment…",
+  "pageActions.comments.submit": "Comment",
+  "pageActions.comments.submitting": "Adding…",
+  "pageActions.comments.empty.title": "No comments yet",
+  "pageActions.comments.empty.body": "Start a discussion — comments are visible to everyone with access to this page.",
+  "pageActions.comments.close": "Close comments"
 }
