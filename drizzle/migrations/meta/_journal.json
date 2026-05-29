@@ -379,6 +379,13 @@
       "when": 1779902241249,
       "tag": "0053_siem_forwarders",
       "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1779902241250,
+      "tag": "0054_workspace_icon",
+      "breakpoints": true
     }
   ]
 }

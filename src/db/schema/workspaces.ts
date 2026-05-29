@@ -3,6 +3,9 @@ import { boolean, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg
 export const workspaces = pgTable('workspaces', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull(),
+  // v0.9.4 UX audit #81 — optional workspace icon, prefix-encoded like
+  // pages.icon ("emoji::🪨" / "file::<uuid>"). text NULL; no FK.
+  icon: text('icon'),
   slug: text('slug').notNull().unique(),
   plan: text('plan').notNull().default('homelab'),
   publicSiteSlug: text('public_site_slug').unique(),

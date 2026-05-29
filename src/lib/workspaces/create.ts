@@ -6,6 +6,7 @@ import { registerTrashPurgeCron } from '@/server/cron-register';
 export type CreateWorkspaceInput = {
   name: string;
   ownerUserId: string;
+  icon?: string | null;
 };
 
 /** slugify(name) + 6 hex chars — the random suffix avoids collisions (no retry). */
@@ -35,7 +36,7 @@ export async function createWorkspace(
   return db.transaction(async (tx) => {
     const [ws] = await tx
       .insert(schema.workspaces)
-      .values({ name: input.name, slug: slugFor(input.name) })
+      .values({ name: input.name, slug: slugFor(input.name), icon: input.icon ?? null })
       .returning();
     if (!ws) throw new Error('Failed to create workspace');
     await tx
