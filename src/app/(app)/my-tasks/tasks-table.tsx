@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { DateField } from '@/components/ui/date-field';
 
 export type TasksTableRow = {
   pageId: string;
@@ -70,12 +70,12 @@ export function TasksTable(props: {
             {s}
           </Button>
         ))}
-        <Input
-          type="date"
+        <DateField
+          label="Due by"
+          hideLabel
           className="ml-auto w-40"
           value={props.initialDue ?? ''}
-          aria-label="Due by"
-          onChange={(e) => setQuery({ due: e.target.value || null })}
+          onChange={(next) => setQuery({ due: next || null })}
         />
       </fieldset>
       <ul className="divide-y rounded border">
