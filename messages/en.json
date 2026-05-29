@@ -41,5 +41,6 @@
   "outline.hide": "Hide outline",
   "outline.empty": "No headings.",
   "sidebar.releaseNotes": "Release notes for v{version}",
-  "sidebar.resize": "Resize sidebar"
+  "sidebar.resize": "Resize sidebar",
+  "sidebar.signOut": "Sign out"
 }

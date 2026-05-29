@@ -41,5 +41,6 @@
   "outline.hide": "إخفاء المخطط",
   "outline.empty": "لا توجد عناوين.",
   "sidebar.releaseNotes": "ملاحظات إصدار v{version}",
-  "sidebar.resize": "تغيير حجم الشريط الجانبي"
+  "sidebar.resize": "تغيير حجم الشريط الجانبي",
+  "sidebar.signOut": "تسجيل الخروج"
 }

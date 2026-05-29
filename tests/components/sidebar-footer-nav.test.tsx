@@ -32,4 +32,18 @@ describe('<SidebarFooterNav> version link', () => {
     expect(link.className).toMatch(/(^|\s)underline(\s|$)/);
     expect(link.className).toMatch(/focus-visible:ring/);
   });
+
+  it('renders the Sign out control inside a visually separated group', () => {
+    render(<SidebarFooterNav version="1.0.0" />);
+    const signOut = screen.getByRole('button', { name: /sign out/i });
+    // The sign-out group must carry a clearly-visible separator: a full-bleed
+    // (`-mx-3`) `border-t` divider that reads as a grouping boundary rather than
+    // another same-looking nav-row gap.
+    const group = signOut.closest('div');
+    expect(group?.className).toMatch(/border-t/);
+    expect(group?.className).toMatch(/-mx-3/);
+    // And Sign out must read as distinct from the nav links above it — a leading
+    // icon, so it's not visually identical to My tasks / Templates / Settings.
+    expect(signOut.querySelector('svg')).toBeTruthy();
+  });
 });
