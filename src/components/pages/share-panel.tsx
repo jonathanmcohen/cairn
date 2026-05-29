@@ -1,6 +1,11 @@
 'use client';
 
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { DateField } from '@/components/ui/date-field';
+import { Label } from '@/components/ui/label';
+import { PasswordInput } from '@/components/ui/password-input';
+import { useT } from '@/lib/i18n/provider';
 
 type SharePanelProps = {
   pageId: string;
@@ -10,9 +15,9 @@ type SharePanelProps = {
 };
 
 /**
- * Per-page share settings: duplication toggle, link password (set/clear), and an
- * optional expiry date. Every change PATCHes `/api/pages/<pageId>/share`.
- * Mounted inside the published branch of PageMenu.
+ * Per-page share settings: duplication toggle, link password (set/clear/rotate),
+ * and an optional expiry date. Every change PATCHes `/api/pages/<pageId>/share`.
+ * Rendered as the roomy, labelled body of the Share modal (ShareDialog).
  */
 export function SharePanel({
   pageId,
@@ -20,6 +25,7 @@ export function SharePanel({
   initialHasPassword = false,
   initialExpiresAt = null,
 }: SharePanelProps) {
+  const t = useT();
   const [allowDuplication, setAllowDuplication] = useState(initialAllowDuplication);
   const [hasPassword, setHasPassword] = useState(initialHasPassword);
   const [password, setPassword] = useState('');
@@ -33,11 +39,11 @@ export function SharePanel({
       body: JSON.stringify(body),
     });
     if (res.ok) {
-      setStatus('Saved');
+      setStatus(t('share.status.saved'));
       setTimeout(() => setStatus(null), 1500);
       return true;
     }
-    setStatus('Error');
+    setStatus(t('share.status.error'));
     return false;
   }
 
@@ -58,18 +64,21 @@ export function SharePanel({
     if (!ok) return;
     try {
       await navigator.clipboard.writeText(next);
-      setStatus('Rotated + copied to clipboard');
+      setStatus(t('share.status.rotatedCopied'));
     } catch {
-      setStatus(`Rotated. New password: ${next}`);
+      setStatus(t('share.status.rotatedReveal', { password: next }));
     }
     setHasPassword(true);
   }
 
   return (
-    <div className="space-y-2 px-3 py-2 text-sm">
-      <label className="flex items-center gap-2">
+    <div className="space-y-5">
+      {/* Allow duplication */}
+      <div className="flex items-start gap-3">
         <input
+          id="share-allow-dup"
           type="checkbox"
+          className="mt-1 h-4 w-4"
           checked={allowDuplication}
           onChange={(e) => {
             const v = e.target.checked;
@@ -77,49 +86,57 @@ export function SharePanel({
             void patch({ allowDuplication: v });
           }}
         />
-        <span>Allow duplication</span>
-      </label>
+        <Label htmlFor="share-allow-dup" className="font-normal">
+          <span className="block font-medium">{t('share.allowDuplication.label')}</span>
+          <span className="block text-muted-foreground text-xs">
+            {t('share.allowDuplication.hint')}
+          </span>
+        </Label>
+      </div>
 
-      <div className="space-y-1">
-        <div className="text-muted-foreground text-xs">Link password</div>
+      {/* Link password */}
+      <div className="space-y-2">
+        <Label htmlFor="share-password">{t('share.password.label')}</Label>
         {hasPassword ? (
-          <div className="flex flex-col gap-1">
-            <div className="flex gap-2">
-              <button
-                type="button"
-                className="text-xs underline hover:no-underline"
-                onClick={() => {
-                  void patch({ password: null }).then((ok) => {
-                    if (ok) setHasPassword(false);
-                  });
-                }}
-              >
-                Remove password
-              </button>
-              <button
-                type="button"
-                className="text-xs underline hover:no-underline"
-                aria-label="Rotate password"
-                onClick={() => {
-                  void rotatePassword();
-                }}
-              >
-                Rotate password
-              </button>
-            </div>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                void patch({ password: null }).then((ok) => {
+                  if (ok) setHasPassword(false);
+                });
+              }}
+            >
+              {t('share.password.remove')}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              aria-label={t('share.password.rotate')}
+              onClick={() => {
+                void rotatePassword();
+              }}
+            >
+              {t('share.password.rotate')}
+            </Button>
           </div>
         ) : (
-          <div className="flex gap-1">
-            <input
-              type="password"
-              className="w-full rounded border px-2 py-1 text-xs"
-              placeholder="Set a password"
+          <div className="flex gap-2">
+            <PasswordInput
+              id="share-password"
+              aria-label={t('share.password.label')}
+              showLabel={t('share.password.show')}
+              hideLabel={t('share.password.hide')}
+              placeholder={t('share.password.placeholder')}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-            <button
+            <Button
               type="button"
-              className="rounded border px-2 text-xs hover:bg-accent"
+              disabled={!password}
               onClick={() => {
                 if (!password) return;
                 void patch({ password }).then((ok) => {
@@ -130,36 +147,39 @@ export function SharePanel({
                 });
               }}
             >
-              Set
-            </button>
+              {t('share.password.set')}
+            </Button>
           </div>
         )}
       </div>
 
-      <div className="space-y-1">
-        <div className="text-muted-foreground text-xs">Expires</div>
-        <div className="flex gap-1">
-          <input
-            type="date"
-            className="w-full rounded border px-2 py-1 text-xs"
+      {/* Expiry */}
+      <div className="space-y-2">
+        <div className="flex items-end gap-2">
+          <DateField
+            label={t('share.expires.label')}
             value={expiresAt}
-            onChange={(e) => setExpiresAt(e.target.value)}
+            onChange={setExpiresAt}
+            className="flex-1"
           />
-          <button
+          <Button
             type="button"
-            className="rounded border px-2 text-xs hover:bg-accent"
             onClick={() => {
               void patch({
                 expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
               });
             }}
           >
-            Save
-          </button>
+            {t('share.expires.save')}
+          </Button>
         </div>
       </div>
 
-      {status && <div className="text-muted-foreground text-xs">{status}</div>}
+      {status && (
+        <div aria-live="polite" className="text-muted-foreground text-xs">
+          {status}
+        </div>
+      )}
     </div>
   );
 }
