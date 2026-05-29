@@ -11,8 +11,9 @@ import {
   useInteractions,
 } from '@floating-ui/react';
 import type { Editor } from '@tiptap/react';
-import { GripVertical } from 'lucide-react';
+import { GripVertical, Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '@/lib/i18n/provider';
 
 type Pos = { top: number; left: number; height: number };
 
@@ -21,6 +22,7 @@ export function DragHandle({ editor }: { editor: Editor }) {
   const [open, setOpen] = useState(false);
   const [targetPos, setTargetPos] = useState<number | null>(null);
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const t = useT();
 
   // Track hovered block by listening to mousemove over the editor's DOM.
   useEffect(() => {
@@ -38,7 +40,9 @@ export function DragHandle({ editor }: { editor: Editor }) {
       const rootRect = root.getBoundingClientRect();
       setPos({
         top: rect.top - rootRect.top,
-        left: -28,
+        // v0.9.4 #96 — widened gutter to host two 24px buttons (+ insert and
+        // the drag grip) plus a 4px gap, sitting in the prose's left margin.
+        left: -52,
         height: rect.height,
       });
       const dompos = editor.view.posAtDOM(node, 0);
@@ -128,12 +132,52 @@ export function DragHandle({ editor }: { editor: Editor }) {
     setOpen(false);
   }
 
+  // v0.9.4 #96 — insert an empty paragraph below the hovered block and drop the
+  // caret into it, so the user can immediately type `/` to open the slash menu
+  // (the Task-2 placeholder paints "Type '/' for commands" there). Yjs-safe:
+  // inserts a standard paragraph node + moves the selection (document structure
+  // synced by y-prosemirror), never node-view-local state.
+  function insertBelow() {
+    if (targetPos === null) return;
+    const { doc, schema } = editor.state;
+    const $pos = doc.resolve(targetPos);
+    const blockEnd = $pos.after(1);
+    const paragraph = schema.nodes.paragraph?.createAndFill();
+    if (!paragraph) return;
+    editor
+      .chain()
+      .focus()
+      .command(({ tr }) => {
+        tr.insert(blockEnd, paragraph);
+        return true;
+      })
+      // Place the caret inside the new empty paragraph (blockEnd + 1).
+      .setTextSelection(blockEnd + 1)
+      .focus()
+      .run();
+    setOpen(false);
+  }
+
   return (
-    <div ref={wrapperRef} style={{ position: 'absolute', top: pos.top, left: pos.left }}>
+    <div
+      ref={wrapperRef}
+      style={{ position: 'absolute', top: pos.top, left: pos.left }}
+      className="flex items-start gap-0.5"
+    >
+      <button
+        type="button"
+        aria-label={t('editor.insertBelow')}
+        title={t('editor.insertBelow')}
+        onClick={insertBelow}
+        className="text-muted-foreground hover:bg-accent flex h-6 w-6 items-center justify-center rounded"
+      >
+        <Plus className="h-4 w-4" />
+      </button>
       <button
         ref={refs.setReference}
         type="button"
-        aria-label="Block actions"
+        aria-label={t('editor.blockActions')}
+        title={t('editor.blockActions')}
         {...getReferenceProps()}
         className="text-muted-foreground hover:bg-accent flex h-6 w-6 items-center justify-center rounded"
       >

@@ -20,6 +20,8 @@
   "editor.link.apply": "Aplicar enlace",
   "editor.link.remove": "Quitar enlace",
   "editor.link.cancel": "Cancelar",
+  "editor.blockActions": "Acciones de bloque",
+  "editor.insertBelow": "Insertar bloque debajo",
   "palette.actions": "Acciones",
   "palette.recent": "Recientes",
   "palette.searchPlaceholder": "Buscar páginas y acciones…",

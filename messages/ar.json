@@ -20,6 +20,8 @@
   "editor.link.apply": "تطبيق الرابط",
   "editor.link.remove": "إزالة الرابط",
   "editor.link.cancel": "إلغاء",
+  "editor.blockActions": "إجراءات الكتلة",
+  "editor.insertBelow": "إدراج كتلة بالأسفل",
   "palette.actions": "إجراءات",
   "palette.recent": "الأخيرة",
   "palette.searchPlaceholder": "ابحث في الصفحات والإجراءات…",
