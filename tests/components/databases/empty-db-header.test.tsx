@@ -3,6 +3,16 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { TableView } from '@/components/databases/table-view';
 import type { DatabaseMeta, RowData } from '@/components/databases/use-database-data';
+import { I18nProvider } from '@/lib/i18n/provider';
+import enMessages from '../../../messages/en.json';
+
+function renderWithI18n(ui: React.ReactNode) {
+  return render(
+    <I18nProvider locale="en" messages={enMessages}>
+      {ui}
+    </I18nProvider>,
+  );
+}
 
 // jsdom doesn't compute layout; the non-grouped body delegates to
 // <VirtualizedRowBody> which reads offsetWidth/offsetHeight via
@@ -61,7 +71,7 @@ const groupedMeta: DatabaseMeta = {
 describe('empty database rendering', () => {
   it('renders column header(s) even when there are zero rows', () => {
     const rows: RowData[] = [];
-    render(
+    renderWithI18n(
       <TableView
         databaseId="db1"
         meta={meta}
@@ -78,7 +88,7 @@ describe('empty database rendering', () => {
   // still render so the empty grouped table reads as a table, not a void.
   it('renders the column header for an empty GROUPED table view', () => {
     const rows: RowData[] = [];
-    render(
+    renderWithI18n(
       <TableView
         databaseId="db1"
         meta={groupedMeta}
