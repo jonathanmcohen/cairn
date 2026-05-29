@@ -55,6 +55,8 @@
   "security.sessions.title": "Sessions",
   "security.sessions.note": "Sessions are token-based (stateless) with a 30-day maximum lifetime. You can sign out of this browser below; remote \"sign out everywhere\" is planned for a follow-up release.",
   "security.sessions.signOut": "Sign out of this browser",
+  "notifications.type.mention": "Mentions",
+  "notifications.type.commentReply": "Comment replies",
   "sidebar.releaseNotes": "Release notes for v{version}",
   "sidebar.resize": "Resize sidebar",
   "sidebar.signOut": "Sign out"

@@ -55,6 +55,8 @@
   "security.sessions.title": "الجلسات",
   "security.sessions.note": "تعتمد الجلسات على الرموز (بدون حالة) بحد أقصى 30 يومًا. يمكنك تسجيل الخروج من هذا المتصفح أدناه؛ تسجيل الخروج عن بُعد من جميع الأجهزة مخطط له في إصدار لاحق.",
   "security.sessions.signOut": "تسجيل الخروج من هذا المتصفح",
+  "notifications.type.mention": "الإشارات",
+  "notifications.type.commentReply": "ردود التعليقات",
   "sidebar.releaseNotes": "ملاحظات إصدار v{version}",
   "sidebar.resize": "تغيير حجم الشريط الجانبي",
   "sidebar.signOut": "تسجيل الخروج"

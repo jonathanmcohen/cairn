@@ -25,6 +25,16 @@ beforeEach(async () => {
   await sql`TRUNCATE notification_email_prefs, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
 });
 
+describe('NOTIFICATION_TYPES (#72: emailable subset)', () => {
+  it('is exactly the per-type-emailable subset, excluding reminder/flashcards_due/upgrade_available', () => {
+    expect([...NOTIFICATION_TYPES].sort()).toEqual(['comment_reply', 'mention']);
+    const list = NOTIFICATION_TYPES as readonly string[];
+    expect(list).not.toContain('reminder');
+    expect(list).not.toContain('flashcards_due');
+    expect(list).not.toContain('upgrade_available');
+  });
+});
+
 describe('getEmailPrefs', () => {
   it('returns the full type list with opt-in defaults when no rows exist', async () => {
     const { userId, workspaceId } = await createTestWorkspaceWithUser(db);

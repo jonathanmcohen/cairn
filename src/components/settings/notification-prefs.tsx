@@ -3,8 +3,11 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-type NotificationType = 'mention' | 'comment_reply';
+// Import the canonical type from the server source of truth instead of
+// re-declaring it locally — the local re-declaration drifting out of sync with
+// NOTIFICATION_TYPES was the root cause of #72.
+import type { NotificationType } from '@/lib/email/prefs';
+import { useT } from '@/lib/i18n/provider';
 
 type Pref = {
   notificationType: NotificationType;
@@ -17,9 +20,11 @@ type PrefsResponse = {
   emailEnabled: boolean;
 };
 
-const TYPE_LABELS: Record<NotificationType, string> = {
-  mention: 'Mentions',
-  comment_reply: 'Comment replies',
+// i18n label key per emailable type. Kept exhaustive over NotificationType so
+// adding a type to NOTIFICATION_TYPES forces a label here (compile error).
+const TYPE_LABEL_KEYS: Record<NotificationType, string> = {
+  mention: 'notifications.type.mention',
+  comment_reply: 'notifications.type.commentReply',
 };
 
 // The three mutually-exclusive choices, mapped to the (emailEnabled, digestOnly) pair.
@@ -37,6 +42,7 @@ function choiceOf(pref: Pref): Choice {
 }
 
 export function NotificationPrefs() {
+  const t = useT();
   const [prefs, setPrefs] = useState<Pref[] | null>(null);
   const [smtpEnabled, setSmtpEnabled] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -119,7 +125,9 @@ export function NotificationPrefs() {
               key={pref.notificationType}
               className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"
             >
-              <span className="text-sm font-medium">{TYPE_LABELS[pref.notificationType]}</span>
+              <span className="text-sm font-medium">
+                {t(TYPE_LABEL_KEYS[pref.notificationType])}
+              </span>
               <div className="flex gap-1">
                 {CHOICES.map((c) => {
                   // Email-bearing options require a configured SMTP server.
