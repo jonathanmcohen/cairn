@@ -40,6 +40,7 @@
   "outline.title": "Outline",
   "outline.hide": "Hide outline",
   "outline.empty": "No headings.",
+  "security.twoFactor.setup": "Set up 2FA",
   "sidebar.releaseNotes": "Release notes for v{version}",
   "sidebar.resize": "Resize sidebar",
   "sidebar.signOut": "Sign out"

@@ -40,6 +40,7 @@
   "outline.title": "Esquema",
   "outline.hide": "Ocultar esquema",
   "outline.empty": "Sin encabezados.",
+  "security.twoFactor.setup": "Configurar 2FA",
   "sidebar.releaseNotes": "Notas de la versión v{version}",
   "sidebar.resize": "Redimensionar la barra lateral",
   "sidebar.signOut": "Cerrar sesión"

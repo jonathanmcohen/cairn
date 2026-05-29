@@ -3,10 +3,12 @@
 import QRCode from 'qrcode';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/provider';
 
 type EnrollData = { secret: string; otpauthUri: string; recoveryCodes: string[] };
 
 export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean }) {
+  const t = useT();
   const [enabled, setEnabled] = useState(initiallyEnabled);
   const [enroll, setEnroll] = useState<EnrollData | null>(null);
   const [qr, setQr] = useState<string | null>(null);
@@ -79,7 +81,9 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
           <p className="text-muted-foreground text-sm">
             Protect your account with an authenticator app.
           </p>
-          <Button onClick={() => void begin()}>Set up 2FA</Button>
+          <Button variant="default" onClick={() => void begin()}>
+            {t('security.twoFactor.setup')}
+          </Button>
         </>
       ) : (
         <div className="space-y-3">
