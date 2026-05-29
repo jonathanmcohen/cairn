@@ -10,7 +10,15 @@ describe('<SlashMenu> icons', () => {
   it('renders the item icon when provided', () => {
     const { container } = render(
       <SlashMenu
-        items={[{ title: 'Heading 1', description: 'x', command: () => {}, icon: Heading1 }]}
+        items={[
+          {
+            title: 'Heading 1',
+            description: 'x',
+            category: 'basic',
+            command: () => {},
+            icon: Heading1,
+          },
+        ]}
         command={() => {}}
       />,
     );

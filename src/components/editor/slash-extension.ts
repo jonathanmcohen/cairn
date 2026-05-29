@@ -42,7 +42,7 @@ import { FootnoteMark } from './blocks/footnote-mark';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
-import { type SlashItem, SlashMenu, type SlashMenuRef } from './slash-menu';
+import { type SlashCategory, type SlashItem, SlashMenu, type SlashMenuRef } from './slash-menu';
 
 /**
  * Ensure a lazy editor extension (math/syncedBlock/embed) is registered on
@@ -201,10 +201,11 @@ export const citationMenuItem: CitationSlashEntry = {
   },
 };
 
-function toSlashItem(entry: CitationSlashEntry): SlashItem {
+function toSlashItem(entry: CitationSlashEntry, category: SlashCategory): SlashItem {
   return {
     title: entry.title,
     description: entry.description,
+    category,
     command: entry.run,
     icon: entry.icon,
   };
@@ -257,6 +258,7 @@ export const datetimeMenuItem: CitationSlashEntry = {
 export const pdfSlashItem: SlashItem = {
   title: 'PDF',
   description: 'Upload a PDF and annotate it inline',
+  category: 'media',
   icon: FileText,
   command: (editor) => {
     void (async () => {
@@ -284,78 +286,91 @@ const items: SlashItem[] = [
   {
     title: 'Heading 1',
     description: 'Large section header',
+    category: 'basic',
     icon: Heading1,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
   },
   {
     title: 'Heading 2',
     description: 'Medium section header',
+    category: 'basic',
     icon: Heading2,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
   },
   {
     title: 'Heading 3',
     description: 'Small section header',
+    category: 'basic',
     icon: Heading3,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
   },
   {
     title: 'Bullet list',
     description: 'Simple bulleted list',
+    category: 'basic',
     icon: List,
     command: (editor) => editor.chain().focus().toggleBulletList().run(),
   },
   {
     title: 'Numbered list',
     description: 'Ordered list',
+    category: 'basic',
     icon: ListOrdered,
     command: (editor) => editor.chain().focus().toggleOrderedList().run(),
   },
   {
     title: 'Task list',
     description: 'Checkbox list',
+    category: 'basic',
     icon: ListChecks,
     command: (editor) => editor.chain().focus().toggleTaskList().run(),
   },
   {
     title: 'Quote',
     description: 'Block quote',
+    category: 'basic',
     icon: Quote,
     command: (editor) => editor.chain().focus().toggleBlockquote().run(),
   },
   {
     title: 'Code',
     description: 'Code block with syntax highlight',
+    category: 'basic',
     icon: Code,
     command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
   },
   {
     title: 'Divider',
     description: 'Horizontal rule',
+    category: 'basic',
     icon: Minus,
     command: (editor) => editor.chain().focus().setDivider().run(),
   },
   {
     title: 'Callout',
     description: 'Highlighted aside',
+    category: 'basic',
     icon: Info,
     command: (editor) => editor.chain().focus().setCallout('note').run(),
   },
   {
     title: 'Toggle',
     description: 'Collapsible block',
+    category: 'basic',
     icon: ChevronRight,
     command: (editor) => editor.chain().focus().setToggle().run(),
   },
   {
     title: 'Columns',
     description: 'Two side-by-side columns',
+    category: 'basic',
     icon: Columns2,
     command: (editor) => editor.chain().focus().setColumns(2).run(),
   },
   {
     title: 'Table',
     description: 'Simple table',
+    category: 'database',
     icon: Table,
     command: (editor) =>
       editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
@@ -363,6 +378,7 @@ const items: SlashItem[] = [
   {
     title: 'Image',
     description: 'Upload and embed an image',
+    category: 'media',
     icon: Image,
     command: (editor) => {
       const input = document.createElement('input');
@@ -391,6 +407,7 @@ const items: SlashItem[] = [
   {
     title: 'File',
     description: 'Attach a file as a downloadable link',
+    category: 'media',
     icon: Paperclip,
     command: (editor) => {
       const input = document.createElement('input');
@@ -424,6 +441,7 @@ const items: SlashItem[] = [
   {
     title: 'Embed',
     description: 'Embed a YouTube/Vimeo/Loom/Figma/gist/CodeSandbox/Codepen/Spotify/Excalidraw URL',
+    category: 'media',
     icon: Code2,
     command: (editor) => {
       void ensureLazyExtension(editor, 'embed').then(() => {
@@ -438,24 +456,28 @@ const items: SlashItem[] = [
   {
     title: 'Bookmark',
     description: 'Save a link as a rich preview card',
+    category: 'media',
     icon: Bookmark,
     command: (editor) => editor.chain().focus().setBookmark('').run(),
   },
   {
     title: 'Button',
     description: 'Inline CTA with optional URL',
+    category: 'media',
     icon: MousePointerClick,
     command: (editor) => editor.chain().focus().setButton().run(),
   },
   {
     title: 'Video',
     description: 'Upload an MP4 or WebM video',
+    category: 'media',
     icon: Video,
     command: (editor) => editor.chain().focus().setVideo().run(),
   },
   {
     title: 'Audio',
     description: 'Upload and embed an audio file (mp3/wav/ogg/flac/aac)',
+    category: 'media',
     icon: Music,
     command: (editor) => {
       // v0.9.0 G3 P22: load the React node-view first so the inserted node
@@ -489,6 +511,7 @@ const items: SlashItem[] = [
   {
     title: 'Equation',
     description: 'Block math rendered with KaTeX',
+    category: 'advanced',
     icon: Sigma,
     command: (editor) => {
       void ensureLazyExtension(editor, 'math').then(() => {
@@ -499,6 +522,7 @@ const items: SlashItem[] = [
   {
     title: 'Synced block',
     description: 'Reusable block mirrored elsewhere on this page',
+    category: 'advanced',
     icon: RefreshCw,
     command: (editor) => {
       void ensureLazyExtension(editor, 'syncedBlock').then(() => {
@@ -509,6 +533,7 @@ const items: SlashItem[] = [
   {
     title: 'Mermaid diagram',
     description: 'Render a Mermaid diagram (flowchart, sequence, ER) as SVG',
+    category: 'advanced',
     icon: Workflow,
     command: (editor) => {
       void ensureLazyExtension(editor, 'mermaid').then(() => {
@@ -519,6 +544,7 @@ const items: SlashItem[] = [
   {
     title: 'PlantUML diagram',
     description: 'Render PlantUML (sequence, use-case, class) via public or self-hosted server',
+    category: 'advanced',
     icon: Network,
     command: (editor) => {
       void ensureLazyExtension(editor, 'plantuml').then(() => {
@@ -529,6 +555,7 @@ const items: SlashItem[] = [
   {
     title: 'drawio diagram',
     description: 'Embed a viewer-only diagrams.net diagram (XML or public URL)',
+    category: 'advanced',
     icon: PenTool,
     command: (editor) => {
       void ensureLazyExtension(editor, 'drawio').then(() => {
@@ -539,6 +566,7 @@ const items: SlashItem[] = [
   {
     title: 'Image gallery',
     description: 'Drop multiple images into a responsive grid with click-to-zoom',
+    category: 'media',
     icon: Images,
     command: (editor) => {
       void ensureLazyExtension(editor, 'gallery').then(() => {
@@ -547,12 +575,13 @@ const items: SlashItem[] = [
     },
   },
   pdfSlashItem,
-  toSlashItem(footnoteMenuItem),
-  toSlashItem(citationMenuItem),
-  toSlashItem(datetimeMenuItem),
+  toSlashItem(footnoteMenuItem, 'advanced'),
+  toSlashItem(citationMenuItem, 'advanced'),
+  toSlashItem(datetimeMenuItem, 'advanced'),
   {
     title: 'Flashcard',
     description: 'Spaced-repetition flashcard (front / back / deck tag)',
+    category: 'advanced',
     icon: Layers,
     command: (editor) => {
       const front = window.prompt('Front (question)') ?? '';
@@ -571,12 +600,14 @@ const items: SlashItem[] = [
   {
     title: 'Table of contents',
     description: "Linked outline of this page's headings",
+    category: 'basic',
     icon: ListTree,
     command: (editor) => editor.chain().focus().insertTableOfContents().run(),
   },
   {
     title: 'Database',
     description: 'Inline database with table/kanban/gallery',
+    category: 'database',
     icon: Database,
     command: (editor) => {
       void (async () => {
@@ -600,6 +631,7 @@ const items: SlashItem[] = [
   {
     title: 'Page embed',
     description: 'Embed a link to another page as a preview card',
+    category: 'database',
     icon: FileSymlink,
     command: (editor) => {
       openPagePicker(editor, (item) => {
@@ -628,8 +660,11 @@ export const SlashCommand = Extension.create({
           editor.chain().focus().deleteRange(range).run();
           props.command(editor);
         },
+        // #122 — return the full filtered catalog (no slice cap). The grouped,
+        // scrollable SlashMenu bounds its own height, so every block is now
+        // discoverable both by scrolling categories and by typing.
         items: ({ query }) =>
-          items.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())).slice(0, 10),
+          items.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())),
         render: () => {
           let component: ReactRenderer<
             SlashMenuRef,

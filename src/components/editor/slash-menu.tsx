@@ -4,9 +4,12 @@ import type { Editor } from '@tiptap/react';
 import type { LucideIcon } from 'lucide-react';
 import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
 
+export type SlashCategory = 'basic' | 'media' | 'database' | 'advanced';
+
 export type SlashItem = {
   title: string;
   description: string;
+  category: SlashCategory;
   command: (editor: Editor) => void;
   icon?: LucideIcon;
 };
@@ -14,6 +17,23 @@ export type SlashItem = {
 export type SlashMenuRef = {
   onKeyDown: (event: KeyboardEvent) => boolean;
 };
+
+/** Fixed display order for grouped slash-menu sections (#122). */
+export const SLASH_CATEGORY_ORDER: SlashCategory[] = ['basic', 'media', 'database', 'advanced'];
+
+export type SlashGroup = { category: SlashCategory; items: SlashItem[] };
+
+/**
+ * Group items by category in a fixed display order, dropping empty groups.
+ * The flattened group order MUST equal the input filter order's category
+ * partition so keyboard nav (which indexes the flat list) stays coherent.
+ */
+export function groupSlashItems(items: SlashItem[]): SlashGroup[] {
+  return SLASH_CATEGORY_ORDER.map((category) => ({
+    category,
+    items: items.filter((i) => i.category === category),
+  })).filter((g) => g.items.length > 0);
+}
 
 /**
  * Bespoke ProseMirror-anchored popup for `/` slash commands. ARIA-wise we
