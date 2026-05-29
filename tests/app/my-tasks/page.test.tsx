@@ -40,9 +40,9 @@ describe('TasksTable', () => {
   it('exposes accessible filter buttons', () => {
     render(<TasksTable initialTasks={seed} initialStatus="open" />);
     expect(screen.getByRole('group', { name: /Filter by status/ })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'open' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'done' })).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'all' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Open' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Done' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'All' })).toBeTruthy();
   });
 
   it('renders an accessible checkbox per row', () => {

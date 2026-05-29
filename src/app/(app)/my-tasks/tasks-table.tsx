@@ -63,11 +63,13 @@ export function TasksTable(props: {
         {STATUSES.map((s) => (
           <Button
             key={s}
-            variant={props.initialStatus === s ? 'default' : 'outline'}
+            type="button"
+            variant={props.initialStatus === s ? 'default' : 'ghost'}
             size="sm"
+            aria-pressed={props.initialStatus === s}
             onClick={() => setQuery({ status: s })}
           >
-            {s}
+            {{ open: 'Open', done: 'Done', all: 'All' }[s]}
           </Button>
         ))}
         <DateField
