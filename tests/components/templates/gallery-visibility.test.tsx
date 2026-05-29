@@ -87,6 +87,20 @@ describe('TemplatesGallery visibility grouping', () => {
     expect(screen.getByText('Welcome to Cairn')).toBeTruthy();
   });
 
+  it('renders a lucide chevron in the Preview disclosure (no raw marker)', () => {
+    const welcomeBuiltInTemplate = tpl({
+      name: 'Welcome to Cairn',
+      kind: 'page',
+      builtIn: true,
+      workspaceId: null,
+      visibility: 'public',
+    });
+    render(<TemplatesGallery initialTemplates={[welcomeBuiltInTemplate]} />);
+    const summary = screen.getByText('Preview').closest('summary');
+    expect(summary?.querySelector('svg')).toBeTruthy();
+    expect(summary?.className).toContain('list-none');
+  });
+
   it('renders the kind badge and the Built-in badge with distinct styling', () => {
     const builtInPageTemplate = tpl({
       name: 'Welcome to Cairn',

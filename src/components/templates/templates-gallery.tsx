@@ -151,8 +151,14 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                   </CardHeader>
                   <CardContent className="mt-auto flex flex-col gap-2">
                     {t.builtIn && BUILT_IN_DESCRIPTIONS[t.name] ? (
-                      <details className="text-xs text-muted-foreground">
-                        <summary className="cursor-pointer select-none">Preview</summary>
+                      <details className="group text-xs text-muted-foreground">
+                        <summary className="flex cursor-pointer list-none select-none items-center gap-1 [&::-webkit-details-marker]:hidden">
+                          <ChevronRight
+                            aria-hidden
+                            className="size-3.5 shrink-0 transition-transform group-open:rotate-90"
+                          />
+                          Preview
+                        </summary>
                         <p className="mt-1">{BUILT_IN_DESCRIPTIONS[t.name]}</p>
                       </details>
                     ) : null}
