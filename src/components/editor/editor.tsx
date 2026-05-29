@@ -70,6 +70,18 @@ const STATUS_DOT = {
   error: 'bg-destructive',
 } as const;
 
+// #123 — class applied to the .ProseMirror contenteditable. We suppress BOTH
+// `:focus` and `:focus-visible` outlines on this one surface. The global
+// `:focus-visible { outline: 2px solid hsl(var(--ring)) }` (globals.css) exists
+// for discrete controls (buttons/inputs/links) per WCAG 2.4.7, but on this
+// 50vh-tall writing surface it painted the accent ring around the whole editor
+// viewport — orange under the amber accent, red under rose — which read as a
+// stuck error glow after slash-menu teardown returned keyboard-style focus.
+// The caret is this surface's focus affordance, so dropping its outline is
+// correct and does not regress real control focus rings elsewhere.
+export const EDITOR_CONTENT_CLASS =
+  'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden focus-visible:outline-hidden min-h-[50vh]';
+
 export function Editor({
   pageId,
   workspaceId,
@@ -204,8 +216,7 @@ export function Editor({
           immediatelyRender: false,
           editorProps: {
             attributes: {
-              class:
-                'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
+              class: EDITOR_CONTENT_CLASS,
               // axe `aria-input-field-name`: the ProseMirror contenteditable is
               // tabbable + editable, and recent axe-core builds (4.10+) map a
               // tabbable `[contenteditable=true]` to an implicit ARIA textbox.
