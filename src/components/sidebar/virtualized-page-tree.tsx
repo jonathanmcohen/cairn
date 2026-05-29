@@ -10,6 +10,7 @@ import { useT } from '@/lib/i18n/provider';
 import { parseIcon } from '@/lib/pages/icon-format';
 import type { FlatPageNode } from '@/lib/pages/tree';
 import { PageRowActionsMenu } from './page-row-actions-menu';
+import { PageRowContextMenu } from './page-row-context-menu';
 import { usePageRowActions } from './use-page-row-actions';
 
 /**
@@ -233,51 +234,53 @@ function PageTreeRow({
   const api = usePageRowActions(node);
   return (
     <li key={rowKey} data-virtual-row="" data-row-kind="page" data-depth={node.depth} style={style}>
-      <div
-        className="group flex items-center gap-1 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
-        style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
-      >
-        {api.renaming ? (
-          <>
-            <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
-              {renderNodeIcon(node.icon)}
-            </span>
-            <input
-              type="text"
-              // biome-ignore lint/a11y/noAutofocus: inline rename — focusing the input immediately is the expected UX when the user invokes "Rename"
-              autoFocus
-              aria-label={t('pageRow.rename')}
-              defaultValue={node.title}
-              className="min-w-0 flex-1 rounded border bg-background px-1 py-0.5 text-sm outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  void api.submitRename((e.target as HTMLInputElement).value);
-                } else if (e.key === 'Escape') {
-                  e.preventDefault();
-                  api.cancelRename();
-                }
-              }}
-              onBlur={(e) => void api.submitRename(e.target.value)}
-            />
-          </>
-        ) : (
-          <>
-            <Link
-              href={`/pages/${node.id}` as Route}
-              className="flex min-w-0 flex-1 items-center gap-2 py-1"
-            >
+      <PageRowContextMenu node={node} api={api}>
+        <div
+          className="group flex items-center gap-1 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
+          style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
+        >
+          {api.renaming ? (
+            <>
               <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
                 {renderNodeIcon(node.icon)}
               </span>
-              <span className="min-w-0 flex-1 truncate">{node.title}</span>
-            </Link>
-            <span className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              <PageRowActionsMenu node={node} api={api} />
-            </span>
-          </>
-        )}
-      </div>
+              <input
+                type="text"
+                // biome-ignore lint/a11y/noAutofocus: inline rename — focusing the input immediately is the expected UX when the user invokes "Rename"
+                autoFocus
+                aria-label={t('pageRow.rename')}
+                defaultValue={node.title}
+                className="min-w-0 flex-1 rounded border bg-background px-1 py-0.5 text-sm outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    void api.submitRename((e.target as HTMLInputElement).value);
+                  } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    api.cancelRename();
+                  }
+                }}
+                onBlur={(e) => void api.submitRename(e.target.value)}
+              />
+            </>
+          ) : (
+            <>
+              <Link
+                href={`/pages/${node.id}` as Route}
+                className="flex min-w-0 flex-1 items-center gap-2 py-1"
+              >
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
+                  {renderNodeIcon(node.icon)}
+                </span>
+                <span className="min-w-0 flex-1 truncate">{node.title}</span>
+              </Link>
+              <span className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+                <PageRowActionsMenu node={node} api={api} />
+              </span>
+            </>
+          )}
+        </div>
+      </PageRowContextMenu>
     </li>
   );
 }
