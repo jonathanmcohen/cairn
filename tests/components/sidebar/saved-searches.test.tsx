@@ -35,7 +35,9 @@ describe('SavedSearches rename', () => {
     const input = screen.getByDisplayValue('Old');
     fireEvent.change(input, { target: { value: 'New name' } });
     fireEvent.keyDown(input, { key: 'Enter' });
-    await waitFor(() => expect(patch).toHaveBeenCalledWith('/api/search/saved/s1', expect.anything()));
+    await waitFor(() =>
+      expect(patch).toHaveBeenCalledWith('/api/search/saved/s1', expect.anything()),
+    );
     expect(await screen.findByText('New name')).toBeTruthy();
   });
 });
