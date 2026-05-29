@@ -147,6 +147,7 @@ export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
         {creating ? null : (
           <Button
             type="button"
+            variant="default"
             className="min-h-11"
             onClick={() => {
               setCreating(true);
