@@ -1,5 +1,6 @@
 'use client';
 
+import { CheckSquare } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -82,7 +83,13 @@ export function TasksTable(props: {
       </fieldset>
       <ul className="divide-y rounded border">
         {tasks.length === 0 && (
-          <li className="p-4 text-center text-muted-foreground text-sm">No tasks.</li>
+          <li className="flex flex-col items-center gap-2 py-10 text-center">
+            <CheckSquare className="h-8 w-8 text-muted-foreground" aria-hidden />
+            <p className="text-sm font-medium">No tasks yet</p>
+            <p className="max-w-xs text-sm text-muted-foreground">
+              Tasks you add inside pages show up here. Open a page and add a to-do to get started.
+            </p>
+          </li>
         )}
         {tasks.map((t) => (
           <li key={`${t.pageId}-${t.blockId}`} className="flex items-center gap-3 p-3">
