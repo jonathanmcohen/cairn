@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
-import { render } from '@testing-library/react';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { cleanup, render } from '@testing-library/react';
+import { afterEach, beforeAll, describe, expect, it } from 'vitest';
 import { VirtualizedPageTree } from '@/components/sidebar/virtualized-page-tree';
 import type { FlatPageNode } from '@/lib/pages/tree';
 
@@ -38,6 +38,13 @@ beforeAll(() => {
       NoopResizeObserver;
   }
 });
+
+// Unmount each render before the next test. @tanstack/react-virtual schedules
+// work through React 19's concurrent scheduler (setImmediate-backed); without
+// an explicit unmount a deferred render task can fire AFTER the jsdom env is
+// torn down and throw `ReferenceError: window is not defined`, which Vitest
+// counts as an unhandled error and fails the whole run.
+afterEach(cleanup);
 
 function makeNodes(n: number): FlatPageNode[] {
   return Array.from({ length: n }, (_, i) => ({

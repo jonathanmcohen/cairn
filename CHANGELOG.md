@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.2] - 2026-05-28
+
+> Hotfix for the `cairn-collab` sidecar image, which crash-looped on startup in v0.9.1. The app image (`cairn`), database schema, and env vars are unchanged — only the collab container is affected. Upgraders pull the new `cairn-collab:0.9.2` image (compose does this on redeploy); no migrations.
+
+### Fixed
+- **`cairn-collab` container crash-loop.** Three bugs combined to keep the Hocuspocus sidecar from booting after v0.9.1:
+  - `Dockerfile.collab` still pinned `NODE_VERSION=22-alpine` — the v0.9.1 Node-24 sweep missed it. Now `24-alpine`, matching the app image.
+  - The `CMD` ran `pnpm exec tsx`; pnpm 10+ runs a dependency-status check before `exec` that writes a temp file into the root-owned `/app` working directory, which fails with `EACCES` under the non-root `cairn` user. The entrypoint now invokes `node_modules/.bin/tsx` directly — no pnpm, no deps-check, no network — while still resolving the `@/` path alias via tsconfig.
+  - `collab/server.ts` value-imports `@/lib/observability/metrics`, but the image only copied `src/lib/collab` + `src/lib/auth`. Added a `COPY src/lib/observability` so the prom-client metrics module resolves at runtime.
+
 ## [0.9.1] - 2026-05-28
 
 > Dependency-maintenance release: runtime → Node 24 LTS, package manager → pnpm 11, and the full dependency tree advanced to latest (including the breaking nodemailer 8 and pdfjs-dist 5 majors) with the codebase migrated to match. No schema changes — **no migrations, no new env vars**; upgraders need only redeploy. Plus a public-render bug fix that unblocks Lighthouse CI, and a light+dark feature screenshot set in the README.
