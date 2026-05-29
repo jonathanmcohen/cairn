@@ -81,6 +81,33 @@ describe('<PageModeShell>', () => {
     );
   });
 
+  // a8 #17 regression guard — the duplicate top-right control box reopened in
+  // the v0.9.3 deploy (stale build artifact: the image predated c8f4619). The
+  // source is correct and singular; this guard ensures the shell never
+  // re-introduces its own floating toggles slot. With a single <PageModeToggles>
+  // among the children there must be EXACTLY two mode buttons (focus + reader),
+  // never four (which a second mount would produce).
+  it('renders exactly one focus + one reader toggle (no duplicate control box)', () => {
+    render(
+      <PageModeShell>
+        <PageModeToggles />
+        <div data-testid="body" />
+      </PageModeShell>,
+    );
+    expect(screen.getAllByRole('button', { name: /focus mode/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /reader mode/i })).toHaveLength(1);
+  });
+
+  it('the shell itself renders no mode toggles without an explicit <PageModeToggles> child', () => {
+    render(
+      <PageModeShell>
+        <div data-testid="body" />
+      </PageModeShell>,
+    );
+    expect(screen.queryByRole('button', { name: /focus mode/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /reader mode/i })).toBeNull();
+  });
+
   it('removes the focus-mode class on unmount', () => {
     const { unmount } = render(
       <PageModeShell>
