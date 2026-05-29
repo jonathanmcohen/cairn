@@ -129,10 +129,18 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the
           `cairn-toc-sidebar` cookie set by the Settings toggle. Rendered
           in-flow inside PageDetailShell (the shell has no right-rail slot)
-          and absolutely positioned to the right of the editor on xl+
-          viewports; hidden below xl where there's no room. */}
+          and absolutely positioned on xl+ viewports; hidden below xl where
+          there's no room.
+          a9 #18 — the rail is anchored to the RIGHT EDGE OF THE CENTERED
+          max-w-3xl reading column (`left-1/2` + a `24rem` = half-of-3xl
+          translate), NOT to the viewport's right edge. Previously it floated
+          against the viewport with no positioned ancestor, leaving a dead
+          band of empty whitespace between the column and the rail. Anchoring
+          it to the column makes the gutter intentional, and `TocSidebar`
+          returns null when the page has no headings so the rail never shows
+          empty. */}
       {showTocSidebar ? (
-        <aside className="pointer-events-none absolute right-4 top-32 hidden xl:block xl:w-56">
+        <aside className="pointer-events-none absolute left-1/2 top-32 hidden translate-x-[calc(24rem+1.5rem)] xl:block xl:w-56">
           <div className="pointer-events-auto">
             <TocSidebar initialDoc={page.content} />
           </div>
