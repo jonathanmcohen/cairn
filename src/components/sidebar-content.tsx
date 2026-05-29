@@ -5,6 +5,7 @@ import { listFavorites, listRecents } from '@/lib/prefs/user-page-prefs';
 import { appVersion } from '@/lib/version';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { NewPageButton } from './new-page-button';
+import { SearchHintButton } from './search-hint-button';
 import { PinnedSection } from './sidebar/pinned-section';
 import { SavedSearches } from './sidebar/saved-searches';
 import { VirtualizedPageTree } from './sidebar/virtualized-page-tree';
@@ -43,6 +44,7 @@ export async function SidebarContent({
         <ThemeToggle />
       </div>
       <nav aria-labelledby="sidebar-pages-heading" className="flex-1 overflow-y-auto p-3">
+        <SearchHintButton />
         <PinnedSection />
         <SidebarFavorites favorites={favorites} />
         <SidebarRecents recents={recents} />
