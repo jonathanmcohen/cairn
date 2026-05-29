@@ -77,6 +77,68 @@ These were closed by PR #46 but reopened after the deploy review. Each plan that
 - **P18** `…-19-menus-nav-chrome.md` — #75–#80 + reopened #15, #42, #44
 - **P19** `…-20-reopened-formcontrols.md` — reopened #27, #34 + a diagnose-first checklist for all reopened items
 
+## Round-2 batch-2 findings (page/workspace/editor flows) — GitHub #81–#115
+
+Audit labels #68–#102 → GitHub #81–#115 (these are audit-sequence labels, not GH numbers — they do NOT collide with existing GH #68–#80).
+
+| GH | summary | plan file |
+|---:|---------|-----------|
+| #81 | workspace create: no name/icon modal | `-21-` |
+| #82 | workspace switch lands on /templates not home | `-21-` |
+| #83 | new page random default emoji | `-22-` |
+| #84 | empty page no "Type /" placeholder | `-22-` |
+| #85 | comments compose no visible border | `-23-` |
+| #86 | comment submit low contrast | `-23-` |
+| #87 | comments empty state bare | `-23-` |
+| #88 | version history no "save snapshot"/explain | `-23-` |
+| #89 | version history empty-state icon | `-23-` |
+| #90 | lock dropdown no icons / no custom duration | `-23-` |
+| #91 | export menu no icons | `-23-` |
+| #92 | export "PDF (via browser print)" relabel | `-23-` |
+| #93 | cross-modal: panels stack; Esc dismiss | `-23-` |
+| #94 | mobile: export dropdown overflows | `-23-` |
+| #95 | mobile: language switcher icon-only | `-28-` |
+| #96 | block hover handle no "+" insert | `-22-` |
+| #97 | sidebar "Search…" opens palette not page search | `-25-` |
+| #98 | "N open" badge non-interactive | `-23-` |
+| #99 | db view tabs "+" prefix confusing | `-24-` |
+| #100 | db empty state no count / top Add-row | `-24-` |
+| #101 | suggesting Mark insert/delete no icons/tooltips | `-23-` |
+| #102 | sidebar no right-click context menu | `-25-` |
+| #103 | sidebar hover no quick actions | `-25-` |
+| #104 | visibility (eye) toggle no label/active state | `-22-` |
+| #105 | code-block language picker no search filter | `-26-` |
+| #106 | code block no "Copy code" button | `-26-` |
+| #107 | @ mention dropdown no avatars | `-26-` |
+| #108 | @ surfaces only users (pages need [[) | `-26-` |
+| #109 | palette ⌘K no auto-focus | `-27-` |
+| #110 | palette page results rank below Actions | `-27-` |
+| #111 | palette snippet no match highlight | `-27-` |
+| #112 | palette "Save this search" unclear | `-27-` |
+| #113 | palette "Mod+…" not platform-aware (dup of #54) | `-27-` |
+| #114 | palette Escape unreliable dismiss | `-27-` |
+| #115 | db "+ Table" click no result | `-24-` |
+
+### Batch-2 plan files
+- **`-21-workspace-flows.md`** — #81, #82 *(needs migration 0054: `workspaces.icon`; depends on P18 switcher rebuild)*
+- **`-22-new-page-and-editor-chrome.md`** — #83, #84, #96, #104
+- **`-23-page-action-panels.md`** — #85–#94, #98, #101 *(shared single-open-panel controller)*
+- **`-24-database-block.md`** — #99, #100, #115 *(#115 root cause: created view never activated)*
+- **`-25-sidebar-page-actions.md`** — #97, #102, #103 *(reuses P18 #76 actions)*
+- **`-26-code-and-mentions.md`** — #105, #106, #107, #108
+- **`-27-command-palette-2.md`** — #109–#114 *(#113 folds into P12/#54 formatter)*
+- **`-28-mobile-responsive.md`** — #95
+
+### Cross-plan dependencies (batch-2)
+- **`ui/dialog.tsx`** primitive introduced by `-21-` (workspace create modal) — reuse for other modals.
+- **DateField popover-calendar rewrite** (P17/`-18-`) is a prerequisite for #27 (`-20-`).
+- **Platform shortcut formatter** (`src/lib/shortcuts/format.ts`, P12/`-13-`) is a prerequisite for #113 (`-27-`).
+- **`duplicateOwnedPage` + page actions** (P18/`-19-` #76) are reused by sidebar row actions (`-25-` #102/#103).
+- **suggestion-toolbar.tsx**: `-14-` (#39 styling) vs `-23-` (#98/#101 interactivity) — disjoint nodes, coordinate.
+- **workspace-switcher.tsx**: `-19-` (#77/#78 rebuild) vs `-21-` (#81/#82 create+switch) — land `-19-` first.
+
+> **Backlog is iterative** — the user expects further audit rounds after this lands.
+
 ## Execution order
 
-Cosmetic/low-risk first (P11, P12, P13, P18), then settings surfaces (P15, P16, P17), MCP (P14), reopened re-fixes (P19) interleaved with their thematic plans. Single branch → single PR → hold for review → v0.9.4.
+Cosmetic/low-risk first (P11, P12, P13, P18, `-22-`, `-23-`, `-28-`), then settings surfaces (P15, P16, P17), data/flows (`-21-`, `-24-`, `-25-`, `-26-`, `-27-`), MCP (P14), reopened re-fixes (P19/`-20-`) interleaved. Respect the cross-plan dependencies above. Single branch → single PR → hold for review → v0.9.4.
