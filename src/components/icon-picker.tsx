@@ -4,7 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import { formatIcon, parseIcon } from '@/lib/pages/icon-format';
 import { CustomIconUpload } from './pages/custom-icon-upload';
 import { Button } from './ui/button';
-import { Input } from './ui/input';
 
 const RECENT_KEY = 'cairn:recent-emojis';
 const RECENT_MAX = 16;
@@ -37,7 +36,6 @@ export type IconPickerProps = {
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
   const [open, setOpen] = useState(false);
-  const [search, setSearch] = useState('');
   const [recent, setRecent] = useState<string[]>([]);
   const [tab, setTab] = useState<'emoji' | 'upload'>('emoji');
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -133,46 +131,33 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
 
           {tab === 'emoji' && (
             <>
-              <Input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search emoji"
-                className="mb-2"
-                aria-label="Search emoji"
-              />
               {recent.length > 0 && (
                 <div className="mb-2">
                   <div className="mb-1 text-xs text-muted-foreground">Recently used</div>
                   <div className="flex flex-wrap gap-1">
-                    {recent
-                      .filter((r) => !search || r.includes(search))
-                      .slice(0, RECENT_MAX)
-                      .map((r) => (
-                        <button
-                          key={r}
-                          type="button"
-                          onClick={() => {
-                            const dedup = [r, ...recent.filter((x) => x !== r)];
-                            writeRecent(dedup);
-                            setRecent(dedup);
-                            onChange(formatIcon({ kind: 'emoji', value: r }));
-                            setOpen(false);
-                          }}
-                          className="rounded p-1 text-xl hover:bg-accent"
-                          aria-label={`Use ${r}`}
-                        >
-                          {r}
-                        </button>
-                      ))}
+                    {recent.slice(0, RECENT_MAX).map((r) => (
+                      <button
+                        key={r}
+                        type="button"
+                        onClick={() => {
+                          const dedup = [r, ...recent.filter((x) => x !== r)];
+                          writeRecent(dedup);
+                          setRecent(dedup);
+                          onChange(formatIcon({ kind: 'emoji', value: r }));
+                          setOpen(false);
+                        }}
+                        className="rounded p-1 text-xl hover:bg-accent"
+                        aria-label={`Use ${r}`}
+                      >
+                        {r}
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
-              {/* The emoji-picker-element web component honors its `search`
-                 attribute as a filter on the visible grid; we set it after
-                 mount via the effect above by re-rendering when `search`
-                 changes. To keep the test simple we read the prop directly
-                 into a hidden input the user-visible component can pick up. */}
-              <div ref={containerRef} data-search={search} />
+              {/* The emoji-picker-element web component renders its own internal
+                 search box + scrollable grid into this mount point. */}
+              <div ref={containerRef} data-testid="emoji-picker-mount" />
             </>
           )}
 
