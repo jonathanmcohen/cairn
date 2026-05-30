@@ -4,6 +4,13 @@ import { type FormEvent, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Property = { id: string; name: string; type: string };
 
@@ -96,46 +103,50 @@ export function CsvConfigForm({ connectorId, properties, initial }: Props) {
       <div className="grid grid-cols-2 gap-3">
         <div className="space-y-1">
           <Label htmlFor="delimiter">Delimiter</Label>
-          <select
-            id="delimiter"
-            value={delimiter}
-            onChange={(e) => setDelimiter(e.target.value)}
-            className="w-full rounded border px-2 py-1"
-          >
-            <option value=",">Comma (,)</option>
-            <option value=";">Semicolon (;)</option>
-            <option value="\t">Tab</option>
-          </select>
+          <Select value={delimiter} onValueChange={(next) => setDelimiter(next)}>
+            <SelectTrigger id="delimiter" className="w-full" aria-label="Delimiter">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value=",">Comma (,)</SelectItem>
+              <SelectItem value=";">Semicolon (;)</SelectItem>
+              <SelectItem value="\t">Tab</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         <div className="space-y-1">
           <Label htmlFor="encoding">Encoding</Label>
-          <select
-            id="encoding"
-            value={encoding}
-            onChange={(e) => setEncoding(e.target.value)}
-            className="w-full rounded border px-2 py-1"
-          >
-            <option value="utf8">UTF-8</option>
-            <option value="latin1">Latin-1 (ISO-8859-1)</option>
-            <option value="utf16le">UTF-16 LE</option>
-          </select>
+          <Select value={encoding} onValueChange={(next) => setEncoding(next)}>
+            <SelectTrigger id="encoding" className="w-full" aria-label="Encoding">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="utf8">UTF-8</SelectItem>
+              <SelectItem value="latin1">Latin-1 (ISO-8859-1)</SelectItem>
+              <SelectItem value="utf16le">UTF-16 LE</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
       <div className="space-y-1">
         <Label htmlFor="externalIdProperty">External-ID property</Label>
-        <select
-          id="externalIdProperty"
-          value={externalIdProperty}
-          onChange={(e) => setExternalIdProperty(e.target.value)}
-          className="w-full rounded border px-2 py-1"
-        >
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <Select value={externalIdProperty} onValueChange={(next) => setExternalIdProperty(next)}>
+          <SelectTrigger
+            id="externalIdProperty"
+            className="w-full"
+            aria-label="External-ID property"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {properties.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="text-xs text-muted-foreground">
           Which Cairn property uniquely identifies a row across both systems.
         </p>
