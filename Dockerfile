@@ -54,6 +54,10 @@ COPY --from=builder --chown=cairn:cairn /app/dist ./dist
 COPY --from=deps --chown=cairn:cairn /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
 COPY --from=deps --chown=cairn:cairn /app/node_modules/postgres ./node_modules/postgres
 COPY --from=deps --chown=cairn:cairn /app/node_modules/dotenv ./node_modules/dotenv
+# zod is bundled into the Next standalone server chunks (not left in
+# node_modules), so the separate dist/ tree (e.g. embed-page CLI via
+# dist/lib/env.js) can't resolve it. Copy it explicitly. zod is dependency-free.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/zod ./node_modules/zod
 
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
