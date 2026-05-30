@@ -102,9 +102,26 @@
    * any future palette change. Per-component `focus-visible:ring-*` utilities
    * still layer on top where a component opts into a richer focus treatment.
    */
-  :focus-visible {
+  /*
+   * #110/#133 — the global ring must NOT match the editing surface or the
+   * slash-menu popup. Under saturated accents (--ring = orange/rose) the 2px
+   * offset ring on the 50vh contenteditable read as a stuck viewport edge-glow
+   * after slash-menu teardown returned keyboard-style :focus-visible to it (or
+   * to the popup container). Discrete controls keep the ring; these two
+   * surfaces opt out at the layer level so no per-element utility can be
+   * out-specified.
+   */
+  :focus-visible:not(.ProseMirror):not(.ProseMirror *):not(.cairn-slash-popup):not(
+    .cairn-slash-popup *
+  ) {
     outline: 2px solid hsl(var(--ring));
     outline-offset: 2px;
+  }
+  .ProseMirror:focus-visible,
+  .ProseMirror *:focus-visible,
+  .cairn-slash-popup:focus-visible,
+  .cairn-slash-popup *:focus-visible {
+    outline: none;
   }
 }
 

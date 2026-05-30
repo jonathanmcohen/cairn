@@ -745,6 +745,11 @@ export const SlashCommand = Extension.create({
                 trigger: 'manual',
                 placement: 'bottom-start',
               });
+              // #110/#133 — tag the rendered .tippy-box so globals.css can
+              // exclude the slash popup from the global :focus-visible ring
+              // (the saturated accent ring on this floating surface read as a
+              // stuck viewport edge-glow after teardown returned focus to it).
+              popup.popper.firstElementChild?.classList.add('cairn-slash-popup');
             },
             onUpdate: (props) => {
               component.updateProps({
