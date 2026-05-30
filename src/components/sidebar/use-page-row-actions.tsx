@@ -5,6 +5,7 @@ import { Copy, CopyPlus, FilePlus2, FolderInput, Pencil, Trash2 } from 'lucide-r
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useT } from '@/lib/i18n/provider';
 import type { FlatPageNode } from '@/lib/pages/tree';
 
@@ -36,6 +37,7 @@ export type PageRowActionsApi = {
  */
 export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
   const t = useT();
+  const confirm = useConfirm();
   const router = useRouter();
   const [linkCopied, setLinkCopied] = useState(false);
   const [renaming, setRenaming] = useState(false);
@@ -68,10 +70,15 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
   }, [node.id, router]);
 
   const moveToTrash = useCallback(async () => {
-    if (!window.confirm(t('pageMenu.confirmTrash'))) return;
+    const ok = await confirm({
+      title: t('pageMenu.confirmTrash'),
+      confirmLabel: t('pageMenu.moveToTrash'),
+      variant: 'danger',
+    });
+    if (!ok) return;
     const res = await fetch(`/api/pages/${node.id}`, { method: 'DELETE' });
     if (res.ok) router.refresh();
-  }, [node.id, router, t]);
+  }, [node.id, router, t, confirm]);
 
   const submitRename = useCallback(
     async (next: string) => {

@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { AuthSessionProvider } from '@/components/session-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { ConfirmProvider } from '@/components/ui/confirm-dialog';
 import { dir, LOCALE_COOKIE } from '@/lib/i18n/config';
 import { getMessages } from '@/lib/i18n/messages';
 import { I18nProvider } from '@/lib/i18n/provider';
@@ -36,7 +37,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       <body className="bg-background text-foreground min-h-screen antialiased">
         <I18nProvider locale={locale} messages={messages}>
           <AuthSessionProvider>
-            <ThemeProvider nonce={nonce}>{children}</ThemeProvider>
+            <ThemeProvider nonce={nonce}>
+              <ConfirmProvider>{children}</ConfirmProvider>
+            </ThemeProvider>
           </AuthSessionProvider>
         </I18nProvider>
       </body>
