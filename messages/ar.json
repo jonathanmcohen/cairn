@@ -77,6 +77,7 @@
   "pageRow.rename": "إعادة تسمية",
   "pageRow.addChild": "إضافة صفحة فرعية",
   "pageRow.actions": "إجراءات الصفحة",
+  "pageRow.open": "فتح {title}",
   "searchHint.label": "ابحث أو انتقل إلى…",
   "searchHint.aria": "فتح لوحة الأوامر",
   "workspaceSwitcher.heading": "مساحات العمل",

@@ -77,6 +77,7 @@
   "pageRow.rename": "Cambiar nombre",
   "pageRow.addChild": "Añadir subpágina",
   "pageRow.actions": "Acciones de la página",
+  "pageRow.open": "Abrir {title}",
   "searchHint.label": "Buscar o ir a…",
   "searchHint.aria": "Abrir la paleta de comandos",
   "workspaceSwitcher.heading": "Espacios de trabajo",
