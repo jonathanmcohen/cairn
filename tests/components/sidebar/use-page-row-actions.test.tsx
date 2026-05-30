@@ -40,3 +40,24 @@ describe('usePageRowActions', () => {
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining(`/pages/${node.id}`));
   });
 });
+
+describe('usePageRowActions — moveTo picker wiring', () => {
+  it('moveTo.run opens the picker (moveOpen flips true)', () => {
+    const { result } = renderHook(() => usePageRowActions(node));
+    expect(result.current.moveOpen).toBe(false);
+    const moveTo = result.current.actions.find((a) => a.id === 'moveTo');
+    act(() => {
+      void moveTo?.run();
+    });
+    expect(result.current.moveOpen).toBe(true);
+  });
+
+  it('setMoveOpen(false) closes the picker', () => {
+    const { result } = renderHook(() => usePageRowActions(node));
+    act(() => {
+      void result.current.actions.find((a) => a.id === 'moveTo')?.run();
+    });
+    act(() => result.current.setMoveOpen(false));
+    expect(result.current.moveOpen).toBe(false);
+  });
+});

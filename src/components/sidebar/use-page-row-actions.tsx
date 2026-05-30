@@ -25,6 +25,10 @@ export type PageRowActionsApi = {
   renaming: boolean;
   submitRename: (next: string) => Promise<void>;
   cancelRename: () => void;
+  /** v0.9.6 #124 — Move-To picker open-state, owned here so the hover `…` menu
+   *  and the right-click context menu share one dialog instance. */
+  moveOpen: boolean;
+  setMoveOpen: (open: boolean) => void;
 };
 
 /**
@@ -41,6 +45,7 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
   const router = useRouter();
   const [linkCopied, setLinkCopied] = useState(false);
   const [renaming, setRenaming] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
 
   const copyLink = useCallback(() => {
     const url = `${window.location.origin}/pages/${node.id}`;
@@ -109,12 +114,10 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
       id: 'moveTo',
       label: t('pageMenu.moveTo'),
       icon: FolderInput,
-      // TODO(move-to): the reparent picker UX is shared with P19's deferred
-      // `#76 Move-to picker` follow-up (POST /api/pages/[id]/move { newParentId },
-      // newParentId:null = top level). The endpoint exists; only the picker
-      // popover is unbuilt. Ships as a follow-up shared with #76 — do NOT build
-      // a second bespoke picker here. Run is a no-op until the picker lands.
-      run: () => {},
+      // v0.9.6 #124 — opens the shared Move-To picker (POST .../move
+      // { newParentId }, null = top level). The dialog is mounted by the
+      // consuming surface (row menu / context menu) and driven by `moveOpen`.
+      run: () => setMoveOpen(true),
     },
     {
       id: 'trash',
@@ -132,5 +135,7 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
     renaming,
     submitRename,
     cancelRename: () => setRenaming(false),
+    moveOpen,
+    setMoveOpen,
   };
 }
