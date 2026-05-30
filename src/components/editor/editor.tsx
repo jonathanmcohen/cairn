@@ -13,6 +13,7 @@ import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions
 import { BulkUploader } from './bulk-uploader';
 import { DragHandle } from './drag-handle';
 import { EditorBubbleMenu } from './editor-bubble-menu';
+import { EditorDialogs } from './editor-dialogs';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
 import { composeGalleryInsert } from './image-extension';
@@ -512,6 +513,7 @@ export function Editor({
 
   return (
     <div className="relative">
+      <EditorDialogs />
       {/* a30 #39 (round-2 styling) — top control strip. Thin `h-4 w-px bg-border`
           separators divide the logical groups (suggest-edits / presence+status /
           outline) and the toggles carry explicit active states (aria-pressed +
