@@ -11,6 +11,7 @@ import { env } from '@/lib/env';
 import { ipKey, loginLimiter } from '@/lib/security/rate-limit';
 import { checkMfaEnrollmentForSignIn } from './mfa-policy';
 import { applyOAuthGate } from './oauth-gate';
+import { verifyLoginTicket } from './passkey-ticket';
 import { verifyPassword } from './password';
 import { isTwoFactorEnabled, verifySecondFactor } from './two-factor';
 
@@ -71,6 +72,42 @@ function buildProviders(): NextAuthConfig['providers'] {
     }),
   ];
 
+  providers.push(
+    Credentials({
+      id: 'passkey',
+      name: 'passkey',
+      // The browser completes the WebAuthn assertion via /api/webauthn/login-verify
+      // and passes the returned signed ticket here. We re-verify the HMAC + expiry,
+      // load the user, and run the same MFA-enrollment gate as the password path.
+      // The cryptographic assertion already happened server-side, so there is no
+      // password to check — a valid, unexpired ticket IS proof of possession.
+      credentials: { ticket: { type: 'text' } },
+      async authorize(raw) {
+        const ticket =
+          typeof (raw as { ticket?: unknown })?.ticket === 'string'
+            ? (raw as { ticket: string }).ticket
+            : null;
+        if (!ticket) return null;
+        const userId = verifyLoginTicket(ticket, env().AUTH_SECRET);
+        if (!userId) return null;
+        const db = getDb();
+        const [user] = await db
+          .select()
+          .from(schema.users)
+          .where(eq(schema.users.id, userId))
+          .limit(1);
+        if (!user) return null;
+        // Admin-enforce parity with the password path: a workspace policy may
+        // require MFA from an allow-list. A passkey login satisfies a
+        // WebAuthn-permitting policy by construction, but we still run the gate
+        // so a TOTP-only policy can reject (fails closed).
+        const mfaCheck = await checkMfaEnrollmentForSignIn(db, { userId: user.id });
+        if (!mfaCheck.ok) return null;
+        return { id: user.id, email: user.email, name: user.name };
+      },
+    }),
+  );
+
   if (process.env.AUTH_GOOGLE_ID && process.env.AUTH_GOOGLE_SECRET) {
     providers.push(
       Google({
@@ -105,7 +142,11 @@ export const authConfig: NextAuthConfig = {
   providers: buildProviders(),
   callbacks: {
     async signIn({ user, account }) {
-      if (!account || account.provider === 'credentials') return true;
+      // Both credentials providers (password + passkey) gate inside authorize();
+      // the OAuth gate below applies only to external IdP sign-ins.
+      if (!account || account.provider === 'credentials' || account.provider === 'passkey') {
+        return true;
+      }
       if (!user.email || !user.id) return false;
       return applyOAuthGate(getDb(), { email: user.email, userId: user.id });
     },
