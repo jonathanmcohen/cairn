@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -78,8 +78,14 @@ export function PropertyPanel({
     };
   }, [type, databaseId]);
 
-  // Relation properties on THIS database, for selector 1.
-  const relationProps = properties.filter((p) => p.type === 'relation');
+  // Relation properties on THIS database, for selector 1. Memoized so its
+  // reference is stable across renders — it feeds the rollup effect's dependency
+  // array below, and a fresh array each render would retrigger that effect (which
+  // setState's), causing an infinite render loop.
+  const relationProps = useMemo(
+    () => properties.filter((p) => p.type === 'relation'),
+    [properties],
+  );
 
   // Selector 2 depends on selector 1: load the chosen relation's target-db properties.
   useEffect(() => {
