@@ -3,6 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Member = {
   userId: string;
@@ -109,19 +116,22 @@ export function MembersTable({
                   {roleLocked ? (
                     <span>{ROLE_LABELS[m.role]}</span>
                   ) : (
-                    <select
-                      aria-label={`Change role for ${m.email}`}
+                    <Select
                       value={m.role}
                       disabled={busyId === m.userId}
-                      onChange={(e) => changeRole(m.userId, e.target.value as EditableRole)}
-                      className="rounded border px-2 py-1"
+                      onValueChange={(next) => changeRole(m.userId, next as EditableRole)}
                     >
-                      {EDITABLE_ROLES.map((r) => (
-                        <option key={r} value={r}>
-                          {ROLE_LABELS[r]}
-                        </option>
-                      ))}
-                    </select>
+                      <SelectTrigger aria-label={`Change role for ${m.email}`} className="w-auto">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {EDITABLE_ROLES.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {ROLE_LABELS[r]}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   )}
                 </td>
                 <td className="py-2 text-right">

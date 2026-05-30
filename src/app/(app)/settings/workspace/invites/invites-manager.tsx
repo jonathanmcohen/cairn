@@ -3,6 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Role = 'viewer' | 'editor' | 'admin';
 type Invite = {
@@ -113,18 +120,18 @@ export function InvitesManager({
           <label htmlFor={roleId} className="text-xs text-muted-foreground">
             Role
           </label>
-          <select
-            id={roleId}
-            value={role}
-            onChange={(e) => setRole(e.target.value as Role)}
-            className="rounded border px-2 py-1"
-          >
-            {ROLES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
+          <Select value={role} onValueChange={(next) => setRole(next as Role)}>
+            <SelectTrigger id={roleId} aria-label="Role">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLES.map((r) => (
+                <SelectItem key={r} value={r}>
+                  {r}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div className="flex flex-col">
           <label htmlFor={daysId} className="text-xs text-muted-foreground">

@@ -2,6 +2,13 @@
 
 import { type FormEvent, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Phase = 'idle' | 'uploading' | 'running' | 'done' | 'error';
 
@@ -120,19 +127,18 @@ export function ImportForm({ workspaceId }: { workspaceId: string }) {
         <label htmlFor="import-source" className="text-sm font-medium">
           Source
         </label>
-        <select
-          id="import-source"
-          value={source}
-          onChange={(e) => setSource(e.target.value as Source)}
-          className="rounded border px-2 py-1"
-          disabled={busy}
-        >
-          {SOURCES.map((s) => (
-            <option key={s.value} value={s.value}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+        <Select value={source} onValueChange={(next) => setSource(next as Source)} disabled={busy}>
+          <SelectTrigger id="import-source" aria-label="Source">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {SOURCES.map((s) => (
+              <SelectItem key={s.value} value={s.value}>
+                {s.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
       <div className="space-y-1">
         <label htmlFor="import-file" className="text-sm font-medium">

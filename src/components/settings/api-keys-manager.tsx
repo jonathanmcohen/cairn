@@ -6,6 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 export type ApiKeyRow = {
   id: string;
@@ -187,18 +194,21 @@ export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={roleId}>Role</Label>
-                <select
-                  id={roleId}
+                <Select
                   value={role}
-                  onChange={(e) => setRole(e.target.value as (typeof ROLES)[number])}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                  onValueChange={(next) => setRole(next as (typeof ROLES)[number])}
                 >
-                  {ROLES.map((r) => (
-                    <option key={r} value={r}>
-                      {r}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id={roleId} aria-label="Role">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ROLES.map((r) => (
+                      <SelectItem key={r} value={r}>
+                        {r}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor={expiryId}>Expires in (days, optional)</Label>
