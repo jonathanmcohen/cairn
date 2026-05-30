@@ -233,5 +233,7 @@
   "connectors.app": "تطبيق {id}",
   "connectors.empty.title": "لا توجد موصِّلات بعد",
   "connectors.empty.body": "اربط Slack أو Discord لإعادة توجيه أحداث الصفحات والتعليقات والرد داخل المحادثة.",
-  "connectors.empty.docs": "اقرأ وثائق الموصِّلات"
+  "connectors.empty.docs": "اقرأ وثائق الموصِّلات",
+  "apiDocs.title": "وثائق واجهة Cairn البرمجية",
+  "apiDocs.back": "العودة إلى Cairn"
 }

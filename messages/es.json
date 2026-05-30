@@ -233,5 +233,7 @@
   "connectors.app": "aplicación {id}",
   "connectors.empty.title": "Aún no hay conectores",
   "connectors.empty.body": "Conecta Slack o Discord para reenviar eventos de páginas y comentarios y responder en el hilo.",
-  "connectors.empty.docs": "Lee la documentación de conectores"
+  "connectors.empty.docs": "Lee la documentación de conectores",
+  "apiDocs.title": "Documentación de la API de Cairn",
+  "apiDocs.back": "Volver a Cairn"
 }

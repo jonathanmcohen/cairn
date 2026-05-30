@@ -233,5 +233,7 @@
   "connectors.app": "app {id}",
   "connectors.empty.title": "No connectors yet",
   "connectors.empty.body": "Connect Slack or Discord to forward page + comment events and reply in-thread.",
-  "connectors.empty.docs": "Read the connector documentation"
+  "connectors.empty.docs": "Read the connector documentation",
+  "apiDocs.title": "Cairn API documentation",
+  "apiDocs.back": "Back to Cairn"
 }
