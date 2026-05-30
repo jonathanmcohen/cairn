@@ -314,26 +314,16 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
       ) : (
         <>
           {rows.length === 0 ? (
-            // a10 #19 — render the column header row even with zero rows so an
-            // empty database still reads as a table (Notion-parity), then show
-            // the empty-state hint in the body. Without this the block
-            // collapsed to a bare "No rows yet." with no column context.
+            // a10 #19 — keep the column header row even with zero rows so an
+            // empty database still reads as a table (Notion-parity).
+            // #144 — lead with the row-count indicator + a single emphasised
+            // "Add your first row" CTA; the old centered emptyHint and the
+            // redundant top "Add row" button are removed to cut dead space.
             <div>
-              <div className="flex items-center justify-between gap-2 px-3 py-2">
+              <div className="flex items-center px-3 py-1.5">
                 <span className="text-xs text-muted-foreground">
                   {t('database.rowCount', { count: rows.length })}
                 </span>
-                <Button
-                  type="button"
-                  size="sm"
-                  onClick={() => void addRow()}
-                  disabled={adding || !rowMutateAllowed}
-                  title={rowMutateAllowed ? undefined : 'Unavailable offline'}
-                  className="min-h-11"
-                >
-                  <Plus className="h-4 w-4" aria-hidden="true" />
-                  {t('database.addRow')}
-                </Button>
               </div>
               <div className="overflow-x-auto">
                 {/* biome-ignore lint/a11y/useSemanticElements: matches the div-based ARIA grid header used by <VirtualizedRowBody>; a <table> cannot host the windowed body, so the empty header mirrors that shape for consistency. */}
@@ -371,8 +361,18 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
                   </div>
                 </div>
               </div>
-              <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                {t('database.emptyHint')}
+              <div className="px-3 py-3">
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => void addRow()}
+                  disabled={adding || !rowMutateAllowed}
+                  title={rowMutateAllowed ? undefined : 'Unavailable offline'}
+                  className="min-h-11"
+                >
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  {t('database.empty.firstRow')}
+                </Button>
               </div>
             </div>
           ) : (
