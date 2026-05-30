@@ -2,6 +2,7 @@ import { cookies, headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { AuthSessionProvider } from '@/components/session-provider';
 import { ThemeProvider } from '@/components/theme-provider';
+import { AlertProvider } from '@/components/ui/alert-dialog';
 import { ConfirmProvider } from '@/components/ui/confirm-dialog';
 import { InputDialogProvider } from '@/components/ui/input-dialog';
 import { dir, LOCALE_COOKIE } from '@/lib/i18n/config';
@@ -40,7 +41,9 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
           <AuthSessionProvider>
             <ThemeProvider nonce={nonce}>
               <ConfirmProvider>
-                <InputDialogProvider>{children}</InputDialogProvider>
+                <InputDialogProvider>
+                  <AlertProvider>{children}</AlertProvider>
+                </InputDialogProvider>
               </ConfirmProvider>
             </ThemeProvider>
           </AuthSessionProvider>
