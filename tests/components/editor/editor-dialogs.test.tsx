@@ -3,15 +3,26 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, describe, expect, it } from 'vitest';
 import { openEditorDialog, resetEditorDialogBus } from '@/components/editor/editor-dialog-bus';
 import { EditorDialogs } from '@/components/editor/editor-dialogs';
+import { I18nProvider } from '@/lib/i18n/provider';
+import enMessages from '../../../messages/en.json';
 
 afterEach(() => {
   cleanup();
   resetEditorDialogBus();
 });
 
+// EditorDialogs calls useT(), so it must mount inside an I18nProvider.
+function renderDialogs() {
+  return render(
+    <I18nProvider locale="en" messages={enMessages}>
+      <EditorDialogs />
+    </I18nProvider>,
+  );
+}
+
 describe('<EditorDialogs>', () => {
   it('resolves footnote text on submit', async () => {
-    render(<EditorDialogs />);
+    renderDialogs();
     const promise = openEditorDialog({ kind: 'footnote', title: 'Footnote' });
     const field = (await screen.findByLabelText('Footnote text')) as HTMLInputElement;
     fireEvent.change(field, { target: { value: 'see ref' } });
@@ -20,14 +31,14 @@ describe('<EditorDialogs>', () => {
   });
 
   it('resolves null on cancel', async () => {
-    render(<EditorDialogs />);
+    renderDialogs();
     const promise = openEditorDialog({ kind: 'footnote', title: 'Footnote' });
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
     expect(await promise).toBeNull();
   });
 
   it('citation form collects all five fields', async () => {
-    render(<EditorDialogs />);
+    renderDialogs();
     const promise = openEditorDialog({ kind: 'citation', title: 'Citation' });
     fireEvent.change(await screen.findByLabelText('Author (Last, F.)'), {
       target: { value: 'Doe, J.' },
@@ -48,7 +59,7 @@ describe('<EditorDialogs>', () => {
   });
 
   it('flashcard form collects front/back/deck', async () => {
-    render(<EditorDialogs />);
+    renderDialogs();
     const promise = openEditorDialog({ kind: 'flashcard', title: 'Flashcard' });
     fireEvent.change(await screen.findByLabelText('Front (question)'), {
       target: { value: 'Q?' },

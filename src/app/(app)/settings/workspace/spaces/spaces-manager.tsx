@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useT } from '@/lib/i18n/provider';
 
 type SpaceRow = {
   id: string;
@@ -34,6 +35,7 @@ type Member = {
  * after each mutation so the table stays in sync without local cache.
  */
 export function SpacesManager({ spaces }: { spaces: SpaceRow[] }) {
+  const t = useT();
   const router = useRouter();
   const nameId = useId();
   const slugId = useId();
@@ -257,7 +259,10 @@ export function SpacesManager({ spaces }: { spaces: SpaceRow[] }) {
                     value={addRole}
                     onValueChange={(next) => setAddRole(next as Member['role'])}
                   >
-                    <SelectTrigger aria-label="Member role" className="w-auto text-sm">
+                    <SelectTrigger
+                      aria-label={t('spaces.memberRoleAriaLabel')}
+                      className="w-auto text-sm"
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

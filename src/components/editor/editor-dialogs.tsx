@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/lib/i18n/provider';
 import {
   type EditorDialogField,
   type EditorDialogRequest,
@@ -67,6 +68,7 @@ function blankValues(fields: EditorDialogField[]): Record<string, string> {
 }
 
 export function EditorDialogs() {
+  const t = useT();
   const [request, setRequest] = useState<EditorDialogRequest | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
 
@@ -123,7 +125,7 @@ export function EditorDialogs() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => settle(null)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button type="submit" disabled={!canSubmit}>
                 {spec.confirmLabel}

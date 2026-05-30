@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/select';
 import { computeFormula } from '@/lib/databases/formula';
 import { ROLLUP_FNS } from '@/lib/databases/rollup/config';
+import { useT } from '@/lib/i18n/provider';
 
 const TYPES = [
   'text',
@@ -34,6 +35,7 @@ export function PropertyPanel({
   databaseId: string;
   onChange: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<(typeof TYPES)[number]>('text');
@@ -168,7 +170,7 @@ export function PropertyPanel({
           className="rounded border bg-transparent px-2 py-1 text-sm outline-hidden"
         />
         <Select value={type} onValueChange={(next) => setType(next as (typeof TYPES)[number])}>
-          <SelectTrigger aria-label="Property type" className="w-40 text-sm">
+          <SelectTrigger aria-label={t('propertyPanel.typeAriaLabel')} className="w-40 text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

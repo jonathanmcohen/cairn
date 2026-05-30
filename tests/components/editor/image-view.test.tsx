@@ -4,9 +4,12 @@ import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { baseExtensions } from '@/components/editor/extensions';
+import { I18nProvider } from '@/lib/i18n/provider';
+import enMessages from '../../../messages/en.json';
 
 afterEach(cleanup);
 
+// The NodeView calls useT(), so it must mount inside an I18nProvider.
 function Harness({ editable, src }: { editable: boolean; src: string | null }) {
   const editor = useEditor({
     extensions: baseExtensions(),
@@ -17,7 +20,11 @@ function Harness({ editable, src }: { editable: boolean; src: string | null }) {
     },
     immediatelyRender: false,
   });
-  return <EditorContent editor={editor} />;
+  return (
+    <I18nProvider locale="en" messages={enMessages}>
+      <EditorContent editor={editor} />
+    </I18nProvider>
+  );
 }
 
 describe('image view empty-state (#139)', () => {

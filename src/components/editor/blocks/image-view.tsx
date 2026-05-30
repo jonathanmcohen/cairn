@@ -3,6 +3,7 @@
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
+import { useT } from '@/lib/i18n/provider';
 
 /**
  * #139 — empty-state node-view for the `cairnImage` atom. When the node has a
@@ -12,6 +13,7 @@ import { useState } from 'react';
  * Yjs state the single source of truth — no node-local persisted state.
  */
 export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
+  const t = useT();
   const src = node.attrs.src as string | null;
   const alt = (node.attrs.alt as string | null) ?? '';
   // An <img> with an empty `alt` is exposed as presentational (no `img` role).
@@ -62,7 +64,7 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
   if (!editor.isEditable) {
     return (
       <NodeViewWrapper className="my-3 rounded-md border p-3 text-sm text-muted-foreground">
-        Empty image.
+        {t('editor.image.emptyAlt')}
       </NodeViewWrapper>
     );
   }
@@ -84,7 +86,7 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
             onClick={() => setMode('url')}
             className="rounded border px-2 py-1 text-sm hover:bg-accent/40"
           >
-            Embed a URL
+            {t('editor.image.embedUrl')}
           </button>
         </div>
       ) : (
@@ -92,7 +94,7 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
           <input
             value={url}
             onChange={(e) => setUrl(e.target.value)}
-            placeholder="Paste an image URL"
+            placeholder={t('editor.image.pasteUrlPlaceholder')}
             className="flex-1 rounded border bg-background px-2 py-1 text-sm"
           />
           <button
@@ -101,7 +103,7 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
             onClick={() => updateAttributes({ src: url.trim(), alt: '' })}
             className="rounded bg-accent px-2 py-1 text-sm font-medium hover:bg-accent/80 disabled:opacity-50"
           >
-            Embed
+            {t('editor.image.embed')}
           </button>
         </div>
       )}

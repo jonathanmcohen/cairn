@@ -4,6 +4,7 @@ import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import { Paperclip } from 'lucide-react';
 import { useState } from 'react';
+import { useT } from '@/lib/i18n/provider';
 
 /**
  * #139 — empty-state node-view for the `fileAttachment` atom. With an `href`
@@ -12,6 +13,7 @@ import { useState } from 'react';
  * resolved attrs back via `updateAttributes` (doc/Yjs is the source of truth).
  */
 export function FileView({ node, editor, updateAttributes }: NodeViewProps) {
+  const t = useT();
   const href = node.attrs.href as string | null;
   const name = (node.attrs.name as string | null) ?? 'file';
   const [uploading, setUploading] = useState(false);
@@ -68,7 +70,7 @@ export function FileView({ node, editor, updateAttributes }: NodeViewProps) {
   if (!editor.isEditable) {
     return (
       <NodeViewWrapper className="my-3 rounded-md border p-3 text-sm text-muted-foreground">
-        Empty file.
+        {t('editor.file.emptyAlt')}
       </NodeViewWrapper>
     );
   }
