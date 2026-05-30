@@ -5,6 +5,7 @@ import { type ReactNode, useRef, useState } from 'react';
 import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
 import { applyRowTemplate, listRowTemplates } from '@/lib/databases/row-templates';
@@ -44,11 +45,17 @@ function LongPressRow({
 }) {
   const rowRef = useRef<HTMLTableRowElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const confirm = useConfirm();
   useLongPress(rowRef, { onLongPress: () => setMenuOpen(true) });
 
   async function onDelete() {
     setMenuOpen(false);
-    if (!window.confirm('Delete this row?')) return;
+    const ok = await confirm({
+      title: 'Delete this row?',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     await fetch(`/api/databases/${databaseId}/rows/${rowId}`, { method: 'DELETE' });
     onChange();
   }

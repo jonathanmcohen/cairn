@@ -2,6 +2,7 @@
 
 import { Bookmark, Check, Pencil, X } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useT } from '@/lib/i18n/provider';
 
 type Saved = {
@@ -19,6 +20,7 @@ type Saved = {
  */
 export function SavedSearches() {
   const t = useT();
+  const confirm = useConfirm();
   const [items, setItems] = useState<Saved[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState('');
@@ -41,7 +43,12 @@ export function SavedSearches() {
   }, []);
 
   async function remove(id: string, name: string) {
-    if (!window.confirm(t('savedSearches.confirmDelete', { name }))) return;
+    const ok = await confirm({
+      title: t('savedSearches.confirmDelete', { name }),
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     const r = await fetch(`/api/search/saved/${id}`, { method: 'DELETE' });
     if (r.ok) setItems((xs) => xs.filter((x) => x.id !== id));
   }

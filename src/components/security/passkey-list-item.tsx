@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 /**
  * v0.9.0 G1 P8 — single passkey row + remove button.
@@ -15,15 +16,17 @@ export function PasskeyListItem(props: {
   createdAt: string; // ISO
   lastUsedAt: string | null; // ISO or null
 }): React.JSX.Element {
+  const confirm = useConfirm();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   async function remove() {
-    if (
-      !window.confirm(
-        `Remove this passkey${props.nickname ? ` (${props.nickname})` : ''}? This cannot be undone.`,
-      )
-    ) {
+    const ok = await confirm({
+      title: `Remove this passkey${props.nickname ? ` (${props.nickname})` : ''}? This cannot be undone.`,
+      confirmLabel: 'Remove',
+      variant: 'danger',
+    });
+    if (!ok) {
       return;
     }
     setBusy(true);

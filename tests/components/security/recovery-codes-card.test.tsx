@@ -6,6 +6,13 @@ import { RecoveryCodesCard } from '@/components/security/recovery-codes-card';
 import { getMessages } from '@/lib/i18n/messages';
 import { I18nProvider } from '@/lib/i18n/provider';
 
+// Regenerate is now gated behind the themed useConfirm() dialog (#138). Auto-
+// confirm so this test exercises the regenerate flow without rendering a
+// <ConfirmProvider> and driving the dialog.
+vi.mock('@/components/ui/confirm-dialog', () => ({
+  useConfirm: () => () => Promise.resolve(true),
+}));
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
