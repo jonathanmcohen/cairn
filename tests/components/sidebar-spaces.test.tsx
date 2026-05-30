@@ -1,8 +1,15 @@
 // @vitest-environment jsdom
 import { cleanup, render } from '@testing-library/react';
-import { afterEach, beforeAll, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { VirtualizedPageTree } from '@/components/sidebar/virtualized-page-tree';
 import type { FlatPageNode } from '@/lib/pages/tree';
+
+// PageTreeRow consumes i18n + next/navigation via usePageRowActions; stub both
+// so the tree renders without an <I18nProvider>/router (echo keys). Mirrors
+// tests/components/sidebar/virtualized-page-tree.test.tsx. The asserted strings
+// (space names, "Unfiled", page titles) are data/literals, not translations.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }) }));
+vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
 
 beforeAll(() => {
   const SIDEBAR_VIEWPORT_HEIGHT = 600;
