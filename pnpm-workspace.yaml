@@ -6,7 +6,6 @@ allowBuilds:
   '@scarf/scarf': false
   cpu-features: true # ssh2 native speedup (testcontainers transport)
   esbuild: true # vite/vitest bundler — native binary required
-  onnxruntime-node: true # embedding provider runtime (native)
   protobufjs: true # onnxruntime dependency codegen
   sharp: true # image processing (next/image, image gallery, a11y screenshots)
   ssh2: true # testcontainers docker SSH transport

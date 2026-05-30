@@ -52,7 +52,7 @@ export interface TransformersEnv {
 
 /**
  * v0.9.6 G4 (#136) — force Transformers.js onto the pure-WASM onnxruntime-web
- * backend so the runtime image needs no native onnxruntime-node `.so`.
+ * backend so the runtime image needs no native ORT Node binding `.so`.
  *
  * - allowRemoteModels=false + allowLocalModels=true + localModelPath='/models/'
  *   makes the loader read the bundled MiniLM set under `public/models` instead
