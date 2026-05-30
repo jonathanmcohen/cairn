@@ -142,6 +142,9 @@ export const AUDIT_ACTIONS = [
   'upgrade.applied',
   'upgrade.failed',
   'upgrade.rolled_back',
+  // v0.9.6 G8b (#70) — user revoked active sessions ("sign out everywhere").
+  // metadata: { scope: 'others' | 'all', revoked } — counts only, no sid.
+  'auth.sessions_revoked',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

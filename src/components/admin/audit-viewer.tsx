@@ -158,6 +158,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'upgrade.applied': 'Upgrade applied',
   'upgrade.failed': 'Upgrade failed',
   'upgrade.rolled_back': 'Upgrade rolled back',
+  // v0.9.6 G8b (#70) — user revoked active sessions ("sign out everywhere").
+  'auth.sessions_revoked': 'Sessions revoked',
 };
 
 function actionLabel(action: string): string {
