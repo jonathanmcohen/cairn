@@ -77,8 +77,9 @@ jobs:
 
       - name: Seed a page
         run: |
-          # Note: psql emits an "INSERT 0 1" command tag for each data-modifying
-          # CTE, so the RETURNING uuid is the LAST output line — grab it with tail.
+          # Note: psql emits "INSERT 0 1" command tags for the data-modifying CTEs
+          # alongside the RETURNING uuid, so extract the uuid by its shape rather
+          # than assuming line position.
           PAGE_ID=$(docker exec embed-db psql -U cairn -d cairn -At -c "
             WITH u AS (
               INSERT INTO users (email, password_hash, name)
@@ -92,7 +93,7 @@ jobs:
             SELECT ws.id, 'Smoke', 'hello smoke world from the wasm embedder', u.id
             FROM ws, u
             RETURNING id;
-          " | tail -n1)
+          " | grep -Eio '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -n1)
           echo "PAGE_ID=$PAGE_ID" >> "$GITHUB_ENV"
 
       - name: Run embedPage via the CLI inside the container
