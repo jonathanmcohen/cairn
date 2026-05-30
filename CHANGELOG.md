@@ -5,6 +5,36 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.6] - 2026-05-30
+
+> Audit-driven release resolving **every open issue from the v0.9.4 live-deploy audit** (#38, #70, #124, #129–#139, #141–#149, #150). One migration (`0055` — `auth_sessions`). Plans: `docs/superpowers/plans/v0.9.6/`.
+
+### Added
+- **Themed dialogs everywhere** — `ConfirmDialog`/`InputDialog`/`AlertDialog` primitives replace every native `window.confirm`/`prompt`; a framework-free editor dialog bus routes the slash-command prompts (footnote / citation / flashcard) through themed forms. A Biome `noRestrictedGlobals` rule now bans `confirm`/`alert`/`prompt` going forward (#138, #135).
+- **WebAuthn passkeys** — passkey registration **and** passwordless login alongside TOTP.
+- **Active sessions** — Settings → Security lists active sessions (current device marked) with **Sign out everywhere**, backed by a new `auth_sessions` store + a `sid` JWT claim with server-side revocation (#70).
+- **Admin console** — functional audit-log viewer, member management, and SIEM-forwarder config pages (#132).
+- **Connectors UI** — "Add connector" Slack/Discord create flow + a Developer-settings nav entry + themed empty state (#146, #147).
+- **Move-to page picker** — searchable reparent destination picker in the page row actions + action bar (#124).
+- **Page covers** — "Add cover" now opens a working picker (image upload + URL) (#108).
+- **Suggestions drawer** — the "N open" suggesting-mode badge opens an accept/reject suggestions list (#85/#145).
+- **Slash keyword aliases** — blocks are findable by synonyms (`/math`→Equation, `/img`/`/photo`→Image, `/iframe`/`/youtube`→Embed, etc.) (#149).
+- **Workspace icon picker**; **🔒 Locked-until indicator** on locked pages (#134).
+
+### Fixed
+- **Embeddings work in the Docker image** — the embedder runs on the `onnxruntime-web` (WASM) backend, removing the native `onnxruntime-node` `.so` that was missing from the image (semantic search was silently dead). CI smoke boots the image + asserts `embedPage` writes a vector (#136).
+- **Emoji picker** — grid now loads (data source points at the same-origin `emoji-data.json` instead of the CSP-blocked CDN); collapsed the duplicate search box; Escape + click-outside dismiss (#129, #130, #131).
+- **Sidebar page-tree rows are clickable again** — full-bleed navigation overlay; the `…`/`+` actions no longer steal the row click (#150).
+- **Image & file blocks** render a visible empty-state placeholder/CTA when empty instead of nothing (#139, #148).
+- **Editor edge-glow** — the global `:focus-visible` accent ring no longer leaks onto the editor surface / slash menu (#110, #133).
+- **Swagger `/api-docs`** — server URL uses the public origin, version reflects the running build, dark theme, back-to-Cairn link (#141).
+- **Database views** — `+ Add view` shows per-type icons + tooltips on disabled Calendar/Timeline; empty databases show an "Add your first row" CTA (#142, #143, #144).
+- **Collab auth** — `onAuthenticate` logs the rejection reason; docs note the shared-`AUTH_SECRET` requirement (#137).
+
+### Changed
+- **All native form controls replaced** — every remaining native `<select>` / date input swapped for the themed `Select`/`DateField`; a CI guard prevents regressions (#38).
+- Sidebar search input label clarifies it opens the command palette (#84).
+
 ## [0.9.5] - 2026-05-30
 
 > **Hotfix.** Startup migrations could silently no-op, leaving the schema behind the code. v0.9.4's `workspaces.icon` column (migration `0054`) was never created on deployments whose container started the server from a working directory other than the image root — every workspace fetch then threw `column "icon" does not exist` (Postgres `42703`) on every page load.
