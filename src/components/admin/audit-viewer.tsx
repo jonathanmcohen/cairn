@@ -2,6 +2,14 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { DateField } from '@/components/ui/date-field';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { AUDIT_ACTIONS, type AuditAction, type AuditTargetType } from '@/lib/audit/actions';
 
 type AuditEntry = {
@@ -248,58 +256,58 @@ export function AuditViewer() {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
-        <label className="flex flex-col text-xs">
+        <div className="flex flex-col text-xs">
           <span className="text-muted-foreground mb-1">Action</span>
-          <select
-            aria-label="Filter by action"
-            value={filters.action}
-            onChange={(e) => setFilters((f) => ({ ...f, action: e.target.value }))}
-            className="rounded border px-2 py-1 text-sm"
+          <Select
+            value={filters.action || '__all'}
+            onValueChange={(next) =>
+              setFilters((f) => ({ ...f, action: next === '__all' ? '' : next }))
+            }
           >
-            <option value="">All actions</option>
-            {AUDIT_ACTIONS.map((a) => (
-              <option key={a} value={a}>
-                {actionLabel(a)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col text-xs">
+            <SelectTrigger aria-label="Filter by action" className="text-sm">
+              <SelectValue placeholder="All actions" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all">All actions</SelectItem>
+              {AUDIT_ACTIONS.map((a) => (
+                <SelectItem key={a} value={a}>
+                  {actionLabel(a)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="flex flex-col text-xs">
           <span className="text-muted-foreground mb-1">Target type</span>
-          <select
-            aria-label="Filter by target type"
-            value={filters.targetType}
-            onChange={(e) => setFilters((f) => ({ ...f, targetType: e.target.value }))}
-            className="rounded border px-2 py-1 text-sm"
+          <Select
+            value={filters.targetType || '__all'}
+            onValueChange={(next) =>
+              setFilters((f) => ({ ...f, targetType: next === '__all' ? '' : next }))
+            }
           >
-            <option value="">All targets</option>
-            {TARGET_TYPES.map((t) => (
-              <option key={t} value={t}>
-                {t}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="flex flex-col text-xs">
-          <span className="text-muted-foreground mb-1">From</span>
-          <input
-            type="date"
-            aria-label="Filter from date"
-            value={filters.from}
-            onChange={(e) => setFilters((f) => ({ ...f, from: e.target.value }))}
-            className="rounded border px-2 py-1 text-sm"
-          />
-        </label>
-        <label className="flex flex-col text-xs">
-          <span className="text-muted-foreground mb-1">To</span>
-          <input
-            type="date"
-            aria-label="Filter to date"
-            value={filters.to}
-            onChange={(e) => setFilters((f) => ({ ...f, to: e.target.value }))}
-            className="rounded border px-2 py-1 text-sm"
-          />
-        </label>
+            <SelectTrigger aria-label="Filter by target type" className="text-sm">
+              <SelectValue placeholder="All targets" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__all">All targets</SelectItem>
+              {TARGET_TYPES.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {t}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DateField
+          label="From"
+          value={filters.from}
+          onChange={(iso) => setFilters((f) => ({ ...f, from: iso }))}
+        />
+        <DateField
+          label="To"
+          value={filters.to}
+          onChange={(iso) => setFilters((f) => ({ ...f, to: iso }))}
+        />
       </div>
 
       {error ? (
