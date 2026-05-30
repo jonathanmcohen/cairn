@@ -52,4 +52,16 @@ describe('IconPicker', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
     expect(onChange).toHaveBeenCalledWith(null);
   });
+
+  it('closes the picker on Escape (#131)', () => {
+    render(<IconPicker value={null} onChange={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
+    // Popover open → the emoji mount point is in the DOM.
+    expect(document.querySelector('[data-testid="emoji-picker-mount"]')).toBeTruthy();
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: 'Escape',
+      code: 'Escape',
+    });
+    expect(document.querySelector('[data-testid="emoji-picker-mount"]')).toBeNull();
+  });
 });

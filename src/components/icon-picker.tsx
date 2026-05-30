@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { formatIcon, parseIcon } from '@/lib/pages/icon-format';
 import { CustomIconUpload } from './pages/custom-icon-upload';
 import { Button } from './ui/button';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 
 const RECENT_KEY = 'cairn:recent-emojis';
 const RECENT_MAX = 16;
@@ -45,9 +46,9 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     setRecent(readRecent());
   }, [open]);
 
-  // Mount the emoji-picker web component when the emoji tab is active. Forward
-  // the search prop into the component (it supports `.skinToneEmoji` + filter
-  // via direct property assignment).
+  // Mount the emoji-picker web component when the emoji tab is active. The
+  // component renders its own search box + grid into the container and fetches
+  // its dataset from the same-origin dataSource set below.
   useEffect(() => {
     if (!open || tab !== 'emoji') return;
     let cancelled = false;
@@ -86,91 +87,85 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
     parsed?.kind === 'emoji' ? parsed.value : parsed?.kind === 'file' ? '🖼️' : '📄';
 
   return (
-    <div className="relative inline-block">
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setOpen((v) => !v)}
-        aria-label="Change icon"
-        className="h-10 w-10 text-3xl"
-      >
-        {buttonLabel}
-      </Button>
-      {open && (
-        <div className="absolute left-0 z-10 mt-2 w-[360px] rounded-md border bg-background p-3 shadow-lg">
-          <div className="mb-2 flex gap-2 border-b pb-2">
-            <Button
-              type="button"
-              variant={tab === 'emoji' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTab('emoji')}
-            >
-              Emoji
-            </Button>
-            <Button
-              type="button"
-              variant={tab === 'upload' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTab('upload')}
-            >
-              Upload
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="ml-auto"
-              onClick={() => {
-                onChange(null);
-                setOpen(false);
-              }}
-            >
-              Remove
-            </Button>
-          </div>
-
-          {tab === 'emoji' && (
-            <>
-              {recent.length > 0 && (
-                <div className="mb-2">
-                  <div className="mb-1 text-xs text-muted-foreground">Recently used</div>
-                  <div className="flex flex-wrap gap-1">
-                    {recent.slice(0, RECENT_MAX).map((r) => (
-                      <button
-                        key={r}
-                        type="button"
-                        onClick={() => {
-                          const dedup = [r, ...recent.filter((x) => x !== r)];
-                          writeRecent(dedup);
-                          setRecent(dedup);
-                          onChange(formatIcon({ kind: 'emoji', value: r }));
-                          setOpen(false);
-                        }}
-                        className="rounded p-1 text-xl hover:bg-accent"
-                        aria-label={`Use ${r}`}
-                      >
-                        {r}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {/* The emoji-picker-element web component renders its own internal
-                 search box + scrollable grid into this mount point. */}
-              <div ref={containerRef} data-testid="emoji-picker-mount" />
-            </>
-          )}
-
-          {tab === 'upload' && (
-            <CustomIconUpload
-              onUploaded={(formatted) => {
-                onChange(formatted);
-                setOpen(false);
-              }}
-            />
-          )}
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Change icon" className="h-10 w-10 text-3xl">
+          {buttonLabel}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-[360px] p-3">
+        <div className="mb-2 flex gap-2 border-b pb-2">
+          <Button
+            type="button"
+            variant={tab === 'emoji' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTab('emoji')}
+          >
+            Emoji
+          </Button>
+          <Button
+            type="button"
+            variant={tab === 'upload' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setTab('upload')}
+          >
+            Upload
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-auto"
+            onClick={() => {
+              onChange(null);
+              setOpen(false);
+            }}
+          >
+            Remove
+          </Button>
         </div>
-      )}
-    </div>
+
+        {tab === 'emoji' && (
+          <>
+            {recent.length > 0 && (
+              <div className="mb-2">
+                <div className="mb-1 text-xs text-muted-foreground">Recently used</div>
+                <div className="flex flex-wrap gap-1">
+                  {recent.slice(0, RECENT_MAX).map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => {
+                        const dedup = [r, ...recent.filter((x) => x !== r)];
+                        writeRecent(dedup);
+                        setRecent(dedup);
+                        onChange(formatIcon({ kind: 'emoji', value: r }));
+                        setOpen(false);
+                      }}
+                      className="rounded p-1 text-xl hover:bg-accent"
+                      aria-label={`Use ${r}`}
+                    >
+                      {r}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+            {/* The emoji-picker-element web component renders its own internal
+                 search box + scrollable grid into this mount point. */}
+            <div ref={containerRef} data-testid="emoji-picker-mount" />
+          </>
+        )}
+
+        {tab === 'upload' && (
+          <CustomIconUpload
+            onUploaded={(formatted) => {
+              onChange(formatted);
+              setOpen(false);
+            }}
+          />
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
