@@ -16,11 +16,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 ### Added
 - Integration test that runs the migrator from a non-repo working directory against a fresh Postgres, then performs the exact full-row `workspaces` select (all columns, incl. `icon`) and asserts no missing-column error — a regression guard for the whole "code references a column its migration never applied" class.
 
-> **Unblock an already-broken deployment immediately** (works on the existing `0.9.4` image too — no need to wait for `0.9.5`): run the bundled compiled migrator against your database once. `docker compose run` uses the image's `/app` working directory, so the migrations resolve correctly even on the old build —
+> **Unblock an already-broken deployment immediately** (works on the existing `0.9.4` image too — no need to wait for `0.9.5`): run the bundled compiled migrator against your database once —
 > ```sh
-> docker compose run --rm cairn node dist/db/migrate.js
+> docker compose run --rm --entrypoint node -w /app cairn /app/dist/db/migrate.js
 > ```
-> Then restart the app container (`docker compose up -d`). The slim runtime image has no `pnpm`/`tsx`, so invoke the compiled `dist/db/migrate.js` directly (not `pnpm db:migrate`). Upgrading to the `0.9.5` image makes on-boot migrations cwd-independent, so this won't recur.
+> Then restart the app container (`docker compose up -d`). Notes:
+> - `--entrypoint node` forces the binary to `node`, ignoring any `entrypoint`/CMD your compose sets. Without it, the command is appended to your entrypoint — a compose with `entrypoint: node` turns `… cairn pnpm db:migrate` into `node pnpm …` → `Cannot find module '/app/pnpm'`.
+> - The slim runtime image has no `pnpm`/`tsx`/`src/` — invoke the **compiled** `dist/db/migrate.js` directly (not `pnpm db:migrate`). It has a CLI guard that applies pending migrations.
+> - `-w /app` pins the working directory so the `0.9.4` image's cwd-relative migrations path still resolves; `DATABASE_URL` is inherited from the `cairn` service environment.
+>
+> Upgrading to the `0.9.5` image makes on-boot migrations cwd-independent, so this won't recur.
 
 ## [0.9.4] - 2026-05-30
 
