@@ -58,9 +58,7 @@ beforeAll(() => {
 afterEach(cleanup);
 
 const PAGE_ID = '11111111-1111-1111-1111-111111111111';
-const nodes: FlatPageNode[] = [
-  { id: PAGE_ID, parentId: null, title: 'Doc', icon: null, depth: 0 },
-];
+const nodes: FlatPageNode[] = [{ id: PAGE_ID, parentId: null, title: 'Doc', icon: null, depth: 0 }];
 
 describe('PageTreeRow navigation', () => {
   it('the row exposes a single navigating link to /pages/[id] covering the whole row', () => {
@@ -80,7 +78,7 @@ describe('PageTreeRow navigation', () => {
     // A real <a href> is in the tab order and Enter/Space activate it natively;
     // assert it is a genuine anchor with href (not a div with onClick).
     expect(link.tagName).toBe('A');
-    expect(link).not.toHaveAttribute('aria-disabled');
+    expect(link.hasAttribute('aria-disabled')).toBe(false);
     link.focus();
     expect(document.activeElement).toBe(link);
   });

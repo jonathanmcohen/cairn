@@ -214,12 +214,18 @@ export function VirtualizedPageTree({
 }
 
 /**
- * A single page row: the `<Link>` and the trailing hover action cluster are
- * siblings (nested interactive elements are invalid), so the depth indent moves
- * to the row `<li>`. The cluster is always in the DOM (revealed via opacity on
- * hover/focus, never `hidden`) so it stays keyboard- and SR-reachable. The
- * action hook is called exactly once here so inline-rename state can live in
- * the row (the title `<span>` swaps for an `<input>` while renaming).
+ * A single page row. The `<Link>` is a full-bleed `absolute inset-0` overlay so
+ * the ENTIRE row navigates to `/pages/[id]` on click and (being a real focusable
+ * <a>) on Enter/Space — fixing the v0.9.4 regression where the Link was a
+ * `flex-1` strip and the always-mounted 44px action cluster bled over the 32px
+ * row, leaving large non-navigating dead zones (#150). The icon+title layer is
+ * `pointer-events-none` so clicks fall through to the overlay; the trailing
+ * action cluster is a `relative z-10` sibling stacked above the overlay so its
+ * `+`/`…` buttons (which `stopPropagation`) keep receiving clicks without ever
+ * triggering navigation. The cluster stays in the DOM (revealed via opacity,
+ * never `hidden`) so it remains keyboard- and SR-reachable. The action hook is
+ * called exactly once here so inline-rename state lives in the row (the title
+ * `<span>` swaps for an `<input>` while renaming).
  */
 function PageTreeRow({
   node,
@@ -236,7 +242,7 @@ function PageTreeRow({
     <li key={rowKey} data-virtual-row="" data-row-kind="page" data-depth={node.depth} style={style}>
       <PageRowContextMenu node={node} api={api}>
         <div
-          className="group flex items-center gap-1 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
+          className="group relative flex items-center gap-1 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
           style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
         >
           {api.renaming ? (
@@ -265,16 +271,33 @@ function PageTreeRow({
             </>
           ) : (
             <>
+              {/*
+                Full-bleed navigation overlay: the ONE navigating element for the
+                whole row. `absolute inset-0` makes the entire row (icon, title,
+                trailing padding band — everything not covered by the z-10 action
+                cluster) a single click target, and a real <a href> is natively
+                focusable so Enter/Space navigate for free. The visible icon+title
+                layer below is `pointer-events-none` so clicks fall through to this
+                anchor; the action cluster is stacked above it (z-10) so its own
+                buttons keep receiving clicks. Fixes the v0.9.4 dead-zone regression
+                where the Link was a flex-1 strip and the 44px action cluster bled
+                over the 32px row (#150).
+              */}
               <Link
                 href={`/pages/${node.id}` as Route}
-                className="flex min-w-0 flex-1 items-center gap-2 py-1"
-              >
+                aria-label={t('pageRow.open', { title: node.title })}
+                className="absolute inset-0 rounded outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <div className="pointer-events-none flex min-w-0 flex-1 items-center gap-2 py-1">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
                   {renderNodeIcon(node.icon)}
                 </span>
                 <span className="min-w-0 flex-1 truncate">{node.title}</span>
-              </Link>
-              <span className="shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+              </div>
+              <span
+                data-row-actions=""
+                className="relative z-10 shrink-0 opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+              >
                 <PageRowActionsMenu node={node} api={api} />
               </span>
             </>
