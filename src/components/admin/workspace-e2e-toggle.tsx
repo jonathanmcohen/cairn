@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { usePrompt } from '@/components/ui/input-dialog';
 
 type Sealed = {
   publicKey: string;
@@ -40,6 +41,7 @@ export function WorkspaceE2EToggle({
   workspaceId: string;
   initialMode: 'off' | 'per_page' | 'workspace_wide';
 }) {
+  const prompt = usePrompt();
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -64,9 +66,11 @@ export function WorkspaceE2EToggle({
         throw new Error('no sealed keypair on this device — enroll your passphrase first');
       }
       const sealed = JSON.parse(sealedJson) as Sealed;
-      const passphrase = window.prompt(
-        'Enter your E2E passphrase to enable workspace-wide encryption',
-      );
+      const passphrase = await prompt({
+        title: 'Enter your E2E passphrase to enable workspace-wide encryption',
+        type: 'password',
+        confirmLabel: 'Continue',
+      });
       if (!passphrase) throw new Error('cancelled');
       const me = await unlockUserKeypair(
         {
