@@ -212,5 +212,12 @@
   "slash.group.basic": "Basic",
   "slash.group.media": "Media",
   "slash.group.database": "Database",
-  "slash.group.advanced": "Advanced"
+  "slash.group.advanced": "Advanced",
+  "settingsAdmin.siem.title": "SIEM forwarders",
+  "settingsAdmin.siem.description": "Forward every audit event to a syslog endpoint or HTTP webhook to feed your SOC, observability platform, or compliance log archive. Failed deliveries retry on an exponential backoff; the per-attempt history is recorded for review.",
+  "settingsAdmin.siem.configured": "Configured forwarders",
+  "settingsAdmin.siem.empty": "No forwarders configured yet.",
+  "settingsAdmin.siem.enabled": "enabled",
+  "settingsAdmin.siem.disabled": "disabled",
+  "settingsAdmin.siem.add": "Add a forwarder"
 }

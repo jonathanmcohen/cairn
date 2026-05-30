@@ -212,5 +212,12 @@
   "slash.group.basic": "Básico",
   "slash.group.media": "Multimedia",
   "slash.group.database": "Base de datos",
-  "slash.group.advanced": "Avanzado"
+  "slash.group.advanced": "Avanzado",
+  "settingsAdmin.siem.title": "Reenviadores SIEM",
+  "settingsAdmin.siem.description": "Reenvía cada evento de auditoría a un endpoint de syslog o a un webhook HTTP para alimentar tu SOC, plataforma de observabilidad o archivo de registros de cumplimiento. Las entregas fallidas se reintentan con retroceso exponencial; el historial por intento se registra para su revisión.",
+  "settingsAdmin.siem.configured": "Reenviadores configurados",
+  "settingsAdmin.siem.empty": "Aún no hay reenviadores configurados.",
+  "settingsAdmin.siem.enabled": "activado",
+  "settingsAdmin.siem.disabled": "desactivado",
+  "settingsAdmin.siem.add": "Añadir un reenviador"
 }

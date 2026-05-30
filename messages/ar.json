@@ -212,5 +212,12 @@
   "slash.group.basic": "أساسي",
   "slash.group.media": "وسائط",
   "slash.group.database": "قاعدة بيانات",
-  "slash.group.advanced": "متقدم"
+  "slash.group.advanced": "متقدم",
+  "settingsAdmin.siem.title": "موجِّهات SIEM",
+  "settingsAdmin.siem.description": "أعِد توجيه كل حدث تدقيق إلى نقطة نهاية syslog أو خطاف ويب HTTP لتغذية مركز عمليات الأمان أو منصة المراقبة أو أرشيف سجلات الامتثال. تُعاد محاولة عمليات التسليم الفاشلة وفق تراجع أُسّي؛ ويُسجَّل سجل كل محاولة للمراجعة.",
+  "settingsAdmin.siem.configured": "الموجِّهات المُهيأة",
+  "settingsAdmin.siem.empty": "لا توجد موجِّهات مُهيأة بعد.",
+  "settingsAdmin.siem.enabled": "مُفعّل",
+  "settingsAdmin.siem.disabled": "مُعطّل",
+  "settingsAdmin.siem.add": "إضافة موجِّه"
 }
