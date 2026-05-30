@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
 import { FootnoteMark } from './blocks/footnote-mark';
+import { openEditorDialog } from './editor-dialog-bus';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
@@ -146,13 +147,16 @@ export const footnoteMenuItem: CitationSlashEntry = {
   description: 'Add an inline footnote',
   icon: Asterisk,
   run: (editor: Editor): void => {
-    const content = window.prompt('Footnote text');
-    if (!content) return;
-    if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
-      editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
-    }
-    const id = crypto.randomUUID();
-    editor.chain().focus().setMark('footnote', { id, content }).run();
+    void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((result) => {
+      const content = result?.text;
+      if (!content) return;
+      if (editor.isDestroyed) return;
+      if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
+        editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
+      }
+      const id = crypto.randomUUID();
+      editor.chain().focus().setMark('footnote', { id, content }).run();
+    });
   },
 };
 
@@ -584,16 +588,18 @@ const items: SlashItem[] = [
     category: 'advanced',
     icon: Layers,
     command: (editor) => {
-      const front = window.prompt('Front (question)') ?? '';
-      const back = window.prompt('Back (answer)') ?? '';
-      if (!front || !back) return;
-      const deck = window.prompt('Deck tag (optional)') ?? '';
-      void ensureLazyExtension(editor, 'flashcard').then(() => {
-        editor
-          .chain()
-          .focus()
-          .setFlashcard({ front, back, deckTag: deck || null })
-          .run();
+      void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((result) => {
+        if (!result) return;
+        const { front, back, deck } = result;
+        if (!front || !back) return;
+        void ensureLazyExtension(editor, 'flashcard').then(() => {
+          if (editor.isDestroyed) return;
+          editor
+            .chain()
+            .focus()
+            .setFlashcard({ front, back, deckTag: deck || null })
+            .run();
+        });
       });
     },
   },
