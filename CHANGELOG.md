@@ -5,9 +5,26 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-## [0.9.4] - Unreleased
+## [0.9.5] - 2026-05-30
 
-> UX-audit patch release, round 2. Deeper homelab-deploy review of v0.9.3 found ~half of the round-1 fixes didn't hold on a real deployment, plus a wave of new findings (GitHub #50–#123). This release re-fixes the 12 regressed items and resolves the new findings: production-only rendering/theming bugs, the create-then-switch flows that never activated, accent-token wiring, the cover/icon contract mismatch, and a broad sweep of empty/active-state and form-control polish. One migration (`0054` — `workspaces.icon`), one new env var (`CAIRN_ENFORCE_2FA`). Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-{11..32}-*.md`.
+> **Hotfix.** Startup migrations could silently no-op, leaving the schema behind the code. v0.9.4's `workspaces.icon` column (migration `0054`) was never created on deployments whose container started the server from a working directory other than the image root — every workspace fetch then threw `column "icon" does not exist` (Postgres `42703`) on every page load.
+
+### Fixed
+- **Migrations now resolve their folder from the module location, not the process working directory.** The runner used a cwd-relative `./drizzle/migrations` path; when the standalone server was launched from any other directory, Drizzle's migrator found no migrations, reported success, and skipped the schema change entirely. The path is now resolved absolutely from `src/db/migrate.ts`, so on-boot migrations apply regardless of cwd (the v0.9.4 `workspaces.icon` outage).
+- **Concurrent replicas no longer race migrations.** `runMigrations` now takes a Postgres session-level advisory lock around `migrate()`, so the first booting container applies pending migrations while others block then no-op — safe for multi-replica `docker compose up --scale`.
+
+### Added
+- Integration test that runs the migrator from a non-repo working directory against a fresh Postgres, then performs the exact full-row `workspaces` select (all columns, incl. `icon`) and asserts no missing-column error — a regression guard for the whole "code references a column its migration never applied" class.
+
+> **Unblock an already-broken deployment immediately** (works on the existing `0.9.4` image too — no need to wait for `0.9.5`): run the bundled compiled migrator against your database once. `docker compose run` uses the image's `/app` working directory, so the migrations resolve correctly even on the old build —
+> ```sh
+> docker compose run --rm cairn node dist/db/migrate.js
+> ```
+> Then restart the app container (`docker compose up -d`). The slim runtime image has no `pnpm`/`tsx`, so invoke the compiled `dist/db/migrate.js` directly (not `pnpm db:migrate`). Upgrading to the `0.9.5` image makes on-boot migrations cwd-independent, so this won't recur.
+
+## [0.9.4] - 2026-05-30
+
+> UX-audit patch release, round 2. Deeper homelab-deploy review of v0.9.3 found ~half of the round-1 fixes didn't hold on a real deployment, plus a wave of new findings (GitHub #50–#123). This release re-fixes the 12 regressed items and resolves the new findings: production-only rendering/theming bugs, the create-then-switch flows that never activated, accent-token wiring, the cover/icon contract mismatch, and a broad sweep of empty/active-state and form-control polish. One migration (`0054` — `workspaces.icon`), one new env var (`CAIRN_ENFORCE_2FA`). Plans: `docs/superpowers/plans/v0.9.4/`.
 
 ### Added
 - **Workspace icons** — `workspaces.icon` column (migration `0054`) so workspaces, not just pages, carry an emoji/icon in the switcher and sidebar.
@@ -36,7 +53,7 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [0.9.3] - 2026-05-29
 
-> UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No migrations, no new env vars; one templates listing fix. Plans: `docs/superpowers/plans/2026-05-24-cairn-ux-audit-patches-*.md`.
+> UX-audit patch release. Resolves the 36-item live UX audit of v0.9.2 (GitHub #10–#45): rendering bugs, themed replacements for native form controls, navigation gaps (Settings entry, `/tasks` redirect, themed 404), and empty/active-state polish. No migrations, no new env vars; one templates listing fix. Plans: `docs/superpowers/plans/v0.9.3/`.
 
 ### Added
 - Themed `Select` + `DateField` UI primitives (`src/components/ui/`), built on the unified `radix-ui` package (#38).
