@@ -1,5 +1,12 @@
 'use client';
 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { type CalcFn, type CalcResult, computeCalcFooter } from '@/lib/databases/calc-footer';
 import type { DatabaseMeta, RowData } from './use-database-data';
 
@@ -89,18 +96,24 @@ export function CalcFooterRow({
                 <span className="tabular-nums text-foreground">
                   {result ? formatValue(result) : ''}
                 </span>
-                <select
-                  aria-label={`Calc for ${p.name}`}
+                <Select
                   value={current}
-                  onChange={(e) => void setFn(p.id, e.target.value as CalcFn | 'none')}
-                  className="rounded border-0 bg-transparent text-[10px] text-muted-foreground hover:bg-accent"
+                  onValueChange={(next) => void setFn(p.id, next as CalcFn | 'none')}
                 >
-                  {ALL_FNS.map((fn) => (
-                    <option key={fn} value={fn}>
-                      {FN_LABELS[fn]}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger
+                    aria-label={`Calc for ${p.name}`}
+                    className="h-6 min-h-6 w-auto border-0 px-1 py-0 text-[10px] text-muted-foreground shadow-none hover:bg-accent"
+                  >
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ALL_FNS.map((fn) => (
+                      <SelectItem key={fn} value={fn}>
+                        {FN_LABELS[fn]}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </td>
           );

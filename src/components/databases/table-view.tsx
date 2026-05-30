@@ -6,6 +6,13 @@ import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
 import { applyRowTemplate, listRowTemplates } from '@/lib/databases/row-templates';
@@ -402,24 +409,29 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           + New row
         </button>
         {templates.length > 0 && (
-          <select
-            aria-label="New row from template"
-            value=""
+          <Select
+            value="__none"
             disabled={adding || !rowMutateAllowed}
-            title={rowMutateAllowed ? undefined : 'Unavailable offline'}
-            onChange={(e) => {
-              const id = e.target.value;
-              if (id) void addRowFromTemplate(id);
+            onValueChange={(id) => {
+              if (id && id !== '__none') void addRowFromTemplate(id);
             }}
-            className="px-2 py-2 text-sm text-muted-foreground hover:bg-accent"
           >
-            <option value="">Templates…</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger
+              aria-label="New row from template"
+              title={rowMutateAllowed ? undefined : 'Unavailable offline'}
+              className="w-auto border-0 px-2 py-2 text-sm text-muted-foreground shadow-none hover:bg-accent"
+            >
+              <SelectValue placeholder="Templates…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">Templates…</SelectItem>
+              {templates.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         )}
       </div>
     </div>
