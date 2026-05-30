@@ -1,6 +1,14 @@
 'use client';
 
 import { useState } from 'react';
+import { DateField } from '@/components/ui/date-field';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { RelationCell } from './relation-cell';
 
 type Property = { id: string; name: string; type: string; config: unknown };
@@ -87,31 +95,32 @@ export function CellEditor({
       );
     case 'date':
       return (
-        <input
-          type="date"
-          aria-label={property.name}
-          className="w-full bg-transparent outline-hidden"
-          defaultValue={typeof local === 'string' ? local.slice(0, 10) : ''}
-          onBlur={(e) => void save(e.target.value || null)}
+        <DateField
+          label={property.name}
+          hideLabel
+          value={typeof local === 'string' ? local.slice(0, 10) : ''}
+          onChange={(iso) => void save(iso || null)}
         />
       );
     case 'select': {
       const options =
         (property.config as { options?: { id: string; name: string }[] })?.options ?? [];
+      const NONE = '__none';
+      const current = typeof local === 'string' && local ? local : NONE;
       return (
-        <select
-          aria-label={property.name}
-          className="w-full bg-transparent outline-hidden"
-          value={typeof local === 'string' ? local : ''}
-          onChange={(e) => void save(e.target.value || null)}
-        >
-          <option value="">—</option>
-          {options.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.name}
-            </option>
-          ))}
-        </select>
+        <Select value={current} onValueChange={(next) => void save(next === NONE ? null : next)}>
+          <SelectTrigger aria-label={property.name} className="h-8 min-h-8 w-full">
+            <SelectValue placeholder="—" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE}>—</SelectItem>
+            {options.map((o) => (
+              <SelectItem key={o.id} value={o.id}>
+                {o.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       );
     }
     default:
