@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -36,6 +37,7 @@ function fmtDate(iso: string | null): string {
 }
 
 export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
+  const confirm = useConfirm();
   const nameId = useId();
   const roleId = useId();
   const expiryId = useId();
@@ -91,7 +93,12 @@ export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
   }
 
   async function onRevoke(id: string) {
-    if (!confirm('Revoke this key? Requests using it will immediately stop working.')) return;
+    const ok = await confirm({
+      title: 'Revoke this key? Requests using it will immediately stop working.',
+      confirmLabel: 'Revoke',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setRevoking(id);
     try {
       const res = await fetch(`/api/api-keys/${id}`, { method: 'DELETE' });

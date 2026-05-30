@@ -2,13 +2,20 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { usePrompt } from '@/components/ui/input-dialog';
 
 export function NoWorkspace() {
   const router = useRouter();
+  const prompt = usePrompt();
   const [busy, setBusy] = useState(false);
 
   async function create() {
-    const name = window.prompt('Name your first workspace');
+    const name = await prompt({
+      title: 'Name your first workspace',
+      label: 'Workspace name',
+      placeholder: 'e.g. Acme HQ',
+      confirmLabel: 'Create',
+    });
     if (!name?.trim()) return;
     setBusy(true);
     const res = await fetch('/api/workspaces', {

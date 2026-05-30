@@ -19,6 +19,7 @@ import { SaveAsTemplateDialog } from '@/components/pages/save-as-template-dialog
 import { ShareDialog } from '@/components/pages/share-dialog';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import {
   Dialog,
   DialogContent,
@@ -52,6 +53,7 @@ export function PageMenu({
   initialExpiresAt = null,
 }: PageMenuProps) {
   const t = useT();
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const shareAllowed = useActionAllowed('share');
   const [published, setPublished] = useState(initialPublished);
@@ -139,7 +141,12 @@ export function PageMenu({
   }
 
   async function moveToTrash() {
-    if (!window.confirm(t('pageMenu.confirmTrash'))) return;
+    const ok = await confirm({
+      title: t('pageMenu.confirmTrash'),
+      confirmLabel: t('pageMenu.moveToTrash'),
+      variant: 'danger',
+    });
+    if (!ok) return;
     const res = await fetch(`/api/pages/${pageId}`, { method: 'DELETE' });
     if (res.ok) window.location.href = '/';
   }

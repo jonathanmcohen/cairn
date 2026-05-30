@@ -3,6 +3,7 @@
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
@@ -64,6 +65,7 @@ export function WebhooksManager({
   initialHooks: WebhookRow[];
   initialDeliveries: DeliveryRow[];
 }) {
+  const confirm = useConfirm();
   const urlId = useId();
 
   const [hooks, setHooks] = useState<WebhookRow[]>(initialHooks);
@@ -149,11 +151,13 @@ export function WebhooksManager({
   }
 
   async function onRotate(hook: WebhookRow) {
-    if (
-      !confirm(
+    const ok = await confirm({
+      title:
         'Rotate this webhook secret? Existing signed deliveries will stop verifying — receivers must adopt the new secret immediately.',
-      )
-    ) {
+      confirmLabel: 'Rotate',
+      variant: 'danger',
+    });
+    if (!ok) {
       return;
     }
     setRotatingId(hook.id);
@@ -173,7 +177,12 @@ export function WebhooksManager({
   }
 
   async function onDelete(id: string) {
-    if (!confirm('Delete this webhook? Its delivery history will be removed too.')) return;
+    const ok = await confirm({
+      title: 'Delete this webhook? Its delivery history will be removed too.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/webhooks/${id}`, { method: 'DELETE' });

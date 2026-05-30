@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { usePrompt } from '@/components/ui/input-dialog';
 
 type Sealed = {
   publicKey: string;
@@ -41,6 +42,7 @@ export function EncryptPageAction({
   workspaceId: string;
   currentDoc: unknown;
 }) {
+  const prompt = usePrompt();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -72,7 +74,11 @@ export function EncryptPageAction({
         throw new Error('no sealed keypair on this device — enroll your passphrase first');
       }
       const sealed = JSON.parse(sealedJson) as Sealed;
-      const passphrase = window.prompt('Enter your E2E passphrase to encrypt this page');
+      const passphrase = await prompt({
+        title: 'Enter your E2E passphrase to encrypt this page',
+        type: 'password',
+        confirmLabel: 'Encrypt',
+      });
       if (!passphrase) throw new Error('cancelled');
       const me = await unlockUserKeypair(
         {

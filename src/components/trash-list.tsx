@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 
 export type TrashItem = {
   id: string;
@@ -13,6 +14,7 @@ export type TrashItem = {
 
 export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [items, setItems] = useState(initialItems);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -27,7 +29,12 @@ export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
   }
 
   async function purge(id: string) {
-    if (!confirm('Permanently delete? This cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Permanently delete? This cannot be undone.',
+      confirmLabel: 'Delete permanently',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setBusy(id);
     const res = await fetch(`/api/trash/${id}`, { method: 'DELETE' });
     setBusy(null);
