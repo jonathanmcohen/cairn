@@ -1,28 +1,36 @@
-import { desc, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import type { Route } from 'next';
-import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
-import { Button } from '@/components/ui/button';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
-import { getAuthContext } from '@/lib/auth/require-role';
+import { requireRole } from '@/lib/auth/require-role';
+import { ConnectorsPanel } from './connectors-panel';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * P19 ships only the shell. Concrete "Add connector" flow lands in P20 (Sheets),
- * P21 (Airtable), and P22 (CSV) — each registers an adapter and adds a wizard.
- */
+// Developer > Connectors (#141). Surfaces the chat-bridge install backend
+// (/api/admin/chat-bridge, shipped v0.9.0 G7) with a Slack/Discord type-picker
+// create flow and a themed empty state. Admin-gated — installs write workspace
+// webhook rows.
 export default async function ConnectorsPage() {
-  const ctx = await getAuthContext();
-  if (!ctx?.workspaceId) redirect('/login');
-  const db = getDb();
-  const connectors = await db
-    .select()
-    .from(schema.databaseConnectors)
-    .where(eq(schema.databaseConnectors.workspaceId, ctx.workspaceId))
-    .orderBy(desc(schema.databaseConnectors.createdAt));
+  const ctx = await requireRole('admin').catch(() => null);
+  if (!ctx) redirect('/settings/developer');
+
+  const hooks = await getDb()
+    .select({
+      kind: schema.webhooks.kind,
+      platformMetadata: schema.webhooks.platformMetadata,
+    })
+    .from(schema.webhooks)
+    .where(
+      and(
+        eq(schema.webhooks.workspaceId, ctx.workspaceId),
+        inArray(schema.webhooks.kind, ['slack', 'discord']),
+      ),
+    );
+  const slack = hooks.find((h) => h.kind === 'slack') ?? null;
+  const discord = hooks.find((h) => h.kind === 'discord') ?? null;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 p-6">
@@ -30,49 +38,20 @@ export default async function ConnectorsPage() {
         section={{ label: 'Developer', href: '/settings/developer' as Route }}
         page="Connectors"
       />
-      <header className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Connectors</h1>
-        <Button
-          disabled
-          title="Adapter wiring lands in v0.7.0 P20 (Sheets) / P21 (Airtable) / P22 (CSV)."
-          // WCAG 2.5.5: enforce a 44px-tall touch target on the page CTA.
-          className="min-h-11"
-        >
-          Add connector
-        </Button>
-      </header>
-      {connectors.length === 0 ? (
-        <p className="text-muted-foreground text-sm">No connectors configured.</p>
-      ) : (
-        <ul className="divide-y rounded-md border">
-          {connectors.map((c) => (
-            <li key={c.id} className="flex items-center justify-between px-4 py-3">
-              <div>
-                <div className="font-medium">{c.kind}</div>
-                <div className="text-muted-foreground text-xs">
-                  last synced:{' '}
-                  {c.lastSyncedAt ? c.lastSyncedAt.toISOString().slice(0, 16) : 'never'}
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <span
-                  className={`rounded-full px-2 py-0.5 text-xs ${
-                    c.enabled ? 'bg-secondary text-secondary-foreground' : 'border'
-                  }`}
-                >
-                  {c.enabled ? 'enabled' : 'disabled'}
-                </span>
-                <Link
-                  href={`/settings/developer/connectors/${c.id}/conflicts`}
-                  className="text-sm underline"
-                >
-                  Conflicts
-                </Link>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      <ConnectorsPanel
+        slackInstalled={!!slack}
+        slackTeamId={(slack?.platformMetadata as { team_id?: string } | null)?.team_id ?? null}
+        slackChannelId={
+          (slack?.platformMetadata as { channel_id?: string } | null)?.channel_id ?? null
+        }
+        discordInstalled={!!discord}
+        discordApplicationId={
+          (discord?.platformMetadata as { application_id?: string } | null)?.application_id ?? null
+        }
+        discordChannelId={
+          (discord?.platformMetadata as { channel_id?: string } | null)?.channel_id ?? null
+        }
+      />
     </div>
   );
 }

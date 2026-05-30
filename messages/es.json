@@ -219,5 +219,19 @@
   "settingsAdmin.siem.empty": "Aún no hay reenviadores configurados.",
   "settingsAdmin.siem.enabled": "activado",
   "settingsAdmin.siem.disabled": "desactivado",
-  "settingsAdmin.siem.add": "Añadir un reenviador"
+  "settingsAdmin.siem.add": "Añadir un reenviador",
+  "connectors.title": "Conectores",
+  "connectors.subtitle": "Conecta las páginas y comentarios de Cairn con el chat de tu equipo. Se admiten Slack y Discord.",
+  "connectors.add": "Añadir conector",
+  "connectors.chooseType": "Elige un tipo de conector",
+  "connectors.slack": "Slack",
+  "connectors.discord": "Discord",
+  "connectors.cancel": "Cancelar",
+  "connectors.connected": "conectado",
+  "connectors.installed": "instalado",
+  "connectors.team": "equipo {id}",
+  "connectors.app": "aplicación {id}",
+  "connectors.empty.title": "Aún no hay conectores",
+  "connectors.empty.body": "Conecta Slack o Discord para reenviar eventos de páginas y comentarios y responder en el hilo.",
+  "connectors.empty.docs": "Lee la documentación de conectores"
 }

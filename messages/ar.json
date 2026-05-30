@@ -219,5 +219,19 @@
   "settingsAdmin.siem.empty": "لا توجد موجِّهات مُهيأة بعد.",
   "settingsAdmin.siem.enabled": "مُفعّل",
   "settingsAdmin.siem.disabled": "مُعطّل",
-  "settingsAdmin.siem.add": "إضافة موجِّه"
+  "settingsAdmin.siem.add": "إضافة موجِّه",
+  "connectors.title": "الموصِّلات",
+  "connectors.subtitle": "اربط صفحات Cairn وتعليقاتها بمحادثة فريقك. يدعم Slack وDiscord.",
+  "connectors.add": "إضافة موصِّل",
+  "connectors.chooseType": "اختر نوع الموصِّل",
+  "connectors.slack": "Slack",
+  "connectors.discord": "Discord",
+  "connectors.cancel": "إلغاء",
+  "connectors.connected": "متصل",
+  "connectors.installed": "مُثبَّت",
+  "connectors.team": "فريق {id}",
+  "connectors.app": "تطبيق {id}",
+  "connectors.empty.title": "لا توجد موصِّلات بعد",
+  "connectors.empty.body": "اربط Slack أو Discord لإعادة توجيه أحداث الصفحات والتعليقات والرد داخل المحادثة.",
+  "connectors.empty.docs": "اقرأ وثائق الموصِّلات"
 }

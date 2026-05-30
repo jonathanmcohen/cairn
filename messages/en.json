@@ -219,5 +219,19 @@
   "settingsAdmin.siem.empty": "No forwarders configured yet.",
   "settingsAdmin.siem.enabled": "enabled",
   "settingsAdmin.siem.disabled": "disabled",
-  "settingsAdmin.siem.add": "Add a forwarder"
+  "settingsAdmin.siem.add": "Add a forwarder",
+  "connectors.title": "Connectors",
+  "connectors.subtitle": "Bridge Cairn pages and comments to your team chat. Slack and Discord are supported.",
+  "connectors.add": "Add connector",
+  "connectors.chooseType": "Choose a connector type",
+  "connectors.slack": "Slack",
+  "connectors.discord": "Discord",
+  "connectors.cancel": "Cancel",
+  "connectors.connected": "connected",
+  "connectors.installed": "installed",
+  "connectors.team": "team {id}",
+  "connectors.app": "app {id}",
+  "connectors.empty.title": "No connectors yet",
+  "connectors.empty.body": "Connect Slack or Discord to forward page + comment events and reply in-thread.",
+  "connectors.empty.docs": "Read the connector documentation"
 }
