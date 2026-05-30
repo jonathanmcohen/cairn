@@ -51,3 +51,7 @@ public/emoji-data.json
 
 # i18n audit per-run report (baseline IS committed; report is regenerated each run)
 i18n-audit.report.json
+
+# v0.9.6 G4 (#136): embedding assets staged at build time by scripts/fetch-embedding-assets.mjs
+/public/models/
+/public/onnx/
