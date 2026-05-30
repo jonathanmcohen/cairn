@@ -1,6 +1,4 @@
 import { mergeAttributes, Node } from '@tiptap/core';
-import { ReactNodeViewRenderer } from '@tiptap/react';
-import { ImageView } from './blocks/image-view';
 
 /**
  * Upload-result tuple shared by every gallery/drop caller. The drop handler in
@@ -102,9 +100,6 @@ declare module '@tiptap/core' {
   }
 }
 
-/** Client extension: the `cairnImage` atom + its empty-state React node-view. */
-export const CairnImageWithView = CairnImage.extend({
-  addNodeView() {
-    return ReactNodeViewRenderer(ImageView);
-  },
-});
+// The client editor variant `CairnImageWithView` (atom + React node-view) lives
+// in `./image-view-extension` so this module stays free of `@tiptap/react` and
+// can be imported server-side (schema → suggestions transform) safely.
