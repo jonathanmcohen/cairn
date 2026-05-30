@@ -78,12 +78,17 @@ jobs:
       - name: Seed a page
         run: |
           PAGE_ID=$(docker exec embed-db psql -U cairn -d cairn -At -c "
-            WITH ws AS (
+            WITH u AS (
+              INSERT INTO users (email, password_hash, name)
+              VALUES ('smoke@example.com', 'x', 'Smoke')
+              RETURNING id
+            ), ws AS (
               INSERT INTO workspaces (name, slug) VALUES ('smoke', 'smoke')
               RETURNING id
             )
-            INSERT INTO pages (workspace_id, title, content_text)
-            SELECT id, 'Smoke', 'hello smoke world from the wasm embedder' FROM ws
+            INSERT INTO pages (workspace_id, title, content_text, created_by)
+            SELECT ws.id, 'Smoke', 'hello smoke world from the wasm embedder', u.id
+            FROM ws, u
             RETURNING id;
           ")
           echo "PAGE_ID=$PAGE_ID" >> "$GITHUB_ENV"

@@ -15,7 +15,7 @@ test.describe('sign-in screen a11y (WCAG 2.1 AA)', () => {
     // Visible labelled inputs and a labelled submit button.
     await expect(page.getByLabel(/email/i)).toBeVisible();
     await expect(page.getByLabel(/password/i)).toBeVisible();
-    await expect(page.getByRole('button', { name: /sign in/i })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Sign in', exact: true })).toBeVisible();
     await expectNoA11yViolations(page, 'sign-in');
   });
 });

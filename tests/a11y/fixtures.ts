@@ -54,7 +54,9 @@ async function doCredentialsSignIn(page: Page, seeded: SeededA11y): Promise<void
   await page.goto('/login');
   await page.locator('input[name="email"]').fill(seeded.userEmail);
   await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: /sign in/i }).click();
+  // Exact match: the login page also has a "Sign in with a passkey" button, so a
+  // loose /sign in/i resolves to 2 elements (Playwright strict-mode violation).
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
   await page.waitForURL('**/', { timeout: 30_000 });
 }
 
