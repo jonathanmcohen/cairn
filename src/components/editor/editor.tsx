@@ -20,6 +20,7 @@ import { composeGalleryInsert } from './image-extension';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { SuggestionToolbar } from './suggestion-toolbar';
+import { type OpenSuggestion, SuggestionsDrawer } from './suggestions-drawer';
 import { useBulkDropHandler } from './use-bulk-drop-handler';
 import { useCollabDoc } from './use-collab-doc';
 
@@ -128,6 +129,8 @@ export function Editor({
   const [suggestionMode, setSuggestionMode] = useState(false);
   const [openCount, setOpenCount] = useState(0);
   const [resolvable, setResolvable] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [openSuggestions, setOpenSuggestions] = useState<OpenSuggestion[]>([]);
   const activeSuggestionRef = useRef<string | null>(null);
 
   // Uploads hit the server, so they are blocked offline (bounded-offline gate).
@@ -396,8 +399,14 @@ export function Editor({
     void (async () => {
       const res = await fetch(`/api/pages/${pageId}/suggestions`);
       if (!res.ok || cancelled) return;
-      const data = (await res.json()) as { suggestions: unknown[] };
-      if (!cancelled) setOpenCount(data.suggestions.length);
+      const data = (await res.json()) as {
+        suggestions: { id: string; authorName?: string | null }[];
+      };
+      if (cancelled) return;
+      setOpenCount(data.suggestions.length);
+      setOpenSuggestions(
+        data.suggestions.map((s) => ({ id: s.id, authorName: s.authorName ?? 'Anonymous' })),
+      );
     })();
     return () => {
       cancelled = true;
@@ -442,22 +451,19 @@ export function Editor({
     setOpenCount((c) => c + 1);
   }, [suggestionMode, pageId]);
 
-  // #98 — jump to the first open suggestion: find the first rendered
-  // suggestion mark (`[data-suggestion-id]`) in the editor DOM, scroll it into
-  // view, and move the ProseMirror selection there so keyboard focus follows.
-  const jumpToFirstOpenSuggestion = useCallback(() => {
+  // #85/#145 — scroll to a specific suggestion's first mark, then close the
+  // drawer so the doc is visible. Reuses the posAtDOM/selection pattern.
+  const viewSuggestion = useCallback((suggestionId: string) => {
     const ed = editorRef.current;
     if (!ed) return;
     const root = ed.view.dom as HTMLElement;
-    const el = root.querySelector<HTMLElement>('[data-suggestion-id]');
-    if (!el) return;
-    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    const pos = ed.view.posAtDOM(el, 0);
-    if (pos >= 0) {
-      ed.chain().focus().setTextSelection(pos).run();
-    } else {
-      ed.commands.focus();
+    const el = root.querySelector<HTMLElement>(`[data-suggestion-id="${suggestionId}"]`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const pos = ed.view.posAtDOM(el, 0);
+      if (pos >= 0) ed.chain().focus().setTextSelection(pos).run();
     }
+    setDrawerOpen(false);
   }, []);
 
   const markSelection = useCallback(
@@ -503,6 +509,7 @@ export function Editor({
         Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(seeded));
       });
       setOpenCount((c) => Math.max(0, c - 1));
+      setOpenSuggestions((rows) => rows.filter((r) => r.id !== suggestionId));
       if (activeSuggestionRef.current === suggestionId) {
         activeSuggestionRef.current = null;
         setSuggestionMode(false);
@@ -539,7 +546,15 @@ export function Editor({
               resolvable={resolvable}
               onAccept={(id) => void resolve('accept', id)}
               onReject={(id) => void resolve('reject', id)}
-              onJumpToFirstOpen={jumpToFirstOpenSuggestion}
+              onOpenDrawer={() => setDrawerOpen(true)}
+            />
+            <SuggestionsDrawer
+              open={drawerOpen}
+              onOpenChange={setDrawerOpen}
+              suggestions={openSuggestions}
+              onAccept={(id) => void resolve('accept', id)}
+              onReject={(id) => void resolve('reject', id)}
+              onView={viewSuggestion}
             />
             <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
           </>

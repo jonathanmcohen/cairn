@@ -18,8 +18,8 @@ function wrap(ui: React.ReactNode) {
 const noop = () => {};
 
 describe('<SuggestionToolbar>', () => {
-  it('renders the open-count as a button that jumps to the first open suggestion (#98)', () => {
-    const onJump = vi.fn();
+  it('renders the open-count as a button that opens the suggestions drawer (#85)', () => {
+    const onOpenDrawer = vi.fn();
     render(
       wrap(
         <SuggestionToolbar
@@ -32,17 +32,16 @@ describe('<SuggestionToolbar>', () => {
           resolvable={null}
           onAccept={noop}
           onReject={noop}
-          onJumpToFirstOpen={onJump}
+          onOpenDrawer={onOpenDrawer}
         />,
       ),
     );
-    // The "N open" element is a button with an accessible name.
     const badge = screen.getByRole('button', {
       name: enMessages['pageActions.suggest.openCountLabel.other'].replace('{count}', '3'),
     });
     expect(badge.tagName).toBe('BUTTON');
     fireEvent.click(badge);
-    expect(onJump).toHaveBeenCalledTimes(1);
+    expect(onOpenDrawer).toHaveBeenCalledTimes(1);
   });
 
   it('gives Mark insert / Mark delete accessible labels + icons (#101)', () => {
@@ -58,7 +57,7 @@ describe('<SuggestionToolbar>', () => {
           resolvable={null}
           onAccept={noop}
           onReject={noop}
-          onJumpToFirstOpen={noop}
+          onOpenDrawer={noop}
         />,
       ),
     );

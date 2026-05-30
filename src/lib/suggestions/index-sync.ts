@@ -22,11 +22,19 @@ export async function proposeSuggestion(
   return row.id;
 }
 
-/** Open suggestions for a page, in insertion order. */
+/** Open suggestions for a page (with author display name), in insertion order. */
 export function listOpenSuggestions(db: Db, pageId: string) {
   return db
-    .select()
+    .select({
+      id: schema.suggestions.id,
+      pageId: schema.suggestions.pageId,
+      authorId: schema.suggestions.authorId,
+      status: schema.suggestions.status,
+      createdAt: schema.suggestions.createdAt,
+      authorName: schema.users.name,
+    })
     .from(schema.suggestions)
+    .leftJoin(schema.users, eq(schema.suggestions.authorId, schema.users.id))
     .where(and(eq(schema.suggestions.pageId, pageId), eq(schema.suggestions.status, 'open')));
 }
 
