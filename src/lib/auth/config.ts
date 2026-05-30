@@ -13,6 +13,7 @@ import { checkMfaEnrollmentForSignIn } from './mfa-policy';
 import { applyOAuthGate } from './oauth-gate';
 import { verifyLoginTicket } from './passkey-ticket';
 import { verifyPassword } from './password';
+import { createSession, touchSession } from './session-store';
 import { isTwoFactorEnabled, verifySecondFactor } from './two-factor';
 
 const CredentialsSchema = z.object({
@@ -20,6 +21,24 @@ const CredentialsSchema = z.object({
   password: z.string().min(1),
   totp: z.string().optional(),
 });
+
+/**
+ * v0.9.6 G8b (#70) — best-effort UA/IP for the session-store row. The jwt
+ * callback runs inside the Auth.js route handler on sign-in, so `next/headers`
+ * resolves the live request. Outside a request context (unit tests) it throws —
+ * we swallow and return nulls.
+ */
+async function readSignInClient(): Promise<{ ua: string | null; ip: string | null }> {
+  try {
+    const { headers } = await import('next/headers');
+    const h = await headers();
+    const ua = h.get('user-agent');
+    const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? null;
+    return { ua, ip };
+  } catch {
+    return { ua: null, ip: null };
+  }
+}
 
 function buildProviders(): NextAuthConfig['providers'] {
   const providers: NextAuthConfig['providers'] = [
@@ -151,7 +170,22 @@ export const authConfig: NextAuthConfig = {
       return applyOAuthGate(getDb(), { email: user.email, userId: user.id });
     },
     async jwt({ token, user, trigger, session }) {
-      if (user?.id) token.id = user.id;
+      if (user?.id) {
+        token.id = user.id;
+        // v0.9.6 G8b (#70) — mint a session-store row on sign-in and stamp its
+        // sid into the token. This runs for BOTH credentials providers
+        // (password + passkey) and OAuth, since every sign-in populates `user`.
+        // UA/IP are read from the live request headers (the jwt callback runs
+        // inside the Auth.js route handler on sign-in); best-effort — null when
+        // no request context is available (e.g. unit tests).
+        if (!token.sid) {
+          const { ua, ip } = await readSignInClient();
+          token.sid = await createSession(getDb(), { userId: user.id, userAgent: ua, ip });
+        }
+      } else if (typeof token.sid === 'string') {
+        // Subsequent reads: keep last_seen_at fresh (no-op if already revoked).
+        await touchSession(getDb(), token.sid);
+      }
       // v0.9.0 G1 P8 — step-up assertion timestamp. Mirrored into the JWT so
       // requireStepUp can read it from the session object on subsequent
       // requests. /api/webauthn/assert sets the `cairn_stepup` cookie AND
@@ -168,6 +202,11 @@ export const authConfig: NextAuthConfig = {
     async session({ session, token }) {
       if (session.user && typeof token.id === 'string') {
         session.user.id = token.id;
+      }
+      // v0.9.6 G8b (#70) — surface the per-login sid so getAuthContext() can
+      // reject revoked sessions and the sessions UI can flag the current device.
+      if (typeof token.sid === 'string') {
+        (session as { sid?: string }).sid = token.sid;
       }
       const stepUpAt = (token as Record<string, unknown>).stepUpAt;
       if (typeof stepUpAt === 'number') {
