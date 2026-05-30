@@ -386,6 +386,13 @@
       "when": 1780078722090,
       "tag": "0054_workspace_icon",
       "breakpoints": true
+    },
+    {
+      "idx": 55,
+      "version": "7",
+      "when": 1780155797491,
+      "tag": "0055_auth_sessions",
+      "breakpoints": true
     }
   ]
 }

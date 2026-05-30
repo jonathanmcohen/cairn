@@ -1,6 +1,9 @@
 export * from './api-keys';
 export * from './audit-log';
 export * from './auth';
+// v0.9.6 G8b (#70) — sid-keyed session store for listable + revocable JWT
+// sessions (no full DB session adapter; jwt strategy retained).
+export * from './auth-sessions';
 export * from './automation-rules';
 export * from './automation-runs';
 // v0.9.0 G7 P37 — chat-bridge install + channel-link tables (slash commands
