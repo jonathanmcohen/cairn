@@ -95,6 +95,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
             currentRole={ctx.role}
             canEditVersions={hasMinRole(ctx.role, 'editor')}
             canLock={canEdit}
+            canMove={hasMinRole(ctx.role, 'editor')}
           />
           {showEncryptAction && (
             <EncryptPageAction

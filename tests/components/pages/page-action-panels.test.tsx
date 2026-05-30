@@ -39,6 +39,7 @@ function renderPanels() {
         currentRole="editor"
         canEditVersions
         canLock
+        canMove={false}
       />,
     ),
   );

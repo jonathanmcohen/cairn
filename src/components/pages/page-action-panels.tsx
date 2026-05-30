@@ -1,11 +1,15 @@
 'use client';
 
+import { FolderInput } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CommentsToggle } from '@/components/comments/comments-toggle';
 import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockToggle } from '@/components/pages/lock-toggle';
 import { VersionHistory } from '@/components/pages/version-history';
+import { MoveToPicker } from '@/components/sidebar/move-to-picker';
 import type { MemberRole } from '@/lib/auth/require-role';
+import { useT } from '@/lib/i18n/provider';
 
 /**
  * v0.9.4 #93 — Shared single-open-panel controller for the page-detail action
@@ -30,6 +34,9 @@ type PageActionPanelsProps = {
   currentRole: MemberRole;
   canEditVersions: boolean;
   canLock: boolean;
+  // v0.9.6 #124 — show the Move-To affordance to users who can reparent
+  // (editor+). The reparent itself is still editor-gated by the move route.
+  canMove: boolean;
 };
 
 export function PageActionPanels({
@@ -39,8 +46,12 @@ export function PageActionPanels({
   currentRole,
   canEditVersions,
   canLock,
+  canMove,
 }: PageActionPanelsProps) {
+  const t = useT();
+  const router = useRouter();
   const [active, setActive] = useState<ActivePanel>(null);
+  const [moveOpen, setMoveOpen] = useState(false);
 
   // Single keydown listener dismisses the open panel on Escape. For the
   // non-radix surfaces (the comments + versions drawers) this is the dismissal
@@ -74,6 +85,25 @@ export function PageActionPanels({
       <VersionHistory pageId={pageId} canEdit={canEditVersions} {...bind('versions')} />
       <PageExportMenu pageId={pageId} {...bind('export')} />
       {canLock && <LockToggle pageId={pageId} {...bind('lock')} />}
+      {canMove && (
+        <>
+          <button
+            type="button"
+            aria-label={t('pageMenu.moveTo')}
+            title={t('pageMenu.moveTo')}
+            onClick={() => setMoveOpen(true)}
+            className="flex min-h-11 min-w-11 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring outline-hidden"
+          >
+            <FolderInput aria-hidden="true" className="h-4 w-4" />
+          </button>
+          <MoveToPicker
+            open={moveOpen}
+            sourceId={pageId}
+            onOpenChange={setMoveOpen}
+            onMoved={() => router.refresh()}
+          />
+        </>
+      )}
     </>
   );
 }
