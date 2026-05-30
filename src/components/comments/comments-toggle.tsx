@@ -5,12 +5,20 @@ import { useState } from 'react';
 import { CommentPanel } from '@/components/comments/comment-panel';
 import { Button } from '@/components/ui/button';
 import type { MemberRole } from '@/lib/auth/require-role';
+import { useT } from '@/lib/i18n/provider';
 
 type CommentsToggleProps = {
   pageId: string;
   canComment: boolean;
   currentUserId: string;
   currentRole: MemberRole;
+  /**
+   * Optional controlled open-state (used by the shared page-action-panels
+   * controller for single-open mutual exclusion). When omitted the toggle
+   * self-manages, so it stays usable standalone and in tests.
+   */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 };
 
 export function CommentsToggle({
@@ -18,17 +26,25 @@ export function CommentsToggle({
   canComment,
   currentUserId,
   currentRole,
+  open: controlledOpen,
+  onOpenChange,
 }: CommentsToggleProps) {
-  const [open, setOpen] = useState(false);
+  const t = useT();
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = controlledOpen ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setInternalOpen(next);
+  };
 
   return (
     <>
       <Button
         variant="ghost"
         size="icon"
-        aria-label="Comments"
+        aria-label={t('pageActions.comments.title')}
         aria-pressed={open}
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => setOpen(!open)}
       >
         <MessageSquare aria-hidden="true" className="h-4 w-4" />
       </Button>

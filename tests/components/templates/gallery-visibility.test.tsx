@@ -86,4 +86,47 @@ describe('TemplatesGallery visibility grouping', () => {
     expect(screen.getByRole('heading', { name: 'public' })).toBeTruthy();
     expect(screen.getByText('Welcome to Cairn')).toBeTruthy();
   });
+
+  it('renders a lucide chevron in the Preview disclosure (no raw marker)', () => {
+    const welcomeBuiltInTemplate = tpl({
+      name: 'Welcome to Cairn',
+      kind: 'page',
+      builtIn: true,
+      workspaceId: null,
+      visibility: 'public',
+    });
+    render(<TemplatesGallery initialTemplates={[welcomeBuiltInTemplate]} />);
+    const summary = screen.getByText('Preview').closest('summary');
+    expect(summary?.querySelector('svg')).toBeTruthy();
+    expect(summary?.className).toContain('list-none');
+  });
+
+  it('renders the kind badge and the Built-in badge with distinct styling', () => {
+    const builtInPageTemplate = tpl({
+      name: 'Welcome to Cairn',
+      kind: 'page',
+      builtIn: true,
+      workspaceId: null,
+      visibility: 'public',
+    });
+    render(<TemplatesGallery initialTemplates={[builtInPageTemplate]} />);
+    const kind = screen.getByText('page').closest('span');
+    const builtIn = screen.getByText('Built-in').closest('span');
+    expect(kind?.className).not.toEqual(builtIn?.className);
+    // kind badge carries a leading lucide icon (decorative)
+    expect(kind?.querySelector('svg')).toBeTruthy();
+  });
+
+  it('uses a 4-col grid at xl so a 4th card fills the row instead of orphaning', () => {
+    const fourPublicTemplates = [
+      tpl({ name: 'B1', builtIn: true, workspaceId: null, visibility: 'public' }),
+      tpl({ name: 'B2', builtIn: true, workspaceId: null, visibility: 'public' }),
+      tpl({ name: 'B3', builtIn: true, workspaceId: null, visibility: 'public' }),
+      tpl({ name: 'B4', builtIn: true, workspaceId: null, visibility: 'public' }),
+    ];
+    const { container } = render(<TemplatesGallery initialTemplates={fourPublicTemplates} />);
+    const grid = container.querySelector('section [class*="grid-cols"]');
+    expect(grid?.className).toContain('xl:grid-cols-4');
+    expect(grid?.className).toContain('sm:grid-cols-2');
+  });
 });

@@ -1,23 +1,20 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import { CommentsToggle } from '@/components/comments/comments-toggle';
-import { CoverImage } from '@/components/cover-image';
 import { Editor } from '@/components/editor/editor';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import { ApprovalPanel } from '@/components/pages/approval-panel';
 import { CoverBanner } from '@/components/pages/cover-banner';
+import { CoverPicker } from '@/components/pages/cover-picker';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
-import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockBanner } from '@/components/pages/lock-banner';
-import { LockToggle } from '@/components/pages/lock-toggle';
+import { PageActionPanels } from '@/components/pages/page-action-panels';
 import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { PageModeShell } from '@/components/pages/page-mode-shell';
 import { PageModeToggles } from '@/components/pages/page-mode-toggles';
 import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { TocSidebar } from '@/components/pages/toc-sidebar';
-import { VersionHistory } from '@/components/pages/version-history';
 import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
@@ -53,6 +50,10 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   // a client-side flicker.
   const cookieStore = await cookies();
   const showTocSidebar = cookieStore.get('cairn-toc-sidebar')?.value === '1';
+  // #121 — build-time inlined Unsplash key (optional); passed to CoverPicker so
+  // it can render the Unsplash tab. Undefined-tolerant: the picker hides the tab
+  // when unset. (This read was removed by round-1 #16 and is restored here.)
+  const unsplashKey = env().NEXT_PUBLIC_CAIRN_UNSPLASH_ACCESS_KEY;
   // v0.9.0 G1 P6 — E2E "Encrypt page" affordance gates on the public mirror
   // of CAIRN_ENABLE_E2E_ENCRYPTION. Already-encrypted pages don't render
   // the action (re-encrypt is a separate flow not in this plan).
@@ -63,11 +64,16 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
     <PageDetailShell>
       <PageModeShell>
         <CoverBanner cover={cover} alt={page.title} />
-        {/* a7 #16 — the in-flow <CoverImage> button below is the single canonical
-            "Add cover" / "Change" affordance; it sits where the cover renders.
-            The previously floating <CoverPicker> mount was removed to avoid two
-            competing cover controls. */}
-        <CoverImage pageId={page.id} initial={page.coverUrl} />
+        {/* #121 — the in-flow CoverPicker is the single canonical "Add cover" /
+            "Change cover" affordance. It writes the live `pages.cover` jsonb via
+            /api/pages/[pageId]/cover and refreshes so CoverBanner re-renders.
+            (Round-1 #16 had left the legacy CoverImage button here, which wrote
+            the orphaned `cover_url` column the banner no longer reads.) */}
+        {canEdit && (
+          <div className="mb-2 flex justify-start">
+            <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
+          </div>
+        )}
         <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
           <PageIconPicker pageId={page.id} initial={page.icon} />
           <div className="min-w-0 flex-1 basis-full sm:basis-auto">
@@ -77,16 +83,17 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
               page actions below, separated by a thin rule, so the header reads
               as one coherent control group instead of two competing toolbars. */}
           <PageModeToggles />
-          <span className="h-6 w-px shrink-0 self-center bg-border" aria-hidden="true" />
-          <CommentsToggle
+          {/* v0.9.4 #93 — the comments / version-history / export / lock cluster
+              is now a single shared controller that keeps only one panel open
+              at a time and dismisses it on Escape. */}
+          <PageActionPanels
             pageId={page.id}
             canComment={hasMinRole(ctx.role, 'editor')}
             currentUserId={ctx.userId}
             currentRole={ctx.role}
+            canEditVersions={hasMinRole(ctx.role, 'editor')}
+            canLock={canEdit}
           />
-          <VersionHistory pageId={page.id} canEdit={hasMinRole(ctx.role, 'editor')} />
-          <PageExportMenu pageId={page.id} />
-          {canEdit && <LockToggle pageId={page.id} />}
           {showEncryptAction && (
             <EncryptPageAction
               pageId={page.id}
@@ -129,10 +136,18 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the
           `cairn-toc-sidebar` cookie set by the Settings toggle. Rendered
           in-flow inside PageDetailShell (the shell has no right-rail slot)
-          and absolutely positioned to the right of the editor on xl+
-          viewports; hidden below xl where there's no room. */}
+          and absolutely positioned on xl+ viewports; hidden below xl where
+          there's no room.
+          a9 #18 — the rail is anchored to the RIGHT EDGE OF THE CENTERED
+          max-w-3xl reading column (`left-1/2` + a `24rem` = half-of-3xl
+          translate), NOT to the viewport's right edge. Previously it floated
+          against the viewport with no positioned ancestor, leaving a dead
+          band of empty whitespace between the column and the rail. Anchoring
+          it to the column makes the gutter intentional, and `TocSidebar`
+          returns null when the page has no headings so the rail never shows
+          empty. */}
       {showTocSidebar ? (
-        <aside className="pointer-events-none absolute right-4 top-32 hidden xl:block xl:w-56">
+        <aside className="pointer-events-none absolute left-1/2 top-32 hidden translate-x-[calc(24rem+1.5rem)] xl:block xl:w-56">
           <div className="pointer-events-auto">
             <TocSidebar initialDoc={page.content} />
           </div>

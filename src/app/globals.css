@@ -134,6 +134,15 @@
    accent hex. Other UI surfaces inherit via the existing token chain. */
 html[data-accent="default"] {
   --cairn-accent: #0f172a;
+  /* Bind the shadcn primary/ring tokens like every named accent does, so a
+     `variant="default"` button is a saturated dark-slate pill (not the base
+     theme's --primary, which is near-white 0 0% 98% under `.dark`). Fixes #34:
+     the "Create key" button rendered as a light-grey pill in dark mode because
+     the default accent never remapped --primary. #0f172a → HSL 222 47% 11%;
+     near-white foreground gives ~14:1 contrast (WCAG AA). */
+  --primary: 222 47% 11%;
+  --primary-foreground: 0 0% 98%;
+  --ring: 222 47% 11%;
 }
 html[data-accent="blue"] {
   --cairn-accent: #2563eb;
@@ -199,4 +208,14 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
  */
 [data-page-mode-shell][data-reader="true"] .ProseMirror {
   max-width: none;
+}
+
+/*
+ * #111 — the command palette injects ts_headline snippet markup (matches
+ * wrapped in <b>). Style that <b> with theme tokens so matches read clearly in
+ * both light and dark, rather than relying on the browser default bold.
+ */
+.palette-snippet b {
+  font-weight: 600;
+  color: var(--color-foreground);
 }

@@ -3,6 +3,13 @@
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Initial = {
   name: string;
@@ -14,10 +21,12 @@ export function SettingsForm({
   workspaceId,
   initial,
   pages,
+  twofaEnforcementAvailable = false,
 }: {
   workspaceId: string;
   initial: Initial;
   pages: { id: string; title: string }[];
+  twofaEnforcementAvailable?: boolean;
 }) {
   const router = useRouter();
   const nameId = useId();
@@ -102,42 +111,44 @@ export function SettingsForm({
         <label htmlFor={homePageId} className="text-sm font-medium">
           Home page
         </label>
-        <select
-          id={homePageId}
-          value={homePage}
-          onChange={(e) => setHomePage(e.target.value)}
-          className="rounded border px-2 py-1"
+        <Select
+          value={homePage === '' ? 'none' : homePage}
+          onValueChange={(next) => setHomePage(next === 'none' ? '' : next)}
         >
-          <option value="">(none)</option>
-          {pages.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.title}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger id={homePageId} aria-label="Home page" className="min-h-11">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="none">(none)</SelectItem>
+            {pages.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.title}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="text-xs text-muted-foreground">
           The page members land on after sign-in. Leave as "(none)" to use the default.
         </p>
       </div>
 
-      <div className="flex items-start gap-2">
-        <input
-          id={twofaId}
-          type="checkbox"
-          checked={requireTwofa}
-          onChange={(e) => setRequireTwofa(e.target.checked)}
-          className="mt-1"
-        />
-        <div className="flex flex-col">
-          <label htmlFor={twofaId} className="text-sm font-medium">
-            Require two-factor authentication
-          </label>
-          <p className="text-xs text-muted-foreground">
-            Persists the flag now; enforcement at sign-in ships with TOTP support in a later
-            release.
-          </p>
+      {twofaEnforcementAvailable ? (
+        <div className="flex items-start gap-2">
+          <input
+            id={twofaId}
+            type="checkbox"
+            checked={requireTwofa}
+            onChange={(e) => setRequireTwofa(e.target.checked)}
+            className="mt-1 size-5"
+          />
+          <div className="flex flex-col">
+            <label htmlFor={twofaId} className="text-sm font-medium">
+              Require two-factor authentication
+            </label>
+            <p className="text-xs text-muted-foreground">Members must complete 2FA at sign-in.</p>
+          </div>
         </div>
-      </div>
+      ) : null}
 
       <div>
         <Button type="submit" disabled={submitting}>

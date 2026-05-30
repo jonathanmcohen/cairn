@@ -15,8 +15,19 @@ export type PageLinkListRef = { onKeyDown: (event: KeyboardEvent) => boolean };
  */
 export const PageLinkList = forwardRef<
   PageLinkListRef,
-  { items: PageItem[]; command: (item: PageItem) => void }
->(function PageLinkList({ items, command }, ref) {
+  {
+    items: PageItem[];
+    command: (item: PageItem) => void;
+    /**
+     * v0.9.4 P26 #108 — trigger-clarity footer ("[[ or @@ for pages · @ for
+     * people"). Passed in (already translated) by the page-link suggestion
+     * extension because this component mounts via ReactRenderer detached from
+     * the <I18nProvider> tree, so `useT()` can't resolve here. Optional so
+     * existing call sites/tests work.
+     */
+    hint?: string;
+  }
+>(function PageLinkList({ items, command, hint }, ref) {
   const [index, setIndex] = useState(0);
   const listId = useId();
 
@@ -45,10 +56,19 @@ export const PageLinkList = forwardRef<
     },
   }));
 
+  // v0.9.4 P26 #108 — footer hint is aria-hidden so it doesn't pollute the
+  // aria-activedescendant option set; it is a purely visual affordance.
+  const footer = hint ? (
+    <div className="border-t px-3 py-1.5 text-xs text-muted-foreground" aria-hidden>
+      {hint}
+    </div>
+  ) : null;
+
   if (items.length === 0) {
     return (
-      <div className="rounded-md border bg-popover p-2 text-sm text-muted-foreground shadow-md">
-        No pages
+      <div className="w-64 rounded-md border bg-popover shadow-md">
+        <div className="p-2 text-sm text-muted-foreground">No pages</div>
+        {footer}
       </div>
     );
   }
@@ -89,6 +109,7 @@ export const PageLinkList = forwardRef<
           </div>
         ))}
       </div>
+      {footer}
     </div>
   );
 });

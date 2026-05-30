@@ -83,4 +83,49 @@ export function ensureAppShortcuts(): void {
     labelKey: 'shortcuts.quickCapture',
     run: openQuickCapture,
   });
+
+  // v0.9.4 P29 #117 — editor-scoped insert-link shortcut. This is the first
+  // entry in the previously-empty 'editor' scope, so it populates the ⌘/
+  // shortcuts sheet's Editor group and documents ⌘⇧K. The actual keystroke is
+  // handled by the TipTap EditorLinkShortcut extension (only meaningful with
+  // editor focus); this `run` simply mirrors the open-link event so the palette
+  // entry stays functional. No collision: 'editor' scope was empty, and a
+  // different scope than the global Mod+Shift+L/O/F/N entries.
+  registerShortcut({
+    id: 'editor.insertLink',
+    keys: 'Mod+Shift+K',
+    scope: 'editor',
+    kind: 'action',
+    labelKey: 'shortcut.insertLink',
+    run: () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cairn:editor:open-link'));
+      }
+    },
+  });
+
+  // v0.9.4 P26 #108 — document the two editor suggestion triggers in the ⌘/
+  // shortcuts sheet so the `@` (people) vs `[[`/`@@` (pages) split is
+  // discoverable. These are typed-character triggers, not keystroke handlers,
+  // so `run` is a no-op (the actual behavior lives in the TipTap suggestion
+  // plugins); they appear purely as documentation rows. `keys` carries the
+  // literal trigger glyphs (no `+`, so they never collide with the modifier
+  // shortcuts in this scope).
+  registerShortcut({
+    id: 'editor.mentionPerson',
+    keys: '@',
+    scope: 'editor',
+    kind: 'command',
+    labelKey: 'shortcut.mentionPerson',
+    run: () => {},
+  });
+
+  registerShortcut({
+    id: 'editor.linkPage',
+    keys: '[[',
+    scope: 'editor',
+    kind: 'command',
+    labelKey: 'shortcut.linkPage',
+    run: () => {},
+  });
 }

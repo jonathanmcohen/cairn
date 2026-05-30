@@ -1,7 +1,21 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import type { ReactElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { SharePanel } from '@/components/pages/share-panel';
+import { I18nProvider } from '@/lib/i18n/provider';
+import en from '../../../messages/en.json';
+
+// SharePanel now reads its copy via useT(), so it must render inside a provider.
+// The en value for share.status.rotatedReveal is "Rotated. New password: {password}",
+// which keeps the inline-reveal assertion below matching.
+function renderPanel(ui: React.ReactElement) {
+  return render(
+    <I18nProvider locale="en" messages={en as Record<string, string>}>
+      {ui}
+    </I18nProvider>,
+  );
+}
 
 const fetchSpy = vi.fn();
 const clipboardSpy = vi.fn(async () => undefined);
@@ -39,7 +53,7 @@ afterEach(() => {
 
 describe('<SharePanel> rotate password (v0.9.0 G6 P33)', () => {
   it('PATCHes /api/pages/<id>/share with a fresh password string + copies it', async () => {
-    render(<SharePanel pageId="p1" initialHasPassword={true} />);
+    renderPanel(<SharePanel pageId="p1" initialHasPassword={true} />);
     fireEvent.click(screen.getByRole('button', { name: /rotate password/i }));
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
     const call = fetchSpy.mock.calls[0]!;
@@ -57,7 +71,7 @@ describe('<SharePanel> rotate password (v0.9.0 G6 P33)', () => {
 
   it('falls back to inline reveal when clipboard write fails', async () => {
     clipboardSpy.mockRejectedValueOnce(new Error('blocked'));
-    render(<SharePanel pageId="p1" initialHasPassword={true} />);
+    renderPanel(<SharePanel pageId="p1" initialHasPassword={true} />);
     fireEvent.click(screen.getByRole('button', { name: /rotate password/i }));
     await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
     await waitFor(() => {

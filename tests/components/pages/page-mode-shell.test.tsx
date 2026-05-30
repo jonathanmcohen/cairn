@@ -1,8 +1,24 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render as rtlRender, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PAGE_MODE_STORAGE_KEY, PageModeShell } from '@/components/pages/page-mode-shell';
 import { PageModeToggles } from '@/components/pages/page-mode-toggles';
+import { I18nProvider } from '@/lib/i18n/provider';
+import enMessages from '../../../messages/en.json';
+
+// v0.9.4 #104: PageModeToggles now reads i18n labels via useT(), so every
+// render must sit under an <I18nProvider>. Shadow testing-library's render
+// with a provider-wrapping variant so the existing call sites are unchanged
+// and the button accessible-names resolve to the real en labels the
+// getByRole({ name: /focus mode/i }) queries match against.
+function render(ui: ReactNode) {
+  return rtlRender(
+    <I18nProvider locale="en" messages={enMessages as never}>
+      {ui}
+    </I18nProvider>,
+  );
+}
 
 beforeEach(() => {
   document.documentElement.classList.remove('cairn-focus-mode');
@@ -79,6 +95,33 @@ describe('<PageModeShell>', () => {
     expect(screen.getByRole('button', { name: /reader mode/i }).getAttribute('aria-pressed')).toBe(
       'true',
     );
+  });
+
+  // a8 #17 regression guard — the duplicate top-right control box reopened in
+  // the v0.9.3 deploy (stale build artifact: the image predated c8f4619). The
+  // source is correct and singular; this guard ensures the shell never
+  // re-introduces its own floating toggles slot. With a single <PageModeToggles>
+  // among the children there must be EXACTLY two mode buttons (focus + reader),
+  // never four (which a second mount would produce).
+  it('renders exactly one focus + one reader toggle (no duplicate control box)', () => {
+    render(
+      <PageModeShell>
+        <PageModeToggles />
+        <div data-testid="body" />
+      </PageModeShell>,
+    );
+    expect(screen.getAllByRole('button', { name: /focus mode/i })).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: /reader mode/i })).toHaveLength(1);
+  });
+
+  it('the shell itself renders no mode toggles without an explicit <PageModeToggles> child', () => {
+    render(
+      <PageModeShell>
+        <div data-testid="body" />
+      </PageModeShell>,
+    );
+    expect(screen.queryByRole('button', { name: /focus mode/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /reader mode/i })).toBeNull();
   });
 
   it('removes the focus-mode class on unmount', () => {

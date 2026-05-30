@@ -1,5 +1,7 @@
 import type { Route } from 'next';
+import Link from 'next/link';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
+import { Button } from '@/components/ui/button';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { listWorkspaceMembers } from '@/lib/workspaces/admin-members';
@@ -14,7 +16,12 @@ export default async function AdminMembersPage() {
         section={{ label: 'Workspace', href: '/settings/workspace' as Route }}
         page="Members"
       />
-      <h1 className="mb-4 text-xl font-semibold">Members</h1>
+      <div className="mb-4 flex items-center justify-between gap-4">
+        <h1 className="text-xl font-semibold">Members</h1>
+        <Button asChild variant="outline">
+          <Link href="/settings/workspace/invites">Invite member</Link>
+        </Button>
+      </div>
       <MembersTable workspaceId={ctx.workspaceId} members={members} currentUserId={ctx.userId} />
     </section>
   );

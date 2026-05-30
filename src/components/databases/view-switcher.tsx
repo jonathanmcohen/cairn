@@ -1,10 +1,31 @@
 'use client';
 
+import { Calendar, GalleryThumbnails, GanttChartSquare, List, Plus, Table2 } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useT } from '@/lib/i18n/provider';
 
 export type ViewTab = { id: string; type: string; name: string };
 
 type DateProp = { id: string; name: string };
+
+const VIEW_TYPE_ICON: Record<string, typeof Table2> = {
+  table: Table2,
+  gallery: GalleryThumbnails,
+  list: List,
+  calendar: Calendar,
+  timeline: GanttChartSquare,
+  kanban: Table2, // kanban has no add-button (needs groupBy); icon only for existing tabs
+};
+const ADDABLE_TYPES = ['table', 'gallery', 'list', 'calendar', 'timeline'] as const;
+const DATE_TYPES = new Set(['calendar', 'timeline']);
 
 export function ViewSwitcher({
   databaseId,
@@ -21,6 +42,7 @@ export function ViewSwitcher({
   onChange: (id: string) => void;
   onViewsChanged: () => void;
 }) {
+  const t = useT();
   const [adding, setAdding] = useState(false);
   // Which date-requiring type is mid-add ('calendar' | 'timeline' | null).
   const [pendingType, setPendingType] = useState<'calendar' | 'timeline' | null>(null);
@@ -28,35 +50,47 @@ export function ViewSwitcher({
 
   async function addSimpleView(type: 'table' | 'gallery' | 'list') {
     setAdding(true);
-    await fetch(`/api/databases/${databaseId}/views`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        type,
-        name: type.charAt(0).toUpperCase() + type.slice(1),
-        config: {},
-      }),
-    });
-    setAdding(false);
-    onViewsChanged();
+    try {
+      const res = await fetch(`/api/databases/${databaseId}/views`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type,
+          name: t(`database.view.type.${type}`),
+          config: {},
+        }),
+      });
+      if (!res.ok) return; // leave error UX to a later pass; do not silently "succeed"
+      const view = (await res.json()) as { id: string };
+      onViewsChanged();
+      onChange(view.id);
+    } finally {
+      setAdding(false);
+    }
   }
 
   async function addDateView() {
     if (!pendingType || !pickedDateProp) return;
     setAdding(true);
-    await fetch(`/api/databases/${databaseId}/views`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({
-        type: pendingType,
-        name: pendingType.charAt(0).toUpperCase() + pendingType.slice(1),
-        config: { dateProperty: pickedDateProp },
-      }),
-    });
-    setAdding(false);
-    setPendingType(null);
-    setPickedDateProp('');
-    onViewsChanged();
+    try {
+      const res = await fetch(`/api/databases/${databaseId}/views`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type: pendingType,
+          name: t(`database.view.type.${pendingType}`),
+          config: { dateProperty: pickedDateProp },
+        }),
+      });
+      if (!res.ok) return;
+      const view = (await res.json()) as { id: string };
+      setPendingType(null);
+      setPickedDateProp('');
+      onViewsChanged();
+      onChange(view.id);
+    } finally {
+      setAdding(false);
+    }
   }
 
   function startDateView(type: 'calendar' | 'timeline') {
@@ -67,92 +101,92 @@ export function ViewSwitcher({
   return (
     <div className="flex flex-col gap-1 border-b px-2 py-1">
       <div className="flex items-center gap-1">
-        {views.map((v) => (
-          <button
-            key={v.id}
-            type="button"
-            onClick={() => onChange(v.id)}
-            className={`rounded px-2 py-1 text-sm ${v.id === activeId ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'}`}
-          >
-            {v.name}
-          </button>
-        ))}
+        {views.map((v) => {
+          const Icon = VIEW_TYPE_ICON[v.type] ?? Table2;
+          const active = v.id === activeId;
+          return (
+            <button
+              key={v.id}
+              type="button"
+              aria-current={active ? 'true' : undefined}
+              onClick={() => onChange(v.id)}
+              className={`flex min-h-11 items-center gap-1.5 rounded px-2 py-1 text-sm ${
+                active ? 'bg-accent font-medium' : 'text-muted-foreground hover:bg-accent'
+              }`}
+            >
+              <Icon className="h-4 w-4 opacity-70" aria-hidden="true" />
+              {v.name}
+            </button>
+          );
+        })}
         <div className="ml-auto flex items-center gap-1">
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void addSimpleView('table')}
-            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
+          <Select
+            value=""
+            onValueChange={(next) => {
+              if (DATE_TYPES.has(next)) {
+                startDateView(next as 'calendar' | 'timeline');
+              } else {
+                void addSimpleView(next as 'table' | 'gallery' | 'list');
+              }
+            }}
           >
-            + Table
-          </button>
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void addSimpleView('gallery')}
-            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-          >
-            + Gallery
-          </button>
-          <button
-            type="button"
-            disabled={adding}
-            onClick={() => void addSimpleView('list')}
-            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent"
-          >
-            + List
-          </button>
-          <button
-            type="button"
-            disabled={adding || dateProperties.length === 0}
-            title={dateProperties.length === 0 ? 'Add a date property first' : undefined}
-            onClick={() => startDateView('calendar')}
-            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent disabled:opacity-40"
-          >
-            + Calendar
-          </button>
-          <button
-            type="button"
-            disabled={adding || dateProperties.length === 0}
-            title={dateProperties.length === 0 ? 'Add a date property first' : undefined}
-            onClick={() => startDateView('timeline')}
-            className="rounded px-2 py-1 text-xs text-muted-foreground hover:bg-accent disabled:opacity-40"
-          >
-            + Timeline
-          </button>
+            <SelectTrigger
+              aria-label={t('database.view.add')}
+              disabled={adding}
+              className="h-auto min-h-11 w-auto gap-1.5 border-0 px-2 py-1 text-xs text-muted-foreground shadow-none hover:bg-accent"
+            >
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              <SelectValue placeholder={t('database.view.add')} />
+            </SelectTrigger>
+            <SelectContent>
+              {ADDABLE_TYPES.map((type) => {
+                const dateDisabled = DATE_TYPES.has(type) && dateProperties.length === 0;
+                return (
+                  <SelectItem key={type} value={type} disabled={dateDisabled}>
+                    {t(`database.view.type.${type}`)}
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       </div>
       {pendingType && (
         <div className="flex items-center gap-2 px-1 pb-1 text-xs">
-          <label className="flex items-center gap-2 text-muted-foreground">
-            {pendingType} date property:
-            <select
-              value={pickedDateProp}
-              onChange={(e) => setPickedDateProp(e.target.value)}
-              className="rounded border bg-background px-1 py-0.5"
+          <span className="text-muted-foreground">
+            {t('database.view.dateProperty', { type: pendingType })}
+          </span>
+          <Select value={pickedDateProp} onValueChange={(next) => setPickedDateProp(next)}>
+            <SelectTrigger
+              aria-label={t('database.view.dateProperty', { type: pendingType })}
+              className="h-auto min-h-11 w-auto gap-1.5 px-2 py-1 text-xs"
             >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
               {dateProperties.map((p) => (
-                <option key={p.id} value={p.id}>
+                <SelectItem key={p.id} value={p.id}>
                   {p.name}
-                </option>
+                </SelectItem>
               ))}
-            </select>
-          </label>
-          <button
-            type="button"
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
             disabled={adding || !pickedDateProp}
             onClick={() => void addDateView()}
-            className="rounded bg-accent px-2 py-0.5 font-medium hover:bg-accent/80"
+            className="min-h-11"
           >
-            Add
-          </button>
-          <button
-            type="button"
+            {t('common.add')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
             onClick={() => setPendingType(null)}
-            className="rounded px-2 py-0.5 text-muted-foreground hover:bg-accent"
+            className="min-h-11"
           >
-            Cancel
-          </button>
+            {t('common.cancel')}
+          </Button>
         </div>
       )}
     </div>

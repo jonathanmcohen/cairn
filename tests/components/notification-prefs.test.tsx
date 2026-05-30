@@ -1,0 +1,78 @@
+// @vitest-environment jsdom
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import type { ReactNode } from 'react';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { NotificationPrefs } from '@/components/settings/notification-prefs';
+import { getMessages } from '@/lib/i18n/messages';
+import { I18nProvider } from '@/lib/i18n/provider';
+
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
+function renderWithI18n(ui: ReactNode) {
+  return render(
+    <I18nProvider locale="en" messages={getMessages('en')}>
+      {ui}
+    </I18nProvider>,
+  );
+}
+
+const PREFS = [
+  { notificationType: 'mention', emailEnabled: false, digestOnly: false },
+  { notificationType: 'comment_reply', emailEnabled: false, digestOnly: false },
+];
+
+function mockPrefs(emailEnabled: boolean) {
+  vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+    new Response(JSON.stringify({ prefs: PREFS, emailEnabled }), { status: 200 }),
+  );
+}
+
+describe('<NotificationPrefs> #72 type rows', () => {
+  it('renders a row for each emailable type using i18n labels', async () => {
+    mockPrefs(true);
+    renderWithI18n(<NotificationPrefs />);
+    await waitFor(() => expect(screen.getByText('Mentions')).toBeTruthy());
+    expect(screen.getByText('Comment replies')).toBeTruthy();
+  });
+});
+
+describe('<NotificationPrefs> #73/#74 SMTP-off handling', () => {
+  it('disables email-bearing buttons with a non-color reason and shows a neutral amber banner', async () => {
+    mockPrefs(false);
+    const { container } = renderWithI18n(<NotificationPrefs />);
+
+    // The amber/info banner (NOT red/destructive) is present.
+    const banner = await screen.findByRole('status');
+    expect(banner.className).toContain('bg-amber-50');
+    expect(banner.className).toContain('text-amber-900');
+    expect(banner.className).not.toContain('bg-destructive');
+    expect(banner.className).not.toContain('text-destructive');
+
+    // Email + Daily digest buttons are disabled with a textual reason.
+    const emailBtns = screen.getAllByRole('button', { name: 'Email' });
+    const digestBtns = screen.getAllByRole('button', { name: 'Daily digest' });
+    for (const b of [...emailBtns, ...digestBtns]) {
+      expect((b as HTMLButtonElement).disabled).toBe(true);
+      expect(b.getAttribute('title')).toBeTruthy();
+      expect(b.getAttribute('aria-describedby')).toBe(banner.id);
+    }
+    // In-app only stays enabled (no email).
+    for (const b of screen.getAllByRole('button', { name: 'In-app only' })) {
+      expect((b as HTMLButtonElement).disabled).toBe(false);
+    }
+    expect(container).toBeTruthy();
+  });
+
+  it('enables all buttons and hides the banner when SMTP is configured', async () => {
+    mockPrefs(true);
+    renderWithI18n(<NotificationPrefs />);
+    await waitFor(() => expect(screen.getByText('Mentions')).toBeTruthy());
+    expect(screen.queryByRole('status')).toBeNull();
+    for (const b of screen.getAllByRole('button', { name: 'Email' })) {
+      expect((b as HTMLButtonElement).disabled).toBe(false);
+    }
+  });
+});

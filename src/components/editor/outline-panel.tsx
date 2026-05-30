@@ -3,8 +3,10 @@
 import type { Editor } from '@tiptap/react';
 import { useEffect, useState } from 'react';
 import { collectHeadings, type HeadingEntry } from '@/lib/editor/headings';
+import { useT } from '@/lib/i18n/provider';
 
 export function OutlinePanel({ editor, onClose }: { editor: Editor; onClose?: () => void }) {
+  const t = useT();
   const [headings, setHeadings] = useState<HeadingEntry[]>(() =>
     collectHeadings(editor.state.doc.toJSON()),
   );
@@ -27,24 +29,24 @@ export function OutlinePanel({ editor, onClose }: { editor: Editor; onClose?: ()
 
   return (
     <aside
-      aria-label="Outline"
-      className="sticky top-0 max-h-screen w-56 shrink-0 overflow-y-auto border-s p-3 text-sm"
+      aria-label={t('outline.title')}
+      className="absolute end-0 top-0 z-20 max-h-screen w-56 overflow-y-auto rounded-md border bg-popover p-3 text-sm shadow-md"
     >
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">Outline</span>
+        <span className="text-xs font-medium text-muted-foreground">{t('outline.title')}</span>
         {onClose && (
           <button
             type="button"
             onClick={onClose}
-            className="rounded px-1 text-xs text-muted-foreground hover:bg-accent"
-            aria-label="Hide outline"
+            className="flex min-h-11 min-w-11 items-center justify-center rounded text-xs text-muted-foreground hover:bg-accent"
+            aria-label={t('outline.hide')}
           >
             ✕
           </button>
         )}
       </div>
       {headings.length === 0 ? (
-        <p className="text-muted-foreground">No headings.</p>
+        <p className="text-muted-foreground">{t('outline.empty')}</p>
       ) : (
         <ul className="space-y-0.5">
           {headings.map((h, i) => (

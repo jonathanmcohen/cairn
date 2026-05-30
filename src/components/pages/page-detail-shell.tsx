@@ -17,9 +17,12 @@ export function PageDetailShell({ children }: { children: ReactNode }) {
   // with responsive horizontal padding so it reads as a deliberate text column,
   // and the page region fills the viewport height (`min-h-dvh bg-background`) so
   // the area beside/below the column is part of the page surface, not a bare
-  // void.
+  // void. `relative` makes this the positioning context for the absolutely-
+  // placed TOC rail in page.tsx, so the rail anchors to the centered column
+  // (left-1/2 + translate) rather than floating against the viewport edge and
+  // leaving an orphan whitespace band.
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="relative min-h-dvh bg-background">
       <div ref={rootRef} className="mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8">
         {children}
       </div>

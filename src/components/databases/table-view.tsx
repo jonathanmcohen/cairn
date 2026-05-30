@@ -1,11 +1,14 @@
 'use client';
 
+import { Plus } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
+import { Button } from '@/components/ui/button';
 import type { CalcFn } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
 import { applyRowTemplate, listRowTemplates } from '@/lib/databases/row-templates';
+import { useT } from '@/lib/i18n/provider';
 import { CalcFooterRow } from './calc-footer-row';
 import { CellEditor } from './cell-editor';
 import { columnLayout } from './column-ergonomics';
@@ -99,6 +102,7 @@ function LongPressRow({
 }
 
 export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
+  const t = useT();
   const [adding, setAdding] = useState(false);
   const rowMutateAllowed = useActionAllowed('db-row-mutate');
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
@@ -300,43 +304,61 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
             // empty database still reads as a table (Notion-parity), then show
             // the empty-state hint in the body. Without this the block
             // collapsed to a bare "No rows yet." with no column context.
-            <div className="overflow-x-auto">
-              {/* biome-ignore lint/a11y/useSemanticElements: matches the div-based ARIA grid header used by <VirtualizedRowBody>; a <table> cannot host the windowed body, so the empty header mirrors that shape for consistency. */}
-              <div role="grid">
-                {/* biome-ignore lint/a11y/useFocusableInteractive: header row is a screen-reader landmark; columns carry no sort/resize handles yet, so tabIndex would only confuse focus order. */}
-                {/* biome-ignore lint/a11y/useSemanticElements: <tr> requires a parent <table>; this header mirrors the div-based ARIA grid in <VirtualizedRowBody> so the empty and populated states share one shape. */}
-                <div
-                  data-virtual-header
-                  className="flex bg-card text-xs font-medium uppercase tracking-wide text-muted-foreground"
-                  role="row"
+            <div>
+              <div className="flex items-center justify-between gap-2 px-3 py-2">
+                <span className="text-xs text-muted-foreground">
+                  {t('database.rowCount', { count: rows.length })}
+                </span>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => void addRow()}
+                  disabled={adding || !rowMutateAllowed}
+                  title={rowMutateAllowed ? undefined : 'Unavailable offline'}
+                  className="min-h-11"
                 >
-                  {columns.map((c) => (
-                    // biome-ignore lint/a11y/useFocusableInteractive: columnheader is a landmark role, not user-interactive here.
-                    // biome-ignore lint/a11y/useSemanticElements: <th> is forbidden outside a <table>; this header lives in a div-based ARIA grid.
-                    <div
-                      key={c.id}
-                      role="columnheader"
-                      className="border-b px-3 py-2"
-                      style={{
-                        width: c.width,
-                        minWidth: c.width,
-                        ...(c.frozen && c.insetInlineStart !== null
-                          ? {
-                              position: 'sticky',
-                              insetInlineStart: `${c.insetInlineStart}px`,
-                              zIndex: 3,
-                              background: 'inherit',
-                            }
-                          : null),
-                      }}
-                    >
-                      {c.prop.name}
-                    </div>
-                  ))}
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                  {t('database.addRow')}
+                </Button>
+              </div>
+              <div className="overflow-x-auto">
+                {/* biome-ignore lint/a11y/useSemanticElements: matches the div-based ARIA grid header used by <VirtualizedRowBody>; a <table> cannot host the windowed body, so the empty header mirrors that shape for consistency. */}
+                <div role="grid">
+                  {/* biome-ignore lint/a11y/useFocusableInteractive: header row is a screen-reader landmark; columns carry no sort/resize handles yet, so tabIndex would only confuse focus order. */}
+                  {/* biome-ignore lint/a11y/useSemanticElements: <tr> requires a parent <table>; this header mirrors the div-based ARIA grid in <VirtualizedRowBody> so the empty and populated states share one shape. */}
+                  <div
+                    data-virtual-header
+                    className="flex bg-card text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    role="row"
+                  >
+                    {columns.map((c) => (
+                      // biome-ignore lint/a11y/useFocusableInteractive: columnheader is a landmark role, not user-interactive here.
+                      // biome-ignore lint/a11y/useSemanticElements: <th> is forbidden outside a <table>; this header lives in a div-based ARIA grid.
+                      <div
+                        key={c.id}
+                        role="columnheader"
+                        className="border-b px-3 py-2"
+                        style={{
+                          width: c.width,
+                          minWidth: c.width,
+                          ...(c.frozen && c.insetInlineStart !== null
+                            ? {
+                                position: 'sticky',
+                                insetInlineStart: `${c.insetInlineStart}px`,
+                                zIndex: 3,
+                                background: 'inherit',
+                              }
+                            : null),
+                        }}
+                      >
+                        {c.prop.name}
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
               <div className="px-3 py-4 text-center text-sm text-muted-foreground">
-                No rows yet — add one with + New row.
+                {t('database.emptyHint')}
               </div>
             </div>
           ) : (

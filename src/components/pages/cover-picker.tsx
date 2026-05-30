@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
 import { UnsplashTab } from './cover-picker-unsplash-tab';
 
@@ -44,6 +45,7 @@ export type CoverPickerProps = {
 };
 
 export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPickerProps) {
+  const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<TabKey>('color');
@@ -89,30 +91,30 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={() => setOpen(true)}>
-        {'kind' in current ? 'Change cover' : 'Add cover'}
+      <Button variant="ghost" size="sm" className="min-h-11" onClick={() => setOpen(true)}>
+        {'kind' in current ? t('cover.change') : t('cover.add')}
       </Button>
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[15vh]">
           <button
             type="button"
-            aria-label="Close cover picker"
+            aria-label={t('cover.close')}
             className="fixed inset-0 bg-black/30"
             onClick={() => setOpen(false)}
           />
           <div
             role="dialog"
-            aria-label="Page cover"
+            aria-label={t('cover.dialogTitle')}
             className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
           >
             <div className="border-b px-4 py-3">
-              <h2 className="text-sm font-medium">Page cover</h2>
+              <h2 className="text-sm font-medium">{t('cover.dialogTitle')}</h2>
             </div>
             <div className="px-4 pt-2">
               <div role="tablist" className="flex gap-1 border-b">
-                {tabBtn('color', 'Color')}
-                {unsplashKey && tabBtn('unsplash', 'Unsplash')}
-                {tabBtn('upload', 'Upload')}
+                {tabBtn('color', t('cover.tab.color'))}
+                {unsplashKey && tabBtn('unsplash', t('cover.tab.unsplash'))}
+                {tabBtn('upload', t('cover.tab.upload'))}
               </div>
             </div>
             <div className="space-y-3 p-4">
@@ -126,13 +128,13 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                         className="h-8 w-8 rounded border-2 border-transparent hover:border-foreground"
                         style={{ backgroundColor: hex }}
                         onClick={() => void save({ kind: 'color', value: hex })}
-                        aria-label={`Use ${hex}`}
+                        aria-label={t('cover.useColor', { hex })}
                       />
                     ))}
                   </div>
                   <div className="flex items-center gap-2">
                     <Label htmlFor="cover-hex" className="w-24">
-                      Custom hex
+                      {t('cover.customHex')}
                     </Label>
                     <Input
                       id="cover-hex"

@@ -12,6 +12,7 @@ import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BulkUploader } from './bulk-uploader';
 import { DragHandle } from './drag-handle';
+import { EditorBubbleMenu } from './editor-bubble-menu';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
 import { composeGalleryInsert } from './image-extension';
@@ -69,6 +70,18 @@ const STATUS_DOT = {
   error: 'bg-destructive',
 } as const;
 
+// #123 — class applied to the .ProseMirror contenteditable. We suppress BOTH
+// `:focus` and `:focus-visible` outlines on this one surface. The global
+// `:focus-visible { outline: 2px solid hsl(var(--ring)) }` (globals.css) exists
+// for discrete controls (buttons/inputs/links) per WCAG 2.4.7, but on this
+// 50vh-tall writing surface it painted the accent ring around the whole editor
+// viewport — orange under the amber accent, red under rose — which read as a
+// stuck error glow after slash-menu teardown returned keyboard-style focus.
+// The caret is this surface's focus affordance, so dropping its outline is
+// correct and does not regress real control focus rings elsewhere.
+export const EDITOR_CONTENT_CLASS =
+  'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden focus-visible:outline-hidden min-h-[50vh]';
+
 export function Editor({
   pageId,
   workspaceId,
@@ -98,6 +111,16 @@ export function Editor({
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // #117 — the EditorLinkShortcut extension (and the ⌘/ sheet registry entry)
+  // dispatch a `cairn:editor:open-link` window event when the user presses the
+  // insert-link shortcut. Bumping this counter lets <EditorBubbleMenu> open its
+  // link input without holding React state inside the ProseMirror extension.
+  const [openLinkSignal, setOpenLinkSignal] = useState(0);
+  useEffect(() => {
+    const onOpen = () => setOpenLinkSignal((n) => n + 1);
+    window.addEventListener('cairn:editor:open-link', onOpen);
+    return () => window.removeEventListener('cairn:editor:open-link', onOpen);
+  }, []);
   // Suggestion mode (editor+ only). `activeSuggestionId` is the open proposal
   // that new insert/delete marks attach to while suggesting; `resolvable` is the
   // suggestionId under the current selection (drives the Accept/Reject buttons).
@@ -193,8 +216,7 @@ export function Editor({
           immediatelyRender: false,
           editorProps: {
             attributes: {
-              class:
-                'prose prose-sm sm:prose-base dark:prose-invert max-w-none focus:outline-hidden min-h-[50vh]',
+              class: EDITOR_CONTENT_CLASS,
               // axe `aria-input-field-name`: the ProseMirror contenteditable is
               // tabbable + editable, and recent axe-core builds (4.10+) map a
               // tabbable `[contenteditable=true]` to an implicit ARIA textbox.
@@ -419,6 +441,24 @@ export function Editor({
     setOpenCount((c) => c + 1);
   }, [suggestionMode, pageId]);
 
+  // #98 — jump to the first open suggestion: find the first rendered
+  // suggestion mark (`[data-suggestion-id]`) in the editor DOM, scroll it into
+  // view, and move the ProseMirror selection there so keyboard focus follows.
+  const jumpToFirstOpenSuggestion = useCallback(() => {
+    const ed = editorRef.current;
+    if (!ed) return;
+    const root = ed.view.dom as HTMLElement;
+    const el = root.querySelector<HTMLElement>('[data-suggestion-id]');
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const pos = ed.view.posAtDOM(el, 0);
+    if (pos >= 0) {
+      ed.chain().focus().setTextSelection(pos).run();
+    } else {
+      ed.commands.focus();
+    }
+  }, []);
+
   const markSelection = useCallback(
     (kind: 'insert' | 'delete') => {
       const ed = editorRef.current;
@@ -472,11 +512,18 @@ export function Editor({
 
   return (
     <div className="relative">
-      {/* a30 #39 — top control strip: thin separators divide the logical
-          groups (suggest-edits / presence+status / outline) and toggles carry
-          explicit active states so the bar reads as distinct controls rather
-          than a row of bare labels. Presentation only — handlers/state are
-          unchanged. */}
+      {/* a30 #39 (round-2 styling) — top control strip. Thin `h-4 w-px bg-border`
+          separators divide the logical groups (suggest-edits / presence+status /
+          outline) and the toggles carry explicit active states (aria-pressed +
+          bg-primary fill) so the bar reads as distinct, structured controls
+          rather than a row of bare labels — IN EVERY ROLE. The
+          presence+status+outline group always renders (editor AND viewer); only
+          the suggest-edits group is gated on `effectiveEditable`, and its
+          trailing separator lives INSIDE that gate so it never dangles when a
+          viewer omits the group. The status pill rests as a hairline-bordered
+          chip (no `bg-muted` fill, which read as an active/selected state at
+          rest). Styling only — handlers/state are unchanged, and the
+          interactivity changes for these controls are owned by the -23- plan. */}
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {effectiveEditable && (
           <>
@@ -490,13 +537,14 @@ export function Editor({
               resolvable={resolvable}
               onAccept={(id) => void resolve('accept', id)}
               onReject={(id) => void resolve('reject', id)}
+              onJumpToFirstOpen={jumpToFirstOpenSuggestion}
             />
             <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
           </>
         )}
         <PresenceAvatars users={presentUsers} />
         <span
-          className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-foreground text-xs"
+          className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
           title={STATUS_LABEL[status]}
         >
           <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
@@ -519,12 +567,21 @@ export function Editor({
       <div className="flex gap-4">
         <div className="relative min-w-0 flex-1">
           {editor && <DragHandle editor={editor} />}
+          {/* #116 — inline formatting bubble menu. Only the editable, collab-
+              bound editor gets it (viewers / reader-mode never see formatting
+              controls). It surfaces on text selection; see shouldShow. */}
+          {editor && effectiveEditable && (
+            <EditorBubbleMenu editor={editor} openLinkSignal={openLinkSignal} />
+          )}
           <EditorContent editor={editor} />
         </div>
-        {editor && outlineOpen && (
-          <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
-        )}
       </div>
+      {/* P19 #80 — the outline is an overlay flyout anchored to the outer
+          `relative` wrapper, not an in-flow column, so the editor body keeps
+          full width and a page with few headings doesn't waste a 14rem column. */}
+      {editor && outlineOpen && (
+        <OutlinePanel editor={editor} onClose={() => setOutlineOpen(false)} />
+      )}
       <BulkUploader
         open={bulk.open}
         files={bulk.files}

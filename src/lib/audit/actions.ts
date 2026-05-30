@@ -55,6 +55,7 @@ export const AUDIT_ACTIONS = [
   'mfa.passkey_used',
   'mfa.stepup_required',
   'mfa.policy_changed',
+  'mfa.recovery_codes_regenerated',
   // v0.9.0 G2 P11 — Spaces CRUD + per-space membership.
   'space.created',
   'space.updated',

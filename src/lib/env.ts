@@ -126,6 +126,13 @@ const Schema = z.object({
   // SHOULD use much longer values stored in a secret manager. See
   // docs/operations.md § "Encrypted backup passphrase rotation".
   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE: z.string().min(8).optional(),
+  // v0.9.4 P17 #66 — gate for the workspace "Require 2FA" control. The
+  // `workspaces.require_2fa` column + settings API field exist, but NOTHING
+  // reads the flag at sign-in yet — enforcement is unimplemented. Shipping a
+  // no-op security toggle is misleading, so the UI is hidden until an operator
+  // opts in by setting this true (intended to flip on once sign-in enforcement
+  // lands, with no further code change). Default OFF.
+  CAIRN_ENFORCE_2FA: z.coerce.boolean().default(false),
 });
 
 export type Env = z.infer<typeof Schema>;

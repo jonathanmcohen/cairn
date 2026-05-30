@@ -4,7 +4,25 @@ import * as schema from '@/db/schema';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
-/** The notification types that can have per-workspace email preferences. */
+/**
+ * The notification types that can have per-workspace, per-type email
+ * preferences. This is intentionally a SUBSET of `notifications.type` (which
+ * also has `reminder`, `flashcards_due`, `upgrade_available`).
+ *
+ * #72 decision — only the types whose per-event send path actually consults
+ * the per-type pref belong here:
+ *   - `mention`, `comment_reply` — created via `notifications/create.ts`, which
+ *     fires `sendNotificationEmail()` → reads `getEmailPref(...)` per type.
+ *     KEEP (real per-type pref).
+ *   - `reminder` (reminders/scan.ts) and `flashcards_due` (flashcards/notify-due.ts)
+ *     insert notification rows DIRECTLY, bypassing `sendNotificationEmail`, so a
+ *     per-type email toggle would be a dead control. They only surface over email
+ *     via the daily digest, which is gated by the user-level `digestOnly` flag,
+ *     not a per-type pref. OMIT (no per-type email pathway).
+ *   - `upgrade_available` — admin/release-watch notification targeting owners via
+ *     a different path. OMIT from per-user email prefs.
+ * Exposing only the emailable subset avoids showing unwired toggles.
+ */
 export const NOTIFICATION_TYPES = ['mention', 'comment_reply'] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 

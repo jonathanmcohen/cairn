@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export type MentionItem = {
   id: string;
@@ -8,6 +9,18 @@ export type MentionItem = {
   email: string;
   image: string | null;
 };
+
+// Kept in sync with presence-avatars.tsx#initials — a 6-line pure helper; not
+// abstracted into a shared module on purpose (avoids an import dependency from
+// the detached ReactRenderer mount).
+function initials(name: string): string {
+  return name
+    .split(/\s+/)
+    .map((p) => p[0] ?? '')
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+}
 
 export type MentionListRef = {
   onKeyDown: (event: KeyboardEvent) => boolean;
@@ -21,8 +34,18 @@ export type MentionListRef = {
  */
 export const MentionList = forwardRef<
   MentionListRef,
-  { items: MentionItem[]; command: (item: MentionItem) => void }
->(function MentionList({ items, command }, ref) {
+  {
+    items: MentionItem[];
+    command: (item: MentionItem) => void;
+    /**
+     * v0.9.4 P26 #108 — trigger-clarity footer ("@ for people · [[ for pages").
+     * Passed in (already translated) by the suggestion extension because this
+     * component mounts via ReactRenderer detached from the <I18nProvider> tree,
+     * so `useT()` can't resolve here. Optional so existing call sites/tests work.
+     */
+    hint?: string;
+  }
+>(function MentionList({ items, command, hint }, ref) {
   const [index, setIndex] = useState(0);
   const listId = useId();
 
@@ -51,10 +74,19 @@ export const MentionList = forwardRef<
     },
   }));
 
+  // v0.9.4 P26 #108 — footer hint is aria-hidden so it doesn't pollute the
+  // aria-activedescendant option set; it is a purely visual affordance.
+  const footer = hint ? (
+    <div className="border-t px-3 py-1.5 text-xs text-muted-foreground" aria-hidden>
+      {hint}
+    </div>
+  ) : null;
+
   if (items.length === 0) {
     return (
-      <div className="rounded-md border bg-popover p-2 text-sm text-muted-foreground shadow-md">
-        No members
+      <div className="w-64 rounded-md border bg-popover shadow-md">
+        <div className="p-2 text-sm text-muted-foreground">No members</div>
+        {footer}
       </div>
     );
   }
@@ -85,16 +117,25 @@ export const MentionList = forwardRef<
               type="button"
               tabIndex={-1}
               onClick={() => command(item)}
-              className={`block w-full px-3 py-1.5 text-left text-sm hover:bg-accent ${
+              className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent ${
                 i === index ? 'bg-accent' : ''
               }`}
             >
-              <div className="font-medium">{item.name}</div>
-              <div className="text-xs text-muted-foreground">{item.email}</div>
+              {/* Decorative: the row already announces name + email, so the
+                  avatar is aria-hidden / alt="" to avoid a double announcement. */}
+              <Avatar size="sm" aria-hidden>
+                {item.image ? <AvatarImage src={item.image} alt="" /> : null}
+                <AvatarFallback>{initials(item.name)}</AvatarFallback>
+              </Avatar>
+              <span className="min-w-0">
+                <span className="block truncate font-medium">{item.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">{item.email}</span>
+              </span>
             </button>
           </div>
         ))}
       </div>
+      {footer}
     </div>
   );
 });

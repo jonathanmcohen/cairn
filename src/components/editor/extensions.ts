@@ -30,6 +30,7 @@ import { SimpleTable } from './blocks/table';
 import { Toggle } from './blocks/toggle';
 import { VideoBlock } from './blocks/video';
 import { DatabaseNode } from './database-extension';
+import { EditorLinkShortcut } from './editor-link-shortcut';
 import { FileAttachment } from './file-extension';
 import { CairnImage } from './image-extension';
 import { SuggestionDelete } from './marks/suggestion-delete';
@@ -57,6 +58,15 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
       // a fourth nesting level. Keyboard shortcuts (Ctrl/Cmd-Alt-4) become
       // available automatically.
       heading: { levels: [1, 2, 3, 4] },
+      // v0.9.4 P29 #116/#117: keep StarterKit's Link mark but stop the editable
+      // surface from navigating on click (so a click places the caret for
+      // editing) and autolink pasted URLs. The `cairn-editor-link` class styles
+      // the anchor in both themes (see code-highlight.css).
+      link: {
+        openOnClick: false,
+        autolink: true,
+        HTMLAttributes: { rel: 'noopener noreferrer nofollow', class: 'cairn-editor-link' },
+      },
       ...(undoRedo ? {} : { undoRedo: false as const }),
     }),
     // v0.9.2 P09 — extended code block: a React NodeView adds a themed language
@@ -106,6 +116,11 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     SuggestionDelete,
     SuggestionBlock,
     SlashCommand,
+    // v0.9.4 P29 #117 — keymap-only extension: Mod+Shift+K always opens the
+    // link input; Mod+K opens it only with a ranged selection (else bubbles to
+    // the ⌘K palette). Present in the collab path too since collabExtensions()
+    // spreads baseExtensions().
+    EditorLinkShortcut,
     MentionExtension,
     PageLink,
     PageMention,
@@ -205,6 +220,8 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     `src` is a transient post-resign attr; peer collaborators
  *                     can carry it but each re-derives a signed URL at view
  *                     time. No node-local mutable state. v0.8.0 P24.            SAFE
+ *  - cairnLinkShortcut — keymap-only Extension (no node/mark, no schema, no
+ *                        node-local state); dispatches a window CustomEvent. SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {

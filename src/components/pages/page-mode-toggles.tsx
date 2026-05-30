@@ -2,6 +2,7 @@
 
 import { Eye, Maximize2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/provider';
 import { usePageMode } from './page-mode-shell';
 
 /**
@@ -11,11 +12,24 @@ import { usePageMode } from './page-mode-shell';
  * control — focus and reader are independently composable (a viewer can read a
  * doc with full chrome, or focus an editable doc without reader-mode).
  *
- * a11y: both buttons are `aria-pressed` toggle buttons and pad to 44x44 min
- * to satisfy the WCAG touch-target gate from the v0.6 a11y sweep.
+ * v0.9.4 #104: i18n'd labels + native-title tooltips, and a stronger pressed
+ * state — the active toggle keeps the solid `default` variant AND gains a
+ * focus-ring-colored 2px ring (driven by the `aria-pressed:` Tailwind variant)
+ * so the on/off distinction is obvious at a glance (the prior `default` vs
+ * `outline` swap alone read as too subtle). Ring + fill = redundant cues.
+ *
+ * a11y: both are `aria-pressed` toggle buttons with an explicit `aria-label`
+ * (the accessible name) plus a `title` (the hover tooltip), and pad to 44x44
+ * min to satisfy the WCAG 2.5.5 touch-target gate. The ring meets WCAG 1.4.11
+ * non-text contrast for the state indicator.
  */
 export function PageModeToggles() {
   const { focus, reader, setFocus, setReader } = usePageMode();
+  const t = useT();
+  // aria-pressed-driven ring: only paints when the button is pressed, so the
+  // class can live statically on both toggles regardless of current state.
+  const pressedRing =
+    'aria-pressed:ring-2 aria-pressed:ring-ring aria-pressed:ring-offset-1 aria-pressed:ring-offset-background';
   return (
     <>
       <Button
@@ -23,9 +37,9 @@ export function PageModeToggles() {
         variant={focus ? 'default' : 'outline'}
         size="icon"
         aria-pressed={focus}
-        aria-label="Focus mode"
-        title="Focus mode (hide sidebar + header + comments)"
-        className="min-h-[44px] min-w-[44px]"
+        aria-label={t('pageMode.focus')}
+        title={t('pageMode.focusHint')}
+        className={`min-h-[44px] min-w-[44px] ${pressedRing}`}
         onClick={() => setFocus(!focus)}
       >
         <Maximize2 className="h-4 w-4" />
@@ -35,9 +49,9 @@ export function PageModeToggles() {
         variant={reader ? 'default' : 'outline'}
         size="icon"
         aria-pressed={reader}
-        aria-label="Reader mode"
-        title="Reader mode (read-only prose view)"
-        className="min-h-[44px] min-w-[44px]"
+        aria-label={t('pageMode.reader')}
+        title={t('pageMode.readerHint')}
+        className={`min-h-[44px] min-w-[44px] ${pressedRing}`}
         onClick={() => setReader(!reader)}
       >
         <Eye className="h-4 w-4" />

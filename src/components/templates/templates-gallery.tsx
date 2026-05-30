@@ -1,5 +1,6 @@
 'use client';
 
+import { ChevronRight, Database, FileText } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -122,17 +123,22 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
             >
               {v}
             </h2>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
               {rows.map((t) => (
                 <Card key={t.id} className="flex flex-col">
                   <CardHeader>
                     <CardTitle className="text-base">{t.name}</CardTitle>
                     <div className="mt-1 flex flex-wrap gap-1.5">
-                      <span className="rounded border px-1.5 py-0.5 text-xs text-muted-foreground">
+                      <span className="inline-flex items-center gap-1 rounded border border-transparent bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                        {t.kind === 'database' ? (
+                          <Database aria-hidden className="size-3" />
+                        ) : (
+                          <FileText aria-hidden className="size-3" />
+                        )}
                         {t.kind}
                       </span>
                       {t.builtIn ? (
-                        <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+                        <span className="rounded border border-transparent bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                           Built-in
                         </span>
                       ) : null}
@@ -145,8 +151,14 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                   </CardHeader>
                   <CardContent className="mt-auto flex flex-col gap-2">
                     {t.builtIn && BUILT_IN_DESCRIPTIONS[t.name] ? (
-                      <details className="text-xs text-muted-foreground">
-                        <summary className="cursor-pointer select-none">Preview</summary>
+                      <details className="group text-xs text-muted-foreground">
+                        <summary className="flex cursor-pointer list-none select-none items-center gap-1 [&::-webkit-details-marker]:hidden">
+                          <ChevronRight
+                            aria-hidden
+                            className="size-3.5 shrink-0 transition-transform group-open:rotate-90"
+                          />
+                          Preview
+                        </summary>
                         <p className="mt-1">{BUILT_IN_DESCRIPTIONS[t.name]}</p>
                       </details>
                     ) : null}

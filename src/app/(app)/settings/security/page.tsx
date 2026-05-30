@@ -1,5 +1,7 @@
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
+import { PasskeysCard } from '@/components/security/passkeys-card';
+import { SessionsCard } from '@/components/security/sessions-card';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { auth } from '@/lib/auth/config';
@@ -18,6 +20,8 @@ export default async function SecuritySettingsPage() {
       />
       <h1 className="font-semibold text-2xl">Security</h1>
       <TwoFactorCard initiallyEnabled={enabled} />
+      <PasskeysCard />
+      <SessionsCard />
     </main>
   );
 }

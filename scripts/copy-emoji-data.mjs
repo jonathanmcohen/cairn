@@ -17,4 +17,5 @@ const dest = join(destDir, 'emoji-data.json');
 
 mkdirSync(destDir, { recursive: true });
 copyFileSync(src, dest);
+// biome-ignore lint/suspicious/noConsole: build-time script status output
 console.log(`[copy-emoji-data] ${src} -> ${dest}`);
