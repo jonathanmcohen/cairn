@@ -30,11 +30,12 @@ function renderTable(rows: unknown[]) {
 
 afterEach(cleanup);
 
-describe('<TableView> empty state (#100)', () => {
-  it('shows a "0 rows" count and a top-level Add row button when empty', () => {
+describe('<TableView> empty state (#100, #144)', () => {
+  it('shows a "0 rows" count and an "Add your first row" CTA when empty', () => {
     renderTable([]);
     expect(screen.getByText('0 rows')).toBeTruthy();
-    // primary CTA in the empty state (distinct from the bottom "+ New row")
-    expect(screen.getByRole('button', { name: 'Add row' })).toBeTruthy();
+    // v0.9.6 #144: the empty state leads with a single "Add your first row" CTA
+    // (the redundant top-level "Add row" button was removed).
+    expect(screen.getByRole('button', { name: 'Add your first row' })).toBeTruthy();
   });
 });
