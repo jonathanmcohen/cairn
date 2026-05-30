@@ -230,6 +230,113 @@ export async function finishAssertion(input: FinishAssertionInput): Promise<Fini
   return { ok: true, credentialId: cred.credentialId };
 }
 
+export type BeginLoginAssertionInput = { email: string; db?: Db };
+export type BeginLoginAssertionOutput = {
+  options: PublicKeyCredentialRequestOptionsJSON;
+  expectedChallenge: string;
+};
+
+/**
+ * v0.9.6 G8 — unauthenticated login ceremony start.
+ *
+ * Resolves the user by lower-cased email, then builds the assertion options
+ * from THAT user's credentials. Returns null (never throws) when the email is
+ * unknown or the user has no passkeys, so the route can answer identically in
+ * both cases (no account enumeration). The challenge round-trips via an
+ * httpOnly cookie the route sets — never the response body the client controls.
+ */
+export async function beginLoginAssertion(
+  input: BeginLoginAssertionInput,
+): Promise<BeginLoginAssertionOutput | null> {
+  const { rpId } = requireRpEnv();
+  const db = input.db ?? getDb();
+  const [user] = await db
+    .select({ id: schema.users.id })
+    .from(schema.users)
+    .where(eq(schema.users.email, input.email.toLowerCase()))
+    .limit(1);
+  if (!user) return null;
+  const allowList = await db
+    .select({
+      credentialId: schema.userWebauthnCredentials.credentialId,
+      transports: schema.userWebauthnCredentials.transports,
+    })
+    .from(schema.userWebauthnCredentials)
+    .where(eq(schema.userWebauthnCredentials.userId, user.id));
+  if (allowList.length === 0) return null;
+  const options = await generateAuthenticationOptions({
+    rpID: rpId,
+    allowCredentials: allowList.map((c) => ({
+      id: c.credentialId,
+      transports: (c.transports ?? undefined) as AuthenticatorTransportFuture[] | undefined,
+    })),
+    userVerification: 'preferred',
+  });
+  return { options, expectedChallenge: options.challenge };
+}
+
+export type FinishLoginAssertionInput = {
+  response: AuthenticationResponseJSON;
+  expectedChallenge: string;
+  db?: Db;
+};
+
+export type FinishLoginAssertionResult =
+  | { ok: true; userId: string; credentialId: string }
+  | { ok: false; error: string };
+
+/**
+ * v0.9.6 G8 — unauthenticated login ceremony finish.
+ *
+ * Looks the credential up by the asserted id, verifies the signature against
+ * its stored public key, bumps the anti-cloning sign-count, and returns the
+ * OWNING user's id. The caller (the `passkey` Credentials provider) trusts the
+ * returned userId to mint a session — there is no separate password check, so
+ * the cryptographic verify IS the authentication.
+ */
+export async function finishLoginAssertion(
+  input: FinishLoginAssertionInput,
+): Promise<FinishLoginAssertionResult> {
+  const { rpId, rpOrigin } = requireRpEnv();
+  const db = input.db ?? getDb();
+  const [cred] = await db
+    .select()
+    .from(schema.userWebauthnCredentials)
+    .where(eq(schema.userWebauthnCredentials.credentialId, input.response.id))
+    .limit(1);
+  if (!cred) return { ok: false, error: 'unknown credential' };
+
+  let verification: Awaited<ReturnType<typeof verifyAuthenticationResponse>>;
+  try {
+    verification = await verifyAuthenticationResponse({
+      response: input.response,
+      expectedChallenge: input.expectedChallenge,
+      expectedOrigin: rpOrigin,
+      expectedRPID: rpId,
+      credential: {
+        id: cred.credentialId,
+        publicKey: new Uint8Array(cred.publicKey),
+        counter: Number(cred.signCount),
+        transports: (cred.transports ?? undefined) as AuthenticatorTransportFuture[] | undefined,
+      },
+      requireUserVerification: false,
+    });
+  } catch (err) {
+    console.error('[webauthn] verifyAuthenticationResponse (login) threw', err);
+    return { ok: false, error: 'verification failed' };
+  }
+  if (!verification.verified) return { ok: false, error: 'verification failed' };
+
+  await db
+    .update(schema.userWebauthnCredentials)
+    .set({
+      signCount: verification.authenticationInfo.newCounter,
+      lastUsedAt: new Date(),
+    })
+    .where(eq(schema.userWebauthnCredentials.credentialId, cred.credentialId));
+  return { ok: true, userId: cred.userId, credentialId: cred.credentialId };
+}
+
 /** True iff the user has at least one registered passkey. */
 export async function userHasWebauthnCredential(db: Db, userId: string): Promise<boolean> {
   const [row] = await db
