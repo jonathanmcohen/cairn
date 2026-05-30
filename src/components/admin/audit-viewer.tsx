@@ -189,8 +189,8 @@ function buildQuery(f: Filters, cursor: string | null): string {
   const p = new URLSearchParams();
   if (f.action) p.set('action', f.action);
   if (f.targetType) p.set('targetType', f.targetType);
-  // `<input type="date">` returns yyyy-mm-dd; widen to a full ISO instant so
-  // the backend's z.string().datetime() validator accepts it.
+  // DateField emits yyyy-mm-dd; widen to a full ISO instant so the backend's
+  // z.string().datetime() validator accepts it.
   if (f.from) p.set('from', `${f.from}T00:00:00.000Z`);
   if (f.to) p.set('to', `${f.to}T00:00:00.000Z`);
   if (cursor) p.set('cursor', cursor);
