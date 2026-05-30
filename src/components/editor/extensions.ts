@@ -31,7 +31,7 @@ import { Toggle } from './blocks/toggle';
 import { VideoBlock } from './blocks/video';
 import { DatabaseNode } from './database-extension';
 import { EditorLinkShortcut } from './editor-link-shortcut';
-import { FileAttachment } from './file-extension';
+import { FileAttachmentWithView } from './file-extension';
 import { CairnImageWithView } from './image-extension';
 import { SuggestionDelete } from './marks/suggestion-delete';
 import { SuggestionInsert } from './marks/suggestion-insert';
@@ -82,7 +82,7 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     Column,
     SimpleTable,
     CairnImageWithView,
-    FileAttachment,
+    FileAttachmentWithView,
     DatabaseNode,
     TableOfContents,
     EmbedNode,

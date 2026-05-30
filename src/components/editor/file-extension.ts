@@ -1,4 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { ReactNodeViewRenderer } from '@tiptap/react';
+import { FileView } from './blocks/file-view';
 
 export const FileAttachment = Node.create({
   name: 'fileAttachment',
@@ -54,3 +56,10 @@ declare module '@tiptap/core' {
     };
   }
 }
+
+/** Client extension: the `fileAttachment` atom + its empty-state node-view. */
+export const FileAttachmentWithView = FileAttachment.extend({
+  addNodeView() {
+    return ReactNodeViewRenderer(FileView);
+  },
+});
