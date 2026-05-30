@@ -415,3 +415,27 @@ ciphertext)`. No partial plaintext lands on disk.
   inside the DB; the envelope protects the entire `.dump` (which
   contains the ciphertext rows AND every other table) at rest on disk.
   Both can coexist for defense-in-depth.
+
+## Collaboration auth (shared AUTH_SECRET)
+
+The `cairn` app and the `cairn-collab` real-time service form a single trust
+domain joined by **one shared secret: `AUTH_SECRET`**. The app mints a collab
+token via `mintCollabToken` (HMAC-SHA256 over `{userId, pageId, role, exp}`,
+5-minute TTL) at `/api/collab/token`; `cairn-collab`'s `onAuthenticate` verifies
+it with `authorizeCollab` using the same secret. There is intentionally **no
+separate collab secret** (no `HOCUSPOCUS_SECRET`) — one secret to rotate, one
+to keep in sync.
+
+Operational consequences:
+
+- **Keep `AUTH_SECRET` identical** across both services. In the shipped
+  `docker-compose.yml` both read `${AUTH_SECRET}` from `.env`; if you template
+  the secret per-service (e.g. a secrets manager), inject the same value into
+  both.
+- **Rotating `AUTH_SECRET`** invalidates all in-flight collab tokens (TTL ≤ 5
+  min) and all app sessions. Restart both services together; live editors
+  reconnect within a few seconds.
+- **Diagnosing rejections**: `cairn-collab` logs
+  `reason=bad-sig|expired|page-mismatch|malformed` with the decoded (untrusted)
+  `tokenPageId`/`exp` — never the secret or the raw token. `bad-sig` almost
+  always means the two services' secrets drifted.

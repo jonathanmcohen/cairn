@@ -249,6 +249,32 @@ Swap `--target docusaurus` for a Docusaurus site (with i18n routing for
 translated pages). Workspaces containing encrypted pages are refused — export
 is public-share-equivalent and must not leak ciphertext.
 
+### Troubleshooting: collaboration won't connect ("Unauthorized")
+
+Real-time editing runs in a separate `cairn-collab` service. The app mints a
+short-lived, HMAC-signed collab token; `cairn-collab` verifies it. **Both
+services sign and verify with the same `AUTH_SECRET`** — there is no separate
+`HOCUSPOCUS_SECRET`. If the two containers have different `AUTH_SECRET` values,
+every connection is rejected and the editor silently falls back to local-only
+edits.
+
+Since v0.9.6 the collab service logs the reason on each rejection, e.g.:
+
+```
+cairn-collab: rejected connect reason=bad-sig document=<page-id> tokenPageId=<page-id> exp=<unix>
+```
+
+- `reason=bad-sig` → the secrets don't match. Set the **identical** `AUTH_SECRET`
+  on both `cairn` and `cairn-collab` and restart both. In `docker-compose.yml`
+  both services already read `AUTH_SECRET: ${AUTH_SECRET}` from your `.env`, so a
+  mismatch only happens if you override one of them.
+- `reason=expired` → the token TTL (5 min) elapsed before connect; usually a
+  severe clock skew between the app host and the collab host — sync clocks (NTP).
+- `reason=page-mismatch` → the token was minted for a different page than the
+  one requested; typically a stale client. Reload the page.
+
+Check the logs with `docker compose logs cairn-collab`.
+
 ## Local development
 
 `pnpm dev` / `build` / `test` read the same `.env` directly, so it must contain
