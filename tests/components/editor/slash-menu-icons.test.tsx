@@ -17,6 +17,7 @@ describe('<SlashMenu> icons', () => {
             category: 'basic',
             command: () => {},
             icon: Heading1,
+            keywords: [],
           },
         ]}
         command={() => {}}
