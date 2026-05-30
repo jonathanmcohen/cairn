@@ -166,41 +166,43 @@ export const citationMenuItem: CitationSlashEntry = {
   description: 'Insert a bibliographic reference',
   icon: Quote,
   run: (editor: Editor): void => {
-    const doi = window.prompt('DOI (optional)') ?? null;
-    const pubmed = window.prompt('PubMed ID (optional)') ?? null;
-    const author = window.prompt('Author (Last, F.)') ?? '';
-    const title = window.prompt('Title') ?? '';
-    const yearStr = window.prompt('Year') ?? '';
-    const year = Number.parseInt(yearStr, 10);
-    if (!author || !title || Number.isNaN(year)) return;
-    const ref = { authors: [author], title, year };
-    void Promise.all([
-      import('@/lib/citations/format'),
-      import('./extensions/citation').then((m) => m.CitationExtension),
-    ]).then(([fmt, CitationExt]) => {
-      if (editor.isDestroyed) return;
-      if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
-        editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
-      }
-      const fullRef = { ...ref, doi: doi ?? undefined, pubmedId: pubmed ?? undefined };
-      editor
-        .chain()
-        .focus()
-        .insertContent({
-          type: 'citation',
-          attrs: {
-            id: crypto.randomUUID(),
-            doi,
-            pubmed_id: pubmed,
-            formatted_apa: fmt.formatCitation(fullRef, 'apa'),
-            formatted_mla: fmt.formatCitation(fullRef, 'mla'),
-            formatted_chicago: fmt.formatCitation(fullRef, 'chicago'),
-            raw_authors: [author],
-            raw_title: title,
-            raw_year: year,
-          },
-        })
-        .run();
+    void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((result) => {
+      if (!result) return;
+      const author = result.author?.trim() ?? '';
+      const title = result.title?.trim() ?? '';
+      const year = Number.parseInt(result.year ?? '', 10);
+      if (!author || !title || Number.isNaN(year)) return;
+      const doi = result.doi?.trim() ? result.doi.trim() : null;
+      const pubmed = result.pubmed?.trim() ? result.pubmed.trim() : null;
+      const ref = { authors: [author], title, year };
+      void Promise.all([
+        import('@/lib/citations/format'),
+        import('./extensions/citation').then((m) => m.CitationExtension),
+      ]).then(([fmt, CitationExt]) => {
+        if (editor.isDestroyed) return;
+        if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
+          editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
+        }
+        const fullRef = { ...ref, doi: doi ?? undefined, pubmedId: pubmed ?? undefined };
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'citation',
+            attrs: {
+              id: crypto.randomUUID(),
+              doi,
+              pubmed_id: pubmed,
+              formatted_apa: fmt.formatCitation(fullRef, 'apa'),
+              formatted_mla: fmt.formatCitation(fullRef, 'mla'),
+              formatted_chicago: fmt.formatCitation(fullRef, 'chicago'),
+              raw_authors: [author],
+              raw_title: title,
+              raw_year: year,
+            },
+          })
+          .run();
+      });
     });
   },
 };
