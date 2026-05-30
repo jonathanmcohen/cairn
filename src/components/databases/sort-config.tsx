@@ -1,6 +1,13 @@
 'use client';
 
 import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { ViewProps } from './table-view';
 
 type Sort = { propertyId: string; direction: 'asc' | 'desc' };
@@ -61,18 +68,24 @@ export function SortConfig({ databaseId, meta, view, onChange }: ViewProps) {
           {sorts.map((s, i) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: sort keys are positional and reorderable, with no stable id
             <div key={`${s.propertyId}-${i}`} className="mb-1 flex items-center gap-1 text-xs">
-              <select
-                aria-label="Sort by property"
+              <Select
                 value={s.propertyId}
-                onChange={(e) => setSort(i, { propertyId: e.target.value })}
-                className="flex-1 rounded border bg-background px-1 py-0.5"
+                onValueChange={(next) => setSort(i, { propertyId: next })}
               >
-                {sortable.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.name}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger
+                  aria-label="Sort by property"
+                  className="h-7 min-h-7 flex-1 px-1 py-0.5 text-xs"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {sortable.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <button
                 type="button"
                 onClick={() => setSort(i, { direction: s.direction === 'asc' ? 'desc' : 'asc' })}
