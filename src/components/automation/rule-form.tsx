@@ -6,6 +6,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type * as schema from '@/db/schema';
 
 const TRIGGERS = [
@@ -218,20 +225,23 @@ export function RuleForm(props: Props) {
 
           <div className="space-y-1.5">
             <Label htmlFor={triggerId}>Trigger event</Label>
-            <select
-              id={triggerId}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            <Select
               value={triggerEvent}
-              onChange={(e) => {
-                if (isTriggerEvent(e.target.value)) setTriggerEvent(e.target.value);
+              onValueChange={(next) => {
+                if (isTriggerEvent(next)) setTriggerEvent(next);
               }}
             >
-              {TRIGGERS.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id={triggerId} className="w-full text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TRIGGERS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <fieldset className="space-y-2 rounded-md border p-3">
@@ -252,20 +262,23 @@ export function RuleForm(props: Props) {
                 <Label htmlFor={operatorId} className="text-xs">
                   Operator
                 </Label>
-                <select
-                  id={operatorId}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                <Select
                   value={operator}
-                  onChange={(e) => {
-                    if (isOperator(e.target.value)) setOperator(e.target.value);
+                  onValueChange={(next) => {
+                    if (isOperator(next)) setOperator(next);
                   }}
                 >
-                  {OPERATORS.map((o) => (
-                    <option key={o} value={o}>
-                      {o}
-                    </option>
-                  ))}
-                </select>
+                  <SelectTrigger id={operatorId} className="w-full text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {OPERATORS.map((o) => (
+                      <SelectItem key={o} value={o}>
+                        {o}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div className="space-y-1">
                 <Label htmlFor={valueId} className="text-xs">
@@ -286,20 +299,23 @@ export function RuleForm(props: Props) {
 
           <div className="space-y-1.5">
             <Label htmlFor={actionId}>Action</Label>
-            <select
-              id={actionId}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            <Select
               value={actionType}
-              onChange={(e) => {
-                if (isActionType(e.target.value)) onActionChange(e.target.value);
+              onValueChange={(next) => {
+                if (isActionType(next)) onActionChange(next);
               }}
             >
-              {ACTIONS.map((a) => (
-                <option key={a} value={a}>
-                  {a}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id={actionId} className="w-full text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {ACTIONS.map((a) => (
+                  <SelectItem key={a} value={a}>
+                    {a}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-1.5">
