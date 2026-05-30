@@ -17,6 +17,7 @@ import { EditorDialogs } from './editor-dialogs';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
 import { composeGalleryInsert } from './image-extension';
+import { LockBadge } from './lock-badge';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
 import { SuggestionToolbar } from './suggestion-toolbar';
@@ -54,6 +55,10 @@ export type EditorProps = {
    * Defaults to false; pass `page.encrypted` from the page-detail shell.
    */
   encrypted?: boolean;
+  /** #134 — when true the page is locked for this viewer; editing is disabled. */
+  locked?: boolean;
+  /** ISO unlock time, or null for an indefinite lock. */
+  lockedUntilIso?: string | null;
 };
 
 const STATUS_LABEL = {
@@ -91,6 +96,8 @@ export function Editor({
   currentUser,
   editable,
   encrypted = false,
+  locked = false,
+  lockedUntilIso = null,
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
@@ -100,7 +107,7 @@ export function Editor({
   // the PageModeShell (public viewers don't carry the toggle).
   const pageMode = usePageModeOptional();
   const readerMode = pageMode?.reader ?? false;
-  const effectiveEditable = editable && !readerMode;
+  const effectiveEditable = editable && !readerMode && !locked;
 
   // Announce collab connection-status transitions through the shell's polite
   // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
@@ -534,6 +541,7 @@ export function Editor({
           rest). Styling only — handlers/state are unchanged, and the
           interactivity changes for these controls are owned by the -23- plan. */}
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+        {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
         {effectiveEditable && (
           <>
             <SuggestionToolbar

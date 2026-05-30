@@ -220,6 +220,8 @@
   "cover.remove": "إزالة الغلاف",
   "cover.uploadHint": "تُخزَّن الصور محليًا وتُقدَّم عبر روابط موقَّعة.",
   "cover.useColor": "استخدام {hex}",
+  "editor.lockedBadge.until": "🔒 مقفل حتى {time}",
+  "editor.lockedBadge.indefinite": "🔒 مقفل",
   "slash.group.basic": "أساسي",
   "slash.group.media": "وسائط",
   "slash.group.database": "قاعدة بيانات",

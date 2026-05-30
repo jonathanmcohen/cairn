@@ -220,6 +220,8 @@
   "cover.remove": "Quitar portada",
   "cover.uploadHint": "Las imágenes se almacenan localmente y se sirven mediante URL firmadas.",
   "cover.useColor": "Usar {hex}",
+  "editor.lockedBadge.until": "🔒 Bloqueado hasta {time}",
+  "editor.lockedBadge.indefinite": "🔒 Bloqueado",
   "slash.group.basic": "Básico",
   "slash.group.media": "Multimedia",
   "slash.group.database": "Base de datos",

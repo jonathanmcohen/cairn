@@ -220,6 +220,8 @@
   "cover.remove": "Remove cover",
   "cover.uploadHint": "Images are stored locally and served through signed URLs.",
   "cover.useColor": "Use {hex}",
+  "editor.lockedBadge.until": "🔒 Locked until {time}",
+  "editor.lockedBadge.indefinite": "🔒 Locked",
   "slash.group.basic": "Basic",
   "slash.group.media": "Media",
   "slash.group.database": "Database",
