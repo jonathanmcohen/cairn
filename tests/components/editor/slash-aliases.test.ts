@@ -51,3 +51,27 @@ describe('matchesSlashQuery (#148)', () => {
     expect(matchesSlashQuery(item, 'zzz')).toBe(false);
   });
 });
+
+describe('catalog resolves spec synonyms via the shared matcher (#148)', () => {
+  const find = (q: string) =>
+    SLASH_ITEMS.filter((i) => matchesSlashQuery(i, q)).map((i) => i.title);
+
+  it('"math" surfaces Equation', () => {
+    expect(find('math')).toContain('Equation');
+  });
+  it('"youtube" surfaces Embed', () => {
+    expect(find('youtube')).toContain('Embed');
+  });
+  it('"photo" surfaces Image', () => {
+    expect(find('photo')).toContain('Image');
+  });
+  it('"todo" surfaces Task list', () => {
+    expect(find('todo')).toContain('Task list');
+  });
+  it('"flowchart" surfaces Mermaid diagram', () => {
+    expect(find('flowchart')).toContain('Mermaid diagram');
+  });
+  it('"cite" surfaces Citation', () => {
+    expect(find('cite')).toContain('Citation');
+  });
+});
