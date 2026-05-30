@@ -235,5 +235,7 @@
   "connectors.empty.body": "Conecta Slack o Discord para reenviar eventos de páginas y comentarios y responder en el hilo.",
   "connectors.empty.docs": "Lee la documentación de conectores",
   "apiDocs.title": "Documentación de la API de Cairn",
-  "apiDocs.back": "Volver a Cairn"
+  "apiDocs.back": "Volver a Cairn",
+  "workspaceSettings.icon.label": "Icono del espacio de trabajo",
+  "workspaceSettings.icon.hint": "Se muestra junto al nombre del espacio de trabajo en la barra lateral."
 }

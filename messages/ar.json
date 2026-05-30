@@ -235,5 +235,7 @@
   "connectors.empty.body": "اربط Slack أو Discord لإعادة توجيه أحداث الصفحات والتعليقات والرد داخل المحادثة.",
   "connectors.empty.docs": "اقرأ وثائق الموصِّلات",
   "apiDocs.title": "وثائق واجهة Cairn البرمجية",
-  "apiDocs.back": "العودة إلى Cairn"
+  "apiDocs.back": "العودة إلى Cairn",
+  "workspaceSettings.icon.label": "أيقونة مساحة العمل",
+  "workspaceSettings.icon.hint": "تظهر بجوار اسم مساحة العمل في الشريط الجانبي."
 }

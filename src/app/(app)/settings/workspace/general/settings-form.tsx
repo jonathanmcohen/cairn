@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
+import { IconPicker } from '@/components/icon-picker';
 import { Button } from '@/components/ui/button';
 import {
   Select,
@@ -10,11 +11,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useT } from '@/lib/i18n/provider';
 
 type Initial = {
   name: string;
   requireTwofa: boolean;
   homePageId: string | null;
+  icon: string | null;
 };
 
 export function SettingsForm({
@@ -28,6 +31,7 @@ export function SettingsForm({
   pages: { id: string; title: string }[];
   twofaEnforcementAvailable?: boolean;
 }) {
+  const t = useT();
   const router = useRouter();
   const nameId = useId();
   const twofaId = useId();
@@ -36,6 +40,7 @@ export function SettingsForm({
   const [name, setName] = useState(initial.name);
   const [requireTwofa, setRequireTwofa] = useState(initial.requireTwofa);
   const [homePage, setHomePage] = useState<string>(initial.homePageId ?? '');
+  const [icon, setIcon] = useState<string | null>(initial.icon);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
@@ -50,10 +55,12 @@ export function SettingsForm({
         name: string;
         requireTwofa: boolean;
         homePageId: string | null;
+        icon: string | null;
       } = {
         name: name.trim(),
         requireTwofa,
         homePageId: homePage === '' ? null : homePage,
+        icon,
       };
       const res = await fetch(`/api/workspaces/${workspaceId}/settings`, {
         method: 'PATCH',
@@ -90,6 +97,12 @@ export function SettingsForm({
           Settings saved.
         </div>
       ) : null}
+
+      <div className="flex flex-col gap-1">
+        <span className="text-sm font-medium">{t('workspaceSettings.icon.label')}</span>
+        <IconPicker value={icon} onChange={setIcon} />
+        <p className="text-xs text-muted-foreground">{t('workspaceSettings.icon.hint')}</p>
+      </div>
 
       <div className="flex flex-col gap-1">
         <label htmlFor={nameId} className="text-sm font-medium">

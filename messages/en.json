@@ -235,5 +235,7 @@
   "connectors.empty.body": "Connect Slack or Discord to forward page + comment events and reply in-thread.",
   "connectors.empty.docs": "Read the connector documentation",
   "apiDocs.title": "Cairn API documentation",
-  "apiDocs.back": "Back to Cairn"
+  "apiDocs.back": "Back to Cairn",
+  "workspaceSettings.icon.label": "Workspace icon",
+  "workspaceSettings.icon.hint": "Shown beside the workspace name in the sidebar."
 }
