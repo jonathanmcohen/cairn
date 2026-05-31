@@ -24,8 +24,8 @@ export function SetPropertyCard({ config, onChange }: Props) {
   const databaseId = typeof config.databaseId === 'string' ? config.databaseId : '';
   const propertyId = typeof config.propertyId === 'string' ? config.propertyId : '';
   const value = config.value == null ? '' : String(config.value);
-  const { options: dbs } = useDatabases();
-  const { options: props } = useProperties(databaseId || null);
+  const { options: dbs, loading: dbsLoading } = useDatabases();
+  const { options: props, loading: propsLoading } = useProperties(databaseId || null);
 
   return (
     <div className="space-y-3">
@@ -39,11 +39,17 @@ export function SetPropertyCard({ config, onChange }: Props) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {dbs.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
+            {!dbsLoading && dbs.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-muted-foreground">
+                {t('automation.setProperty.databases.empty')}
+              </div>
+            ) : (
+              dbs.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>
@@ -54,11 +60,17 @@ export function SetPropertyCard({ config, onChange }: Props) {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {props.map((o) => (
-              <SelectItem key={o.value} value={o.value}>
-                {o.label}
-              </SelectItem>
-            ))}
+            {!propsLoading && props.length === 0 ? (
+              <div className="px-3 py-2 text-sm text-muted-foreground">
+                {t('automation.setProperty.properties.empty')}
+              </div>
+            ) : (
+              props.map((o) => (
+                <SelectItem key={o.value} value={o.value}>
+                  {o.label}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       </div>
