@@ -95,6 +95,12 @@ COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-libvips-
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
 
+# @xenova/transformers' env.localModelPath is '/models/' (see src/lib/search/
+# embed.ts) — in Node that resolves to the absolute filesystem path /models, but
+# the bundled MiniLM model set ships under /app/public/models. Symlink so the
+# embedder finds tokenizer.json + model_quantized.onnx at runtime.
+RUN ln -s /app/public/models /models
+
 USER cairn
 EXPOSE 3000
 ENV PORT=3000
