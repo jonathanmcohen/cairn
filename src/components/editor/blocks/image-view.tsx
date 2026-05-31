@@ -3,6 +3,7 @@
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
+import { Lightbox } from '@/components/editor/lightbox';
 import { useT } from '@/lib/i18n/provider';
 
 /**
@@ -23,6 +24,7 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
   const [mode, setMode] = useState<'cta' | 'url'>('cta');
   const [url, setUrl] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
   async function upload(file: File) {
     setUploading(true);
@@ -55,8 +57,22 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
   if (src) {
     return (
       <NodeViewWrapper className="my-3" data-cairn-image="">
-        {/* biome-ignore lint/performance/noImgElement: TipTap node-view emits a raw <img>; next/image is not appropriate inside ProseMirror node views. */}
-        <img src={src} alt={altProp} className="max-w-full rounded-md" loading="lazy" />
+        <button
+          type="button"
+          aria-label={t('editor.image.openFullscreen')}
+          onClick={() => setLightboxOpen(true)}
+          className="block w-full cursor-zoom-in rounded-md focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {/* biome-ignore lint/performance/noImgElement: TipTap node-view emits a raw <img>; next/image is not appropriate inside ProseMirror node views. */}
+          <img src={src} alt={altProp} className="max-w-full rounded-md" loading="lazy" />
+        </button>
+        {lightboxOpen ? (
+          <Lightbox
+            images={[{ src, alt }]}
+            startIndex={0}
+            onClose={() => setLightboxOpen(false)}
+          />
+        ) : null}
       </NodeViewWrapper>
     );
   }
