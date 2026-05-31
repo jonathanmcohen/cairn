@@ -65,7 +65,7 @@ const server = new Server({
       // tell a real auth bug from the common AUTH_SECRET mismatch between the
       // cairn and cairn-collab services. NEVER log the token or the secret —
       // only the decoded (untrusted) pageId/exp and our own reason code.
-      // biome-ignore lint/suspicious/noConsole: operational rejection log for the standalone collab service
+      // (console.warn is in the noConsole allow-list — no suppression needed.)
       console.warn(
         `cairn-collab: rejected connect reason=${result.reason} document=${documentName} tokenPageId=${result.tokenPageId ?? 'n/a'} exp=${result.exp ?? 'n/a'}`,
       );
