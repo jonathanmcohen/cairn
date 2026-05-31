@@ -1,7 +1,7 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronDown, ChevronRight, Folder } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Folder, Image as ImageIcon } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
@@ -20,9 +20,9 @@ import { usePageRowActions } from './use-page-row-actions';
  */
 function renderNodeIcon(stored: string | null): React.ReactNode {
   const parsed = parseIcon(stored);
-  if (!parsed) return '📄';
+  if (!parsed) return <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
   if (parsed.kind === 'emoji') return parsed.value;
-  return <span aria-hidden="true">🖼️</span>;
+  return <ImageIcon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
 }
 
 const ROW_HEIGHT_PX = 32; // Matches the existing sidebar row.
