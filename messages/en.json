@@ -562,5 +562,6 @@
   "e2e.rekey.success": "Workspace key rotated to version {version}.",
   "e2e.rekey.error": "Key rotation failed: {message}",
   "e2e.rekey.noKeypairWarning": "This member has not enrolled an encryption key, so they cannot be included in a rekey.",
-  "e2e.rekey.loadFailed": "Could not load the workspace members."
+  "e2e.rekey.loadFailed": "Could not load the workspace members.",
+  "settings.nav.security.encryption": "Encryption"
 }

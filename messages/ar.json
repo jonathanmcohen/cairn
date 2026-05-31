@@ -562,5 +562,6 @@
   "e2e.rekey.success": "تم تدوير مفتاح مساحة العمل إلى الإصدار {version}.",
   "e2e.rekey.error": "فشل تدوير المفتاح: {message}",
   "e2e.rekey.noKeypairWarning": "لم يسجّل هذا العضو مفتاح تشفير، لذا لا يمكن تضمينه في التدوير.",
-  "e2e.rekey.loadFailed": "تعذّر تحميل أعضاء مساحة العمل."
+  "e2e.rekey.loadFailed": "تعذّر تحميل أعضاء مساحة العمل.",
+  "settings.nav.security.encryption": "التشفير"
 }

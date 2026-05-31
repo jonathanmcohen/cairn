@@ -562,5 +562,6 @@
   "e2e.rekey.success": "Clave del espacio de trabajo rotada a la versión {version}.",
   "e2e.rekey.error": "Error al rotar la clave: {message}",
   "e2e.rekey.noKeypairWarning": "Este miembro no ha registrado una clave de cifrado, por lo que no se puede incluir en una rotación.",
-  "e2e.rekey.loadFailed": "No se pudieron cargar los miembros del espacio de trabajo."
+  "e2e.rekey.loadFailed": "No se pudieron cargar los miembros del espacio de trabajo.",
+  "settings.nav.security.encryption": "Cifrado"
 }

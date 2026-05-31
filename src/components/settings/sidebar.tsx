@@ -186,7 +186,18 @@ export function SettingsSidebar({
         label: t('settings.nav.notifications'),
         href: '/settings/notifications' as Route,
       },
-      { id: 'security', label: t('settings.nav.security'), href: '/settings/security' as Route },
+      {
+        id: 'security',
+        label: t('settings.nav.security'),
+        href: '/settings/security' as Route,
+        children: [
+          {
+            id: 'security-encryption',
+            label: t('settings.nav.security.encryption'),
+            href: '/settings/security/encryption' as Route,
+          },
+        ],
+      },
     ];
   }, [t, e2eEnabled]);
 

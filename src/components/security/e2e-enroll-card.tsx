@@ -23,13 +23,14 @@ type Status =
   | { kind: 'done' }
   | { kind: 'error'; message: string };
 
-export function E2EEnrollCard() {
+export function E2EEnrollCard({ enabled = true }: { enabled?: boolean }) {
   const t = useT();
   const prompt = usePrompt();
   const [status, setStatus] = useState<Status>({ kind: 'loading' });
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
+    if (!enabled) return;
     let cancelled = false;
     void ensureEnrolled().then((r) => {
       if (cancelled) return;
@@ -40,7 +41,7 @@ export function E2EEnrollCard() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [enabled]);
 
   async function run() {
     setBusy(true);
@@ -70,6 +71,15 @@ export function E2EEnrollCard() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!enabled) {
+    return (
+      <section className="space-y-2 rounded-lg border p-4">
+        <h2 className="font-semibold text-lg">{t('e2e.enroll.title')}</h2>
+        <p className="text-destructive text-sm">{t('e2e.enroll.disabledBuild')}</p>
+      </section>
+    );
   }
 
   if (status.kind === 'loading') return null;
