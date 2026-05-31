@@ -352,5 +352,17 @@
   "favorites.page.description": "الصفحات التي ميّزتها للوصول السريع.",
   "favorites.page.empty": "لا توجد مفضلة بعد. ميّز صفحة لتثبيتها هنا.",
   "flashcards.study.link": "دراسة البطاقات",
-  "palette.quickCapture": "التقاط سريع لملاحظة"
+  "palette.quickCapture": "التقاط سريع لملاحظة",
+  "settings.nav.account": "الحساب",
+  "settings.nav.workspace": "مساحة العمل",
+  "settings.nav.admin": "الإدارة",
+  "settings.nav.developer": "المطوّر",
+  "settings.nav.notifications": "الإشعارات",
+  "settings.nav.security": "الأمان",
+  "settings.nav.admin.audit": "سجل التدقيق",
+  "settings.nav.admin.members": "الأعضاء",
+  "settings.nav.admin.siem": "معيدو توجيه SIEM",
+  "settings.nav.workspace.general": "عام",
+  "settings.nav.workspace.members": "الأعضاء",
+  "settings.nav.developer.connectors": "الموصّلات"
 }

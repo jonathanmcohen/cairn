@@ -352,5 +352,17 @@
   "favorites.page.description": "Pages you starred for quick access.",
   "favorites.page.empty": "No favorites yet. Star a page to pin it here.",
   "flashcards.study.link": "Study flashcards",
-  "palette.quickCapture": "Quick capture a note"
+  "palette.quickCapture": "Quick capture a note",
+  "settings.nav.account": "Account",
+  "settings.nav.workspace": "Workspace",
+  "settings.nav.admin": "Admin",
+  "settings.nav.developer": "Developer",
+  "settings.nav.notifications": "Notifications",
+  "settings.nav.security": "Security",
+  "settings.nav.admin.audit": "Audit log",
+  "settings.nav.admin.members": "Members",
+  "settings.nav.admin.siem": "SIEM forwarders",
+  "settings.nav.workspace.general": "General",
+  "settings.nav.workspace.members": "Members",
+  "settings.nav.developer.connectors": "Connectors"
 }

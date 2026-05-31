@@ -352,5 +352,17 @@
   "favorites.page.description": "Páginas que marcaste para acceso rápido.",
   "favorites.page.empty": "Aún no hay favoritos. Marca una página para fijarla aquí.",
   "flashcards.study.link": "Estudiar tarjetas",
-  "palette.quickCapture": "Captura rápida de una nota"
+  "palette.quickCapture": "Captura rápida de una nota",
+  "settings.nav.account": "Cuenta",
+  "settings.nav.workspace": "Espacio de trabajo",
+  "settings.nav.admin": "Administración",
+  "settings.nav.developer": "Desarrollador",
+  "settings.nav.notifications": "Notificaciones",
+  "settings.nav.security": "Seguridad",
+  "settings.nav.admin.audit": "Registro de auditoría",
+  "settings.nav.admin.members": "Miembros",
+  "settings.nav.admin.siem": "Reenviadores SIEM",
+  "settings.nav.workspace.general": "General",
+  "settings.nav.workspace.members": "Miembros",
+  "settings.nav.developer.connectors": "Conectores"
 }
