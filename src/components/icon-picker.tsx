@@ -1,5 +1,6 @@
 'use client';
 
+import { FileText, Image as ImageIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { formatIcon, parseIcon } from '@/lib/pages/icon-format';
 import { CustomIconUpload } from './pages/custom-icon-upload';
@@ -83,14 +84,25 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
   }, [open, tab, onChange, recent]);
 
   const parsed = parseIcon(value);
-  const buttonLabel =
-    parsed?.kind === 'emoji' ? parsed.value : parsed?.kind === 'file' ? '🖼️' : '📄';
+  const triggerContent =
+    parsed?.kind === 'emoji' ? (
+      <span>{parsed.value}</span>
+    ) : parsed?.kind === 'file' ? (
+      <ImageIcon aria-hidden="true" className="h-6 w-6 text-muted-foreground" />
+    ) : (
+      <FileText aria-hidden="true" className="h-6 w-6 text-muted-foreground" />
+    );
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Change icon" className="h-10 w-10 text-3xl">
-          {buttonLabel}
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Change icon"
+          className="flex h-10 w-10 items-center justify-center text-3xl"
+        >
+          {triggerContent}
         </Button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[360px] p-3">
