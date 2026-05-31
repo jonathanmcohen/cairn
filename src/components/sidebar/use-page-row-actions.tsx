@@ -20,6 +20,8 @@ export type PageRowAction = {
 export type PageRowActionsApi = {
   actions: PageRowAction[];
   linkCopied: boolean;
+  /** True while an async row action (add-child / duplicate / trash) is in flight. */
+  busy: boolean;
   /** Begin inline rename (the consuming row swaps its title span for an input). */
   startRename: () => void;
   renaming: boolean;
@@ -46,6 +48,7 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
   const [linkCopied, setLinkCopied] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [moveOpen, setMoveOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   const copyLink = useCallback(() => {
     const url = `${window.location.origin}/pages/${node.id}`;
@@ -56,29 +59,39 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
   }, [node.id]);
 
   const addChild = useCallback(async () => {
-    const res = await fetch('/api/pages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ parentId: node.id, spaceId: node.spaceId ?? undefined }),
-    });
-    if (!res.ok) return;
-    const { id } = (await res.json()) as { id: string };
-    router.push(`/pages/${id}` as Route);
-    // G10 finding S — the sidebar tree is server-rendered initial props; navigating
-    // alone leaves the still-mounted tree stale. Refresh re-runs the server component
-    // (re-fetches flattenedPageTree) so the new child appears without F5. Mirrors
-    // new-page-button.tsx's push-then-refresh.
-    router.refresh();
+    setBusy(true);
+    try {
+      const res = await fetch('/api/pages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ parentId: node.id, spaceId: node.spaceId ?? undefined }),
+      });
+      if (!res.ok) return;
+      const { id } = (await res.json()) as { id: string };
+      router.push(`/pages/${id}` as Route);
+      // G10 finding S — the sidebar tree is server-rendered initial props; navigating
+      // alone leaves the still-mounted tree stale. Refresh re-runs the server component
+      // (re-fetches flattenedPageTree) so the new child appears without F5. Mirrors
+      // new-page-button.tsx's push-then-refresh.
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
   }, [node.id, node.spaceId, router]);
 
   const duplicate = useCallback(async () => {
-    // Reuses the endpoint introduced by P19 (duplicateOwnedPage).
-    const res = await fetch(`/api/pages/${node.id}/duplicate`, { method: 'POST' });
-    if (!res.ok) return;
-    const { id } = (await res.json()) as { id: string };
-    router.push(`/pages/${id}` as Route);
-    // G10 finding S — refresh the server-rendered tree so the duplicate appears now.
-    router.refresh();
+    setBusy(true);
+    try {
+      // Reuses the endpoint introduced by P19 (duplicateOwnedPage).
+      const res = await fetch(`/api/pages/${node.id}/duplicate`, { method: 'POST' });
+      if (!res.ok) return;
+      const { id } = (await res.json()) as { id: string };
+      router.push(`/pages/${id}` as Route);
+      // G10 finding S — refresh the server-rendered tree so the duplicate appears now.
+      router.refresh();
+    } finally {
+      setBusy(false);
+    }
   }, [node.id, router]);
 
   const moveToTrash = useCallback(async () => {
@@ -88,8 +101,13 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
       variant: 'danger',
     });
     if (!ok) return;
-    const res = await fetch(`/api/pages/${node.id}`, { method: 'DELETE' });
-    if (res.ok) router.refresh();
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/pages/${node.id}`, { method: 'DELETE' });
+      if (res.ok) router.refresh();
+    } finally {
+      setBusy(false);
+    }
   }, [node.id, router, t, confirm]);
 
   const submitRename = useCallback(
@@ -138,6 +156,7 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
   return {
     actions,
     linkCopied,
+    busy,
     startRename: () => setRenaming(true),
     renaming,
     submitRename,
