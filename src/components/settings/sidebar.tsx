@@ -86,6 +86,10 @@ export function SettingsSidebar({
     }
 
     return [
+      // G17 (#164) — full-page search lives outside the settings hub at /search;
+      // surface it here so the page is reachable from the nav. Static label,
+      // consistent with the route living outside /settings.
+      { id: 'search', label: 'Search', href: '/search' as Route },
       {
         id: 'account',
         label: t('settings.nav.account'),

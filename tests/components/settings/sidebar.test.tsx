@@ -93,7 +93,8 @@ describe('<SettingsSidebar>', () => {
     const security = screen.getByRole('link', { name: 'Security' });
     security.focus();
     fireEvent.keyDown(security, { key: 'ArrowDown' });
-    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Account' }));
+    // G17 (#164): Search is the first nav entry, so wrap lands there.
+    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Search' }));
   });
 
   it('reveals Workspace sub-pages when a Workspace route is active', () => {

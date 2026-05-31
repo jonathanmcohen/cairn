@@ -11,6 +11,7 @@ import { LOCALE_COOKIE } from '@/lib/i18n/config';
 import { getMessages } from '@/lib/i18n/messages';
 import { I18nProvider } from '@/lib/i18n/provider';
 import { resolveLocale } from '@/lib/i18n/resolve';
+import { canFederate } from './can-federate';
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -46,7 +47,7 @@ export default async function SearchPage({
     <I18nProvider locale={locale} messages={messages}>
       <main className="mx-auto max-w-3xl p-6">
         <SearchPageHeader />
-        <SearchPageView initialQuery={initialQuery} />
+        <SearchPageView initialQuery={initialQuery} canFederate={canFederate(ctx.role)} />
       </main>
     </I18nProvider>
   );
