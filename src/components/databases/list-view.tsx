@@ -125,7 +125,7 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
                     ? JSON.stringify(v)
                     : String(v);
               return text ? (
-                <span key={p.id} className="truncate">
+                <span key={p.id} className="truncate" title={text}>
                   {text}
                 </span>
               ) : null;
