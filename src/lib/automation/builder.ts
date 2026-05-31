@@ -1,5 +1,5 @@
 import type { AutomationActionType, AutomationCondition, AutomationOperator } from '@/db/schema';
-import { TRIGGER_EVENTS, type TriggerEvent } from '@/lib/automation/dispatcher';
+import { TRIGGER_EVENTS, type TriggerEvent } from '@/lib/automation/events';
 
 /** One condition row in the visual builder (mirrors the dispatcher's singular condition fields). */
 export type ConditionRow = {

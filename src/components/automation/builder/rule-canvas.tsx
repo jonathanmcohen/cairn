@@ -25,7 +25,7 @@ import {
   decompileRule,
   emptyBuilder,
 } from '@/lib/automation/builder';
-import { TRIGGER_EVENTS, type TriggerEvent } from '@/lib/automation/dispatcher';
+import { TRIGGER_EVENTS, type TriggerEvent } from '@/lib/automation/events';
 import { useT } from '@/lib/i18n/provider';
 
 type Props =

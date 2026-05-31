@@ -1,4 +1,4 @@
-import type { TriggerEvent } from '@/lib/automation/dispatcher';
+import type { TriggerEvent } from '@/lib/automation/events';
 
 const SAMPLE_PAGE = {
   id: '00000000-0000-0000-0000-0000000000a1',
