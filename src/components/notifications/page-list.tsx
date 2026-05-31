@@ -252,7 +252,9 @@ export function NotificationsPageList({
           {items.map((n) => (
             <li key={n.id} className="flex items-start gap-2 p-3 hover:bg-accent">
               <Link href={hrefFor(n)} className="flex-1 truncate">
-                <span className="block truncate">{describe(n.type)}</span>
+                <span className="block truncate" title={describe(n.type)}>
+                  {describe(n.type)}
+                </span>
                 <span className="text-muted-foreground text-xs">{relativeTime(n.createdAt)}</span>
               </Link>
               {n.readAt == null && (

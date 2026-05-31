@@ -110,8 +110,12 @@ export function MembersTable({
             const roleLocked = isOwner || isSelf;
             return (
               <tr key={m.userId} className="border-b">
-                <td className="py-2">{m.name}</td>
-                <td className="py-2">{m.email}</td>
+                <td className="max-w-[16rem] truncate py-2" title={m.name}>
+                  {m.name}
+                </td>
+                <td className="max-w-[16rem] truncate py-2" title={m.email}>
+                  {m.email}
+                </td>
                 <td className="py-2">
                   {roleLocked ? (
                     <span>{ROLE_LABELS[m.role]}</span>
