@@ -484,5 +484,6 @@
   "databases.row.comments": "تعليقات",
   "statusBanner.error": "خطأ",
   "statusBanner.success": "تم بنجاح",
-  "statusBanner.warning": "تحذير"
+  "statusBanner.warning": "تحذير",
+  "workspaceSettings.saved": "تم حفظ الإعدادات."
 }

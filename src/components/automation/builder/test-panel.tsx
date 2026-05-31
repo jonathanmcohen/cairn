@@ -63,7 +63,7 @@ export function TestPanel({ body }: { body: Body | null }) {
       {result ? (
         <div className="text-sm">
           {result.status === 'would_run' ? (
-            <p className="text-green-600 dark:text-green-400">
+            <p className="text-success">
               {t('automation.builder.testResult.wouldRun', { summary: result.actionSummary })}
             </p>
           ) : null}

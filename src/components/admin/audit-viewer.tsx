@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusBanner } from '@/components/ui/status-banner';
 import { AUDIT_ACTIONS, type AuditAction, type AuditTargetType } from '@/lib/audit/actions';
 
 type AuditEntry = {
@@ -312,14 +313,7 @@ export function AuditViewer() {
         />
       </div>
 
-      {error ? (
-        <div
-          role="alert"
-          className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800"
-        >
-          {error}
-        </div>
-      ) : null}
+      {error ? <StatusBanner variant="error">{error}</StatusBanner> : null}
 
       <div className="overflow-x-auto">
         <table className="w-full text-sm">

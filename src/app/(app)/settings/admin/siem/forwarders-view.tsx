@@ -46,7 +46,7 @@ export function ForwardersView({ forwarders }: { forwarders: ForwarderRow[] }) {
                   </div>
                   <div className="text-xs">
                     {f.enabled ? (
-                      <span className="rounded bg-green-100 px-2 py-1 text-green-800 dark:bg-green-900 dark:text-green-100">
+                      <span className="rounded bg-success/15 px-2 py-1 text-success">
                         {t('settingsAdmin.siem.enabled')}
                       </span>
                     ) : (

@@ -484,5 +484,6 @@
   "databases.row.comments": "Comentarios",
   "statusBanner.error": "Error",
   "statusBanner.success": "Correcto",
-  "statusBanner.warning": "Advertencia"
+  "statusBanner.warning": "Advertencia",
+  "workspaceSettings.saved": "Configuración guardada."
 }

@@ -22,11 +22,11 @@ function hslToRgb(h: number, s: number, l: number): [number, number, number] {
 }
 
 function lum([r, g, b]: [number, number, number]): number {
-  const c = [r, g, b].map((v) => {
+  const ch = (v: number) => {
     const x = v / 255;
     return x <= 0.03928 ? x / 12.92 : ((x + 0.055) / 1.055) ** 2.4;
-  });
-  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2];
+  };
+  return 0.2126 * ch(r) + 0.7152 * ch(g) + 0.0722 * ch(b);
 }
 
 function ratio(a: [number, number, number], b: [number, number, number]): number {
