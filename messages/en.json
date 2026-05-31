@@ -488,5 +488,8 @@
   "workspaceSettings.saved": "Settings saved.",
   "admin.upgrade.confirmTitle": "Apply upgrade now?",
   "admin.upgrade.confirmBody": "This restarts Cairn to apply the new version. In-progress edits may be interrupted.",
-  "admin.upgrade.confirmCta": "Apply upgrade"
+  "admin.upgrade.confirmCta": "Apply upgrade",
+  "admin.e2e.confirmTitle": "Enable workspace-wide encryption?",
+  "admin.e2e.confirmBody": "This is irreversible. Every existing page is encrypted under a key the server never sees. Lost passphrases mean lost content.",
+  "admin.e2e.confirmCta": "Enable encryption"
 }

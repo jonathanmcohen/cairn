@@ -488,5 +488,8 @@
   "workspaceSettings.saved": "Configuración guardada.",
   "admin.upgrade.confirmTitle": "¿Aplicar la actualización ahora?",
   "admin.upgrade.confirmBody": "Esto reinicia Cairn para aplicar la nueva versión. Las ediciones en curso pueden interrumpirse.",
-  "admin.upgrade.confirmCta": "Aplicar actualización"
+  "admin.upgrade.confirmCta": "Aplicar actualización",
+  "admin.e2e.confirmTitle": "¿Activar el cifrado de todo el espacio?",
+  "admin.e2e.confirmBody": "Esta acción es irreversible. Cada página existente se cifra con una clave que el servidor nunca ve. Si se pierde la frase de contraseña, se pierde el contenido.",
+  "admin.e2e.confirmCta": "Activar cifrado"
 }

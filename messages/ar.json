@@ -488,5 +488,8 @@
   "workspaceSettings.saved": "تم حفظ الإعدادات.",
   "admin.upgrade.confirmTitle": "تطبيق التحديث الآن؟",
   "admin.upgrade.confirmBody": "سيؤدي هذا إلى إعادة تشغيل Cairn لتطبيق الإصدار الجديد. قد تتعطل التعديلات الجارية.",
-  "admin.upgrade.confirmCta": "تطبيق التحديث"
+  "admin.upgrade.confirmCta": "تطبيق التحديث",
+  "admin.e2e.confirmTitle": "تفعيل التشفير على مستوى مساحة العمل؟",
+  "admin.e2e.confirmBody": "هذا الإجراء لا يمكن التراجع عنه. تُشفَّر كل صفحة موجودة بمفتاح لا يراه الخادم أبدًا. فقدان عبارة المرور يعني فقدان المحتوى.",
+  "admin.e2e.confirmCta": "تفعيل التشفير"
 }

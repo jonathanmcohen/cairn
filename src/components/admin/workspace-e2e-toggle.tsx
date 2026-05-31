@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { usePrompt } from '@/components/ui/input-dialog';
+import { useT } from '@/lib/i18n/provider';
 
 type Sealed = {
   publicKey: string;
@@ -42,12 +44,21 @@ export function WorkspaceE2EToggle({
   initialMode: 'off' | 'per_page' | 'workspace_wide';
 }) {
   const prompt = usePrompt();
+  const confirm = useConfirm();
+  const t = useT();
   const [busy, setBusy] = useState(false);
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [mode, setMode] = useState(initialMode);
 
   async function enable() {
+    const ok = await confirm({
+      title: t('admin.e2e.confirmTitle'),
+      description: t('admin.e2e.confirmBody'),
+      confirmLabel: t('admin.e2e.confirmCta'),
+      variant: 'danger',
+    });
+    if (!ok) return;
     setBusy(true);
     setErr(null);
     setProgress(null);
