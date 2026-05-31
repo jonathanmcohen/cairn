@@ -1,9 +1,9 @@
 'use client';
 
-import { Check, X } from 'lucide-react';
+import { Check, Loader2, X } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
-import { useEffect, useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import useSWR from 'swr';
 import { Button } from '@/components/ui/button';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
@@ -86,6 +86,8 @@ export function NotificationDrawer({
 }) {
   const titleId = useId();
   const trapRef = useFocusTrap<HTMLDivElement>(open);
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [markingAll, setMarkingAll] = useState(false);
 
   // Fetch only while the drawer is open; SWR drops the in-flight request on
   // close. Revalidate on focus so re-opening picks up the freshest feed.
@@ -120,15 +122,25 @@ export function NotificationDrawer({
   }
 
   async function onMarkRead(id: string) {
-    await fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' });
-    await mutate();
-    onMarked?.();
+    setBusyId(id);
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' });
+      await mutate();
+      onMarked?.();
+    } finally {
+      setBusyId(null);
+    }
   }
 
   async function onMarkAllRead() {
-    await fetch('/api/notifications/mark-all-read', { method: 'POST', credentials: 'include' });
-    await mutate();
-    onMarked?.();
+    setMarkingAll(true);
+    try {
+      await fetch('/api/notifications/mark-all-read', { method: 'POST', credentials: 'include' });
+      await mutate();
+      onMarked?.();
+    } finally {
+      setMarkingAll(false);
+    }
   }
 
   return (
@@ -181,7 +193,9 @@ export function NotificationDrawer({
                           className="flex-1 truncate"
                           onClick={() => onOpenChange(false)}
                         >
-                          <span className="block truncate">{describe(n.type)}</span>
+                          <span className="block truncate" title={describe(n.type)}>
+                            {describe(n.type)}
+                          </span>
                           <span className="text-muted-foreground text-xs">
                             {relativeTime(n.createdAt)}
                           </span>
@@ -191,11 +205,19 @@ export function NotificationDrawer({
                             variant="ghost"
                             size="icon"
                             aria-label="Mark as read"
+                            disabled={busyId === n.id}
                             onClick={() => void onMarkRead(n.id)}
                             // WCAG 2.5.5: 44×44 touch target on the row action.
                             className="h-11 w-11"
                           >
-                            <Check aria-hidden="true" className="h-4 w-4" />
+                            {busyId === n.id ? (
+                              <Loader2
+                                aria-hidden="true"
+                                className="h-4 w-4 animate-spin motion-reduce:animate-none"
+                              />
+                            ) : (
+                              <Check aria-hidden="true" className="h-4 w-4" />
+                            )}
                           </Button>
                         )}
                       </li>
@@ -208,7 +230,18 @@ export function NotificationDrawer({
         </div>
 
         <div className="flex items-center justify-between border-t p-3">
-          <Button variant="ghost" size="sm" onClick={() => void onMarkAllRead()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={markingAll}
+            onClick={() => void onMarkAllRead()}
+          >
+            {markingAll ? (
+              <Loader2
+                aria-hidden="true"
+                className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+              />
+            ) : null}
             Mark all read
           </Button>
           <Link
