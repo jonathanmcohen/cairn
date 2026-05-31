@@ -15,6 +15,7 @@ const RuleInput = z.object({
   actionType: z.enum(ACTION_TYPES),
   actionConfig: z.record(z.string(), z.unknown()),
   enabled: z.boolean().optional().default(true),
+  builder: z.record(z.string(), z.unknown()).nullish(),
 });
 
 export async function GET(): Promise<Response> {
@@ -44,6 +45,7 @@ export async function POST(req: Request): Promise<Response> {
         condition: body.condition as schema.AutomationCondition,
         actionType: body.actionType,
         actionConfig: body.actionConfig,
+        builder: (body.builder ?? null) as schema.AutomationRule['builder'],
         enabled: body.enabled,
         createdBy: ctx.userId,
       })

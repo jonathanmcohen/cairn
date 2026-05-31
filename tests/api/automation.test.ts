@@ -348,6 +348,81 @@ describe('automation rules CRUD', () => {
     expect(res.status).toBe(404);
   });
 
+  it('POST persists and returns the builder editor blob', async () => {
+    const w = await ws();
+    const admin = await user('admin');
+    await addMember(w, admin, 'admin');
+    active = { name: 'cairn_ws', value: w };
+    await setUser({ userId: admin });
+
+    const builder = {
+      triggerEvent: 'row.created',
+      conditions: { combinator: 'and', rows: [] },
+      actions: [{ id: 'a1', type: 'notify', config: { userId: admin } }],
+    };
+    const { POST, GET } = await import('@/app/api/automation/rules/route');
+    const res = await POST(
+      new Request('http://x/api/automation/rules', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Builder rule',
+          triggerEvent: 'row.created',
+          condition: {},
+          actionType: 'notify',
+          actionConfig: { userId: admin },
+          builder,
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const created = (await res.json()) as { id: string; builder: typeof builder };
+    expect(created.builder).toEqual(builder);
+
+    const listRes = await GET();
+    const { rules } = (await listRes.json()) as {
+      rules: Array<{ id: string; builder: unknown }>;
+    };
+    expect(rules.find((r) => r.id === created.id)?.builder).toEqual(builder);
+  });
+
+  it('PATCH persists an updated builder blob', async () => {
+    const w = await ws();
+    const admin = await user('admin');
+    await addMember(w, admin, 'admin');
+    const [rule] = await getDb()
+      .insert(schema.automationRules)
+      .values({
+        workspaceId: w,
+        name: 'r',
+        triggerEvent: 'row.created',
+        actionType: 'notify',
+        actionConfig: { userId: admin },
+      })
+      .returning();
+    if (!rule) throw new Error('rule insert failed');
+    active = { name: 'cairn_ws', value: w };
+    await setUser({ userId: admin });
+
+    const builder = {
+      triggerEvent: 'row.updated',
+      conditions: { combinator: 'or', rows: [] },
+      actions: [{ id: 'a9', type: 'notify', config: { userId: admin } }],
+    };
+    const { PATCH } = await import('@/app/api/automation/rules/[ruleId]/route');
+    const res = await PATCH(
+      new Request('http://x', {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ builder }),
+      }),
+      { params: Promise.resolve({ ruleId: rule.id }) },
+    );
+    expect(res.status).toBe(200);
+    const patched = (await res.json()) as { builder: typeof builder };
+    expect(patched.builder).toEqual(builder);
+  });
+
   it('CRUD round-trip: create, list, patch, delete', async () => {
     const w = await ws();
     const admin = await user('admin');

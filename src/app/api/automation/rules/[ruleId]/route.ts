@@ -16,6 +16,7 @@ const RuleUpdate = z
     actionType: z.enum(ACTION_TYPES).optional(),
     actionConfig: z.record(z.string(), z.unknown()).optional(),
     enabled: z.boolean().optional(),
+    builder: z.record(z.string(), z.unknown()).nullish(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'no fields to update' });
 
@@ -35,6 +36,8 @@ export async function PATCH(req: Request, { params }: Ctx): Promise<Response> {
     if (patch.actionType !== undefined) updateValues.actionType = patch.actionType;
     if (patch.actionConfig !== undefined) updateValues.actionConfig = patch.actionConfig;
     if (patch.enabled !== undefined) updateValues.enabled = patch.enabled;
+    if (patch.builder !== undefined)
+      updateValues.builder = patch.builder as schema.AutomationRule['builder'];
 
     const [updated] = await getDb()
       .update(schema.automationRules)
