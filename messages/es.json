@@ -481,5 +481,8 @@
   "pages.translations.linkError": "No se pudo vincular la traducción",
   "pages.backlinks.toggle": "Retroenlaces",
   "databases.row.peek": "Abrir fila",
-  "databases.row.comments": "Comentarios"
+  "databases.row.comments": "Comentarios",
+  "statusBanner.error": "Error",
+  "statusBanner.success": "Correcto",
+  "statusBanner.warning": "Advertencia"
 }

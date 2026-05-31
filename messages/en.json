@@ -481,5 +481,8 @@
   "pages.translations.linkError": "Could not link translation",
   "pages.backlinks.toggle": "Backlinks",
   "databases.row.peek": "Open row",
-  "databases.row.comments": "Comments"
+  "databases.row.comments": "Comments",
+  "statusBanner.error": "Error",
+  "statusBanner.success": "Success",
+  "statusBanner.warning": "Warning"
 }

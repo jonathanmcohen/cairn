@@ -481,5 +481,8 @@
   "pages.translations.linkError": "تعذّر ربط الترجمة",
   "pages.backlinks.toggle": "روابط خلفية",
   "databases.row.peek": "فتح الصف",
-  "databases.row.comments": "تعليقات"
+  "databases.row.comments": "تعليقات",
+  "statusBanner.error": "خطأ",
+  "statusBanner.success": "تم بنجاح",
+  "statusBanner.warning": "تحذير"
 }
