@@ -4,6 +4,7 @@ import { type NodeViewProps, NodeViewWrapper } from '@tiptap/react';
 import { useState } from 'react';
 import { CalendarView } from './calendar-view';
 import { DatabaseExportMenu } from './export-menu';
+import { FiltersConfig } from './filters-config';
 import { GalleryView } from './gallery-view';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
@@ -52,6 +53,7 @@ export function DatabaseBlock({ node }: NodeViewProps) {
           onViewsChanged={refresh}
         />
         <div className="flex items-center gap-2">
+          <FiltersConfig {...viewProps} />
           <SortConfig {...viewProps} />
           <DatabaseExportMenu databaseId={databaseId} />
         </div>
