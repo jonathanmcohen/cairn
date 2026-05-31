@@ -40,6 +40,7 @@ const KEYS = [
   'automation.builder.templates.notifyHighPriority',
   'automation.builder.templates.autoAssignMention',
   'automation.builder.templates.archiveOnDone',
+  'automation.builder.name',
 ];
 
 function load(locale: string): Record<string, string> {

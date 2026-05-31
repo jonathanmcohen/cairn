@@ -326,5 +326,6 @@
   "automation.builder.condition.propertyPlaceholder": "row.cells.status",
   "automation.builder.templates.notifyHighPriority": "Notify on high-priority row",
   "automation.builder.templates.autoAssignMention": "Auto-assign on @mention",
-  "automation.builder.templates.archiveOnDone": "Archive when status = Done"
+  "automation.builder.templates.archiveOnDone": "Archive when status = Done",
+  "automation.builder.name": "Rule name"
 }

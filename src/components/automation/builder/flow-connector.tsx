@@ -11,8 +11,14 @@ export function FlowConnector({ variant = 'default' }: Props) {
         variant === 'branch' ? 'border-l border-dashed border-border' : 'bg-border'
       }`}
     >
-      <svg width="9" height="6" viewBox="0 0 9 6" className="translate-y-1 text-border">
-        <title>connector</title>
+      {/* biome-ignore lint/a11y/noSvgWithoutTitle: decorative arrow; the wrapper is aria-hidden. */}
+      <svg
+        width="9"
+        height="6"
+        viewBox="0 0 9 6"
+        className="translate-y-1 text-border"
+        role="presentation"
+      >
         <path d="M0 0 L4.5 6 L9 0 Z" fill="currentColor" />
       </svg>
     </div>

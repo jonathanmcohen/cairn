@@ -326,5 +326,6 @@
   "automation.builder.condition.propertyPlaceholder": "row.cells.status",
   "automation.builder.templates.notifyHighPriority": "Notificar en fila de alta prioridad",
   "automation.builder.templates.autoAssignMention": "Autoasignar al mencionar con @",
-  "automation.builder.templates.archiveOnDone": "Archivar cuando el estado = Hecho"
+  "automation.builder.templates.archiveOnDone": "Archivar cuando el estado = Hecho",
+  "automation.builder.name": "Nombre de la regla"
 }

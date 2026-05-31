@@ -19,7 +19,7 @@ type DryRun = {
   error?: string;
 };
 
-export function TestPanel({ body }: { body: Body }) {
+export function TestPanel({ body }: { body: Body | null }) {
   const t = useT();
   const [running, setRunning] = useState(false);
   const [result, setResult] = useState<DryRun | null>(null);
@@ -27,6 +27,7 @@ export function TestPanel({ body }: { body: Body }) {
   const [error, setError] = useState<string | null>(null);
 
   async function run() {
+    if (!body) return;
     setRunning(true);
     setError(null);
     try {
@@ -50,7 +51,12 @@ export function TestPanel({ body }: { body: Body }) {
 
   return (
     <div className="space-y-2 rounded-md border p-3">
-      <Button type="button" variant="outline" disabled={running} onClick={() => void run()}>
+      <Button
+        type="button"
+        variant="outline"
+        disabled={running || body === null}
+        onClick={() => void run()}
+      >
         {t('automation.builder.test')}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

@@ -326,5 +326,6 @@
   "automation.builder.condition.propertyPlaceholder": "row.cells.status",
   "automation.builder.templates.notifyHighPriority": "إشعار عند صف عالي الأولوية",
   "automation.builder.templates.autoAssignMention": "إسناد تلقائي عند الإشارة بـ @",
-  "automation.builder.templates.archiveOnDone": "الأرشفة عندما تكون الحالة = منجز"
+  "automation.builder.templates.archiveOnDone": "الأرشفة عندما تكون الحالة = منجز",
+  "automation.builder.name": "اسم القاعدة"
 }

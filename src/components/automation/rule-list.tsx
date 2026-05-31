@@ -17,6 +17,7 @@ export type RuleListRow = {
   createdAt: string;
   lastStatus: schema.AutomationRunStatus | null;
   lastRunAt: string | null;
+  builder: schema.AutomationRule['builder'];
 };
 
 function fmtDate(iso: string | null): string {

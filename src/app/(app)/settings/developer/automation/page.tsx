@@ -20,6 +20,7 @@ type RawRow = {
   enabled: boolean;
   created_by: string | null;
   created_at: Date;
+  builder: schema.AutomationRule['builder'];
   last_status: schema.AutomationRunStatus | null;
   last_run_at: Date | null;
 };
@@ -50,6 +51,7 @@ async function loadRules(workspaceId: string): Promise<RuleListRow[]> {
     actionConfig: r.action_config,
     enabled: r.enabled,
     createdAt: r.created_at.toISOString(),
+    builder: r.builder ?? null,
     lastStatus: r.last_status,
     lastRunAt: r.last_run_at ? r.last_run_at.toISOString() : null,
   }));

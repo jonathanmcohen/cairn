@@ -191,6 +191,7 @@ export function RuleForm(props: Props) {
             : new Date(saved.createdAt).toISOString(),
         lastStatus: props.mode === 'edit' ? props.rule.lastStatus : null,
         lastRunAt: props.mode === 'edit' ? props.rule.lastRunAt : null,
+        builder: props.mode === 'edit' ? props.rule.builder : null,
       };
       props.onClose(row);
     } catch (err) {
