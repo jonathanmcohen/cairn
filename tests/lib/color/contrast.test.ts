@@ -48,10 +48,7 @@ describe('contrastRatio', () => {
   });
 
   it('is symmetric (order does not matter)', () => {
-    expect(contrastRatio('#ea580c', '#fafafa')).toBeCloseTo(
-      contrastRatio('#fafafa', '#ea580c'),
-      5,
-    );
+    expect(contrastRatio('#ea580c', '#fafafa')).toBeCloseTo(contrastRatio('#fafafa', '#ea580c'), 5);
   });
 
   it('flags solid orange #ea580c against near-white #fafafa as below 4.5:1', () => {

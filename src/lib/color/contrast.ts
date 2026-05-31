@@ -57,10 +57,6 @@ export function contrastRatio(a: string, b: string): number {
 }
 
 /** True when `fg` vs `bg` meets WCAG AA (4.5:1 body, 3:1 large text). */
-export function meetsAA(
-  fg: string,
-  bg: string,
-  opts: { largeText?: boolean } = {},
-): boolean {
+export function meetsAA(fg: string, bg: string, opts: { largeText?: boolean } = {}): boolean {
   return contrastRatio(fg, bg) >= (opts.largeText ? 3 : 4.5);
 }

@@ -5,28 +5,16 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { meetsAA } from '@/lib/color/contrast';
 import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
+import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY } from '@/lib/pages/cover-presets';
 import { UnsplashTab } from './cover-picker-unsplash-tab';
 
-const COLOR_PRESETS = [
-  '#0f172a',
-  '#1f2937',
-  '#374151',
-  '#4b5563',
-  '#2563eb',
-  '#4f46e5',
-  '#7c3aed',
-  '#a21caf',
-  '#e11d48',
-  '#ea580c',
-  '#d97706',
-  '#ca8a04',
-  '#059669',
-  '#0d9488',
-  '#0891b2',
-  '#475569',
-] as const;
+// The page title overlays/sits-below the cover on the theme --foreground token.
+// In the dark UI that resolves to hsl(0 0% 98%) ≈ #fafafa — the contrast
+// reference for the user-pickable custom-hex warning (finding Y).
+const TITLE_REFERENCE = '#fafafa';
 
 type TabKey = 'color' | 'unsplash' | 'url' | 'upload';
 
@@ -121,44 +109,81 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
             </div>
             <div className="space-y-3 p-4">
               {tab === 'color' && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-8 gap-2">
-                    {COLOR_PRESETS.map((hex) => (
-                      <button
-                        key={hex}
-                        type="button"
-                        className="h-8 w-8 rounded border-2 border-transparent hover:border-foreground"
-                        style={{ backgroundColor: hex }}
-                        onClick={() => void save({ kind: 'color', value: hex })}
-                        aria-label={t('cover.useColor', { hex })}
-                      />
-                    ))}
+                <div className="space-y-4">
+                  <Button
+                    type="button"
+                    className="w-full"
+                    onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
+                  >
+                    {t('cover.useDefault')}
+                  </Button>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {t('cover.section.gradients')}
+                    </p>
+                    <div className="grid grid-cols-7 gap-2">
+                      {COVER_PRESETS.filter((p) => p.type === 'gradient').map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground"
+                          style={{ backgroundImage: p.css }}
+                          onClick={() => void save({ kind: 'preset', value: p.key })}
+                          aria-label={t('cover.usePreset', { name: t(p.nameKey) })}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="cover-hex" className="w-24">
-                      {t('cover.customHex')}
-                    </Label>
-                    <Input
-                      id="cover-hex"
-                      value={customHex}
-                      onChange={(e) => setCustomHex(e.target.value)}
-                      placeholder="#abcdef"
-                      className="w-32"
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex)) {
-                          void save({ kind: 'color', value: customHex });
-                        }
-                      }}
-                    >
-                      Use
-                    </Button>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {t('cover.section.neutrals')}
+                    </p>
+                    <div className="grid grid-cols-7 gap-2">
+                      {COVER_PRESETS.filter((p) => p.type === 'neutral').map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground"
+                          style={{ backgroundColor: p.css }}
+                          onClick={() => void save({ kind: 'preset', value: p.key })}
+                          aria-label={t('cover.usePreset', { name: t(p.nameKey) })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="cover-hex" className="w-24">
+                        {t('cover.customHex')}
+                      </Label>
+                      <Input
+                        id="cover-hex"
+                        value={customHex}
+                        onChange={(e) => setCustomHex(e.target.value)}
+                        placeholder="#abcdef"
+                        className="w-32"
+                      />
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex)) {
+                            void save({ kind: 'color', value: customHex });
+                          }
+                        }}
+                      >
+                        {t('cover.use')}
+                      </Button>
+                    </div>
+                    {/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex) &&
+                      !meetsAA(customHex, TITLE_REFERENCE) && (
+                        <p role="alert" className="text-xs text-destructive">
+                          {t('cover.contrastWarning')}
+                        </p>
+                      )}
                   </div>
                   {'kind' in current && (
                     <Button variant="outline" onClick={() => void save({})}>
-                      Remove cover
+                      {t('cover.remove')}
                     </Button>
                   )}
                 </div>
