@@ -4,7 +4,7 @@ import { Check, RotateCcw, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Comment } from '@/db/schema';
-import { hasMinRole, type MemberRole } from '@/lib/auth/require-role';
+import { hasMinRole, type MemberRole } from '@/lib/auth/roles';
 import type { CommentTargetType } from '@/lib/comments/target';
 import { CommentComposer } from './comment-composer';
 

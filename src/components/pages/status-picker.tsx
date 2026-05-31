@@ -15,7 +15,7 @@ import { useState } from 'react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PAGE_STATUSES, type PageStatus } from '@/db/schema';
 import { useT } from '@/lib/i18n/provider';
-import { canTransition } from '@/lib/pages/status';
+import { canTransition } from '@/lib/pages/status-rules';
 
 const STATUS_KEY: Record<PageStatus, string> = {
   draft: 'pages.status.draft',
