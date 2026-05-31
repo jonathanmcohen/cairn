@@ -9,12 +9,15 @@ import { useAnnounce } from '@/components/a11y/live-region';
 import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
+import type { CitationStyle } from '@/lib/citations/format';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
+import { BibliographyToggle } from './bibliography-toggle';
 import { BulkUploader } from './bulk-uploader';
 import { DragHandle } from './drag-handle';
 import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorDialogs } from './editor-dialogs';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
+import { Bibliography } from './extensions/bibliography';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
 import { composeGalleryInsert } from './image-extension';
 import { LockBadge } from './lock-badge';
@@ -59,6 +62,11 @@ export type EditorProps = {
   locked?: boolean;
   /** ISO unlock time, or null for an indefinite lock. */
   lockedUntilIso?: string | null;
+  /** v0.9.7 G19 #166 — initial value of pages.metadata.disable_bibliography. */
+  initialDisableBibliography?: boolean;
+  /** Page-level citation style used by the inserted citation node-views and
+   *  the in-editor bibliography preview. Defaults to 'apa'. */
+  citationStyle?: CitationStyle;
 };
 
 const STATUS_LABEL = {
@@ -98,6 +106,8 @@ export function Editor({
   encrypted = false,
   locked = false,
   lockedUntilIso = null,
+  initialDisableBibliography = false,
+  citationStyle = 'apa',
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
@@ -138,6 +148,8 @@ export function Editor({
   const [resolvable, setResolvable] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSuggestions, setOpenSuggestions] = useState<OpenSuggestion[]>([]);
+  // v0.9.7 G19 #166 — live "show bibliography" state, driven by the strip toggle.
+  const [bibDisabled, setBibDisabled] = useState(initialDisableBibliography);
   const activeSuggestionRef = useRef<string | null>(null);
 
   // Uploads hit the server, so they are blocked offline (bounded-offline gate).
@@ -564,6 +576,11 @@ export function Editor({
               onReject={(id) => void resolve('reject', id)}
               onView={viewSuggestion}
             />
+            <BibliographyToggle
+              pageId={pageId}
+              initialDisabled={initialDisableBibliography}
+              onChange={setBibDisabled}
+            />
             <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
           </>
         )}
@@ -599,6 +616,7 @@ export function Editor({
             <EditorBubbleMenu editor={editor} openLinkSignal={openLinkSignal} />
           )}
           <EditorContent editor={editor} />
+          {editor && !bibDisabled && <Bibliography doc={editor.getJSON()} style={citationStyle} />}
         </div>
       </div>
       {/* P19 #80 — the outline is an overlay flyout anchored to the outer

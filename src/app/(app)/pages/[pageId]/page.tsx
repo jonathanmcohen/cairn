@@ -67,6 +67,12 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   const showEncryptAction =
     env().NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION && canEdit && !page.encrypted;
 
+  // v0.9.7 G19 #166 — per-page citation prefs ride on `pages.metadata`.
+  const pageMeta = (page.metadata ?? {}) as {
+    citation_style?: 'apa' | 'mla' | 'chicago';
+    disable_bibliography?: boolean;
+  };
+
   return (
     <PageDetailShell>
       <PageModeShell>
@@ -154,6 +160,8 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           encrypted={page.encrypted}
           locked={lockState.locked}
           lockedUntilIso={lockState.lockedUntil ? lockState.lockedUntil.toISOString() : null}
+          initialDisableBibliography={pageMeta.disable_bibliography ?? false}
+          citationStyle={pageMeta.citation_style ?? 'apa'}
         />
       </PageModeShell>
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the

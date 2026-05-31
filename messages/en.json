@@ -292,6 +292,8 @@
   "cover.preset.slate": "Slate",
   "editor.lockedBadge.until": "🔒 Locked until {time}",
   "editor.lockedBadge.indefinite": "🔒 Locked",
+  "editor.bibliography.toggle": "Bibliography",
+  "editor.bibliography.toggleHint": "Show or hide the auto-generated References section",
   "slash.group.basic": "Basic",
   "slash.group.media": "Media",
   "slash.group.database": "Database",
