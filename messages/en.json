@@ -382,6 +382,8 @@
   "automation.builder.action.set_property": "Set a property",
   "automation.builder.action.create_page": "Create a page",
   "automation.builder.action.send_webhook": "Send a webhook",
+  "automation.builder.action.label": "Action type",
+  "automation.builder.condition.operator": "Condition operator",
   "automation.builder.notify.user": "User to notify",
   "automation.builder.notify.message": "Message (optional)",
   "automation.builder.setProperty.database": "Database",

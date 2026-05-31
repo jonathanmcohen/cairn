@@ -38,7 +38,7 @@ export function ActionCardHost({ type, config, onChange }: Props) {
         value={type}
         onValueChange={(v) => onChange({ type: v as AutomationActionType, config: {} })}
       >
-        <SelectTrigger className="w-full text-sm">
+        <SelectTrigger aria-label={t('automation.builder.action.label')} className="w-full text-sm">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

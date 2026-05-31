@@ -14,6 +14,7 @@ type Props = {
 export function NotifyCard({ config, onChange }: Props) {
   const t = useT();
   const msgId = useId();
+  const userSearchId = useId();
   const [query, setQuery] = useState('');
   const { options, loading } = useMembers(query);
   const selectedUserId = typeof config.userId === 'string' ? config.userId : '';
@@ -22,8 +23,9 @@ export function NotifyCard({ config, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label>{t('automation.builder.notify.user')}</Label>
+        <Label htmlFor={userSearchId}>{t('automation.builder.notify.user')}</Label>
         <Input
+          id={userSearchId}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder={t('automation.builder.notify.user')}

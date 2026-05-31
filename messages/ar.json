@@ -382,6 +382,8 @@
   "automation.builder.action.set_property": "تعيين خاصية",
   "automation.builder.action.create_page": "إنشاء صفحة",
   "automation.builder.action.send_webhook": "إرسال خطاف ويب",
+  "automation.builder.action.label": "نوع الإجراء",
+  "automation.builder.condition.operator": "عامل الشرط",
   "automation.builder.notify.user": "المستخدم المراد إشعاره",
   "automation.builder.notify.message": "الرسالة (اختياري)",
   "automation.builder.setProperty.database": "قاعدة البيانات",

@@ -21,6 +21,8 @@ type Props = {
 export function SetPropertyCard({ config, onChange }: Props) {
   const t = useT();
   const valueId = useId();
+  const databaseSelectId = useId();
+  const propertySelectId = useId();
   const databaseId = typeof config.databaseId === 'string' ? config.databaseId : '';
   const propertyId = typeof config.propertyId === 'string' ? config.propertyId : '';
   const value = config.value == null ? '' : String(config.value);
@@ -30,12 +32,12 @@ export function SetPropertyCard({ config, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label>{t('automation.builder.setProperty.database')}</Label>
+        <Label htmlFor={databaseSelectId}>{t('automation.builder.setProperty.database')}</Label>
         <Select
           value={databaseId}
           onValueChange={(v) => onChange({ ...config, databaseId: v, propertyId: '' })}
         >
-          <SelectTrigger className="w-full text-sm">
+          <SelectTrigger id={databaseSelectId} className="w-full text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -54,9 +56,9 @@ export function SetPropertyCard({ config, onChange }: Props) {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>{t('automation.builder.setProperty.property')}</Label>
+        <Label htmlFor={propertySelectId}>{t('automation.builder.setProperty.property')}</Label>
         <Select value={propertyId} onValueChange={(v) => onChange({ ...config, propertyId: v })}>
-          <SelectTrigger className="w-full text-sm">
+          <SelectTrigger id={propertySelectId} className="w-full text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

@@ -101,6 +101,7 @@ export function ConditionGroup({ group, onChange }: Props) {
       {rows.map((row) => (
         <div key={row.id} className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_1fr_1fr_auto]">
           <Input
+            aria-label={t('automation.builder.condition.propertyPlaceholder')}
             placeholder={t('automation.builder.condition.propertyPlaceholder')}
             value={row.property}
             onChange={(e) => updateRow(row.id, { property: e.target.value })}
@@ -109,7 +110,10 @@ export function ConditionGroup({ group, onChange }: Props) {
             value={row.operator}
             onValueChange={(v) => updateRow(row.id, { operator: v as AutomationOperator })}
           >
-            <SelectTrigger className="w-full text-sm">
+            <SelectTrigger
+              aria-label={t('automation.builder.condition.operator')}
+              className="w-full text-sm"
+            >
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -121,6 +125,7 @@ export function ConditionGroup({ group, onChange }: Props) {
             </SelectContent>
           </Select>
           <Input
+            aria-label={t('automation.builder.setProperty.value')}
             placeholder={t('automation.builder.setProperty.value')}
             value={row.value == null ? '' : String(row.value)}
             onChange={(e) => updateRow(row.id, { value: parseLiteral(e.target.value) })}

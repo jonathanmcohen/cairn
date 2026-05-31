@@ -21,6 +21,8 @@ type Props = {
 export function CreatePageCard({ config, onChange }: Props) {
   const t = useT();
   const titleId = useId();
+  const templateSelectId = useId();
+  const parentSelectId = useId();
   const templateId = typeof config.templateId === 'string' ? config.templateId : '';
   const parentId = typeof config.parentId === 'string' ? config.parentId : '';
   const titleTemplate = typeof config.titleTemplate === 'string' ? config.titleTemplate : '';
@@ -30,9 +32,9 @@ export function CreatePageCard({ config, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label>{t('automation.builder.createPage.template')}</Label>
+        <Label htmlFor={templateSelectId}>{t('automation.builder.createPage.template')}</Label>
         <Select value={templateId} onValueChange={(v) => onChange({ ...config, templateId: v })}>
-          <SelectTrigger className="w-full text-sm">
+          <SelectTrigger id={templateSelectId} className="w-full text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -45,9 +47,9 @@ export function CreatePageCard({ config, onChange }: Props) {
         </Select>
       </div>
       <div className="space-y-1.5">
-        <Label>{t('automation.builder.createPage.parent')}</Label>
+        <Label htmlFor={parentSelectId}>{t('automation.builder.createPage.parent')}</Label>
         <Select value={parentId} onValueChange={(v) => onChange({ ...config, parentId: v })}>
-          <SelectTrigger className="w-full text-sm">
+          <SelectTrigger id={parentSelectId} className="w-full text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

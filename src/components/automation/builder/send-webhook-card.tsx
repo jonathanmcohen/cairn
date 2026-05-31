@@ -1,5 +1,6 @@
 'use client';
 
+import { useId } from 'react';
 import { useWebhooks } from '@/components/automation/builder/use-pickers';
 import { Label } from '@/components/ui/label';
 import {
@@ -18,15 +19,16 @@ type Props = {
 
 export function SendWebhookCard({ config, onChange }: Props) {
   const t = useT();
+  const webhookSelectId = useId();
   const webhookId = typeof config.webhookId === 'string' ? config.webhookId : '';
   const { options: webhooks } = useWebhooks();
 
   return (
     <div className="space-y-3">
       <div className="space-y-1.5">
-        <Label>{t('automation.builder.sendWebhook.webhook')}</Label>
+        <Label htmlFor={webhookSelectId}>{t('automation.builder.sendWebhook.webhook')}</Label>
         <Select value={webhookId} onValueChange={(v) => onChange({ ...config, webhookId: v })}>
-          <SelectTrigger className="w-full text-sm">
+          <SelectTrigger id={webhookSelectId} className="w-full text-sm">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
