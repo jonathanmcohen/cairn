@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { openQuickCapture } from '@/components/quick-capture/controller';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { usePrompt } from '@/components/ui/input-dialog';
+import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
@@ -70,6 +71,9 @@ export function SearchPalette({
   const [saved, setSaved] = useState<SavedSearch[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  // #169 — trap Tab/Shift+Tab inside the palette while it's open. cmdk owns
+  // arrow-key list nav; the trap only governs Tab, so they don't collide.
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   // #109: focus the input whenever the palette opens. autoFocus on
   // Command.Input handles the common (fresh-mount) path; this effect covers
@@ -209,6 +213,8 @@ export function SearchPalette({
         onClick={() => setOpen(false)}
       />
       <Command
+        ref={trapRef}
+        data-cairn-palette=""
         className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
         shouldFilter={false}
         onKeyDown={(e) => {
