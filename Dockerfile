@@ -83,11 +83,14 @@ COPY --from=deps --chown=cairn:cairn /app/node_modules/zod ./node_modules/zod
 # the full pnpm package (which includes the .so). @xenova/transformers@2 pins
 # onnxruntime-node@1.14.0.
 COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/onnxruntime-node@1.14.0 ./node_modules/.pnpm/onnxruntime-node@1.14.0
-# @xenova/transformers@2 also pulls sharp@0.32.6 (image preprocessing), whose
-# native build/Release/sharp-<platform>.node + vendored libvips are likewise
-# dropped by Next's file-trace. Overlay the full pnpm package so the embedder's
-# require('sharp') resolves its binary.
-COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/sharp@0.32.6 ./node_modules/.pnpm/sharp@0.32.6
+# sharp (image preprocessing, pulled by @xenova/transformers + used by
+# next/image) is pinned to 0.34.5 via pnpm overrides; its native binary lives in
+# the platform-specific @img/* packages, which Next's file-trace drops. Overlay
+# the sharp package plus its linux-x64 @img binary + libvips so require('sharp')
+# resolves at runtime.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/sharp@0.34.5 ./node_modules/.pnpm/sharp@0.34.5
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-linux-x64@0.34.5 ./node_modules/.pnpm/@img+sharp-linux-x64@0.34.5
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.4 ./node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.4
 
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
