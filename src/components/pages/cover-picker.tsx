@@ -1,5 +1,6 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,9 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
   const [tab, setTab] = useState<TabKey>('color');
   const [customHex, setCustomHex] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  async function save(next: PageCover) {
+  async function persist(next: PageCover) {
     const res = await fetch(`/api/pages/${pageId}/cover`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -56,13 +58,29 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
     }
   }
 
+  async function save(next: PageCover) {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await persist(next);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function upload(file: File) {
-    const form = new FormData();
-    form.set('file', file);
-    const res = await fetch('/api/files', { method: 'POST', body: form });
-    if (!res.ok) return;
-    const json = (await res.json()) as { id: string };
-    void save({ kind: 'upload', value: json.id });
+    if (saving) return;
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      const res = await fetch('/api/files', { method: 'POST', body: form });
+      if (!res.ok) return;
+      const json = (await res.json()) as { id: string };
+      await persist({ kind: 'upload', value: json.id });
+    } finally {
+      setSaving(false);
+    }
   }
 
   const tabBtn = (key: TabKey, label: string) => (
@@ -83,7 +101,19 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
 
   return (
     <>
-      <Button variant="ghost" size="sm" className="min-h-11" onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="min-h-11"
+        disabled={saving}
+        onClick={() => setOpen(true)}
+      >
+        {saving ? (
+          <Loader2
+            aria-hidden="true"
+            className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+          />
+        ) : null}
         {'kind' in current ? t('cover.change') : t('cover.add')}
       </Button>
       {open && (
@@ -125,6 +155,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                   <Button
                     type="button"
                     className="w-full"
+                    disabled={saving}
                     onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
                   >
                     {t('cover.useDefault')}
@@ -138,8 +169,9 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                         <button
                           key={p.key}
                           type="button"
-                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground"
+                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground disabled:opacity-40"
                           style={{ backgroundImage: p.css }}
+                          disabled={saving}
                           onClick={() => void save({ kind: 'preset', value: p.key })}
                           aria-label={t('cover.usePreset', { name: t(p.nameKey) })}
                         />
@@ -155,8 +187,9 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                         <button
                           key={p.key}
                           type="button"
-                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground"
+                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground disabled:opacity-40"
                           style={{ backgroundColor: p.css }}
+                          disabled={saving}
                           onClick={() => void save({ kind: 'preset', value: p.key })}
                           aria-label={t('cover.usePreset', { name: t(p.nameKey) })}
                         />
@@ -177,6 +210,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                       />
                       <Button
                         type="button"
+                        disabled={saving}
                         onClick={() => {
                           if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex)) {
                             void save({ kind: 'color', value: customHex });
@@ -194,7 +228,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                       )}
                   </div>
                   {'kind' in current && (
-                    <Button variant="outline" onClick={() => void save({})}>
+                    <Button variant="outline" disabled={saving} onClick={() => void save({})}>
                       {t('cover.remove')}
                     </Button>
                   )}
@@ -220,6 +254,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                   </div>
                   <Button
                     type="button"
+                    disabled={saving}
                     onClick={() => {
                       if (/^https:\/\/\S+$/.test(coverUrl.trim())) {
                         void save({ kind: 'unsplash', value: coverUrl.trim() });
@@ -236,14 +271,13 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                   <input
                     type="file"
                     accept="image/*"
+                    disabled={saving}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) void upload(file);
                     }}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Images are stored locally and served through signed URLs.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('cover.uploadHint')}</p>
                 </div>
               )}
             </div>
