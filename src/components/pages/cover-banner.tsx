@@ -1,6 +1,7 @@
 import { env } from '@/lib/env';
 import { signFileUrl } from '@/lib/files/signing';
 import type { PageCover } from '@/lib/pages/cover';
+import { getCoverPreset } from '@/lib/pages/cover-presets';
 
 /** 1-hour TTL matches the editor image links + the public-page resign helper. */
 const UPLOAD_TTL_SECONDS = 60 * 60;
@@ -19,6 +20,22 @@ export type CoverBannerProps = {
  */
 export function CoverBanner({ cover, alt = '' }: CoverBannerProps) {
   if (!('kind' in cover)) return null;
+
+  if (cover.kind === 'preset') {
+    const preset = getCoverPreset(cover.value);
+    if (!preset) return null;
+    return (
+      <div
+        aria-hidden="true"
+        className="h-[200px] w-full"
+        style={
+          preset.type === 'gradient'
+            ? { backgroundImage: preset.css }
+            : { backgroundColor: preset.css }
+        }
+      />
+    );
+  }
 
   if (cover.kind === 'color') {
     return (
