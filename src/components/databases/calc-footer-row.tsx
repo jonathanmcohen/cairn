@@ -102,7 +102,7 @@ export function CalcFooterRow({
                 >
                   <SelectTrigger
                     aria-label={`Calc for ${p.name}`}
-                    className="h-6 min-h-6 w-auto border-0 px-1 py-0 text-[10px] text-muted-foreground shadow-none hover:bg-accent"
+                    className="h-6 min-h-6 w-auto border-0 px-1 py-0 text-xs text-muted-foreground shadow-none hover:bg-accent"
                   >
                     <SelectValue />
                   </SelectTrigger>

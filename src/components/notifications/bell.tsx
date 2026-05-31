@@ -45,7 +45,7 @@ export function NotificationBell() {
           <span
             role="img"
             aria-label={`${unread} unread`}
-            className="-right-0.5 -top-0.5 absolute flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 font-semibold text-[10px] text-primary-foreground leading-none"
+            className="-right-0.5 -top-0.5 absolute flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary px-1 font-semibold text-xs text-primary-foreground leading-none"
           >
             {unread > 99 ? '99+' : unread}
           </span>

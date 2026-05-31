@@ -94,11 +94,11 @@ export function CalendarView({ databaseId, meta, rows, view, onChange }: ViewPro
                 c.inMonth ? '' : 'text-muted-foreground/50'
               }`}
             >
-              <span className="px-1 text-[10px]">{c.date.getUTCDate()}</span>
+              <span className="px-1 text-xs">{c.date.getUTCDate()}</span>
               {dayRows.map((r) => (
                 <span
                   key={r.row.id}
-                  className="truncate rounded bg-primary/10 px-1 py-0.5 text-[11px] text-foreground"
+                  className="truncate rounded bg-primary/10 px-1 py-0.5 text-xs text-foreground"
                 >
                   {rowTitle(r.cells)}
                 </span>
