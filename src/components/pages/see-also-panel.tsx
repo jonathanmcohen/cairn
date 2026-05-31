@@ -1,7 +1,22 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { getDb } from '@/db/client';
+import { parseIcon } from '@/lib/pages/icon-format';
 import { findRelatedPages } from '@/lib/search/see-also';
+
+/**
+ * Render a related page's stored icon string. Routes through `parseIcon` so the
+ * `emoji::`/`file::` shortcode prefix never leaks into the DOM (the bug fixed in
+ * the page-icon polish, now applied to this code path too). File-backed icons
+ * collapse to a neutral placeholder here — the compact panel intentionally does
+ * not resolve signed image URLs.
+ */
+function renderRelatedIcon(stored: string | null): React.ReactNode {
+  const parsed = parseIcon(stored);
+  if (!parsed) return '📄';
+  if (parsed.kind === 'emoji') return parsed.value;
+  return '🖼️';
+}
 
 export type SeeAlsoPanelProps = {
   /** The page whose neighbors to surface. */
@@ -53,7 +68,7 @@ export async function SeeAlsoPanel(props: SeeAlsoPanelProps) {
                 className="block rounded p-1 hover:bg-accent/50"
               >
                 <div className="flex items-center gap-2">
-                  <span aria-hidden="true">{r.icon ?? '📄'}</span>
+                  <span aria-hidden="true">{renderRelatedIcon(r.icon)}</span>
                   <span className="font-medium">{r.title}</span>
                   <span
                     className="ml-auto text-xs tabular-nums text-muted-foreground"
