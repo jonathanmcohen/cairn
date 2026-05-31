@@ -39,7 +39,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # restore during upgrade orchestration. The postgresql-client package on the
 # Alpine repo ships both binaries (~6 MB compressed). Pinned to v17 so the
 # wire-protocol matches the Postgres 17/18 server image used in production.
-RUN apk add --no-cache postgresql17-client
+# gcompat provides the glibc dynamic loader (ld-linux-x86-64.so.2) + glibc
+# shim, and libstdc++ the C++ runtime, so the glibc-linked onnxruntime-node
+# prebuilt binary (pulled by @xenova/transformers for the local embedder) can
+# dlopen on this musl/Alpine base.
+RUN apk add --no-cache postgresql17-client gcompat libstdc++
 
 RUN addgroup -g 1001 -S cairn && adduser -u 1001 -S cairn -G cairn
 
