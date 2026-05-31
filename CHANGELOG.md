@@ -7,7 +7,39 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [0.9.7] - 2026-05-31
 
-Post-release browser-audit-2 fixes (findings S–Y; closes #153–#159).
+Post-release browser-audit-2 fixes (findings S–Y; closes #153–#159) plus a
+full-app UI-reachability + ui-ux-pro-max quality sweep (audit-3; closes #161–#170).
+
+### Audit-3 — reachability (every shipped feature now reachable in the UI)
+- **Nav wiring + routes** (#161) — surfaced ~15 orphaned settings/admin pages
+  (automation builder, webhooks, static export, SSO/SCIM, MFA policy, E2E toggle,
+  upgrade, PAT tokens, PAT quotas, Swagger /api-docs, theme, trash retention,
+  pinned pages, chat-bridge); added the missing `/search` and `/favorites` routes.
+- **Databases** (#162) — filter editor, group-by picker, Kanban add-view, full-page
+  database route, gallery empty-state CTA.
+- **Collaboration** (#163) — mounted row/file comments, backlinks panel, submit-for-
+  review + lifecycle status picker, page-translation linker, reminder materialization.
+- **Search** (#164) — fts/semantic/hybrid mode toggle + `/search` results page +
+  admin cross-workspace (federated) opt-in.
+- **Connectors** (#165) — connectors landing (create + config + conflicts) + chat-
+  bridge admin nav.
+- **Citations** (#166) — DOI/PubMed lookup slash item + in-editor bibliography toggle.
+- **SSO + ACLs** (#167) — per-IdP "Sign in with…" buttons + page-ACL management UI/API.
+- **E2EE** (#168) — keypair enrollment (generate → seal → persist) wired into the
+  per-page Encrypt action + workspace-wide toggle (no longer dead-ends) + rekey/
+  member-removal flow.
+
+### Audit-3 — ui-ux-pro-max quality
+- **Critical** (#169) — global `prefers-reduced-motion` guard; restored focus-visible
+  rings across inputs/links/palette; AA dark-mode contrast (`--destructive`/success/
+  warning tokens, semantic banners); ≥40–44px touch targets; themed confirm dialogs
+  on destructive upgrade/E2E actions; focus-trap + Esc on the command palette + cover
+  modal; real labels on 2FA inputs.
+- **Polish** (#170) — emoji→lucide structural icons; Loader2 busy states on async
+  actions; empty states (gallery/automation/Unsplash); ≥12px text; truncation
+  tooltips; single-image lightbox.
+
+### Audit-2 (findings S–Y; closes #153–#159)
 
 ### Added
 - **Automation visual workflow builder** (#154) — replaced the raw-JSON rule form
