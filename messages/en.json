@@ -36,6 +36,7 @@
   "editor.image.pasteUrlPlaceholder": "Paste an image URL",
   "editor.image.embed": "Embed",
   "editor.file.emptyAlt": "Empty file.",
+  "editor.file.comments": "Comments",
   "pageMode.focus": "Focus mode",
   "pageMode.focusHint": "Focus mode (hide sidebar, header, and comments)",
   "pageMode.reader": "Reader mode",

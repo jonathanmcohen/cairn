@@ -36,6 +36,7 @@
   "editor.image.pasteUrlPlaceholder": "الصق عنوان URL لصورة",
   "editor.image.embed": "تضمين",
   "editor.file.emptyAlt": "ملف فارغ.",
+  "editor.file.comments": "تعليقات",
   "pageMode.focus": "وضع التركيز",
   "pageMode.focusHint": "وضع التركيز (إخفاء الشريط الجانبي والرأس والتعليقات)",
   "pageMode.reader": "وضع القراءة",

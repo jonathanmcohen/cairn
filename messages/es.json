@@ -36,6 +36,7 @@
   "editor.image.pasteUrlPlaceholder": "Pega la URL de una imagen",
   "editor.image.embed": "Insertar",
   "editor.file.emptyAlt": "Archivo vacío.",
+  "editor.file.comments": "Comentarios",
   "pageMode.focus": "Modo concentración",
   "pageMode.focusHint": "Modo concentración (ocultar barra lateral, encabezado y comentarios)",
   "pageMode.reader": "Modo lectura",
