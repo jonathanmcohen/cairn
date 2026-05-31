@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { meetsAA } from '@/lib/color/contrast';
 import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
@@ -36,6 +37,8 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
   const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // #169 — trap Tab + handle Escape while the custom modal is open.
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [tab, setTab] = useState<TabKey>('color');
   const [customHex, setCustomHex] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
@@ -92,8 +95,17 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
             onClick={() => setOpen(false)}
           />
           <div
+            ref={trapRef}
             role="dialog"
             aria-label={t('cover.dialogTitle')}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(false);
+              }
+            }}
+            tabIndex={-1}
             className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
           >
             <div className="border-b px-4 py-3">
