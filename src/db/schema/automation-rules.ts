@@ -1,4 +1,5 @@
 import { boolean, index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import type { BuilderModel } from '@/lib/automation/builder';
 import { users } from './users';
 import { workspaces } from './workspaces';
 
@@ -44,6 +45,9 @@ export const automationRules = pgTable(
     actionType: text('action_type').notNull(),
     // Action-type-specific config; shape validated by the runner.
     actionConfig: jsonb('action_config').$type<Record<string, unknown>>().notNull(),
+    // Visual-builder editor state — round-trips the canvas. The dispatcher ignores
+    // this column and reads the singular condition/actionType/actionConfig fields.
+    builder: jsonb('builder').$type<BuilderModel | null>(),
     enabled: boolean('enabled').notNull().default(true),
     createdBy: uuid('created_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),

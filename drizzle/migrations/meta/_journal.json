@@ -393,6 +393,13 @@
       "when": 1780155797491,
       "tag": "0055_auth_sessions",
       "breakpoints": true
+    },
+    {
+      "idx": 56,
+      "version": "7",
+      "when": 1780242197491,
+      "tag": "0056_automation_builder",
+      "breakpoints": true
     }
   ]
 }
