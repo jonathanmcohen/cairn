@@ -11,6 +11,7 @@ function fakeCtx(overrides: Partial<PaletteContext> = {}): PaletteContext {
     currentTheme: 'light',
     toast: vi.fn(),
     openNotifications: vi.fn(),
+    quickCapture: vi.fn(),
     ...overrides,
   };
 }
@@ -71,6 +72,24 @@ describe('buildPaletteActions', () => {
     const actions = buildPaletteActions(ctx);
     actions.find((a) => a.id === 'theme.toggle')?.run();
     expect(ctx.setTheme).toHaveBeenCalledWith('light');
+  });
+
+  it('exposes a flashcards study action that navigates to /flashcards/study', () => {
+    const push = vi.fn();
+    const actions = buildPaletteActions(fakeCtx({ router: { push, refresh: vi.fn() } }));
+    const study = actions.find((a) => a.id === 'flashcards.study');
+    expect(study).toBeDefined();
+    study?.run();
+    expect(push).toHaveBeenCalledWith('/flashcards/study');
+  });
+
+  it('exposes a quick-capture action that invokes the quickCapture callback', () => {
+    const quickCapture = vi.fn();
+    const actions = buildPaletteActions(fakeCtx({ quickCapture }));
+    const qc = actions.find((a) => a.id === 'quick.capture');
+    expect(qc).toBeDefined();
+    qc?.run();
+    expect(quickCapture).toHaveBeenCalledTimes(1);
   });
 
   it('page.copyLink calls clipboard.writeText and toasts', async () => {

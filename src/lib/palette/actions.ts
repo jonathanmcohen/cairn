@@ -27,6 +27,8 @@ export type PaletteContext = {
   toast: (message: string) => void;
   /** Opens the global notification drawer (G6 P15). No-ops if the drawer hasn't been mounted yet. */
   openNotifications: () => void;
+  /** Opens the quick-capture modal (G14). No-ops if the modal isn't mounted. */
+  quickCapture: () => void;
 };
 
 export type PaletteAction = {
@@ -74,6 +76,11 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
       run: () => ctx.router.push('/templates'),
     },
     {
+      id: 'flashcards.study',
+      label: 'Study flashcards',
+      run: () => ctx.router.push('/flashcards/study'),
+    },
+    {
       id: 'nav.settings.account',
       label: 'Settings: Account',
       run: () => ctx.router.push('/settings/account'),
@@ -102,6 +109,11 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
       id: 'page.new',
       label: 'Create new page',
       run: () => ctx.router.push('/pages/new'),
+    },
+    {
+      id: 'quick.capture',
+      label: 'Quick capture a note',
+      run: () => ctx.quickCapture(),
     },
     {
       id: 'search.open',

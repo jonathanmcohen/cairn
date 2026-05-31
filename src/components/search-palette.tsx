@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { openQuickCapture } from '@/components/quick-capture/controller';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { usePrompt } from '@/components/ui/input-dialog';
 import { copy } from '@/lib/copy/messages';
@@ -94,6 +95,7 @@ export function SearchPalette({
           | 'system',
         toast: (m) => toast(m),
         openNotifications: () => router.push('/notifications' as Route),
+        quickCapture: () => openQuickCapture(),
       }),
     );
   }, [router, currentPageId, currentUserId, setTheme, theme]);

@@ -4,6 +4,7 @@ import { CheckSquare, LayoutTemplate, LogOut, Settings, Trash } from 'lucide-rea
 import Link from 'next/link';
 import { useT } from '@/lib/i18n/provider';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
+import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
 
@@ -23,6 +24,7 @@ export function SidebarFooterNav({ version }: { version: string }) {
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
       <ReviewDueCounter />
+      <StudyLink />
       <Link href="/my-tasks" className={NAV_ITEM_CLASS}>
         <CheckSquare aria-hidden="true" className="h-4 w-4" />
         My tasks
