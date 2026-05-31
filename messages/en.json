@@ -401,5 +401,8 @@
   "pages.status.published": "Published",
   "pages.status.archived": "Archived",
   "pages.status.change": "Change status",
-  "pages.status.changeError": "Could not change status"
+  "pages.status.changeError": "Could not change status",
+  "pages.review.submit": "Submit for review",
+  "pages.review.submitting": "Submitting…",
+  "pages.review.error": "Could not submit for review"
 }

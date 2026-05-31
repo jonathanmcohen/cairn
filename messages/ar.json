@@ -401,5 +401,8 @@
   "pages.status.published": "منشورة",
   "pages.status.archived": "مؤرشفة",
   "pages.status.change": "تغيير الحالة",
-  "pages.status.changeError": "تعذّر تغيير الحالة"
+  "pages.status.changeError": "تعذّر تغيير الحالة",
+  "pages.review.submit": "إرسال للمراجعة",
+  "pages.review.submitting": "جارٍ الإرسال…",
+  "pages.review.error": "تعذّر الإرسال للمراجعة"
 }

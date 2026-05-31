@@ -401,5 +401,8 @@
   "pages.status.published": "Publicada",
   "pages.status.archived": "Archivada",
   "pages.status.change": "Cambiar estado",
-  "pages.status.changeError": "No se pudo cambiar el estado"
+  "pages.status.changeError": "No se pudo cambiar el estado",
+  "pages.review.submit": "Enviar a revisión",
+  "pages.review.submitting": "Enviando…",
+  "pages.review.error": "No se pudo enviar a revisión"
 }
