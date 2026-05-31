@@ -22,7 +22,15 @@ const clipboardSpy = vi.fn(async () => undefined);
 
 beforeEach(() => {
   fetchSpy.mockReset();
-  fetchSpy.mockResolvedValue(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+  // SharePanel now mounts <PageAclManager>, which fires GET /api/pages/<id>/acls
+  // on mount. Mock that GET to an empty grant list; everything else (the share
+  // PATCH) resolves to ok:true.
+  fetchSpy.mockImplementation(async (input: string) => {
+    if (String(input).includes('/acls')) {
+      return new Response(JSON.stringify({ grants: [] }), { status: 200 });
+    }
+    return new Response(JSON.stringify({ ok: true }), { status: 200 });
+  });
   vi.stubGlobal('fetch', fetchSpy);
   clipboardSpy.mockClear();
   Object.defineProperty(navigator, 'clipboard', {
@@ -55,8 +63,12 @@ describe('<SharePanel> rotate password (v0.9.0 G6 P33)', () => {
   it('PATCHes /api/pages/<id>/share with a fresh password string + copies it', async () => {
     renderPanel(<SharePanel pageId="p1" initialHasPassword={true} />);
     fireEvent.click(screen.getByRole('button', { name: /rotate password/i }));
-    await waitFor(() => expect(fetchSpy).toHaveBeenCalled());
-    const call = fetchSpy.mock.calls[0]!;
+    // The ACL manager's mount GET also goes through fetchSpy, so target the
+    // share PATCH call specifically rather than calls[0].
+    await waitFor(() =>
+      expect(fetchSpy.mock.calls.some((c) => String(c[0]).includes('/share'))).toBe(true),
+    );
+    const call = fetchSpy.mock.calls.find((c) => String(c[0]).includes('/share'))!;
     expect(call[0]).toBe('/api/pages/p1/share');
     const init = call[1] as RequestInit;
     expect(init.method).toBe('PATCH');
