@@ -67,11 +67,7 @@ export function ImageView({ node, editor, updateAttributes }: NodeViewProps) {
           <img src={src} alt={altProp} className="max-w-full rounded-md" loading="lazy" />
         </button>
         {lightboxOpen ? (
-          <Lightbox
-            images={[{ src, alt }]}
-            startIndex={0}
-            onClose={() => setLightboxOpen(false)}
-          />
+          <Lightbox images={[{ src, alt }]} startIndex={0} onClose={() => setLightboxOpen(false)} />
         ) : null}
       </NodeViewWrapper>
     );

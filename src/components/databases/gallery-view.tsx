@@ -7,7 +7,7 @@ import type { ViewProps } from './table-view';
 
 export function GalleryView({ databaseId, meta, rows, onChange }: ViewProps) {
   const t = useT();
-  const [adding, setAdding] = useState(false);
+  const [, setAdding] = useState(false);
   const titleProp = meta.properties.find((p) => p.type === 'text') ?? meta.properties[0];
   const otherProps = meta.properties.filter((p) => p.id !== titleProp?.id);
 
