@@ -440,6 +440,8 @@
   "settings.nav.workspace.general": "General",
   "settings.nav.workspace.members": "Miembros",
   "settings.nav.developer.connectors": "Conectores",
+  "settings.nav.developer.chatBridge": "Instalación de Slack y Discord",
+  "settings.nav.developer.chatBridgeChannels": "Enlaces de canal",
   "pages.status.label": "Estado",
   "pages.status.draft": "Borrador",
   "pages.status.review": "En revisión",

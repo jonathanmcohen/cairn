@@ -150,6 +150,20 @@ export function SettingsSidebar({
             label: t('settings.nav.developer.connectors'),
             href: '/settings/developer/connectors' as Route,
           },
+          // Chat-bridge admin lives outside the hub (/admin/chat-bridge*) but is
+          // surfaced here so admins reach the Slack/Discord install + channel
+          // links from the Developer nav (#165). The Admin section also links the
+          // install console (G14) — both point at the same admin-gated pages.
+          {
+            id: 'developer-chat-bridge',
+            label: t('settings.nav.developer.chatBridge'),
+            href: '/admin/chat-bridge' as Route,
+          },
+          {
+            id: 'developer-chat-bridge-channels',
+            label: t('settings.nav.developer.chatBridgeChannels'),
+            href: '/admin/chat-bridge/channels' as Route,
+          },
           {
             id: 'developer-automation',
             label: t('settings.nav.developer.automation'),

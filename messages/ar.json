@@ -440,6 +440,8 @@
   "settings.nav.workspace.general": "عام",
   "settings.nav.workspace.members": "الأعضاء",
   "settings.nav.developer.connectors": "الموصّلات",
+  "settings.nav.developer.chatBridge": "تثبيت Slack وDiscord",
+  "settings.nav.developer.chatBridgeChannels": "روابط القنوات",
   "pages.status.label": "الحالة",
   "pages.status.draft": "مسودة",
   "pages.status.review": "قيد المراجعة",
