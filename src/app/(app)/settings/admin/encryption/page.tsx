@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import { WorkspaceE2EToggle } from '@/components/admin/workspace-e2e-toggle';
+import { WorkspaceRekeyAction } from '@/components/admin/workspace-rekey-action';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { workspaces } from '@/db/schema';
@@ -41,7 +42,14 @@ export default async function AdminEncryptionPage() {
         holds the key — only its wrapped form for each member.
       </p>
       {flagOn ? (
-        <WorkspaceE2EToggle workspaceId={ctx.workspaceId} initialMode={mode} />
+        <>
+          <WorkspaceE2EToggle workspaceId={ctx.workspaceId} initialMode={mode} />
+          {mode === 'workspace_wide' ? (
+            <div className="mt-6">
+              <WorkspaceRekeyAction workspaceId={ctx.workspaceId} />
+            </div>
+          ) : null}
+        </>
       ) : (
         <p className="text-destructive text-sm">
           End-to-end encryption is disabled in this build
