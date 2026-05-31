@@ -183,16 +183,17 @@ test.describe('v0.7 modal / form focus management', () => {
     await expect(trigger).toBeVisible();
     await trigger.click();
 
-    // Card heading replaces the trigger when opened.
-    const heading = page.getByRole('heading', { name: /^new rule$/i });
+    // The visual builder canvas replaces the trigger when opened; its heading
+    // is the "Rule name" label (v0.9.7 G11 replaced the old inline RuleForm
+    // with the Zapier/n8n-style builder).
+    const heading = page.getByRole('heading', { name: /^rule name$/i });
     await expect(heading).toBeVisible();
 
     await expectNoA11yViolations(page, 'RuleForm (inline)');
 
-    // The form's first focusable control is the Name input. Move focus to it
-    // explicitly (the inline form doesn't auto-focus today) and assert it
-    // accepts focus + draws a focus indicator.
-    const nameInput = page.getByLabel('Name').first();
+    // The builder's first focusable control is the Rule name input. Move focus
+    // to it explicitly and assert it accepts focus + draws a focus indicator.
+    const nameInput = page.getByLabel('Rule name').first();
     await nameInput.focus();
     await expect(nameInput).toBeFocused();
   });
