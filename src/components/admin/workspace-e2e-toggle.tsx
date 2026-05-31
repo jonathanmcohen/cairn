@@ -4,37 +4,30 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { usePrompt } from '@/components/ui/input-dialog';
+import { enrollKeypair, ensureEnrolled, type StoredSealed } from '@/lib/e2e/enroll-client';
 import { useT } from '@/lib/i18n/provider';
-
-type Sealed = {
-  publicKey: string;
-  encryptedPrivateKey: string;
-  kdfSalt: string;
-  kdfIters: number;
-};
 
 type Member = { memberUserId: string; publicKey: string };
 type PageRow = { id: string; title: string };
 
 /**
- * v0.9.0 G1 P7 — admin toggle for workspace-wide E2E encryption.
+ * v0.9.0 G1 P7 / v0.9.7 G21 (#168) — admin toggle for workspace-wide E2E.
  *
  * Client Component. The server NEVER sees the workspace-key (WSK) or any
  * plaintext page content. Flow on "Enable":
- *   1. Prompt for the admin's E2E passphrase, unlock their sealed keypair
- *      (cached in localStorage by P5 enrollment).
+ *   0. ensureEnrolled(): if the admin has no sealed keypair on this device,
+ *      run inline enrollment FIRST so the toggle is never a dead-end. A
+ *      server-side row with a missing local blob surfaces a recovery error.
+ *   1. Prompt for the admin's passphrase, unlock their sealed keypair.
  *   2. Fetch the workspace keypair roster (public keys only).
  *   3. Mint a fresh 32-byte WSK; wrap it once per member public key.
- *   4. POST /api/workspaces/:id/e2e/enable with the wrapped roster — the
- *      server flips e2eMode to 'workspace_wide' and inserts the WSK rows.
- *   5. Fetch every non-encrypted page id (/page-ids); for each one, fetch
- *      its current document, encrypt under the WSK, and POST to
+ *   4. POST /api/workspaces/:id/e2e/enable with the wrapped roster.
+ *   5. Sweep every non-encrypted page; encrypt under the WSK; POST to
  *      /api/pages/:id/encrypt-under-wsk. Progress shown as X / N.
  *
  * Irreversible-by-design: there is no UI path to disable workspace_wide.
  * Member removal triggers /rekey (separate admin flow); the in-memory WSK
- * is dropped at the end of this call — only members with a wrapped-WSK row
- * can re-derive it from their keypair.
+ * is dropped at the end of this call.
  */
 export function WorkspaceE2EToggle({
   workspaceId,
@@ -51,6 +44,39 @@ export function WorkspaceE2EToggle({
   const [err, setErr] = useState<string | null>(null);
   const [mode, setMode] = useState(initialMode);
 
+  /**
+   * Returns the sealed blob to unlock against, or null when the caller should
+   * abort (cancelled / mismatch / recovery-needed). Returns the blob directly
+   * (rather than re-reading localStorage) so a freshly-enrolled blob is used
+   * even if the storage read in jsdom/SSR contexts lags.
+   */
+  async function ensureLocalKeypair(): Promise<StoredSealed | null> {
+    const result = await ensureEnrolled();
+    if (result.enrolled) return result.stored;
+    if (result.reason === 'local-blob-missing') {
+      setErr(t('e2e.enroll.recoveryNeeded'));
+      return null;
+    }
+    const pass = await prompt({
+      title: t('e2e.enroll.passphrasePrompt'),
+      type: 'password',
+      confirmLabel: t('e2e.enroll.cta'),
+    });
+    if (!pass) return null;
+    const confirmPass = await prompt({
+      title: t('e2e.enroll.confirmPrompt'),
+      type: 'password',
+      confirmLabel: t('e2e.enroll.cta'),
+    });
+    if (pass !== confirmPass) {
+      setErr(t('e2e.enroll.mismatch'));
+      return null;
+    }
+    await enrollKeypair(pass);
+    const after = await ensureEnrolled();
+    return after.enrolled ? after.stored : null;
+  }
+
   async function enable() {
     const ok = await confirm({
       title: t('admin.e2e.confirmTitle'),
@@ -63,26 +89,22 @@ export function WorkspaceE2EToggle({
     setErr(null);
     setProgress(null);
     try {
+      // 0. Make sure this device has a usable sealed keypair first.
+      const sealed = await ensureLocalKeypair();
+      if (!sealed) return;
+
       // Lazy-load crypto so the toggle page doesn't pay the bundle cost for
       // admins who never click.
       const { generateDek, wrapDek, unlockUserKeypair } = await import('@/lib/e2e/crypto');
       const { encryptPageContent } = await import('@/lib/e2e/page-cipher');
 
-      // 1. Unlock caller's keypair from the sealed local blob (P5 enrollment).
-      const sealedJson =
-        typeof window === 'undefined'
-          ? null
-          : window.localStorage.getItem('cairn.e2e.sealedKeypair');
-      if (!sealedJson) {
-        throw new Error('no sealed keypair on this device — enroll your passphrase first');
-      }
-      const sealed = JSON.parse(sealedJson) as Sealed;
+      // 1. Unlock caller's keypair from the sealed blob.
       const passphrase = await prompt({
-        title: 'Enter your E2E passphrase to enable workspace-wide encryption',
+        title: t('e2e.workspaceToggle.passphrasePrompt'),
         type: 'password',
-        confirmLabel: 'Continue',
+        confirmLabel: t('e2e.workspaceToggle.cta'),
       });
-      if (!passphrase) throw new Error('cancelled');
+      if (!passphrase) return;
       const me = await unlockUserKeypair(
         {
           publicKey: Buffer.from(sealed.publicKey, 'base64'),
@@ -95,14 +117,14 @@ export function WorkspaceE2EToggle({
 
       // 2. Fetch member roster (public keys only).
       const rosterRes = await fetch(`/api/workspaces/${workspaceId}/keypair-roster`);
-      if (!rosterRes.ok) throw new Error('roster fetch failed');
+      if (!rosterRes.ok) throw new Error(t('e2e.workspaceToggle.noRoster'));
       const roster: Member[] = await rosterRes.json();
       if (roster.length === 0) {
-        throw new Error('no workspace members have enrolled keypairs');
+        throw new Error(t('e2e.workspaceToggle.noRoster'));
       }
       // Sanity: caller's public key must appear in the roster.
       if (!roster.some((r) => Buffer.from(r.publicKey, 'base64').equals(me.publicKey))) {
-        throw new Error('unlocked key does not match server-side roster');
+        throw new Error(t('e2e.workspaceToggle.keyMismatch'));
       }
 
       // 3. Mint WSK + wrap for every member.
@@ -122,7 +144,7 @@ export function WorkspaceE2EToggle({
       });
       if (!enableRes.ok) {
         const body = (await enableRes.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? `enable failed: ${enableRes.status}`);
+        throw new Error(body.error ?? t('e2e.workspaceToggle.noRoster'));
       }
       setMode('workspace_wide');
 
@@ -133,7 +155,7 @@ export function WorkspaceE2EToggle({
       do {
         const qs = cursor ? `?cursor=${encodeURIComponent(cursor)}` : '';
         const pageRes = await fetch(`/api/workspaces/${workspaceId}/page-ids${qs}`);
-        if (!pageRes.ok) throw new Error('page-ids fetch failed');
+        if (!pageRes.ok) throw new Error(t('e2e.workspaceToggle.noRoster'));
         const body = (await pageRes.json()) as {
           rows: PageRow[];
           nextCursor: string | null;
@@ -146,7 +168,7 @@ export function WorkspaceE2EToggle({
         const id = pageRows[i]?.id;
         if (!id) continue;
         const docRes = await fetch(`/api/pages/${id}`);
-        if (!docRes.ok) throw new Error(`page fetch failed at ${id}: ${docRes.status}`);
+        if (!docRes.ok) throw new Error(t('e2e.workspaceToggle.noRoster'));
         const doc = (await docRes.json()) as { content?: unknown };
         const ct = encryptPageContent(doc.content ?? { type: 'doc', content: [] }, wsk);
         const r = await fetch(`/api/pages/${id}/encrypt-under-wsk`, {
@@ -156,14 +178,14 @@ export function WorkspaceE2EToggle({
         });
         if (!r.ok) {
           const body = (await r.json().catch(() => ({}))) as { error?: string };
-          throw new Error(body.error ?? `sweep failed at page ${id}: ${r.status}`);
+          throw new Error(body.error ?? t('e2e.workspaceToggle.noRoster'));
         }
         setProgress({ done: i + 1, total: pageRows.length });
       }
     } catch (e) {
       // Never `console.error(e)` — error message could be derived from a key.
       // Surface a sanitized message to the operator.
-      setErr(e instanceof Error ? e.message : 'unknown error');
+      setErr(e instanceof Error ? e.message : t('e2e.workspaceToggle.noRoster'));
     } finally {
       setBusy(false);
     }
@@ -172,12 +194,8 @@ export function WorkspaceE2EToggle({
   if (mode === 'workspace_wide') {
     return (
       <div className="space-y-2">
-        <p className="font-medium text-sm">
-          Workspace-wide encryption is enabled. All pages are stored as ciphertext.
-        </p>
-        <p className="text-xs text-muted-foreground">
-          To remove a member or rotate the workspace key, use the rekey flow (separate action).
-        </p>
+        <p className="font-medium text-sm">{t('e2e.workspaceToggle.enabled')}</p>
+        <p className="text-muted-foreground text-xs">{t('e2e.workspaceToggle.enabledHint')}</p>
       </div>
     );
   }
@@ -185,19 +203,15 @@ export function WorkspaceE2EToggle({
   return (
     <div className="space-y-2">
       <Button type="button" onClick={enable} disabled={busy}>
-        {busy ? 'Encrypting workspace…' : 'Enable workspace-wide encryption'}
+        {busy ? t('e2e.workspaceToggle.busy') : t('e2e.workspaceToggle.cta')}
       </Button>
       {progress ? (
         <p className="text-sm">
-          Encrypted {progress.done} / {progress.total} pages
+          {t('e2e.workspaceToggle.progress', { done: progress.done, total: progress.total })}
         </p>
       ) : null}
       {err ? <p className="text-destructive text-sm">{err}</p> : null}
-      <p className="text-muted-foreground text-xs">
-        This action cannot be undone in v0.9. Once enabled, every existing page is encrypted under a
-        workspace key that the server never sees. To rotate the key or remove a member, use the
-        rekey flow.
-      </p>
+      <p className="text-muted-foreground text-xs">{t('e2e.workspaceToggle.warning')}</p>
     </div>
   );
 }
