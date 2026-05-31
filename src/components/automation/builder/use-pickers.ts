@@ -43,7 +43,10 @@ export function useDatabases() {
 }
 
 export function useProperties(databaseId: string | null) {
-  return useFetchOptions(databaseId ? `/api/databases/${databaseId}/properties` : null, (json) => {
+  // GET /api/databases/:id returns the database meta with an embedded
+  // `properties: [{ id, name, ... }]` array (there is no standalone properties
+  // GET endpoint). Read that array for the picker.
+  return useFetchOptions(databaseId ? `/api/databases/${databaseId}` : null, (json) => {
     const list = (json as { properties?: Array<{ id: string; name: string }> }).properties ?? [];
     return list.map((p) => ({ value: p.id, label: p.name }));
   });
