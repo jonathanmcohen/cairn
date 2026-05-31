@@ -394,5 +394,12 @@
   "settings.nav.admin.siem": "معيدو توجيه SIEM",
   "settings.nav.workspace.general": "عام",
   "settings.nav.workspace.members": "الأعضاء",
-  "settings.nav.developer.connectors": "الموصّلات"
+  "settings.nav.developer.connectors": "الموصّلات",
+  "pages.status.label": "الحالة",
+  "pages.status.draft": "مسودة",
+  "pages.status.review": "قيد المراجعة",
+  "pages.status.published": "منشورة",
+  "pages.status.archived": "مؤرشفة",
+  "pages.status.change": "تغيير الحالة",
+  "pages.status.changeError": "تعذّر تغيير الحالة"
 }

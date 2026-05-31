@@ -394,5 +394,12 @@
   "settings.nav.admin.siem": "SIEM forwarders",
   "settings.nav.workspace.general": "General",
   "settings.nav.workspace.members": "Members",
-  "settings.nav.developer.connectors": "Connectors"
+  "settings.nav.developer.connectors": "Connectors",
+  "pages.status.label": "Status",
+  "pages.status.draft": "Draft",
+  "pages.status.review": "In review",
+  "pages.status.published": "Published",
+  "pages.status.archived": "Archived",
+  "pages.status.change": "Change status",
+  "pages.status.changeError": "Could not change status"
 }

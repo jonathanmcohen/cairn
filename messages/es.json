@@ -394,5 +394,12 @@
   "settings.nav.admin.siem": "Reenviadores SIEM",
   "settings.nav.workspace.general": "General",
   "settings.nav.workspace.members": "Miembros",
-  "settings.nav.developer.connectors": "Conectores"
+  "settings.nav.developer.connectors": "Conectores",
+  "pages.status.label": "Estado",
+  "pages.status.draft": "Borrador",
+  "pages.status.review": "En revisión",
+  "pages.status.published": "Publicada",
+  "pages.status.archived": "Archivada",
+  "pages.status.change": "Cambiar estado",
+  "pages.status.changeError": "No se pudo cambiar el estado"
 }
