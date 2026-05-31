@@ -8,6 +8,7 @@ import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
+import { usePrompt } from '@/components/ui/input-dialog';
 import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
@@ -55,6 +56,7 @@ export function SearchPalette({
   currentPageId?: string | null;
 }) {
   const t = useT();
+  const prompt = usePrompt();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
   const [open, setOpen] = useState(false);
@@ -121,7 +123,11 @@ export function SearchPalette({
   async function saveCurrent() {
     const q = query.trim();
     if (!q) return;
-    const name = window.prompt(t('palette.saveSearch.namePrompt'), q);
+    const name = await prompt({
+      title: t('palette.saveSearch.namePrompt'),
+      defaultValue: q,
+      confirmLabel: 'Save',
+    });
     if (!name) return;
     const r = await fetch('/api/search/saved', {
       method: 'POST',

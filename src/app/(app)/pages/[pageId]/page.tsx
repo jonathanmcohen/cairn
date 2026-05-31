@@ -23,6 +23,7 @@ import { userColor } from '@/lib/collab/user-color';
 import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
 import { getPageCover } from '@/lib/pages/cover';
+import { isLocked } from '@/lib/pages/lock';
 
 export default async function PageView({ params }: { params: Promise<{ pageId: string }> }) {
   const { pageId } = await params;
@@ -44,6 +45,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   };
 
   const cover = await getPageCover(getDb(), page.id, ctx.workspaceId);
+  const lockState = await isLocked(getDb(), page.id);
   const canEdit = hasMinRole(ctx.role, 'editor');
   // v0.9.0 G5 P28 — per-device TOC sidebar pref persists as a cookie; the
   // toggle lives at /settings/account/theme. Reading at render time avoids
@@ -93,6 +95,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
             currentRole={ctx.role}
             canEditVersions={hasMinRole(ctx.role, 'editor')}
             canLock={canEdit}
+            canMove={hasMinRole(ctx.role, 'editor')}
           />
           {showEncryptAction && (
             <EncryptPageAction
@@ -131,6 +134,8 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           currentUser={currentUser}
           editable={hasMinRole(ctx.role, 'editor')}
           encrypted={page.encrypted}
+          locked={lockState.locked}
+          lockedUntilIso={lockState.lockedUntil ? lockState.lockedUntil.toISOString() : null}
         />
       </PageModeShell>
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the

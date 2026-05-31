@@ -38,6 +38,7 @@ export default async function AdminSettingsPage() {
           name: row.name,
           requireTwofa: row.requireTwofa,
           homePageId: row.homePageId,
+          icon: row.icon,
         }}
         pages={pages.map((p) => ({ id: p.id, title: p.title }))}
         twofaEnforcementAvailable={env().CAIRN_ENFORCE_2FA}

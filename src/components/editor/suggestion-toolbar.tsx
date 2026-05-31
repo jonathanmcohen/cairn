@@ -15,7 +15,7 @@ export function SuggestionToolbar({
   resolvable,
   onAccept,
   onReject,
-  onJumpToFirstOpen,
+  onOpenDrawer,
 }: {
   editor: TiptapEditor | null;
   active: boolean;
@@ -26,8 +26,8 @@ export function SuggestionToolbar({
   resolvable: string | null;
   onAccept: (suggestionId: string) => void;
   onReject: (suggestionId: string) => void;
-  /** #98 — focus + scroll to the first open suggestion mark in the document. */
-  onJumpToFirstOpen: () => void;
+  /** #85/#145 — open the suggestions drawer listing open suggestions. */
+  onOpenDrawer: () => void;
 }) {
   const t = useT();
   const markDisabled = !editor || editor.state.selection.empty;
@@ -127,7 +127,7 @@ export function SuggestionToolbar({
           // layered on so it reads as actionable.
           <button
             type="button"
-            onClick={onJumpToFirstOpen}
+            onClick={onOpenDrawer}
             aria-label={t('pageActions.suggest.openCountLabel', { count: openCount })}
             className="inline-flex items-center rounded-full border px-2 py-0.5 font-medium text-muted-foreground text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
           >

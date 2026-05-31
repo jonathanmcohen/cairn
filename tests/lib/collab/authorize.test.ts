@@ -23,7 +23,10 @@ describe('authorizeCollab', () => {
       role: 'editor',
       secret: SECRET,
     });
-    expect(authorizeCollab(token, 'page-2', SECRET)).toEqual({ ok: false });
+    expect(authorizeCollab(token, 'page-2', SECRET)).toMatchObject({
+      ok: false,
+      reason: 'page-mismatch',
+    });
   });
 
   it('rejects an invalid signature', () => {
@@ -33,7 +36,10 @@ describe('authorizeCollab', () => {
       role: 'editor',
       secret: SECRET,
     });
-    expect(authorizeCollab(token, 'page-1', 'y'.repeat(32))).toEqual({ ok: false });
+    expect(authorizeCollab(token, 'page-1', 'y'.repeat(32))).toMatchObject({
+      ok: false,
+      reason: 'bad-sig',
+    });
   });
 
   it('rejects an expired token', () => {
@@ -45,11 +51,38 @@ describe('authorizeCollab', () => {
       secret: SECRET,
       expiresAt: past,
     });
-    expect(authorizeCollab(token, 'page-1', SECRET)).toEqual({ ok: false });
+    expect(authorizeCollab(token, 'page-1', SECRET)).toMatchObject({
+      ok: false,
+      reason: 'expired',
+    });
   });
 
   it('rejects an empty / malformed token', () => {
-    expect(authorizeCollab('', 'page-1', SECRET)).toEqual({ ok: false });
-    expect(authorizeCollab('garbage', 'page-1', SECRET)).toEqual({ ok: false });
+    expect(authorizeCollab('', 'page-1', SECRET)).toMatchObject({
+      ok: false,
+      reason: 'malformed',
+    });
+    expect(authorizeCollab('garbage', 'page-1', SECRET)).toMatchObject({
+      ok: false,
+      reason: 'malformed',
+    });
+  });
+
+  it('on a page-mismatch surfaces the token pageId + exp for logging (never the secret)', () => {
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const token = mintCollabToken({
+      userId: 'u',
+      pageId: 'page-1',
+      role: 'editor',
+      secret: SECRET,
+      expiresAt: exp,
+    });
+    const result = authorizeCollab(token, 'page-2', SECRET);
+    expect(result).toMatchObject({
+      ok: false,
+      reason: 'page-mismatch',
+      tokenPageId: 'page-1',
+      exp,
+    });
   });
 });

@@ -28,7 +28,7 @@ const COLOR_PRESETS = [
   '#475569',
 ] as const;
 
-type TabKey = 'color' | 'unsplash' | 'upload';
+type TabKey = 'color' | 'unsplash' | 'url' | 'upload';
 
 export type CoverPickerProps = {
   pageId: string;
@@ -50,6 +50,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<TabKey>('color');
   const [customHex, setCustomHex] = useState('');
+  const [coverUrl, setCoverUrl] = useState('');
 
   async function save(next: PageCover) {
     const res = await fetch(`/api/pages/${pageId}/cover`, {
@@ -114,6 +115,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
               <div role="tablist" className="flex gap-1 border-b">
                 {tabBtn('color', t('cover.tab.color'))}
                 {unsplashKey && tabBtn('unsplash', t('cover.tab.unsplash'))}
+                {tabBtn('url', t('cover.tab.url'))}
                 {tabBtn('upload', t('cover.tab.upload'))}
               </div>
             </div>
@@ -166,6 +168,31 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                   accessKey={unsplashKey}
                   onPick={(url) => void save({ kind: 'unsplash', value: url })}
                 />
+              )}
+              {tab === 'url' && (
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="cover-url">{t('cover.urlLabel')}</Label>
+                    <Input
+                      id="cover-url"
+                      type="url"
+                      value={coverUrl}
+                      onChange={(e) => setCoverUrl(e.target.value)}
+                      placeholder={t('cover.urlPlaceholder')}
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      if (/^https:\/\/\S+$/.test(coverUrl.trim())) {
+                        void save({ kind: 'unsplash', value: coverUrl.trim() });
+                      }
+                    }}
+                  >
+                    {t('cover.use')}
+                  </Button>
+                  <p className="text-xs text-muted-foreground">{t('cover.urlHint')}</p>
+                </div>
               )}
               {tab === 'upload' && (
                 <div className="space-y-3">

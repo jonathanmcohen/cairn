@@ -1,9 +1,11 @@
 'use client';
 
 import { MoreHorizontal, Plus } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { DropdownMenu } from 'radix-ui';
 import { useT } from '@/lib/i18n/provider';
 import type { FlatPageNode } from '@/lib/pages/tree';
+import { MoveToPicker } from './move-to-picker';
 import { PageActionItems } from './page-action-items';
 import { type PageRowActionsApi, usePageRowActions } from './use-page-row-actions';
 
@@ -19,19 +21,20 @@ const ICON_BTN =
  * outside-click dismiss + focus restore for free.
  */
 export function PageRowActionsMenu({ node, api }: { node: FlatPageNode; api?: PageRowActionsApi }) {
-  if (api) return <Cluster api={api} />;
+  if (api) return <Cluster api={api} sourceId={node.id} />;
   return <SelfManaged node={node} />;
 }
 
 /** Test/standalone path: own the hook locally. */
 function SelfManaged({ node }: { node: FlatPageNode }) {
   const api = usePageRowActions(node);
-  return <Cluster api={api} />;
+  return <Cluster api={api} sourceId={node.id} />;
 }
 
-function Cluster({ api }: { api: PageRowActionsApi }) {
+function Cluster({ api, sourceId }: { api: PageRowActionsApi; sourceId: string }) {
   const t = useT();
-  const { actions } = api;
+  const router = useRouter();
+  const { actions, moveOpen, setMoveOpen } = api;
   const addChild = actions.find((a) => a.id === 'addChild');
   return (
     <div className="flex items-center">
@@ -69,6 +72,12 @@ function Cluster({ api }: { api: PageRowActionsApi }) {
           </DropdownMenu.Content>
         </DropdownMenu.Portal>
       </DropdownMenu.Root>
+      <MoveToPicker
+        open={moveOpen}
+        sourceId={sourceId}
+        onOpenChange={setMoveOpen}
+        onMoved={() => router.refresh()}
+      />
     </div>
   );
 }

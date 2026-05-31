@@ -2,11 +2,18 @@
 # (supply-chain hardening). pnpm 11 tracks approvals in this allowBuilds map.
 # true = run the dep's build script (native bindings / codegen Cairn needs).
 # @scarf/scarf is pure telemetry — kept false so it never runs.
+#
+# @xenova/transformers@2 pins sharp@0.32.6, which has no Node 24 prebuilt (its
+# install produces no native binary on the runtime image). Force every sharp
+# instance to 0.34.5 — modern @img/* prebuilts ship a Node 24 ABI binary — so
+# the transitive copy dedupes to the version Cairn already depends on directly.
+overrides:
+  sharp: '0.34.5'
 allowBuilds:
   '@scarf/scarf': false
   cpu-features: true # ssh2 native speedup (testcontainers transport)
   esbuild: true # vite/vitest bundler — native binary required
-  onnxruntime-node: true # embedding provider runtime (native)
+  onnxruntime-node: true # present so @xenova/transformers resolves its node backend at import; runtime forced to WASM (see src/lib/search/embed.ts)
   protobufjs: true # onnxruntime dependency codegen
   sharp: true # image processing (next/image, image gallery, a11y screenshots)
   ssh2: true # testcontainers docker SSH transport

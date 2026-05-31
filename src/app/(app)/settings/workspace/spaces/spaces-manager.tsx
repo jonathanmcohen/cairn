@@ -5,6 +5,14 @@ import { useId, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { useT } from '@/lib/i18n/provider';
 
 type SpaceRow = {
   id: string;
@@ -27,6 +35,7 @@ type Member = {
  * after each mutation so the table stays in sync without local cache.
  */
 export function SpacesManager({ spaces }: { spaces: SpaceRow[] }) {
+  const t = useT();
   const router = useRouter();
   const nameId = useId();
   const slugId = useId();
@@ -246,16 +255,23 @@ export function SpacesManager({ spaces }: { spaces: SpaceRow[] }) {
                     value={addUserId}
                     onChange={(e) => setAddUserId(e.target.value)}
                   />
-                  <select
+                  <Select
                     value={addRole}
-                    onChange={(e) => setAddRole(e.target.value as Member['role'])}
-                    className="rounded border bg-background px-2 py-1 text-sm"
+                    onValueChange={(next) => setAddRole(next as Member['role'])}
                   >
-                    <option value="viewer">viewer</option>
-                    <option value="editor">editor</option>
-                    <option value="admin">admin</option>
-                    <option value="owner">owner</option>
-                  </select>
+                    <SelectTrigger
+                      aria-label={t('spaces.memberRoleAriaLabel')}
+                      className="w-auto text-sm"
+                    >
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="viewer">viewer</SelectItem>
+                      <SelectItem value="editor">editor</SelectItem>
+                      <SelectItem value="admin">admin</SelectItem>
+                      <SelectItem value="owner">owner</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Button type="submit" size="sm">
                     Add
                   </Button>

@@ -141,9 +141,18 @@ export function ViewSwitcher({
             <SelectContent>
               {ADDABLE_TYPES.map((type) => {
                 const dateDisabled = DATE_TYPES.has(type) && dateProperties.length === 0;
+                const Icon = VIEW_TYPE_ICON[type] ?? Table2;
                 return (
-                  <SelectItem key={type} value={type} disabled={dateDisabled}>
-                    {t(`database.view.type.${type}`)}
+                  <SelectItem
+                    key={type}
+                    value={type}
+                    disabled={dateDisabled}
+                    title={dateDisabled ? t(`database.view.disabled.${type}`) : undefined}
+                  >
+                    <span className="flex items-center gap-1.5">
+                      <Icon className="h-4 w-4 opacity-70" aria-hidden="true" />
+                      {t(`database.view.type.${type}`)}
+                    </span>
                   </SelectItem>
                 );
               })}

@@ -6,6 +6,7 @@
  */
 import { redirect } from 'next/navigation';
 import { getAuthContext } from '@/lib/auth/require-role';
+import { ApiDocsHeader } from './api-docs-header';
 import SwaggerUiClient from './swagger-ui-client';
 
 export default async function ApiDocsPage() {
@@ -14,9 +15,11 @@ export default async function ApiDocsPage() {
   if (!ctx.workspaceId) redirect('/');
 
   return (
-    <main aria-label="API documentation" className="min-h-screen bg-background p-4">
-      <h1 className="sr-only">Cairn API documentation</h1>
-      <SwaggerUiClient specUrl="/openapi.json" />
+    <main aria-label="API documentation" className="min-h-screen bg-background">
+      <ApiDocsHeader />
+      <div className="p-4">
+        <SwaggerUiClient specUrl="/openapi.json" />
+      </div>
     </main>
   );
 }

@@ -24,8 +24,30 @@ const SECTIONS: Section[] = [
       { id: 'workspace-members', label: 'Members', href: '/settings/workspace/members' as Route },
     ],
   },
-  { id: 'admin', label: 'Admin', href: '/settings/admin' as Route },
-  { id: 'developer', label: 'Developer', href: '/settings/developer' as Route },
+  {
+    id: 'admin',
+    label: 'Admin',
+    href: '/settings/admin' as Route,
+    children: [
+      { id: 'admin-audit', label: 'Audit log', href: '/settings/admin/audit' as Route },
+      // User management lives under Workspace > Members; surface it from Admin
+      // too so admins find member role/deactivate controls without hunting.
+      { id: 'admin-members', label: 'Members', href: '/settings/workspace/members' as Route },
+      { id: 'admin-siem', label: 'SIEM forwarders', href: '/settings/admin/siem' as Route },
+    ],
+  },
+  {
+    id: 'developer',
+    label: 'Developer',
+    href: '/settings/developer' as Route,
+    children: [
+      {
+        id: 'developer-connectors',
+        label: 'Connectors',
+        href: '/settings/developer/connectors' as Route,
+      },
+    ],
+  },
   { id: 'notifications', label: 'Notifications', href: '/settings/notifications' as Route },
   { id: 'security', label: 'Security', href: '/settings/security' as Route },
 ];

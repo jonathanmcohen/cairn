@@ -54,3 +54,7 @@ declare module '@tiptap/core' {
     };
   }
 }
+
+// The client editor variant `FileAttachmentWithView` (atom + React node-view)
+// lives in `./file-view-extension` so this module stays free of `@tiptap/react`
+// and can be imported server-side (schema → suggestions transform) safely.

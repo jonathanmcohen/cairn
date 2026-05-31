@@ -1,0 +1,37 @@
+/* Dark-mode overrides for swagger-ui-dist. Scoped under .dark so light mode is
+ * untouched. swagger-ui ships a light theme only; these invert the chrome to
+ * match Cairn's dark theme. */
+.dark .swagger-ui,
+.dark .swagger-ui .info,
+.dark .swagger-ui .scheme-container {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+.dark .swagger-ui .info .title,
+.dark .swagger-ui .opblock-tag,
+.dark .swagger-ui .opblock .opblock-summary-operation-id,
+.dark .swagger-ui .opblock .opblock-summary-path,
+.dark .swagger-ui label,
+.dark .swagger-ui .parameter__name,
+.dark .swagger-ui table thead tr th,
+.dark .swagger-ui .response-col_status,
+.dark .swagger-ui .markdown p {
+  color: hsl(var(--foreground));
+}
+.dark .swagger-ui .scheme-container {
+  box-shadow: none;
+  border: 1px solid hsl(var(--border));
+}
+.dark .swagger-ui section.models,
+.dark .swagger-ui .opblock {
+  border-color: hsl(var(--border));
+}
+.dark .swagger-ui .opblock .opblock-section-header {
+  background: hsl(var(--muted));
+}
+.dark .swagger-ui input[type="text"],
+.dark .swagger-ui textarea {
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  border-color: hsl(var(--border));
+}

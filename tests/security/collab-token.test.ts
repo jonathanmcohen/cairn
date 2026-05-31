@@ -4,9 +4,16 @@ import { mintCollabToken } from '@/lib/collab/token';
 
 // The collab token is an HMAC-signed `<payloadB64>.<sig>` minted by
 // mintCollabToken (src/lib/collab/token.ts), NOT a JOSE/JWT. authorizeCollab
-// returns { ok: false } on any rejection (forged/expired/wrong-page) rather than
-// throwing; the contract under test is that those three are never authorized.
+// returns { ok: false, reason } on any rejection (forged/expired/wrong-page)
+// rather than throwing; the contract under test is that those are never
+// authorized and that the rejection NEVER carries the secret (v0.9.6 #137 added
+// a typed reason + decoded pageId/exp for operator logs — secret stays out).
 const SECRET = 'y'.repeat(32);
+
+/** A rejection must never echo the secret in any field. */
+function assertNoSecretLeak(result: unknown): void {
+  expect(JSON.stringify(result)).not.toContain(SECRET);
+}
 
 describe('collab token authorization', () => {
   it('valid token for the right page is accepted', () => {
@@ -31,7 +38,9 @@ describe('collab token authorization', () => {
       role: 'editor',
       secret: 'WRONG-SECRET'.padEnd(32, 'z'),
     });
-    expect(authorizeCollab(forged, 'page-1', SECRET)).toEqual({ ok: false });
+    const result = authorizeCollab(forged, 'page-1', SECRET);
+    expect(result).toMatchObject({ ok: false, reason: 'bad-sig' });
+    assertNoSecretLeak(result);
   });
 
   it('expired token is rejected', () => {
@@ -42,7 +51,9 @@ describe('collab token authorization', () => {
       secret: SECRET,
       expiresAt: Math.floor(Date.now() / 1000) - 10, // already expired
     });
-    expect(authorizeCollab(token, 'page-1', SECRET)).toEqual({ ok: false });
+    const result = authorizeCollab(token, 'page-1', SECRET);
+    expect(result).toMatchObject({ ok: false, reason: 'expired' });
+    assertNoSecretLeak(result);
   });
 
   it('token for a different page is rejected', () => {
@@ -52,10 +63,14 @@ describe('collab token authorization', () => {
       role: 'editor',
       secret: SECRET,
     });
-    expect(authorizeCollab(token, 'page-1', SECRET)).toEqual({ ok: false });
+    const result = authorizeCollab(token, 'page-1', SECRET);
+    expect(result).toMatchObject({ ok: false, reason: 'page-mismatch' });
+    assertNoSecretLeak(result);
   });
 
   it('malformed token is rejected', () => {
-    expect(authorizeCollab('not-a-token', 'page-1', SECRET)).toEqual({ ok: false });
+    const result = authorizeCollab('not-a-token', 'page-1', SECRET);
+    expect(result).toMatchObject({ ok: false, reason: 'malformed' });
+    assertNoSecretLeak(result);
   });
 });

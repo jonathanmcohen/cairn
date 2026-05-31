@@ -97,4 +97,24 @@ describe('<SettingsSidebar>', () => {
     render(<SettingsSidebar />);
     expect(screen.queryByRole('link', { name: 'Members' })).toBeNull();
   });
+
+  it('expands Admin children (Audit log / Members / SIEM) when on an admin route', () => {
+    pathnameMock.mockReturnValue('/settings/admin');
+    render(<SettingsSidebar isAdmin />);
+    expect(screen.getByRole('link', { name: 'Audit log' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Members' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'SIEM forwarders' })).toBeTruthy();
+  });
+
+  it('expands Developer children (Connectors) when on a developer route', () => {
+    pathnameMock.mockReturnValue('/settings/developer/connectors');
+    render(<SettingsSidebar isAdmin />);
+    expect(screen.getByRole('link', { name: 'Connectors' })).toBeTruthy();
+  });
+
+  it('hides the Admin entry entirely for non-admins', () => {
+    pathnameMock.mockReturnValue('/settings/developer');
+    render(<SettingsSidebar isAdmin={false} />);
+    expect(screen.queryByRole('link', { name: 'Admin' })).toBeNull();
+  });
 });

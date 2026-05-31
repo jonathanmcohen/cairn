@@ -39,6 +39,7 @@ import {
 } from 'lucide-react';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
 import { FootnoteMark } from './blocks/footnote-mark';
+import { openEditorDialog } from './editor-dialog-bus';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
@@ -138,6 +139,7 @@ export type CitationSlashEntry = {
   description: string;
   run: (editor: Editor) => void;
   icon?: SlashItem['icon'];
+  keywords?: string[];
 };
 
 export const footnoteMenuItem: CitationSlashEntry = {
@@ -145,14 +147,18 @@ export const footnoteMenuItem: CitationSlashEntry = {
   title: 'Footnote',
   description: 'Add an inline footnote',
   icon: Asterisk,
+  keywords: ['note', 'fn'],
   run: (editor: Editor): void => {
-    const content = window.prompt('Footnote text');
-    if (!content) return;
-    if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
-      editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
-    }
-    const id = crypto.randomUUID();
-    editor.chain().focus().setMark('footnote', { id, content }).run();
+    void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((result) => {
+      const content = result?.text;
+      if (!content) return;
+      if (editor.isDestroyed) return;
+      if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
+        editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
+      }
+      const id = crypto.randomUUID();
+      editor.chain().focus().setMark('footnote', { id, content }).run();
+    });
   },
 };
 
@@ -161,42 +167,45 @@ export const citationMenuItem: CitationSlashEntry = {
   title: 'Citation',
   description: 'Insert a bibliographic reference',
   icon: Quote,
+  keywords: ['cite', 'ref', 'reference', 'bibliography'],
   run: (editor: Editor): void => {
-    const doi = window.prompt('DOI (optional)') ?? null;
-    const pubmed = window.prompt('PubMed ID (optional)') ?? null;
-    const author = window.prompt('Author (Last, F.)') ?? '';
-    const title = window.prompt('Title') ?? '';
-    const yearStr = window.prompt('Year') ?? '';
-    const year = Number.parseInt(yearStr, 10);
-    if (!author || !title || Number.isNaN(year)) return;
-    const ref = { authors: [author], title, year };
-    void Promise.all([
-      import('@/lib/citations/format'),
-      import('./extensions/citation').then((m) => m.CitationExtension),
-    ]).then(([fmt, CitationExt]) => {
-      if (editor.isDestroyed) return;
-      if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
-        editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
-      }
-      const fullRef = { ...ref, doi: doi ?? undefined, pubmedId: pubmed ?? undefined };
-      editor
-        .chain()
-        .focus()
-        .insertContent({
-          type: 'citation',
-          attrs: {
-            id: crypto.randomUUID(),
-            doi,
-            pubmed_id: pubmed,
-            formatted_apa: fmt.formatCitation(fullRef, 'apa'),
-            formatted_mla: fmt.formatCitation(fullRef, 'mla'),
-            formatted_chicago: fmt.formatCitation(fullRef, 'chicago'),
-            raw_authors: [author],
-            raw_title: title,
-            raw_year: year,
-          },
-        })
-        .run();
+    void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((result) => {
+      if (!result) return;
+      const author = result.author?.trim() ?? '';
+      const title = result.title?.trim() ?? '';
+      const year = Number.parseInt(result.year ?? '', 10);
+      if (!author || !title || Number.isNaN(year)) return;
+      const doi = result.doi?.trim() ? result.doi.trim() : null;
+      const pubmed = result.pubmed?.trim() ? result.pubmed.trim() : null;
+      const ref = { authors: [author], title, year };
+      void Promise.all([
+        import('@/lib/citations/format'),
+        import('./extensions/citation').then((m) => m.CitationExtension),
+      ]).then(([fmt, CitationExt]) => {
+        if (editor.isDestroyed) return;
+        if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
+          editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
+        }
+        const fullRef = { ...ref, doi: doi ?? undefined, pubmedId: pubmed ?? undefined };
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'citation',
+            attrs: {
+              id: crypto.randomUUID(),
+              doi,
+              pubmed_id: pubmed,
+              formatted_apa: fmt.formatCitation(fullRef, 'apa'),
+              formatted_mla: fmt.formatCitation(fullRef, 'mla'),
+              formatted_chicago: fmt.formatCitation(fullRef, 'chicago'),
+              raw_authors: [author],
+              raw_title: title,
+              raw_year: year,
+            },
+          })
+          .run();
+      });
     });
   },
 };
@@ -208,6 +217,7 @@ function toSlashItem(entry: CitationSlashEntry, category: SlashCategory): SlashI
     category,
     command: entry.run,
     icon: entry.icon,
+    keywords: entry.keywords ?? [],
   };
 }
 
@@ -222,6 +232,7 @@ export const datetimeMenuItem: CitationSlashEntry = {
   title: 'Date/time',
   description: 'Insert a date/time with timezone',
   icon: CalendarClock,
+  keywords: ['date', 'time', 'now', 'timestamp'],
   run: (editor: Editor): void => {
     void ensureLazyExtension(editor, 'datetime').then(async () => {
       if (editor.isDestroyed) return;
@@ -260,6 +271,7 @@ export const pdfSlashItem: SlashItem = {
   description: 'Upload a PDF and annotate it inline',
   category: 'media',
   icon: FileText,
+  keywords: ['pdf', 'document', 'attachment'],
   command: (editor) => {
     void (async () => {
       await ensureLazyExtension(editor, 'pdf');
@@ -289,6 +301,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Heading1,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+    keywords: ['h1', 'title', 'header'],
   },
   {
     title: 'Heading 2',
@@ -296,6 +309,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Heading2,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+    keywords: ['h2', 'subheader'],
   },
   {
     title: 'Heading 3',
@@ -303,6 +317,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Heading3,
     command: (editor) => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+    keywords: ['h3', 'subheader'],
   },
   {
     title: 'Bullet list',
@@ -310,6 +325,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: List,
     command: (editor) => editor.chain().focus().toggleBulletList().run(),
+    keywords: ['ul', 'unordered', 'bullets'],
   },
   {
     title: 'Numbered list',
@@ -317,6 +333,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: ListOrdered,
     command: (editor) => editor.chain().focus().toggleOrderedList().run(),
+    keywords: ['ol', 'ordered', 'number'],
   },
   {
     title: 'Task list',
@@ -324,6 +341,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: ListChecks,
     command: (editor) => editor.chain().focus().toggleTaskList().run(),
+    keywords: ['check', 'todo', 'checkbox', 'checklist'],
   },
   {
     title: 'Quote',
@@ -331,6 +349,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Quote,
     command: (editor) => editor.chain().focus().toggleBlockquote().run(),
+    keywords: ['blockquote', 'citation'],
   },
   {
     title: 'Code',
@@ -338,6 +357,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Code,
     command: (editor) => editor.chain().focus().toggleCodeBlock().run(),
+    keywords: ['snippet', 'pre', 'monospace'],
   },
   {
     title: 'Divider',
@@ -345,6 +365,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Minus,
     command: (editor) => editor.chain().focus().setDivider().run(),
+    keywords: ['hr', 'line', 'rule', 'separator'],
   },
   {
     title: 'Callout',
@@ -352,6 +373,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Info,
     command: (editor) => editor.chain().focus().setCallout('note').run(),
+    keywords: ['note', 'aside', 'admonition', 'info'],
   },
   {
     title: 'Toggle',
@@ -359,6 +381,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: ChevronRight,
     command: (editor) => editor.chain().focus().setToggle().run(),
+    keywords: ['collapse', 'collapsible', 'accordion', 'details'],
   },
   {
     title: 'Columns',
@@ -366,6 +389,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: Columns2,
     command: (editor) => editor.chain().focus().setColumns(2).run(),
+    keywords: ['cols', 'grid', 'layout'],
   },
   {
     title: 'Table',
@@ -374,6 +398,7 @@ const items: SlashItem[] = [
     icon: Table,
     command: (editor) =>
       editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(),
+    keywords: ['grid', 'spreadsheet'],
   },
   {
     title: 'Image',
@@ -403,6 +428,7 @@ const items: SlashItem[] = [
       };
       input.click();
     },
+    keywords: ['img', 'picture', 'photo'],
   },
   {
     title: 'File',
@@ -437,6 +463,7 @@ const items: SlashItem[] = [
       };
       input.click();
     },
+    keywords: ['attachment', 'upload', 'document'],
   },
   {
     title: 'Embed',
@@ -452,6 +479,7 @@ const items: SlashItem[] = [
           .run();
       });
     },
+    keywords: ['iframe', 'youtube', 'vimeo', 'video', 'figma'],
   },
   {
     title: 'Bookmark',
@@ -459,6 +487,7 @@ const items: SlashItem[] = [
     category: 'media',
     icon: Bookmark,
     command: (editor) => editor.chain().focus().setBookmark('').run(),
+    keywords: ['link', 'url', 'preview'],
   },
   {
     title: 'Button',
@@ -466,6 +495,7 @@ const items: SlashItem[] = [
     category: 'media',
     icon: MousePointerClick,
     command: (editor) => editor.chain().focus().setButton().run(),
+    keywords: ['cta', 'link', 'action'],
   },
   {
     title: 'Video',
@@ -473,6 +503,7 @@ const items: SlashItem[] = [
     category: 'media',
     icon: Video,
     command: (editor) => editor.chain().focus().setVideo().run(),
+    keywords: ['mp4', 'webm', 'movie', 'clip'],
   },
   {
     title: 'Audio',
@@ -507,6 +538,7 @@ const items: SlashItem[] = [
         input.click();
       });
     },
+    keywords: ['sound', 'mp3', 'music', 'podcast'],
   },
   {
     title: 'Equation',
@@ -518,6 +550,7 @@ const items: SlashItem[] = [
         editor.chain().focus().setMath({ latex: '', display: true }).run();
       });
     },
+    keywords: ['math', 'latex', 'katex', 'formula'],
   },
   {
     title: 'Synced block',
@@ -529,6 +562,7 @@ const items: SlashItem[] = [
         editor.chain().focus().setSyncedBlock().run();
       });
     },
+    keywords: ['sync', 'mirror', 'reusable'],
   },
   {
     title: 'Mermaid diagram',
@@ -540,6 +574,7 @@ const items: SlashItem[] = [
         editor.chain().focus().setMermaid().run();
       });
     },
+    keywords: ['diagram', 'flowchart', 'chart', 'graph'],
   },
   {
     title: 'PlantUML diagram',
@@ -551,6 +586,7 @@ const items: SlashItem[] = [
         editor.chain().focus().setPlantUml().run();
       });
     },
+    keywords: ['diagram', 'uml', 'sequence'],
   },
   {
     title: 'drawio diagram',
@@ -562,6 +598,7 @@ const items: SlashItem[] = [
         editor.chain().focus().setDrawio().run();
       });
     },
+    keywords: ['diagram', 'diagrams.net', 'drawio'],
   },
   {
     title: 'Image gallery',
@@ -573,6 +610,7 @@ const items: SlashItem[] = [
         editor.chain().focus().setGallery().run();
       });
     },
+    keywords: ['gallery', 'grid', 'photos', 'album'],
   },
   pdfSlashItem,
   toSlashItem(footnoteMenuItem, 'advanced'),
@@ -584,18 +622,21 @@ const items: SlashItem[] = [
     category: 'advanced',
     icon: Layers,
     command: (editor) => {
-      const front = window.prompt('Front (question)') ?? '';
-      const back = window.prompt('Back (answer)') ?? '';
-      if (!front || !back) return;
-      const deck = window.prompt('Deck tag (optional)') ?? '';
-      void ensureLazyExtension(editor, 'flashcard').then(() => {
-        editor
-          .chain()
-          .focus()
-          .setFlashcard({ front, back, deckTag: deck || null })
-          .run();
+      void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((result) => {
+        if (!result) return;
+        const { front, back, deck } = result;
+        if (!front || !back) return;
+        void ensureLazyExtension(editor, 'flashcard').then(() => {
+          if (editor.isDestroyed) return;
+          editor
+            .chain()
+            .focus()
+            .setFlashcard({ front, back, deckTag: deck || null })
+            .run();
+        });
       });
     },
+    keywords: ['anki', 'card', 'spaced', 'srs'],
   },
   {
     title: 'Table of contents',
@@ -603,6 +644,7 @@ const items: SlashItem[] = [
     category: 'basic',
     icon: ListTree,
     command: (editor) => editor.chain().focus().insertTableOfContents().run(),
+    keywords: ['toc', 'outline', 'index'],
   },
   {
     title: 'Database',
@@ -627,6 +669,7 @@ const items: SlashItem[] = [
           .run();
       })();
     },
+    keywords: ['db', 'table', 'kanban', 'collection'],
   },
   {
     title: 'Page embed',
@@ -645,8 +688,25 @@ const items: SlashItem[] = [
           .run();
       });
     },
+    keywords: ['page', 'subpage', 'link', 'mention'],
   },
 ];
+
+/**
+ * #148 — slash-menu search predicate. Matches `query` (case-insensitive
+ * substring) against the item title OR any of its keyword aliases. An empty
+ * query matches everything. Exported so the suggestion `items()` filter and
+ * the unit test share one source of truth.
+ */
+export function matchesSlashQuery(item: SlashItem, query: string): boolean {
+  const q = query.trim().toLowerCase();
+  if (q === '') return true;
+  if (item.title.toLowerCase().includes(q)) return true;
+  return item.keywords.some((k) => k.toLowerCase().includes(q));
+}
+
+/** The full, ordered slash-command catalog. Exported for tests + reuse. */
+export const SLASH_ITEMS: SlashItem[] = items;
 
 export const SlashCommand = Extension.create({
   name: 'slashCommand',
@@ -663,8 +723,7 @@ export const SlashCommand = Extension.create({
         // #122 — return the full filtered catalog (no slice cap). The grouped,
         // scrollable SlashMenu bounds its own height, so every block is now
         // discoverable both by scrolling categories and by typing.
-        items: ({ query }) =>
-          items.filter((i) => i.title.toLowerCase().includes(query.toLowerCase())),
+        items: ({ query }) => items.filter((i) => matchesSlashQuery(i, query)),
         render: () => {
           let component: ReactRenderer<
             SlashMenuRef,
@@ -686,6 +745,11 @@ export const SlashCommand = Extension.create({
                 trigger: 'manual',
                 placement: 'bottom-start',
               });
+              // #110/#133 — tag the rendered .tippy-box so globals.css can
+              // exclude the slash popup from the global :focus-visible ring
+              // (the saturated accent ring on this floating surface read as a
+              // stuck viewport edge-glow after teardown returned focus to it).
+              popup.popper.firstElementChild?.classList.add('cairn-slash-popup');
             },
             onUpdate: (props) => {
               component.updateProps({

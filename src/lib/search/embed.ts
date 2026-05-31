@@ -30,6 +30,55 @@ export interface EmbeddingProvider {
   embed(text: string): Promise<Float32Array>;
 }
 
+/**
+ * Minimal structural view of the @xenova/transformers `env` singleton — only
+ * the fields we set. Kept local (not imported) so this module stays free of a
+ * static dependency on the heavy library.
+ */
+export interface TransformersEnv {
+  allowRemoteModels?: boolean;
+  allowLocalModels?: boolean;
+  localModelPath?: string;
+  backends?: {
+    onnx?: {
+      wasm?: {
+        numThreads?: number;
+        proxy?: boolean;
+        wasmPaths?: string;
+      };
+    };
+  };
+}
+
+/**
+ * v0.9.6 G4 (#136) — force Transformers.js onto the pure-WASM onnxruntime-web
+ * backend so the runtime image needs no native ORT Node binding `.so`.
+ *
+ * - allowRemoteModels=false + allowLocalModels=true + localModelPath='/models/'
+ *   makes the loader read the bundled MiniLM set under `public/models` instead
+ *   of fetching from the HF Hub (which is blocked by CSP and absent offline).
+ * - numThreads=1 + proxy=false keeps ORT on the single-threaded WASM path: no
+ *   SharedArrayBuffer / cross-origin-isolation requirement, no Worker, which is
+ *   what makes this portable across base images and arm64/amd64.
+ * - wasmPaths='/onnx/' points ORT at the self-hosted `.wasm` binaries under
+ *   `public/onnx` so it never hits a CDN (CSP `connect-src` would reject it).
+ *
+ * Pure + idempotent: it only mutates the passed env. Tested without importing
+ * the real library.
+ */
+export function configureTransformersEnv(env: TransformersEnv): void {
+  env.allowRemoteModels = false;
+  env.allowLocalModels = true;
+  env.localModelPath = '/models/';
+  if (!env.backends) env.backends = {};
+  if (!env.backends.onnx) env.backends.onnx = {};
+  if (!env.backends.onnx.wasm) env.backends.onnx.wasm = {};
+  const wasm = env.backends.onnx.wasm;
+  wasm.numThreads = 1;
+  wasm.proxy = false;
+  wasm.wasmPaths = '/onnx/';
+}
+
 // --- Local provider -------------------------------------------------------
 
 class LocalEmbeddingProvider implements EmbeddingProvider {
@@ -46,7 +95,11 @@ class LocalEmbeddingProvider implements EmbeddingProvider {
       this.pipelinePromise = (async () => {
         // Lazy + dynamic import — keeps the heavy ORT bindings out of the
         // import graph until the first embed actually runs.
-        const { pipeline } = await import('@xenova/transformers');
+        const transformers = await import('@xenova/transformers');
+        // v0.9.6 G4 (#136): pin the WASM backend + bundled models BEFORE the
+        // first pipeline() call. The env singleton is read at model-load time.
+        configureTransformersEnv(transformers.env as unknown as TransformersEnv);
+        const { pipeline } = transformers;
         // feature-extraction returns the mean-pooled + normalized sentence
         // embedding when called with pooling:'mean', normalize:true (set in
         // the call site below).

@@ -1,0 +1,129 @@
+name: Embeddings smoke
+
+on:
+  pull_request:
+    paths:
+      - 'src/lib/search/**'
+      - 'src/server/embed-page-cli.ts'
+      - 'scripts/fetch-embedding-assets.mjs'
+      - 'Dockerfile'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/embeddings-smoke.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/lib/search/**'
+      - 'src/server/embed-page-cli.ts'
+      - 'scripts/fetch-embedding-assets.mjs'
+      - 'Dockerfile'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/embeddings-smoke.yml'
+
+jobs:
+  embed-smoke:
+    runs-on: [self-hosted, linux, x64]
+    permissions:
+      contents: read
+      packages: read
+    env:
+      NET: cairn-embed-smoke
+      DB_IMG: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+      APP_IMG: cairn-embed-smoke:ci
+      AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
+    steps:
+      - uses: actions/checkout@v6
+
+      # Private postgres-pgvector image lives on GHCR.
+      - name: GHCR login
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build runtime image
+        run: docker build -t "$APP_IMG" .
+
+      - name: Create network
+        run: docker network create "$NET"
+
+      - name: Start Postgres
+        run: |
+          docker run -d --name embed-db --network "$NET" \
+            -e POSTGRES_USER=cairn -e POSTGRES_PASSWORD=cairn -e POSTGRES_DB=cairn \
+            "$DB_IMG"
+          # Wait for readiness.
+          for i in $(seq 1 30); do
+            if docker exec embed-db pg_isready -U cairn -d cairn; then break; fi
+            sleep 2
+          done
+
+      - name: Boot Cairn (applies migrations on startup)
+        run: |
+          docker run -d --name embed-app --network "$NET" \
+            -e DATABASE_URL=postgres://cairn:cairn@embed-db:5432/cairn \
+            -e AUTH_SECRET="$AUTH_SECRET" \
+            -e NEXTAUTH_URL=http://localhost:3000 \
+            "$APP_IMG"
+          # Wait for the app healthcheck endpoint.
+          for i in $(seq 1 45); do
+            if docker exec embed-app wget -qO- http://127.0.0.1:3000/api/health >/dev/null 2>&1; then
+              echo "app healthy"; break
+            fi
+            sleep 2
+          done
+
+      - name: Seed a page
+        run: |
+          # Note: psql emits "INSERT 0 1" command tags for the data-modifying CTEs
+          # alongside the RETURNING uuid, so extract the uuid by its shape rather
+          # than assuming line position.
+          PAGE_ID=$(docker exec embed-db psql -U cairn -d cairn -At -c "
+            WITH u AS (
+              INSERT INTO users (email, password_hash, name)
+              VALUES ('smoke@example.com', 'x', 'Smoke')
+              RETURNING id
+            ), ws AS (
+              INSERT INTO workspaces (name, slug) VALUES ('smoke', 'smoke')
+              RETURNING id
+            )
+            INSERT INTO pages (workspace_id, title, content_text, created_by)
+            SELECT ws.id, 'Smoke', 'hello smoke world from the wasm embedder', u.id
+            FROM ws, u
+            RETURNING id;
+          " | grep -Eio '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' | head -n1)
+          echo "PAGE_ID=$PAGE_ID" >> "$GITHUB_ENV"
+
+      - name: Run embedPage via the CLI inside the container
+        run: |
+          docker exec embed-app node dist/server/embed-page-cli.js "$PAGE_ID" | tee /tmp/embed-out.json
+          grep -q '"status":"embedded"' /tmp/embed-out.json
+
+      - name: Assert a vector row was written
+        run: |
+          COUNT=$(docker exec embed-db psql -U cairn -d cairn -At -c \
+            "SELECT count(*) FROM page_embeddings WHERE page_id = '$PAGE_ID'::uuid;")
+          echo "page_embeddings rows: $COUNT"
+          test "$COUNT" = "1"
+
+      - name: Assert no 'Failed to load external module' in app logs
+        run: |
+          if docker logs embed-app 2>&1 | grep -i "Failed to load external module"; then
+            echo "::error::embedder failed to load a native/external module"
+            exit 1
+          fi
+
+      - name: Dump logs on failure
+        if: failure()
+        run: |
+          echo '=== app logs ==='; docker logs embed-app || true
+          echo '=== db logs ===';  docker logs embed-db  || true
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker rm -f embed-app embed-db || true
+          docker network rm "$NET" || true
+          docker rmi "$APP_IMG" || true

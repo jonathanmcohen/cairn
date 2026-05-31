@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { RuleForm } from '@/components/automation/rule-form';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import type * as schema from '@/db/schema';
 
 export type RuleListRow = {
@@ -36,6 +37,7 @@ export function RuleList({
   initialRules: RuleListRow[];
   canMutate: boolean;
 }) {
+  const confirm = useConfirm();
   const [rules, setRules] = useState<RuleListRow[]>(initialRules);
   const [editing, setEditing] = useState<RuleListRow | null>(null);
   const [creating, setCreating] = useState(false);
@@ -64,7 +66,12 @@ export function RuleList({
   }
 
   async function remove(rule: RuleListRow) {
-    if (!confirm(`Delete rule "${rule.name}"? Run history will be removed too.`)) return;
+    const ok = await confirm({
+      title: `Delete rule "${rule.name}"? Run history will be removed too.`,
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setDeletingId(rule.id);
     setError(null);
     try {

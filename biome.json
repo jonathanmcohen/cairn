@@ -24,7 +24,17 @@
       "style": {
         "noNonNullAssertion": "warn",
         "useImportType": "error",
-        "useNodejsImportProtocol": "error"
+        "useNodejsImportProtocol": "error",
+        "noRestrictedGlobals": {
+          "level": "error",
+          "options": {
+            "deniedGlobals": {
+              "confirm": "Use useConfirm() from @/components/ui/confirm-dialog instead of window.confirm.",
+              "alert": "Use useAlert() from @/components/ui/alert-dialog instead of window.alert.",
+              "prompt": "Use usePrompt() from @/components/ui/input-dialog (or the editor dialog bus) instead of window.prompt."
+            }
+          }
+        }
       },
       "suspicious": {
         "noExplicitAny": "error",

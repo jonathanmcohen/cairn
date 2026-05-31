@@ -4,6 +4,15 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SettingsForm } from '@/app/(app)/settings/workspace/general/settings-form';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+// IconPicker mounts a web component + dynamic import; stub it.
+vi.mock('@/components/icon-picker', () => ({
+  IconPicker: () => <div data-testid="icon-picker" />,
+}));
+// The form now reads the icon label/hint via useT(); resolve to English copy.
+vi.mock('@/lib/i18n/provider', async () => {
+  const en = (await import('@/../messages/en.json')).default as Record<string, string>;
+  return { useT: () => (key: string) => en[key] ?? key };
+});
 afterEach(cleanup);
 
 describe('<SettingsForm> home page picker', () => {
@@ -11,7 +20,7 @@ describe('<SettingsForm> home page picker', () => {
     const { container } = render(
       <SettingsForm
         workspaceId="ws-1"
-        initial={{ name: 'W', requireTwofa: false, homePageId: null }}
+        initial={{ name: 'W', requireTwofa: false, homePageId: null, icon: null }}
         pages={[{ id: 'p1', title: 'Welcome' }]}
       />,
     );
@@ -29,7 +38,7 @@ describe('<SettingsForm> Require 2FA control', () => {
     render(
       <SettingsForm
         workspaceId="ws-1"
-        initial={{ name: 'W', requireTwofa: false, homePageId: null }}
+        initial={{ name: 'W', requireTwofa: false, homePageId: null, icon: null }}
         pages={[]}
       />,
     );
@@ -40,7 +49,7 @@ describe('<SettingsForm> Require 2FA control', () => {
     render(
       <SettingsForm
         workspaceId="ws-1"
-        initial={{ name: 'W', requireTwofa: false, homePageId: null }}
+        initial={{ name: 'W', requireTwofa: false, homePageId: null, icon: null }}
         pages={[]}
         twofaEnforcementAvailable
       />,

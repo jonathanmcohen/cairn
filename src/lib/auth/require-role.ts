@@ -4,6 +4,7 @@ import { cache } from 'react';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError } from './http-error';
+import { isSessionActive } from './session-store';
 
 // Re-export so existing consumers that already import `HttpError` from
 // `@/lib/auth/require-role` keep working without a churn-only rename.
@@ -37,6 +38,15 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const session = await auth();
   if (!session?.user?.id) return null;
   const userId = session.user.id;
+
+  // v0.9.6 G8b (#70) — sessions are revocable despite the stateless jwt
+  // strategy: if this token carries a `sid` whose auth_sessions row is missing
+  // or revoked, treat the request as signed out. Tokens with no sid (OAuth /
+  // pre-0.9.6 logins) pass through unchanged.
+  const sid = (session as { sid?: string }).sid;
+  if (sid && !(await isSessionActive(getDb(), userId, sid))) {
+    return null;
+  }
 
   const db = getDb();
   const memberships = await db

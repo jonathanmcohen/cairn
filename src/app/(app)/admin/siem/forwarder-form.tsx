@@ -22,6 +22,13 @@ import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Kind = 'syslog' | 'http' | 'splunk_hec' | 'datadog' | 's3';
 
@@ -134,19 +141,22 @@ export function ForwarderForm() {
     <form onSubmit={submit} className="space-y-4 rounded-md border p-4">
       <div className="space-y-1">
         <Label htmlFor="siem-kind">Kind</Label>
-        <select
-          id="siem-kind"
-          value={kind}
-          onChange={(e) => setKind(e.target.value as Kind)}
-          className="block min-h-11 w-full rounded border bg-background px-3"
-          aria-describedby="siem-kind-help"
-        >
-          {(Object.keys(KIND_LABELS) as Kind[]).map((k) => (
-            <option key={k} value={k}>
-              {KIND_LABELS[k]}
-            </option>
-          ))}
-        </select>
+        <Select value={kind} onValueChange={(next) => setKind(next as Kind)}>
+          <SelectTrigger
+            id="siem-kind"
+            className="min-h-11 w-full"
+            aria-describedby="siem-kind-help"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {(Object.keys(KIND_LABELS) as Kind[]).map((k) => (
+              <SelectItem key={k} value={k}>
+                {KIND_LABELS[k]}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p id="siem-kind-help" className="text-xs text-muted-foreground">
           Each kind speaks its native protocol: <code>splunk_hec</code> uses the HTTP Event
           Collector; <code>datadog</code> uses the Logs Intake API; <code>s3</code> uploads a

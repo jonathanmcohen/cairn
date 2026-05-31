@@ -13,6 +13,13 @@ import { useState, useTransition } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type LinkRow = {
   id: string;
@@ -89,19 +96,22 @@ export function ChannelLinksManager(props: {
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <Label htmlFor="cl-install">Install</Label>
-              <select
-                id="cl-install"
-                className="mt-1 h-11 w-full rounded border bg-background px-3 text-sm"
-                value={installId}
-                onChange={(e) => setInstallId(e.target.value)}
-                aria-label="Chat bridge install"
-              >
-                {props.installs.map((i) => (
-                  <option key={i.id} value={i.id}>
-                    {i.platform} — {i.teamId}
-                  </option>
-                ))}
-              </select>
+              <Select value={installId} onValueChange={(next) => setInstallId(next)}>
+                <SelectTrigger
+                  id="cl-install"
+                  className="mt-1 h-11 w-full text-sm"
+                  aria-label="Chat bridge install"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.installs.map((i) => (
+                    <SelectItem key={i.id} value={i.id}>
+                      {i.platform} — {i.teamId}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="cl-channel">Channel id</Label>
@@ -115,32 +125,41 @@ export function ChannelLinksManager(props: {
             </div>
             <div>
               <Label htmlFor="cl-page">Page</Label>
-              <select
-                id="cl-page"
-                className="mt-1 h-11 w-full rounded border bg-background px-3 text-sm"
-                value={pageId}
-                onChange={(e) => setPageId(e.target.value)}
-                aria-label="Target page"
-              >
-                {props.pages.map((p) => (
-                  <option key={p.id} value={p.id}>
-                    {p.title}
-                  </option>
-                ))}
-              </select>
+              <Select value={pageId} onValueChange={(next) => setPageId(next)}>
+                <SelectTrigger
+                  id="cl-page"
+                  className="mt-1 h-11 w-full text-sm"
+                  aria-label="Target page"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {props.pages.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      {p.title}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="cl-mode">Mode</Label>
-              <select
-                id="cl-mode"
-                className="mt-1 h-11 w-full rounded border bg-background px-3 text-sm"
+              <Select
                 value={linkMode}
-                onChange={(e) => setLinkMode(e.target.value as 'notify' | 'sync')}
-                aria-label="Link mode"
+                onValueChange={(next) => setLinkMode(next as 'notify' | 'sync')}
               >
-                <option value="notify">Notify (outbound only)</option>
-                <option value="sync">Sync (bidirectional)</option>
-              </select>
+                <SelectTrigger
+                  id="cl-mode"
+                  className="mt-1 h-11 w-full text-sm"
+                  aria-label="Link mode"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="notify">Notify (outbound only)</SelectItem>
+                  <SelectItem value="sync">Sync (bidirectional)</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="flex gap-3">

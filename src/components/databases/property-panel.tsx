@@ -1,9 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { computeFormula } from '@/lib/databases/formula';
 import { ROLLUP_FNS } from '@/lib/databases/rollup/config';
+import { useT } from '@/lib/i18n/provider';
 
 const TYPES = [
   'text',
@@ -27,6 +35,7 @@ export function PropertyPanel({
   databaseId: string;
   onChange: () => void;
 }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [type, setType] = useState<(typeof TYPES)[number]>('text');
@@ -69,8 +78,14 @@ export function PropertyPanel({
     };
   }, [type, databaseId]);
 
-  // Relation properties on THIS database, for selector 1.
-  const relationProps = properties.filter((p) => p.type === 'relation');
+  // Relation properties on THIS database, for selector 1. Memoized so its
+  // reference is stable across renders — it feeds the rollup effect's dependency
+  // array below, and a fresh array each render would retrigger that effect (which
+  // setState's), causing an infinite render loop.
+  const relationProps = useMemo(
+    () => properties.filter((p) => p.type === 'relation'),
+    [properties],
+  );
 
   // Selector 2 depends on selector 1: load the chosen relation's target-db properties.
   useEffect(() => {
@@ -160,33 +175,37 @@ export function PropertyPanel({
           onChange={(e) => setName(e.target.value)}
           className="rounded border bg-transparent px-2 py-1 text-sm outline-hidden"
         />
-        <select
-          value={type}
-          onChange={(e) => setType(e.target.value as (typeof TYPES)[number])}
-          className="rounded border bg-transparent px-2 py-1 text-sm outline-hidden"
-        >
-          {TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
+        <Select value={type} onValueChange={(next) => setType(next as (typeof TYPES)[number])}>
+          <SelectTrigger aria-label={t('propertyPanel.typeAriaLabel')} className="w-40 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TYPES.map((t) => (
+              <SelectItem key={t} value={t}>
+                {t}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         {type === 'relation' && (
-          <select
-            aria-label="Target database"
-            value={targetDatabaseId}
-            onChange={(e) => setTargetDatabaseId(e.target.value)}
-            className="rounded border bg-transparent px-2 py-1 text-sm outline-none"
+          <Select
+            value={targetDatabaseId || '__none'}
+            onValueChange={(next) => setTargetDatabaseId(next === '__none' ? '' : next)}
           >
-            <option value="">Target database…</option>
-            {databases
-              .filter((d) => d.id !== databaseId)
-              .map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.title || 'Untitled'}
-                </option>
-              ))}
-          </select>
+            <SelectTrigger aria-label="Target database" className="w-48 text-sm">
+              <SelectValue placeholder="Target database…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">Target database…</SelectItem>
+              {databases
+                .filter((d) => d.id !== databaseId)
+                .map((d) => (
+                  <SelectItem key={d.id} value={d.id}>
+                    {d.title || 'Untitled'}
+                  </SelectItem>
+                ))}
+            </SelectContent>
+          </Select>
         )}
         <Button size="sm" disabled={busy} onClick={() => void addProperty()}>
           Add
@@ -269,48 +288,57 @@ export function PropertyPanel({
       )}
       {type === 'rollup' && (
         <div className="space-y-1">
-          <select
-            aria-label="Relation property"
-            value={relationPropertyId}
-            onChange={(e) => {
-              setRelationPropertyId(e.target.value);
+          <Select
+            value={relationPropertyId || '__none'}
+            onValueChange={(next) => {
+              setRelationPropertyId(next === '__none' ? '' : next);
               setTargetPropertyId('');
             }}
-            className="w-full rounded border bg-transparent px-2 py-1 text-sm outline-none"
           >
-            <option value="">Relation property…</option>
-            {relationProps.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Target property"
-            value={targetPropertyId}
-            onChange={(e) => setTargetPropertyId(e.target.value)}
+            <SelectTrigger aria-label="Relation property" className="w-full text-sm">
+              <SelectValue placeholder="Relation property…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">Relation property…</SelectItem>
+              {relationProps.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={targetPropertyId || '__none'}
+            onValueChange={(next) => setTargetPropertyId(next === '__none' ? '' : next)}
             disabled={!relationPropertyId}
-            className="w-full rounded border bg-transparent px-2 py-1 text-sm outline-none disabled:opacity-50"
           >
-            <option value="">Target property…</option>
-            {targetProps.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.name}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Aggregation function"
+            <SelectTrigger aria-label="Target property" className="w-full text-sm">
+              <SelectValue placeholder="Target property…" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none">Target property…</SelectItem>
+              {targetProps.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select
             value={rollupFn}
-            onChange={(e) => setRollupFn(e.target.value as (typeof ROLLUP_FNS)[number])}
-            className="w-full rounded border bg-transparent px-2 py-1 text-sm outline-none"
+            onValueChange={(next) => setRollupFn(next as (typeof ROLLUP_FNS)[number])}
           >
-            {ROLLUP_FNS.map((fn) => (
-              <option key={fn} value={fn}>
-                {fn}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger aria-label="Aggregation function" className="w-full text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ROLLUP_FNS.map((fn) => (
+                <SelectItem key={fn} value={fn}>
+                  {fn}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
           <p className="text-xs text-muted-foreground">
             Computed at read time. Filtering/sorting on rollups is not supported in this version.
           </p>

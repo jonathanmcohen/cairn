@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useT } from '@/lib/i18n/provider';
 
 /**
@@ -13,6 +14,7 @@ import { useT } from '@/lib/i18n/provider';
  */
 export function RecoveryCodesCard() {
   const t = useT();
+  const confirm = useConfirm();
   const [remaining, setRemaining] = useState<number | null>(null);
   const [codes, setCodes] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -36,7 +38,12 @@ export function RecoveryCodesCard() {
   }, []);
 
   async function regenerate() {
-    if (!window.confirm(t('security.recoveryCodes.confirm'))) return;
+    const ok = await confirm({
+      title: t('security.recoveryCodes.confirm'),
+      confirmLabel: 'Regenerate',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setBusy(true);
     setError(null);
     try {

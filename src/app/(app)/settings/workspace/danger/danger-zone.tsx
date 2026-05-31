@@ -4,6 +4,13 @@ import { useRouter } from 'next/navigation';
 import { useId, useState } from 'react';
 import { StepUpModal } from '@/components/security/stepup-modal';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Member = { userId: string; name: string; email: string; role: string };
 
@@ -121,18 +128,18 @@ export function DangerZone({
               No other members yet — invite someone first.
             </p>
           ) : (
-            <select
-              id={transferSelectId}
-              value={toUserId}
-              onChange={(e) => setToUserId(e.target.value)}
-              className="rounded border px-2 py-1"
-            >
-              {others.map((m) => (
-                <option key={m.userId} value={m.userId}>
-                  {m.name} ({m.email}) — {m.role}
-                </option>
-              ))}
-            </select>
+            <Select value={toUserId} onValueChange={(next) => setToUserId(next)}>
+              <SelectTrigger id={transferSelectId} aria-label="New owner">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {others.map((m) => (
+                  <SelectItem key={m.userId} value={m.userId}>
+                    {m.name} ({m.email}) — {m.role}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           )}
         </div>
 

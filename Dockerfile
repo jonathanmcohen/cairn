@@ -1,11 +1,20 @@
 # syntax=docker/dockerfile:1.7
-ARG NODE_VERSION=24-alpine
+# Debian (glibc) base — NOT Alpine/musl. The local embedder pulls
+# onnxruntime-node, whose prebuilt native binary is glibc-linked and cannot run
+# on musl (even via gcompat it aborts at runtime). A glibc base is required for
+# the bundled Xenova/all-MiniLM embedder to load.
+ARG NODE_VERSION=24-bookworm-slim
 
 FROM node:${NODE_VERSION} AS base
 RUN corepack enable
 WORKDIR /app
 
 FROM base AS deps
+# Build toolchain for any dependency that compiles a native addon during
+# `pnpm install` (e.g. cpu-features). bookworm-slim ships no compiler/python.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends python3 make g++ \
+ && rm -rf /var/lib/apt/lists/*
 # pnpm-workspace.yaml carries the pnpm 10+ allowBuilds + minimumReleaseAgeExclude
 # policy; without it the in-container `pnpm install --frozen-lockfile` applies
 # pnpm's default minimum-release-age policy and rejects freshly-published deps
@@ -35,13 +44,23 @@ WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
-# v0.9.0 G8 P41 — cairn-upgrade CLI spawns pg_dump + psql for snapshot/
-# restore during upgrade orchestration. The postgresql-client package on the
-# Alpine repo ships both binaries (~6 MB compressed). Pinned to v17 so the
-# wire-protocol matches the Postgres 17/18 server image used in production.
-RUN apk add --no-cache postgresql17-client
+# v0.9.0 G8 P41 — cairn-upgrade CLI spawns pg_dump + psql for snapshot/restore.
+# Install the v17 client from the PGDG apt repo (bookworm ships only v15),
+# matching the Postgres 17/18 server. wget backs the container HEALTHCHECK and
+# the embed-smoke boot probe.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends ca-certificates curl gnupg wget \
+ && install -d /usr/share/postgresql-common/pgdg \
+ && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+      -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc \
+ && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" \
+      > /etc/apt/sources.list.d/pgdg.list \
+ && apt-get update \
+ && apt-get install -y --no-install-recommends postgresql-client-17 \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN addgroup -g 1001 -S cairn && adduser -u 1001 -S cairn -G cairn
+RUN groupadd -g 1001 cairn \
+ && useradd -u 1001 -g cairn -M -s /usr/sbin/nologin cairn
 
 # Standalone bundle from Next.js
 COPY --from=builder --chown=cairn:cairn /app/.next/standalone ./
@@ -54,9 +73,33 @@ COPY --from=builder --chown=cairn:cairn /app/dist ./dist
 COPY --from=deps --chown=cairn:cairn /app/node_modules/drizzle-orm ./node_modules/drizzle-orm
 COPY --from=deps --chown=cairn:cairn /app/node_modules/postgres ./node_modules/postgres
 COPY --from=deps --chown=cairn:cairn /app/node_modules/dotenv ./node_modules/dotenv
+# zod is bundled into the Next standalone server chunks (not left in
+# node_modules), so the separate dist/ tree (e.g. embed-page CLI via
+# dist/lib/env.js) can't resolve it. Copy it explicitly. zod is dependency-free.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/zod ./node_modules/zod
+# @xenova/transformers hard-loads the onnxruntime-node native binding at import;
+# its .node sidecar dlopens libonnxruntime.so.<ver> from the same dir. Next's
+# standalone file-trace copies the .node but not the dlopen'd .so, so overlay
+# the full pnpm package (which includes the .so). @xenova/transformers@2 pins
+# onnxruntime-node@1.14.0.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/onnxruntime-node@1.14.0 ./node_modules/.pnpm/onnxruntime-node@1.14.0
+# sharp (image preprocessing, pulled by @xenova/transformers + used by
+# next/image) is pinned to 0.34.5 via pnpm overrides; its native binary lives in
+# the platform-specific @img/* packages, which Next's file-trace drops. Overlay
+# the sharp package plus its linux-x64 @img binary + libvips so require('sharp')
+# resolves at runtime.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/sharp@0.34.5 ./node_modules/.pnpm/sharp@0.34.5
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-linux-x64@0.34.5 ./node_modules/.pnpm/@img+sharp-linux-x64@0.34.5
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.4 ./node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.4
 
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
+
+# @xenova/transformers' env.localModelPath is '/models/' (see src/lib/search/
+# embed.ts) — in Node that resolves to the absolute filesystem path /models, but
+# the bundled MiniLM model set ships under /app/public/models. Symlink so the
+# embedder finds tokenizer.json + model_quantized.onnx at runtime.
+RUN ln -s /app/public/models /models
 
 USER cairn
 EXPOSE 3000

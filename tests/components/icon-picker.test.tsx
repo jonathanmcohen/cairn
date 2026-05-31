@@ -22,10 +22,14 @@ describe('IconPicker', () => {
     expect(screen.getByRole('button', { name: 'Change icon' }).textContent).toContain('🪨');
   });
 
-  it('opens the popover when the trigger is clicked + shows the search input', () => {
+  it('opens the popover and does NOT render a redundant React search input (#129)', () => {
     render(<IconPicker value={null} onChange={() => {}} />);
     fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
-    expect(screen.getByLabelText('Search emoji')).toBeTruthy();
+    // The emoji-picker-element web component provides its own internal search
+    // box; the component must not render a second React <input> on top of it.
+    expect(screen.queryByLabelText('Search emoji')).toBeNull();
+    // The picker mount point is still present.
+    expect(document.querySelector('[data-testid="emoji-picker-mount"]')).toBeTruthy();
   });
 
   it('writes recently-used to localStorage when an emoji is picked from the recently-used row', () => {
@@ -47,5 +51,17 @@ describe('IconPicker', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove' }));
     expect(onChange).toHaveBeenCalledWith(null);
+  });
+
+  it('closes the picker on Escape (#131)', () => {
+    render(<IconPicker value={null} onChange={() => {}} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Change icon' }));
+    // Popover open → the emoji mount point is in the DOM.
+    expect(document.querySelector('[data-testid="emoji-picker-mount"]')).toBeTruthy();
+    fireEvent.keyDown(document.activeElement ?? document.body, {
+      key: 'Escape',
+      code: 'Escape',
+    });
+    expect(document.querySelector('[data-testid="emoji-picker-mount"]')).toBeNull();
   });
 });

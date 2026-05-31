@@ -9,6 +9,8 @@ const Body = z.object({
   name: z.string().min(1).max(120).optional(),
   requireTwofa: z.boolean().optional(),
   homePageId: z.uuid().nullable().optional(),
+  // Prefix-encoded icon string; null clears, max length guards against abuse.
+  icon: z.string().max(300).nullable().optional(),
 });
 
 const IdSchema = z.uuid();

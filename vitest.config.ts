@@ -22,8 +22,21 @@ export default defineConfig({
       provider: 'v8',
       include: ['src/**/*.ts'],
     },
+    server: {
+      deps: {
+        // next-auth's ESM build (`lib/env.js`) imports the bare specifier
+        // `next/server`, which Node's resolver can't map through next's
+        // `exports` field under Vitest (it errors suggesting `next/server.js`).
+        // Inlining next-auth makes Vite transform it so the `next/server` alias
+        // below is applied to that import, letting `@/lib/auth/config` import.
+        inline: [/next-auth/],
+      },
+    },
   },
   resolve: {
-    alias: { '@': path.resolve(__dirname, 'src') },
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      'next/server': path.resolve(__dirname, 'node_modules/next/server.js'),
+    },
   },
 });

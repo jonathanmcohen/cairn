@@ -12,6 +12,8 @@
     "src/server/**/*",
     "src/db/**/*",
     "src/lib/env.ts",
+    "src/lib/search/embed.ts",
+    "src/lib/search/embed-page.ts",
     "src/lib/files/**/*.ts",
     "src/lib/quotas/**/*.ts",
     "src/lib/export/**/*.ts",
@@ -23,5 +25,8 @@
     "src/lib/audit/**/*.ts",
     "src/lib/backups/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", "tests", "src/**/__tests__/**"]
+  "exclude": ["node_modules", ".next", "tests", "src/**/__tests__/**"],
+  "tsc-alias": {
+    "resolveFullPaths": true
+  }
 }

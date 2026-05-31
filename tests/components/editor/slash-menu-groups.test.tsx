@@ -16,6 +16,7 @@ const mk = (title: string, category: SlashItem['category']): SlashItem => ({
   description: `${title} desc`,
   category,
   command: vi.fn(),
+  keywords: [],
 });
 
 const sample: SlashItem[] = [

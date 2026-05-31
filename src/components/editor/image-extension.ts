@@ -99,3 +99,7 @@ declare module '@tiptap/core' {
     };
   }
 }
+
+// The client editor variant `CairnImageWithView` (atom + React node-view) lives
+// in `./image-view-extension` so this module stays free of `@tiptap/react` and
+// can be imported server-side (schema → suggestions transform) safely.

@@ -61,7 +61,15 @@ const server = new Server({
   async onAuthenticate({ token, documentName }) {
     const result = authorizeCollab(token, documentName, secret);
     if (!result.ok) {
-      // Throwing rejects the connection.
+      // v0.9.6 G4 (#137): log WHY the connect was rejected so operators can
+      // tell a real auth bug from the common AUTH_SECRET mismatch between the
+      // cairn and cairn-collab services. NEVER log the token or the secret —
+      // only the decoded (untrusted) pageId/exp and our own reason code.
+      // biome-ignore lint/suspicious/noConsole: operational rejection log for the standalone collab service
+      console.warn(
+        `cairn-collab: rejected connect reason=${result.reason} document=${documentName} tokenPageId=${result.tokenPageId ?? 'n/a'} exp=${result.exp ?? 'n/a'}`,
+      );
+      // Throwing rejects the connection (client gets no detail).
       throw new Error('Unauthorized');
     }
     // Bump connection metric AFTER auth passes so rejected attempts don't inflate

@@ -3,6 +3,15 @@
 import { NodeViewWrapper, type ReactNodeViewProps, ReactNodeViewRenderer } from '@tiptap/react';
 import { useMemo, useState } from 'react';
 import { DateTimeNode } from '@/components/editor/blocks/datetime-node';
+import { DateField } from '@/components/ui/date-field';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { DEFAULT_DISPLAY_FORMAT, formatForViewer, parseInput } from '@/lib/datetime/format';
 
 /**
@@ -98,38 +107,32 @@ export function DateTimeView(props: {
           role="dialog"
           aria-label="Edit date/time"
         >
-          <label className="block text-xs">
-            Date
-            <input
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className="mt-1 block w-full rounded border px-2 py-1"
-            />
-          </label>
-          <label className="block text-xs">
+          <DateField label="Date" value={date} onChange={(iso) => setDate(iso)} />
+          <label className="block text-xs" htmlFor="dt-time">
             Time
-            <input
+            <Input
+              id="dt-time"
               type="time"
               value={time}
               onChange={(e) => setTime(e.target.value)}
-              className="mt-1 block w-full rounded border px-2 py-1"
+              className="mt-1 block w-full"
             />
           </label>
-          <label className="block text-xs">
-            Timezone
-            <select
-              value={zone}
-              onChange={(e) => setZone(e.target.value)}
-              className="mt-1 block w-full rounded border px-2 py-1"
-            >
-              {zones.map((z) => (
-                <option key={z} value={z}>
-                  {z}
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="block text-xs">
+            <span className="block">Timezone</span>
+            <Select value={zone} onValueChange={(next) => setZone(next)}>
+              <SelectTrigger aria-label="Timezone" className="mt-1 w-full text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-60">
+                {zones.map((z) => (
+                  <SelectItem key={z} value={z}>
+                    {z}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <button
             type="button"
             onClick={commit}

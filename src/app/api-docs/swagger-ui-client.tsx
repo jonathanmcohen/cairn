@@ -9,6 +9,7 @@
  * suffices. The page-level CSS for Swagger UI lives in swagger-ui-dist.
  */
 import 'swagger-ui-dist/swagger-ui.css';
+import './swagger-dark.css';
 import { useEffect, useRef } from 'react';
 
 type SwaggerLike = (opts: {

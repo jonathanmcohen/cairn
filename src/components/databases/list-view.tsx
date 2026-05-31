@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 import { PullToRefresh } from '@/components/mobile/pull-to-refresh';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { type CalcFn, type CalcResult, computeCalcFooter } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
 import { patchCalcFooter } from './calc-footer-row';
@@ -159,18 +166,24 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
               {result ? (
                 <span className="tabular-nums text-foreground">{listFormatValue(result)}</span>
               ) : null}
-              <select
-                aria-label={`Calc for ${p.name}`}
+              <Select
                 value={current}
-                onChange={(e) => void setFn(p.id, e.target.value as CalcFn | 'none')}
-                className="rounded border-0 bg-transparent text-[10px] text-muted-foreground hover:bg-accent"
+                onValueChange={(next) => void setFn(p.id, next as CalcFn | 'none')}
               >
-                {LIST_ALL_FNS.map((fn) => (
-                  <option key={fn} value={fn}>
-                    {LIST_FN_LABELS[fn]}
-                  </option>
-                ))}
-              </select>
+                <SelectTrigger
+                  aria-label={`Calc for ${p.name}`}
+                  className="h-6 min-h-6 w-auto border-0 px-1 py-0 text-[10px] text-muted-foreground shadow-none hover:bg-accent"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {LIST_ALL_FNS.map((fn) => (
+                    <SelectItem key={fn} value={fn}>
+                      {LIST_FN_LABELS[fn]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </span>
           );
         })}

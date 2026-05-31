@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import type { TemplateVisibility } from '@/db/schema';
 
 export type TemplateCard = {
@@ -41,6 +42,7 @@ export type TemplatesGalleryProps = {
 
 export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: TemplatesGalleryProps) {
   const router = useRouter();
+  const confirm = useConfirm();
   const [templates, setTemplates] = useState<TemplateCard[]>(initialTemplates);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -69,7 +71,12 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
   }
 
   async function onDelete(id: string) {
-    if (!confirm('Delete this template? This cannot be undone.')) return;
+    const ok = await confirm({
+      title: 'Delete this template? This cannot be undone.',
+      confirmLabel: 'Delete',
+      variant: 'danger',
+    });
+    if (!ok) return;
     setBusy(id);
     setError(null);
     try {

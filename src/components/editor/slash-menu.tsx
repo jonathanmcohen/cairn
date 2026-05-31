@@ -20,6 +20,13 @@ export type SlashItem = {
   category: SlashCategory;
   command: (editor: Editor) => void;
   icon?: LucideIcon;
+  /**
+   * #148 — synonym aliases. The slash search matches the query against the
+   * title OR any keyword (case-insensitive substring), so `/math` finds
+   * "Equation", `/youtube` finds "Embed", etc. Always present (default `[]`)
+   * so consumers never branch on `undefined`.
+   */
+  keywords: string[];
 };
 
 export type SlashMenuRef = {

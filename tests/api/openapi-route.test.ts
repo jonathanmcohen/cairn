@@ -37,6 +37,9 @@ vi.mock('@/lib/auth/config', () => {
 });
 vi.mock('next/headers', () => ({
   cookies: async () => ({ get: () => active, set: () => {} }),
+  // publicOrigin() falls through to headers() when NEXTAUTH_URL is localhost
+  // (as it is in CI); provide a real Headers so hdrs.get(...) works.
+  headers: async () => new Headers(),
 }));
 
 async function setUser(c: { userId: string } | null) {

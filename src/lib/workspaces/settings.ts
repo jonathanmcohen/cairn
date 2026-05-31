@@ -22,6 +22,9 @@ export type UpdateWorkspaceSettingsInput = {
   requireTwofa?: boolean;
   // undefined = leave unchanged; null = clear; string = set (validated).
   homePageId?: string | null;
+  // Prefix-encoded ("emoji::🪨" / "file::<uuid>"); null clears. See
+  // src/lib/pages/icon-format.ts. undefined leaves unchanged.
+  icon?: string | null;
 };
 
 /**
@@ -29,9 +32,8 @@ export type UpdateWorkspaceSettingsInput = {
  * any non-null home_page_id is a live page in THIS workspace. Does NOT enforce
  * require_2fa — that gate is P19 (it needs user_totp + the owner-has-2FA guard).
  *
- * NOTE: the original plan referenced `icon` and `default_role` columns on
- * `workspaces`, but the actual schema (see src/db/schema/workspaces.ts) has
- * neither. Per the plan's escape hatch, those branches are dropped here.
+ * The `icon` column (v0.9.4, prefix-encoded) accepts undefined=leave / null=clear /
+ * string=set; no validation here beyond the route's length guard (#147).
  */
 export async function updateWorkspaceSettings(
   db: Db,
@@ -66,6 +68,7 @@ export async function updateWorkspaceSettings(
     if (input.name !== undefined) patch.name = input.name.trim();
     if (input.requireTwofa !== undefined) patch.requireTwofa = input.requireTwofa;
     if (input.homePageId !== undefined) patch.homePageId = input.homePageId;
+    if (input.icon !== undefined) patch.icon = input.icon;
     if (Object.keys(patch).length === 0) return;
 
     await tx

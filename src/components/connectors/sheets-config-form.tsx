@@ -4,6 +4,13 @@ import { type FormEvent, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Property = { id: string; name: string; type: string };
 
@@ -112,18 +119,22 @@ export function SheetsConfigForm({ connectorId, properties, initial }: Props) {
 
       <div className="space-y-1">
         <Label htmlFor="externalIdProperty">External-ID property</Label>
-        <select
-          id="externalIdProperty"
-          value={externalIdProperty}
-          onChange={(e) => setExternalIdProperty(e.target.value)}
-          className="w-full rounded border px-2 py-1"
-        >
-          {properties.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.name}
-            </option>
-          ))}
-        </select>
+        <Select value={externalIdProperty} onValueChange={(next) => setExternalIdProperty(next)}>
+          <SelectTrigger
+            id="externalIdProperty"
+            className="w-full"
+            aria-label="External-ID property"
+          >
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {properties.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
         <p className="text-xs text-muted-foreground">
           Which Cairn property uniquely identifies a row across both systems.
         </p>

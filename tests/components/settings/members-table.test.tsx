@@ -1,10 +1,15 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MembersTable } from '@/app/(app)/settings/workspace/members/members-table';
 
 // next/navigation is used only for router.refresh(); stub it.
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+
+// jsdom lacks the layout APIs radix Select calls on open.
+if (!Element.prototype.scrollIntoView) Element.prototype.scrollIntoView = () => {};
+if (!Element.prototype.hasPointerCapture) Element.prototype.hasPointerCapture = () => false;
+if (!Element.prototype.releasePointerCapture) Element.prototype.releasePointerCapture = () => {};
 
 afterEach(cleanup);
 
@@ -41,12 +46,13 @@ describe('<MembersTable>', () => {
     expect(within(ownerRow).queryByText('owner')).toBeNull();
   });
 
-  it('keeps the role <option> values lowercase for the editable role select', () => {
+  it('offers the editable roles in the themed role select', async () => {
     renderTable();
-    const select = screen.getByRole('combobox', { name: 'Change role for ada@x.test' });
-    const values = Array.from(select.querySelectorAll('option')).map((o) =>
-      o.getAttribute('value'),
-    );
-    expect(values).toEqual(['viewer', 'editor', 'admin']);
+    const trigger = screen.getByRole('combobox', { name: 'Change role for ada@x.test' });
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+    await screen.findByRole('option', { name: 'Viewer' });
+    const options = screen.getAllByRole('option').map((o) => o.textContent);
+    expect(options).toEqual(['Viewer', 'Editor', 'Admin']);
   });
 });

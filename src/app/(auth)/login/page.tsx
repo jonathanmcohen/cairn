@@ -2,6 +2,7 @@
 import { useRouter, useSearchParams } from 'next/navigation';
 import { signIn } from 'next-auth/react';
 import { Suspense, useEffect, useState } from 'react';
+import { PasskeyLoginButton } from '@/components/security/passkey-login-button';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -12,6 +13,7 @@ function LoginForm() {
   const search = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('');
   const [oauthProviders, setOauthProviders] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -54,7 +56,15 @@ function LoginForm() {
         <form action={onSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" name="email" type="email" required autoComplete="email" />
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
           </div>
           <div className="space-y-1.5">
             <Label htmlFor="password">Password</Label>
@@ -70,6 +80,10 @@ function LoginForm() {
           <Button type="submit" className="w-full" disabled={busy}>
             {busy ? 'Signing in...' : 'Sign in'}
           </Button>
+          <PasskeyLoginButton
+            email={email}
+            onSuccess={() => router.push(search.get('next') ?? '/')}
+          />
         </form>
         {oauthProviders.length > 0 && (
           <div className="mt-4 space-y-2">

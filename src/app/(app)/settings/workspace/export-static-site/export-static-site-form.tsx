@@ -2,6 +2,13 @@
 
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 type Target = 'mkdocs' | 'docusaurus';
 
@@ -39,18 +46,18 @@ export function ExportStaticSiteForm({ workspaceId }: { workspaceId: string }) {
 
   return (
     <div className="space-y-3" aria-busy={busy}>
-      <label className="block space-y-1 text-sm">
+      <div className="block space-y-1 text-sm">
         <span className="text-muted-foreground">Target</span>
-        <select
-          className="block w-full rounded border bg-background px-2 py-1"
-          value={target}
-          onChange={(e) => setTarget(e.target.value as Target)}
-          disabled={busy}
-        >
-          <option value="mkdocs">MkDocs (Material)</option>
-          <option value="docusaurus">Docusaurus</option>
-        </select>
-      </label>
+        <Select value={target} onValueChange={(next) => setTarget(next as Target)} disabled={busy}>
+          <SelectTrigger aria-label="Target" className="w-full">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="mkdocs">MkDocs (Material)</SelectItem>
+            <SelectItem value="docusaurus">Docusaurus</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
       <Button onClick={onGenerate} disabled={busy}>
         {busy ? 'Generating…' : 'Generate'}
       </Button>
