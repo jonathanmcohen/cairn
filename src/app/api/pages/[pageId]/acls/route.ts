@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError } from '@/lib/auth/require-role';
-import { requirePageAcl, removePageAcl, setPageAcl } from '@/lib/pages/acl';
+import { removePageAcl, requirePageAcl, setPageAcl } from '@/lib/pages/acl';
 import { listPageAcls } from '@/lib/pages/acl-list';
 
 export const dynamic = 'force-dynamic';

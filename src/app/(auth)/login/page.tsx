@@ -119,7 +119,9 @@ function LoginForm() {
         )}
         {ssoProviders.length > 0 && (
           <div className="mt-4 space-y-2">
-            <div className="text-center text-muted-foreground text-xs">{t('login.sso.divider')}</div>
+            <div className="text-center text-muted-foreground text-xs">
+              {t('login.sso.divider')}
+            </div>
             {ssoProviders.map((p) => (
               <Button
                 key={p.id}
