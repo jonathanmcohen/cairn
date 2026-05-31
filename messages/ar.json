@@ -410,5 +410,6 @@
   "pages.translations.canonicalPlaceholder": "معرّف الصفحة الأصلية",
   "pages.translations.localePlaceholder": "اللغة (مثل es)",
   "pages.translations.link": "ربط الترجمة",
-  "pages.translations.linkError": "تعذّر ربط الترجمة"
+  "pages.translations.linkError": "تعذّر ربط الترجمة",
+  "pages.backlinks.toggle": "روابط خلفية"
 }

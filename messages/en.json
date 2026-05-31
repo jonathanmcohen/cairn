@@ -410,5 +410,6 @@
   "pages.translations.canonicalPlaceholder": "Canonical page ID",
   "pages.translations.localePlaceholder": "Locale (e.g. es)",
   "pages.translations.link": "Link translation",
-  "pages.translations.linkError": "Could not link translation"
+  "pages.translations.linkError": "Could not link translation",
+  "pages.backlinks.toggle": "Backlinks"
 }

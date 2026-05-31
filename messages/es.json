@@ -410,5 +410,6 @@
   "pages.translations.canonicalPlaceholder": "ID de la página canónica",
   "pages.translations.localePlaceholder": "Idioma (p. ej. es)",
   "pages.translations.link": "Vincular traducción",
-  "pages.translations.linkError": "No se pudo vincular la traducción"
+  "pages.translations.linkError": "No se pudo vincular la traducción",
+  "pages.backlinks.toggle": "Retroenlaces"
 }
