@@ -412,5 +412,7 @@
   "pages.translations.localePlaceholder": "Locale (e.g. es)",
   "pages.translations.link": "Link translation",
   "pages.translations.linkError": "Could not link translation",
-  "pages.backlinks.toggle": "Backlinks"
+  "pages.backlinks.toggle": "Backlinks",
+  "databases.row.peek": "Open row",
+  "databases.row.comments": "Comments"
 }

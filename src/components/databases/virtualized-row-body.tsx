@@ -1,7 +1,9 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { MessageSquare } from 'lucide-react';
 import { useRef } from 'react';
+import { useT } from '@/lib/i18n/provider';
 import { CellEditor } from './cell-editor';
 import type { ColumnLayoutItem } from './column-ergonomics';
 import type { VisibleNode } from './row-tree';
@@ -20,6 +22,8 @@ export type VirtualizedRowBodyProps = {
   onChange: () => void;
   onAddChild: (parentId: string) => void;
   adding: boolean;
+  /** G16 #163 — open the row peek/comments panel for a row. */
+  onPeek: (rowId: string) => void;
 };
 
 /**
@@ -44,7 +48,9 @@ export function VirtualizedRowBody({
   onChange,
   onAddChild,
   adding,
+  onPeek,
 }: VirtualizedRowBodyProps) {
+  const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: visible.length,
@@ -171,6 +177,15 @@ export function VirtualizedRowBody({
                         className="ml-1 shrink-0 text-xs text-muted-foreground opacity-0 hover:bg-accent focus:opacity-100 group-hover:opacity-100"
                       >
                         +
+                      </button>
+                      {/* G16 #163 — open the row peek panel (comments thread). */}
+                      <button
+                        type="button"
+                        aria-label={t('databases.row.peek')}
+                        onClick={() => onPeek(node.row.id)}
+                        className="ml-1 inline-flex shrink-0 items-center text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                      >
+                        <MessageSquare className="size-4" aria-hidden />
                       </button>
                     </span>
                   ) : (

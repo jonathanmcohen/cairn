@@ -412,5 +412,7 @@
   "pages.translations.localePlaceholder": "اللغة (مثل es)",
   "pages.translations.link": "ربط الترجمة",
   "pages.translations.linkError": "تعذّر ربط الترجمة",
-  "pages.backlinks.toggle": "روابط خلفية"
+  "pages.backlinks.toggle": "روابط خلفية",
+  "databases.row.peek": "فتح الصف",
+  "databases.row.comments": "تعليقات"
 }

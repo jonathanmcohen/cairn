@@ -412,5 +412,7 @@
   "pages.translations.localePlaceholder": "Idioma (p. ej. es)",
   "pages.translations.link": "Vincular traducción",
   "pages.translations.linkError": "No se pudo vincular la traducción",
-  "pages.backlinks.toggle": "Retroenlaces"
+  "pages.backlinks.toggle": "Retroenlaces",
+  "databases.row.peek": "Abrir fila",
+  "databases.row.comments": "Comentarios"
 }

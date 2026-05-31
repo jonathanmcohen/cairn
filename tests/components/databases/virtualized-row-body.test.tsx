@@ -6,6 +6,13 @@ import type { VisibleNode } from '@/components/databases/row-tree';
 import type { RowData } from '@/components/databases/use-database-data';
 import { VirtualizedRowBody } from '@/components/databases/virtualized-row-body';
 
+// The body now reads the row-peek aria-label via useT(); render with the
+// authoritative English copy instead of wiring a full <I18nProvider>.
+vi.mock('@/lib/i18n/provider', async () => {
+  const en = (await import('@/../messages/en.json')).default as Record<string, string>;
+  return { useT: () => (key: string) => en[key] ?? key };
+});
+
 // jsdom doesn't compute layout, so every HTMLElement.offsetWidth/offsetHeight
 // returns 0 and every Element.getBoundingClientRect() returns {0,0,0,0}.
 // @tanstack/react-virtual reads `offsetWidth`/`offsetHeight` on the scroll
@@ -93,6 +100,7 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     // The sticky header still renders even when there are zero rows.
@@ -114,6 +122,7 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     const rendered = container.querySelectorAll('[data-virtual-row]');
@@ -133,6 +142,7 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     const header = container.querySelector('[data-virtual-header]') as HTMLElement;
@@ -158,6 +168,7 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     const btn = container.querySelector('[aria-label*="ollapse"]') as HTMLButtonElement;
@@ -180,6 +191,7 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     expect(performance.now() - start).toBeLessThan(200);
@@ -202,6 +214,7 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     const header = container.querySelector('[data-virtual-header]') as HTMLElement;
@@ -228,6 +241,7 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     const firstHeader = container.querySelector('[data-virtual-header]');
@@ -242,6 +256,7 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
+        onPeek={() => {}}
       />,
     );
     const secondHeader = container.querySelector('[data-virtual-header]');
