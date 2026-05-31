@@ -7,15 +7,14 @@ import { HttpError } from './http-error';
 import { hasMinRole, type MemberRole } from './roles';
 import { isSessionActive } from './session-store';
 
+export type { MemberRole };
 // Re-export so existing consumers that already import `HttpError` from
 // `@/lib/auth/require-role` keep working without a churn-only rename.
-export { HttpError };
 // `hasMinRole` + `MemberRole` now live in the client-safe `./roles` module
 // (so client components can use them without dragging this server-only file's
 // `prom-client`/`cluster` graph into the browser bundle). Re-export here so the
 // many existing server-side importers keep working unchanged.
-export { hasMinRole };
-export type { MemberRole };
+export { HttpError, hasMinRole };
 
 export const ACTIVE_WORKSPACE_COOKIE = 'cairn_ws';
 
