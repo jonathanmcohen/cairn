@@ -83,6 +83,11 @@ COPY --from=deps --chown=cairn:cairn /app/node_modules/zod ./node_modules/zod
 # the full pnpm package (which includes the .so). @xenova/transformers@2 pins
 # onnxruntime-node@1.14.0.
 COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/onnxruntime-node@1.14.0 ./node_modules/.pnpm/onnxruntime-node@1.14.0
+# @xenova/transformers@2 also pulls sharp@0.32.6 (image preprocessing), whose
+# native build/Release/sharp-<platform>.node + vendored libvips are likewise
+# dropped by Next's file-trace. Overlay the full pnpm package so the embedder's
+# require('sharp') resolves its binary.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/sharp@0.32.6 ./node_modules/.pnpm/sharp@0.32.6
 
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
