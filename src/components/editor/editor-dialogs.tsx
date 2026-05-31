@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import {
+  CitationAddDialog,
+  type CitationStyle,
+} from '@/components/editor/blocks/citation-add-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,6 +20,7 @@ import { useT } from '@/lib/i18n/provider';
 import {
   type EditorDialogField,
   type EditorDialogRequest,
+  type EditorDialogResult,
   subscribeEditorDialog,
 } from './editor-dialog-bus';
 
@@ -38,7 +43,9 @@ type Spec = {
   fields: EditorDialogField[];
 };
 
-const SPECS: Record<EditorDialogRequest['kind'], Spec> = {
+// `citationLookup` has no entry here — it renders the self-contained
+// `CitationAddDialog` via an early-return branch below, not the generic form.
+const SPECS: Partial<Record<EditorDialogRequest['kind'], Spec>> = {
   footnote: {
     confirmLabel: 'Add',
     fields: [{ name: 'text', label: 'Footnote text', required: true }],
@@ -74,16 +81,45 @@ export function EditorDialogs() {
 
   useEffect(() => {
     return subscribeEditorDialog((req) => {
-      setValues(blankValues(SPECS[req.kind].fields));
+      setValues(blankValues(SPECS[req.kind]?.fields ?? []));
       setRequest(req);
     });
   }, []);
 
-  const settle = (result: Record<string, string> | null) => {
+  const settle = (result: EditorDialogResult) => {
     const req = request;
     setRequest(null);
     req?.resolve(result);
   };
+
+  // v0.9.7 G19 #166 — the DOI/PubMed lookup uses its own self-contained dialog
+  // (paste-detect + style preview) rather than the generic multi-field form.
+  if (request?.kind === 'citationLookup') {
+    return (
+      <CitationAddDialog
+        open
+        defaultStyle={request.defaultStyle ?? 'apa'}
+        onClose={() => settle(null)}
+        onInsert={(meta, formatted, style: CitationStyle) => {
+          // Re-derive all three style strings from the returned meta so the
+          // inserted node can switch styles without another lookup. The dialog
+          // only surfaces the active-style string; the slash `run` recomputes
+          // the full FormattedCitation, but we forward what we have here and
+          // let the caller fill the rest.
+          settle({
+            kind: 'citationLookup',
+            meta,
+            style,
+            formatted: {
+              apa: style === 'apa' ? formatted : '',
+              mla: style === 'mla' ? formatted : '',
+              chicago: style === 'chicago' ? formatted : '',
+            },
+          });
+        }}
+      />
+    );
+  }
 
   const spec = request ? SPECS[request.kind] : null;
   const canSubmit = spec?.fields.every((f) => !f.required || values[f.name]?.trim()) ?? false;
@@ -95,7 +131,7 @@ export function EditorDialogs() {
         if (!open) settle(null);
       }}
     >
-      {request !== null && spec !== null && (
+      {request !== null && spec != null && (
         <DialogContent>
           <form
             onSubmit={(e) => {

@@ -13,6 +13,9 @@
  * guards (`if (!x) return`) keep working.
  */
 
+import type { CitationStyle } from '@/components/editor/blocks/citation-add-dialog';
+import type { CitationMeta, FormattedCitation } from '@/lib/citations/types';
+
 /** A single field in a multi-field editor form dialog. */
 export type EditorDialogField = {
   name: string;
@@ -28,10 +31,42 @@ export type EditorDialogField = {
 export type EditorDialogSpec =
   | { kind: 'footnote'; title: string; description?: string }
   | { kind: 'citation'; title: string; description?: string }
-  | { kind: 'flashcard'; title: string; description?: string };
+  | { kind: 'flashcard'; title: string; description?: string }
+  | {
+      kind: 'citationLookup';
+      title: string;
+      description?: string;
+      /** Pre-selected citation style for the lookup dialog. Defaults to 'apa'. */
+      defaultStyle?: CitationStyle;
+    };
 
-/** The resolved values, keyed by field name (or null on cancel). */
-export type EditorDialogResult = Record<string, string> | null;
+/** The resolved value of a form-dialog request (footnote/citation/flashcard). */
+export type EditorDialogFormResult = Record<string, string>;
+
+/** The resolved value of a DOI/PubMed lookup request. */
+export type EditorDialogCitationResult = {
+  kind: 'citationLookup';
+  meta: CitationMeta;
+  formatted: FormattedCitation;
+  style: CitationStyle;
+};
+
+/** Resolved values, keyed by field name (form dialogs), or the structured
+ *  citation-lookup result, or null on cancel. */
+export type EditorDialogResult = EditorDialogFormResult | EditorDialogCitationResult | null;
+
+/**
+ * Narrow a resolved dialog result to the plain form-field record. Returns the
+ * record for footnote/citation/flashcard submits, or `null` for the structured
+ * citation-lookup result and for cancellation. Lets the form-dialog slash
+ * callers keep their `const v = result?.field` ergonomics now that the result
+ * union also carries the discriminated `citationLookup` shape.
+ */
+export function asFormResult(result: EditorDialogResult): EditorDialogFormResult | null {
+  if (result === null) return null;
+  if ('kind' in result && result.kind === 'citationLookup') return null;
+  return result as EditorDialogFormResult;
+}
 
 export type EditorDialogRequest = EditorDialogSpec & {
   resolve: (result: EditorDialogResult) => void;

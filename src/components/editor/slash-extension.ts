@@ -39,7 +39,7 @@ import {
 } from 'lucide-react';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
 import { FootnoteMark } from './blocks/footnote-mark';
-import { openEditorDialog } from './editor-dialog-bus';
+import { asFormResult, openEditorDialog } from './editor-dialog-bus';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
@@ -149,7 +149,8 @@ export const footnoteMenuItem: CitationSlashEntry = {
   icon: Asterisk,
   keywords: ['note', 'fn'],
   run: (editor: Editor): void => {
-    void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((result) => {
+    void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((raw) => {
+      const result = asFormResult(raw);
       const content = result?.text;
       if (!content) return;
       if (editor.isDestroyed) return;
@@ -169,7 +170,8 @@ export const citationMenuItem: CitationSlashEntry = {
   icon: Quote,
   keywords: ['cite', 'ref', 'reference', 'bibliography'],
   run: (editor: Editor): void => {
-    void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((result) => {
+    void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((raw) => {
+      const result = asFormResult(raw);
       if (!result) return;
       const author = result.author?.trim() ?? '';
       const title = result.title?.trim() ?? '';
@@ -622,7 +624,8 @@ const items: SlashItem[] = [
     category: 'advanced',
     icon: Layers,
     command: (editor) => {
-      void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((result) => {
+      void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((raw) => {
+        const result = asFormResult(raw);
         if (!result) return;
         const { front, back, deck } = result;
         if (!front || !back) return;
