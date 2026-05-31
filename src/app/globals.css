@@ -236,3 +236,23 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
   font-weight: 600;
   color: var(--color-foreground);
 }
+
+/*
+ * #169 — honor the OS "reduce motion" preference (WCAG 2.3.3 + 2.2.2). We do
+ * not delete animations (some convey state, e.g. comment-anchor-flash); we
+ * collapse their duration to ~0 so a single static frame is shown instead of
+ * motion. `!important` + the universal selector beat Tailwind's per-utility
+ * `transition`/`animate-*` classes and tw-animate-css keyframes. iteration-count
+ * is pinned to 1 so looping animations don't strobe at the 0.01ms rate.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
