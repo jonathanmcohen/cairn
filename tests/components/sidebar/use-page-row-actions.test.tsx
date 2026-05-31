@@ -1,13 +1,19 @@
 // @vitest-environment jsdom
 import { act, cleanup, renderHook } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { usePageRowActions } from '@/components/sidebar/use-page-row-actions';
 
-vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }) }));
+const push = vi.fn();
+const refresh = vi.fn();
+vi.mock('next/navigation', () => ({ useRouter: () => ({ push, refresh }) }));
 // i18n provider: stub useT to echo the key so labels are assertable without a provider.
 vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
 
 afterEach(cleanup);
+beforeEach(() => {
+  push.mockClear();
+  refresh.mockClear();
+});
 
 const node = {
   id: '11111111-1111-1111-1111-111111111111',
@@ -59,5 +65,56 @@ describe('usePageRowActions — moveTo picker wiring', () => {
     });
     act(() => result.current.setMoveOpen(false));
     expect(result.current.moveOpen).toBe(false);
+  });
+});
+
+describe('usePageRowActions — post-mutation tree refresh', () => {
+  function mockFetchOk(body: unknown) {
+    return vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(JSON.stringify(body), { status: 200 }));
+  }
+
+  it('addChild navigates to the new page AND refreshes the server tree', async () => {
+    const fetchSpy = mockFetchOk({ id: 'child-22222222' });
+    const { result } = renderHook(() => usePageRowActions(node));
+    await act(async () => {
+      await result.current.actions.find((a) => a.id === 'addChild')?.run();
+    });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      '/api/pages',
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(push).toHaveBeenCalledWith('/pages/child-22222222');
+    expect(refresh).toHaveBeenCalledTimes(1);
+    fetchSpy.mockRestore();
+  });
+
+  it('duplicate navigates to the copy AND refreshes the server tree', async () => {
+    const fetchSpy = mockFetchOk({ id: 'copy-33333333' });
+    const { result } = renderHook(() => usePageRowActions(node));
+    await act(async () => {
+      await result.current.actions.find((a) => a.id === 'duplicate')?.run();
+    });
+    expect(fetchSpy).toHaveBeenCalledWith(
+      `/api/pages/${node.id}/duplicate`,
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(push).toHaveBeenCalledWith('/pages/copy-33333333');
+    expect(refresh).toHaveBeenCalledTimes(1);
+    fetchSpy.mockRestore();
+  });
+
+  it('addChild does NOT refresh when the create fails', async () => {
+    const fetchSpy = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response('', { status: 500 }));
+    const { result } = renderHook(() => usePageRowActions(node));
+    await act(async () => {
+      await result.current.actions.find((a) => a.id === 'addChild')?.run();
+    });
+    expect(push).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+    fetchSpy.mockRestore();
   });
 });

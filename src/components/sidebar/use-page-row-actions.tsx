@@ -64,6 +64,11 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
     if (!res.ok) return;
     const { id } = (await res.json()) as { id: string };
     router.push(`/pages/${id}` as Route);
+    // G10 finding S — the sidebar tree is server-rendered initial props; navigating
+    // alone leaves the still-mounted tree stale. Refresh re-runs the server component
+    // (re-fetches flattenedPageTree) so the new child appears without F5. Mirrors
+    // new-page-button.tsx's push-then-refresh.
+    router.refresh();
   }, [node.id, node.spaceId, router]);
 
   const duplicate = useCallback(async () => {
@@ -72,6 +77,8 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
     if (!res.ok) return;
     const { id } = (await res.json()) as { id: string };
     router.push(`/pages/${id}` as Route);
+    // G10 finding S — refresh the server-rendered tree so the duplicate appears now.
+    router.refresh();
   }, [node.id, router]);
 
   const moveToTrash = useCallback(async () => {
