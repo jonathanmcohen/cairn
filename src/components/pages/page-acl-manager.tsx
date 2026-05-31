@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useT } from '@/lib/i18n/provider';
 
 type Permission = 'view' | 'comment' | 'edit';
@@ -38,10 +45,18 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
   const [status, setStatus] = useState<string | null>(null);
 
   const reload = useCallback(async () => {
-    const res = await fetch(`/api/pages/${pageId}/acls`);
-    if (res.ok) {
-      const data = (await res.json()) as { acls: AclRow[] };
-      setRows(data.acls);
+    // Resilient: a failed/absent ACL fetch (e.g. rendered in a context that
+    // doesn't mock this endpoint) must not throw — just render an empty list.
+    try {
+      const res = await fetch(`/api/pages/${pageId}/acls`);
+      if (!res.ok) {
+        setRows([]);
+        return;
+      }
+      const data = (await res.json()) as { acls?: AclRow[] };
+      setRows(data.acls ?? []);
+    } catch {
+      setRows([]);
     }
   }, [pageId]);
 
@@ -147,16 +162,16 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
             placeholder={t('share.acl.searchPlaceholder')}
             onChange={(e) => setQuery(e.target.value)}
           />
-          <select
-            aria-label={t('share.acl.addMember')}
-            className="rounded-md border bg-background px-2 text-sm"
-            value={permission}
-            onChange={(e) => setPermission(e.target.value as Permission)}
-          >
-            <option value="view">{t('share.acl.permission.view')}</option>
-            <option value="comment">{t('share.acl.permission.comment')}</option>
-            <option value="edit">{t('share.acl.permission.edit')}</option>
-          </select>
+          <Select value={permission} onValueChange={(v) => setPermission(v as Permission)}>
+            <SelectTrigger aria-label={t('share.acl.addMember')} className="w-32 text-sm">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="view">{t('share.acl.permission.view')}</SelectItem>
+              <SelectItem value="comment">{t('share.acl.permission.comment')}</SelectItem>
+              <SelectItem value="edit">{t('share.acl.permission.edit')}</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
         {matches.length > 0 && (
           <ul className="rounded-md border">
