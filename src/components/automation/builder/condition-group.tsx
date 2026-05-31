@@ -1,5 +1,6 @@
 'use client';
 
+import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -124,8 +125,14 @@ export function ConditionGroup({ group, onChange }: Props) {
             value={row.value == null ? '' : String(row.value)}
             onChange={(e) => updateRow(row.id, { value: parseLiteral(e.target.value) })}
           />
-          <Button type="button" size="sm" variant="ghost" onClick={() => removeRow(row.id)}>
-            ✕
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            aria-label={t('db.sort.remove')}
+            onClick={() => removeRow(row.id)}
+          >
+            <X aria-hidden="true" className="h-4 w-4" />
           </Button>
         </div>
       ))}
