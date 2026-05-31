@@ -4,7 +4,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
-import { getPageCover, setPageCover } from '@/lib/pages/cover';
+import { getPageCover, PageCoverSchema, setPageCover } from '@/lib/pages/cover';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
 
@@ -126,5 +126,30 @@ describe('page cover roundtrip', () => {
         cover: { kind: 'gradient', value: 'whatever' },
       }),
     ).rejects.toBeInstanceOf(z.ZodError);
+  });
+});
+
+describe('preset covers (finding U)', () => {
+  it('round-trips a known preset key through set/getPageCover', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await makePage(u.workspaceId, u.userId);
+    const ok = await setPageCover(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      cover: { kind: 'preset', value: 'slate-dusk' },
+    });
+    expect(ok).toBe(true);
+    const cover = await getPageCover(db, page.id, u.workspaceId);
+    expect(cover).toEqual({ kind: 'preset', value: 'slate-dusk' });
+  });
+
+  it('rejects an unknown preset key at the schema boundary', () => {
+    const parsed = PageCoverSchema.safeParse({ kind: 'preset', value: 'not-real' });
+    expect(parsed.success).toBe(false);
+  });
+
+  it('accepts a known preset key at the schema boundary', () => {
+    const parsed = PageCoverSchema.safeParse({ kind: 'preset', value: 'graphite' });
+    expect(parsed.success).toBe(true);
   });
 });

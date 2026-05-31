@@ -2,6 +2,7 @@ import { and, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { z } from 'zod';
 import * as schema from '@/db/schema';
+import { isCoverPresetKey } from '@/lib/pages/cover-presets';
 
 const HEX_RE = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const UUID_RE = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
@@ -10,12 +11,17 @@ const HTTPS_URL_RE = /^https:\/\//;
 /** The jsonb-shaped cover stored in `pages.cover`. */
 export type PageCover =
   | { kind: 'color'; value: string }
+  | { kind: 'preset'; value: string }
   | { kind: 'unsplash'; value: string }
   | { kind: 'upload'; value: string }
   | Record<string, never>;
 
 export const PageCoverSchema: z.ZodType<PageCover> = z.union([
   z.object({ kind: z.literal('color'), value: z.string().regex(HEX_RE) }),
+  z.object({
+    kind: z.literal('preset'),
+    value: z.string().refine(isCoverPresetKey, { message: 'unknown cover preset' }),
+  }),
   z.object({ kind: z.literal('unsplash'), value: z.string().regex(HTTPS_URL_RE) }),
   z.object({ kind: z.literal('upload'), value: z.string().regex(UUID_RE) }),
   z.object({}).strict(),
