@@ -23,6 +23,16 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Gather the native pnpm packages the standalone dist tree needs but Next's
+# file-trace drops (onnxruntime-node + sharp/@img). Globbing here keeps the copy
+# architecture-agnostic: the deps stage only installs the @img package matching
+# the build platform (sharp-linux-x64 on amd64, sharp-linux-arm64 on arm64), so
+# a hardcoded arch name would break the other arch's build.
+FROM deps AS natives
+RUN set -eux; mkdir -p /pnpm-extra; cd /app/node_modules/.pnpm; \
+    cp -a sharp@0.34.5 onnxruntime-node@1.14.0 /pnpm-extra/; \
+    cp -a @img+sharp-linux-* @img+sharp-libvips-linux-* /pnpm-extra/
+
 FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -77,20 +87,11 @@ COPY --from=deps --chown=cairn:cairn /app/node_modules/dotenv ./node_modules/dot
 # node_modules), so the separate dist/ tree (e.g. embed-page CLI via
 # dist/lib/env.js) can't resolve it. Copy it explicitly. zod is dependency-free.
 COPY --from=deps --chown=cairn:cairn /app/node_modules/zod ./node_modules/zod
-# @xenova/transformers hard-loads the onnxruntime-node native binding at import;
-# its .node sidecar dlopens libonnxruntime.so.<ver> from the same dir. Next's
-# standalone file-trace copies the .node but not the dlopen'd .so, so overlay
-# the full pnpm package (which includes the .so). @xenova/transformers@2 pins
-# onnxruntime-node@1.14.0.
-COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/onnxruntime-node@1.14.0 ./node_modules/.pnpm/onnxruntime-node@1.14.0
-# sharp (image preprocessing, pulled by @xenova/transformers + used by
-# next/image) is pinned to 0.34.5 via pnpm overrides; its native binary lives in
-# the platform-specific @img/* packages, which Next's file-trace drops. Overlay
-# the sharp package plus its linux-x64 @img binary + libvips so require('sharp')
-# resolves at runtime.
-COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/sharp@0.34.5 ./node_modules/.pnpm/sharp@0.34.5
-COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-linux-x64@0.34.5 ./node_modules/.pnpm/@img+sharp-linux-x64@0.34.5
-COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.4 ./node_modules/.pnpm/@img+sharp-libvips-linux-x64@1.2.4
+# Native pnpm packages the standalone dist tree needs but Next's file-trace
+# drops: onnxruntime-node (its .node dlopens libonnxruntime.so from the same
+# dir, which the trace skips) + sharp/@img (platform-specific native binary).
+# Sourced from the `natives` stage so the copy is architecture-agnostic.
+COPY --from=natives --chown=cairn:cairn /pnpm-extra/ ./node_modules/.pnpm/
 
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
