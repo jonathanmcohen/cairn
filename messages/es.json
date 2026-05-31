@@ -321,5 +321,7 @@
   "automation.builder.templates.title": "Empezar desde una plantilla",
   "automation.builder.runs.empty": "Aún no hay ejecuciones.",
   "automation.builder.runs.status": "Estado",
-  "automation.builder.runs.payload": "Carga útil del disparador"
+  "automation.builder.runs.payload": "Carga útil del disparador",
+  "automation.builder.condition.firstOnly": "Por ahora solo se guardará la primera condición.",
+  "automation.builder.condition.propertyPlaceholder": "row.cells.status"
 }

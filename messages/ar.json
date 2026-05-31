@@ -321,5 +321,7 @@
   "automation.builder.templates.title": "ابدأ من قالب",
   "automation.builder.runs.empty": "لا توجد عمليات تشغيل بعد.",
   "automation.builder.runs.status": "الحالة",
-  "automation.builder.runs.payload": "حمولة المُشغِّل"
+  "automation.builder.runs.payload": "حمولة المُشغِّل",
+  "automation.builder.condition.firstOnly": "سيتم حفظ الشرط الأول فقط في الوقت الحالي.",
+  "automation.builder.condition.propertyPlaceholder": "row.cells.status"
 }

@@ -35,6 +35,8 @@ const KEYS = [
   'automation.builder.runs.empty',
   'automation.builder.runs.status',
   'automation.builder.runs.payload',
+  'automation.builder.condition.firstOnly',
+  'automation.builder.condition.propertyPlaceholder',
 ];
 
 function load(locale: string): Record<string, string> {

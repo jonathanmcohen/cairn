@@ -321,5 +321,7 @@
   "automation.builder.templates.title": "Start from a template",
   "automation.builder.runs.empty": "No runs yet.",
   "automation.builder.runs.status": "Status",
-  "automation.builder.runs.payload": "Trigger payload"
+  "automation.builder.runs.payload": "Trigger payload",
+  "automation.builder.condition.firstOnly": "Only the first condition will be saved for now.",
+  "automation.builder.condition.propertyPlaceholder": "row.cells.status"
 }
