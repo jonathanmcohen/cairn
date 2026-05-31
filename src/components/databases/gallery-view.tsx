@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { EmptyState } from '@/components/empty-state/empty-state';
 import { useT } from '@/lib/i18n/provider';
 import type { ViewProps } from './table-view';
 
@@ -33,16 +34,13 @@ export function GalleryView({ databaseId, meta, rows, onChange }: ViewProps) {
 
   if (rows.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-2 p-8 text-sm text-muted-foreground">
-        <span>{t('database.emptyHint')}</span>
-        <button
-          type="button"
-          disabled={adding}
-          onClick={() => void addRow()}
-          className="min-h-11 rounded bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-40"
-        >
-          {t('database.empty.firstRow')}
-        </button>
+      <div className="p-4">
+        <EmptyState
+          headline={t('db.gallery.empty.title')}
+          guidance={t('db.gallery.empty.guidance')}
+          ctaLabel={t('database.empty.firstRow')}
+          onCta={() => void addRow()}
+        />
       </div>
     );
   }
