@@ -404,5 +404,11 @@
   "pages.status.changeError": "No se pudo cambiar el estado",
   "pages.review.submit": "Enviar a revisión",
   "pages.review.submitting": "Enviando…",
-  "pages.review.error": "No se pudo enviar a revisión"
+  "pages.review.error": "No se pudo enviar a revisión",
+  "pages.translations.title": "Traducciones",
+  "pages.translations.empty": "No hay traducciones vinculadas.",
+  "pages.translations.canonicalPlaceholder": "ID de la página canónica",
+  "pages.translations.localePlaceholder": "Idioma (p. ej. es)",
+  "pages.translations.link": "Vincular traducción",
+  "pages.translations.linkError": "No se pudo vincular la traducción"
 }

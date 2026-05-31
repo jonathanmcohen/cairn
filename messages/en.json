@@ -404,5 +404,11 @@
   "pages.status.changeError": "Could not change status",
   "pages.review.submit": "Submit for review",
   "pages.review.submitting": "Submitting…",
-  "pages.review.error": "Could not submit for review"
+  "pages.review.error": "Could not submit for review",
+  "pages.translations.title": "Translations",
+  "pages.translations.empty": "No linked translations.",
+  "pages.translations.canonicalPlaceholder": "Canonical page ID",
+  "pages.translations.localePlaceholder": "Locale (e.g. es)",
+  "pages.translations.link": "Link translation",
+  "pages.translations.linkError": "Could not link translation"
 }
