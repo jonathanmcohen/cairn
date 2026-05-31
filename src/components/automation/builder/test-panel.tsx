@@ -1,5 +1,6 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { AutomationActionType, AutomationCondition } from '@/db/schema';
@@ -57,6 +58,12 @@ export function TestPanel({ body }: { body: Body | null }) {
         disabled={running || body === null}
         onClick={() => void run()}
       >
+        {running ? (
+          <Loader2
+            aria-hidden="true"
+            className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+          />
+        ) : null}
         {t('automation.builder.test')}
       </Button>
       {error ? <p className="text-sm text-destructive">{error}</p> : null}

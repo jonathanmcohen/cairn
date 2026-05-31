@@ -1,5 +1,6 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
 import { ActionCardHost } from '@/components/automation/builder/action-card-host';
 import { ConditionGroup } from '@/components/automation/builder/condition-group';
@@ -202,6 +203,12 @@ export function RuleCanvas(props: Props) {
 
           <div className="flex gap-2">
             <Button type="button" disabled={saving} onClick={() => void save()}>
+              {saving ? (
+                <Loader2
+                  aria-hidden="true"
+                  className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+                />
+              ) : null}
               {t('automation.builder.save')}
             </Button>
             <Button
