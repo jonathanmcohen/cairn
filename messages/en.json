@@ -323,5 +323,8 @@
   "automation.builder.runs.status": "Status",
   "automation.builder.runs.payload": "Trigger payload",
   "automation.builder.condition.firstOnly": "Only the first condition will be saved for now.",
-  "automation.builder.condition.propertyPlaceholder": "row.cells.status"
+  "automation.builder.condition.propertyPlaceholder": "row.cells.status",
+  "automation.builder.templates.notifyHighPriority": "Notify on high-priority row",
+  "automation.builder.templates.autoAssignMention": "Auto-assign on @mention",
+  "automation.builder.templates.archiveOnDone": "Archive when status = Done"
 }

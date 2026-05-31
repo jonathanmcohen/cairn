@@ -323,5 +323,8 @@
   "automation.builder.runs.status": "الحالة",
   "automation.builder.runs.payload": "حمولة المُشغِّل",
   "automation.builder.condition.firstOnly": "سيتم حفظ الشرط الأول فقط في الوقت الحالي.",
-  "automation.builder.condition.propertyPlaceholder": "row.cells.status"
+  "automation.builder.condition.propertyPlaceholder": "row.cells.status",
+  "automation.builder.templates.notifyHighPriority": "إشعار عند صف عالي الأولوية",
+  "automation.builder.templates.autoAssignMention": "إسناد تلقائي عند الإشارة بـ @",
+  "automation.builder.templates.archiveOnDone": "الأرشفة عندما تكون الحالة = منجز"
 }

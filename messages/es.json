@@ -323,5 +323,8 @@
   "automation.builder.runs.status": "Estado",
   "automation.builder.runs.payload": "Carga útil del disparador",
   "automation.builder.condition.firstOnly": "Por ahora solo se guardará la primera condición.",
-  "automation.builder.condition.propertyPlaceholder": "row.cells.status"
+  "automation.builder.condition.propertyPlaceholder": "row.cells.status",
+  "automation.builder.templates.notifyHighPriority": "Notificar en fila de alta prioridad",
+  "automation.builder.templates.autoAssignMention": "Autoasignar al mencionar con @",
+  "automation.builder.templates.archiveOnDone": "Archivar cuando el estado = Hecho"
 }
