@@ -7,14 +7,19 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/lib/i18n/provider';
+
+type SsoProvider = { id: string; type: string; name: string; startPath: string };
 
 function LoginForm() {
+  const t = useT();
   const router = useRouter();
   const search = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [email, setEmail] = useState('');
   const [oauthProviders, setOauthProviders] = useState<{ id: string; name: string }[]>([]);
+  const [ssoProviders, setSsoProviders] = useState<SsoProvider[]>([]);
 
   useEffect(() => {
     void fetch('/api/auth/providers')
@@ -24,6 +29,17 @@ function LoginForm() {
       })
       .catch(() => setOauthProviders([]));
   }, []);
+
+  useEffect(() => {
+    const next = search.get('next') ?? '';
+    const qs = next ? `?next=${encodeURIComponent(next)}` : '';
+    void fetch(`/api/sso/enabled${qs}`)
+      .then((r) => (r.ok ? r.json() : { providers: [] }))
+      .then((data: { providers: SsoProvider[] }) => {
+        setSsoProviders(Array.isArray(data.providers) ? data.providers : []);
+      })
+      .catch(() => setSsoProviders([]));
+  }, [search]);
 
   async function onSubmit(fd: FormData) {
     setBusy(true);
@@ -97,6 +113,22 @@ function LoginForm() {
                 onClick={() => void signIn(p.id, { callbackUrl: search.get('next') ?? '/' })}
               >
                 Continue with {p.name}
+              </Button>
+            ))}
+          </div>
+        )}
+        {ssoProviders.length > 0 && (
+          <div className="mt-4 space-y-2">
+            <div className="text-center text-muted-foreground text-xs">{t('login.sso.divider')}</div>
+            {ssoProviders.map((p) => (
+              <Button
+                key={p.id}
+                type="button"
+                variant="outline"
+                className="w-full"
+                onClick={() => window.location.assign(p.startPath)}
+              >
+                {t('login.sso.button', { name: p.name })}
               </Button>
             ))}
           </div>
