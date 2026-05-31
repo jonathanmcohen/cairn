@@ -5,6 +5,35 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.7] - 2026-05-31
+
+Post-release browser-audit-2 fixes (findings S–Y; closes #153–#159).
+
+### Added
+- **Automation visual workflow builder** (#154) — replaced the raw-JSON rule form
+  with a Zapier/n8n-style canvas: trigger card, chainable AND/OR condition cards,
+  typed action cards (notify / set-property / create-page / send-webhook), a
+  "Test rule" dry-run panel, a templates gallery, flow-connector lines, and a
+  run-history sub-tab. Builder editor-state persists in a new additive
+  `automation_rules.builder` jsonb column (migration **0056**); the compiled rule
+  shape stays compatible with the existing dispatcher.
+- **Curated cover palette** (#155) — AA-safe gradient + muted-neutral cover presets
+  (stable keys) replacing the solid-orange default; picker shows presets, recent
+  uploads, an Upload CTA, and a one-click default.
+- **WCAG contrast utility** (#159) — `src/lib/color/contrast.ts` (relative luminance
+  + ratio + AA check) with a live <4.5:1 warning on user-pickable colors.
+
+### Fixed
+- **Real-time sidebar refresh** (#153) — the page tree now updates after add-child /
+  duplicate without a manual refresh (`router.refresh()`); favorites / notifications
+  / comments confirmed already self-refreshing (regression-pinned).
+- **"See also" emoji shortcode** (#156) — related-page rows render the parsed page
+  icon instead of raw `emoji::` text.
+- **Sidebar search subtitle** (#157) — dropped the sub-12px "(command palette)"
+  subtitle from the search label (the ⌘K badge already signals it).
+- **Sidebar truncation tooltips** (#158) — truncated page/space names now expose the
+  full title via a native `title` tooltip.
+
 ## [0.9.6] - 2026-05-30
 
 > Audit-driven release resolving **every open issue from the v0.9.4 live-deploy audit** (#38, #70, #124, #129–#139, #141–#149, #150). One migration (`0055` — `auth_sessions`). Plans: `docs/superpowers/plans/v0.9.6/`.
