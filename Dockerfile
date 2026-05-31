@@ -58,6 +58,12 @@ COPY --from=deps --chown=cairn:cairn /app/node_modules/dotenv ./node_modules/dot
 # node_modules), so the separate dist/ tree (e.g. embed-page CLI via
 # dist/lib/env.js) can't resolve it. Copy it explicitly. zod is dependency-free.
 COPY --from=deps --chown=cairn:cairn /app/node_modules/zod ./node_modules/zod
+# @xenova/transformers hard-loads the onnxruntime-node native binding at import;
+# its .node sidecar dlopens libonnxruntime.so.<ver> from the same dir. Next's
+# standalone file-trace copies the .node but not the dlopen'd .so, so overlay
+# the full pnpm package (which includes the .so). @xenova/transformers@2 pins
+# onnxruntime-node@1.14.0.
+COPY --from=deps --chown=cairn:cairn /app/node_modules/.pnpm/onnxruntime-node@1.14.0 ./node_modules/.pnpm/onnxruntime-node@1.14.0
 
 RUN mkdir -p /data/uploads && chown -R cairn:cairn /data
 VOLUME ["/data/uploads"]
