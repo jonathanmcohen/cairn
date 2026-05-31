@@ -89,7 +89,7 @@
   "pageRow.addChild": "Add subpage",
   "pageRow.actions": "Page actions",
   "pageRow.open": "Open {title}",
-  "searchHint.label": "Search or jump to… (command palette)",
+  "searchHint.label": "Search or jump to…",
   "searchHint.aria": "Open command palette",
   "workspaceSwitcher.heading": "Workspaces",
   "workspaceSwitcher.switch": "Switch workspace",
