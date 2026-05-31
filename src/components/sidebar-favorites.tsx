@@ -161,7 +161,7 @@ function SortableRow({
       </button>
       <Link
         href={`/pages/${fav.pageId}` as Route}
-        className="flex flex-1 items-center gap-2 truncate"
+        className="flex flex-1 items-center gap-2 truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span aria-hidden="true" className="w-4 shrink-0 text-center">
           {fav.icon ?? ''}

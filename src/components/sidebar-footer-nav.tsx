@@ -17,7 +17,7 @@ import { Button } from './ui/button';
  * as the primary "PAGES" tree items so the hierarchy reads as first-class.
  */
 const NAV_ITEM_CLASS =
-  'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent';
+  'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export function SidebarFooterNav({ version }: { version: string }) {
   const t = useT();
