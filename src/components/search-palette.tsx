@@ -15,6 +15,7 @@ import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
 import { highlightMatch } from '@/lib/palette/highlight';
 import { getRecents, pushRecent } from '@/lib/palette/recents';
+import { SEARCH_MODES, useSearchMode } from '@/lib/search/use-search-mode';
 import { prettyKeys, shortcutFor } from '@/lib/shortcuts/format';
 
 /**
@@ -60,6 +61,7 @@ export function SearchPalette({
   const prompt = usePrompt();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { mode, setMode } = useSearchMode();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -169,7 +171,7 @@ export function SearchPalette({
     const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&mode=${mode}`, {
           signal: controller.signal,
         });
         if (res.ok) {
@@ -186,7 +188,7 @@ export function SearchPalette({
       clearTimeout(t);
       controller.abort();
     };
-  }, [query]);
+  }, [query, mode]);
 
   function onSelect(id: string) {
     setOpen(false);
@@ -229,6 +231,25 @@ export function SearchPalette({
           placeholder={t('palette.searchPlaceholder')}
           className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
         />
+        <fieldset className="flex items-center gap-1 border-t px-3 py-1.5">
+          <legend className="sr-only">{t('search.mode.label')}</legend>
+          <span className="mr-1 text-xs text-muted-foreground">{t('search.mode.label')}</span>
+          {SEARCH_MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              onClick={() => setMode(m)}
+              className={`rounded px-2 py-0.5 text-xs ${
+                mode === m
+                  ? 'bg-accent font-medium text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50'
+              }`}
+            >
+              {t(`search.mode.${m}`)}
+            </button>
+          ))}
+        </fieldset>
         <Command.List className="max-h-80 overflow-y-auto border-t">
           {hasQuery && results.length > 0 && (
             <Command.Group heading={t('palette.pages')}>
