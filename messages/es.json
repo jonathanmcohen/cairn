@@ -491,5 +491,7 @@
   "admin.upgrade.confirmCta": "Aplicar actualización",
   "admin.e2e.confirmTitle": "¿Activar el cifrado de todo el espacio?",
   "admin.e2e.confirmBody": "Esta acción es irreversible. Cada página existente se cifra con una clave que el servidor nunca ve. Si se pierde la frase de contraseña, se pierde el contenido.",
-  "admin.e2e.confirmCta": "Activar cifrado"
+  "admin.e2e.confirmCta": "Activar cifrado",
+  "security.twoFactor.disableLabel": "Código actual o código de recuperación",
+  "security.twoFactor.confirmLabel": "Código de 6 dígitos de tu aplicación de autenticación"
 }

@@ -59,13 +59,20 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
         <p className="text-muted-foreground text-sm">
           Enter a current code or a recovery code to turn it off.
         </p>
-        <input
-          className="w-48 rounded border px-2 py-1"
-          inputMode="numeric"
-          placeholder="123456 or recovery"
-          value={disableCode}
-          onChange={(e) => setDisableCode(e.target.value)}
-        />
+        <div className="space-y-1">
+          <label htmlFor="2fa-disable-code" className="block text-sm font-medium">
+            {t('security.twoFactor.disableLabel')}
+          </label>
+          <input
+            id="2fa-disable-code"
+            className="w-48 rounded border px-2 py-1"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            placeholder="123456 or recovery"
+            value={disableCode}
+            onChange={(e) => setDisableCode(e.target.value)}
+          />
+        </div>
         <Button variant="destructive" onClick={() => void disable()}>
           Disable 2FA
         </Button>
@@ -105,13 +112,20 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
               ))}
             </ul>
           </div>
-          <input
-            className="w-48 rounded border px-2 py-1"
-            inputMode="numeric"
-            placeholder="6-digit code"
-            value={token}
-            onChange={(e) => setToken(e.target.value)}
-          />
+          <div className="space-y-1">
+            <label htmlFor="2fa-confirm-code" className="block text-sm font-medium">
+              {t('security.twoFactor.confirmLabel')}
+            </label>
+            <input
+              id="2fa-confirm-code"
+              className="w-48 rounded border px-2 py-1"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="6-digit code"
+              value={token}
+              onChange={(e) => setToken(e.target.value)}
+            />
+          </div>
           <Button onClick={() => void confirm()}>Confirm &amp; enable</Button>
         </div>
       )}

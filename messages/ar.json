@@ -491,5 +491,7 @@
   "admin.upgrade.confirmCta": "تطبيق التحديث",
   "admin.e2e.confirmTitle": "تفعيل التشفير على مستوى مساحة العمل؟",
   "admin.e2e.confirmBody": "هذا الإجراء لا يمكن التراجع عنه. تُشفَّر كل صفحة موجودة بمفتاح لا يراه الخادم أبدًا. فقدان عبارة المرور يعني فقدان المحتوى.",
-  "admin.e2e.confirmCta": "تفعيل التشفير"
+  "admin.e2e.confirmCta": "تفعيل التشفير",
+  "security.twoFactor.disableLabel": "الرمز الحالي أو رمز الاسترداد",
+  "security.twoFactor.confirmLabel": "رمز مكوّن من 6 أرقام من تطبيق المصادقة"
 }

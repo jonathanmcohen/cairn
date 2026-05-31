@@ -491,5 +491,7 @@
   "admin.upgrade.confirmCta": "Apply upgrade",
   "admin.e2e.confirmTitle": "Enable workspace-wide encryption?",
   "admin.e2e.confirmBody": "This is irreversible. Every existing page is encrypted under a key the server never sees. Lost passphrases mean lost content.",
-  "admin.e2e.confirmCta": "Enable encryption"
+  "admin.e2e.confirmCta": "Enable encryption",
+  "security.twoFactor.disableLabel": "Current code or recovery code",
+  "security.twoFactor.confirmLabel": "6-digit code from your authenticator app"
 }
