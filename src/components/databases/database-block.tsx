@@ -50,6 +50,9 @@ export function DatabaseBlock({ node }: NodeViewProps) {
           dateProperties={meta.properties
             .filter((p) => p.type === 'date')
             .map((p) => ({ id: p.id, name: p.name }))}
+          selectProperties={meta.properties
+            .filter((p) => p.type === 'select')
+            .map((p) => ({ id: p.id, name: p.name }))}
           onChange={setViewId}
           onViewsChanged={refresh}
         />

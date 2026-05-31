@@ -213,6 +213,8 @@
   "database.view.dateProperty": "{type} date property",
   "database.view.disabled.calendar": "Add a date property to enable",
   "database.view.disabled.timeline": "Add two date properties for Timeline",
+  "database.view.disabled.kanban": "Add a select property to enable Board",
+  "database.view.kanbanGroupBy": "Board group-by property",
   "database.view.type.table": "Table",
   "database.view.type.gallery": "Gallery",
   "database.view.type.list": "List",

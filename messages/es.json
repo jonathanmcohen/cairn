@@ -213,6 +213,8 @@
   "database.view.dateProperty": "Propiedad de fecha de {type}",
   "database.view.disabled.calendar": "Añade una propiedad de fecha para habilitarlo",
   "database.view.disabled.timeline": "Añade dos propiedades de fecha para Cronología",
+  "database.view.disabled.kanban": "Añade una propiedad de selección para habilitar el tablero",
+  "database.view.kanbanGroupBy": "Propiedad de agrupación del tablero",
   "database.view.type.table": "Tabla",
   "database.view.type.gallery": "Galería",
   "database.view.type.list": "Lista",

@@ -1,6 +1,14 @@
 'use client';
 
-import { Calendar, GalleryThumbnails, GanttChartSquare, List, Plus, Table2 } from 'lucide-react';
+import {
+  Calendar,
+  GalleryThumbnails,
+  GanttChartSquare,
+  Kanban,
+  List,
+  Plus,
+  Table2,
+} from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,16 +30,19 @@ const VIEW_TYPE_ICON: Record<string, typeof Table2> = {
   list: List,
   calendar: Calendar,
   timeline: GanttChartSquare,
-  kanban: Table2, // kanban has no add-button (needs groupBy); icon only for existing tabs
+  kanban: Kanban,
 };
-const ADDABLE_TYPES = ['table', 'gallery', 'list', 'calendar', 'timeline'] as const;
+const ADDABLE_TYPES = ['table', 'gallery', 'list', 'calendar', 'timeline', 'kanban'] as const;
 const DATE_TYPES = new Set(['calendar', 'timeline']);
+// View types that require choosing a select property before creation (kanban groupBy).
+const SELECT_TYPES = new Set(['kanban']);
 
 export function ViewSwitcher({
   databaseId,
   views,
   activeId,
   dateProperties,
+  selectProperties = [],
   onChange,
   onViewsChanged,
 }: {
@@ -39,6 +50,7 @@ export function ViewSwitcher({
   views: ViewTab[];
   activeId: string;
   dateProperties: DateProp[];
+  selectProperties?: DateProp[];
   onChange: (id: string) => void;
   onViewsChanged: () => void;
 }) {
@@ -47,6 +59,9 @@ export function ViewSwitcher({
   // Which date-requiring type is mid-add ('calendar' | 'timeline' | null).
   const [pendingType, setPendingType] = useState<'calendar' | 'timeline' | null>(null);
   const [pickedDateProp, setPickedDateProp] = useState<string>('');
+  // Kanban requires choosing a select property for its groupBy before creation.
+  const [pendingKanbanProp, setPendingKanbanProp] = useState<string>('');
+  const [kanbanPending, setKanbanPending] = useState(false);
 
   async function addSimpleView(type: 'table' | 'gallery' | 'list') {
     setAdding(true);
@@ -98,6 +113,35 @@ export function ViewSwitcher({
     setPickedDateProp(dateProperties[0]?.id ?? '');
   }
 
+  function startKanbanView() {
+    setKanbanPending(true);
+    setPendingKanbanProp(selectProperties[0]?.id ?? '');
+  }
+
+  async function addKanbanView() {
+    if (!pendingKanbanProp) return;
+    setAdding(true);
+    try {
+      const res = await fetch(`/api/databases/${databaseId}/views`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          type: 'kanban',
+          name: t('database.view.type.kanban'),
+          config: { groupBy: pendingKanbanProp },
+        }),
+      });
+      if (!res.ok) return;
+      const view = (await res.json()) as { id: string };
+      setKanbanPending(false);
+      setPendingKanbanProp('');
+      onViewsChanged();
+      onChange(view.id);
+    } finally {
+      setAdding(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-1 border-b px-2 py-1">
       <div className="flex items-center gap-1">
@@ -123,7 +167,9 @@ export function ViewSwitcher({
           <Select
             value=""
             onValueChange={(next) => {
-              if (DATE_TYPES.has(next)) {
+              if (SELECT_TYPES.has(next)) {
+                startKanbanView();
+              } else if (DATE_TYPES.has(next)) {
                 startDateView(next as 'calendar' | 'timeline');
               } else {
                 void addSimpleView(next as 'table' | 'gallery' | 'list');
@@ -141,13 +187,21 @@ export function ViewSwitcher({
             <SelectContent>
               {ADDABLE_TYPES.map((type) => {
                 const dateDisabled = DATE_TYPES.has(type) && dateProperties.length === 0;
+                const selectDisabled = SELECT_TYPES.has(type) && selectProperties.length === 0;
+                const disabled = dateDisabled || selectDisabled;
                 const Icon = VIEW_TYPE_ICON[type] ?? Table2;
                 return (
                   <SelectItem
                     key={type}
                     value={type}
-                    disabled={dateDisabled}
-                    title={dateDisabled ? t(`database.view.disabled.${type}`) : undefined}
+                    disabled={disabled}
+                    title={
+                      dateDisabled
+                        ? t(`database.view.disabled.${type}`)
+                        : selectDisabled
+                          ? t('database.view.disabled.kanban')
+                          : undefined
+                    }
                   >
                     <span className="flex items-center gap-1.5">
                       <Icon className="h-4 w-4 opacity-70" aria-hidden="true" />
@@ -192,6 +246,42 @@ export function ViewSwitcher({
             size="sm"
             variant="ghost"
             onClick={() => setPendingType(null)}
+            className="min-h-11"
+          >
+            {t('common.cancel')}
+          </Button>
+        </div>
+      )}
+      {kanbanPending && (
+        <div className="flex items-center gap-2 px-1 pb-1 text-xs">
+          <span className="text-muted-foreground">{t('database.view.kanbanGroupBy')}</span>
+          <Select value={pendingKanbanProp} onValueChange={(next) => setPendingKanbanProp(next)}>
+            <SelectTrigger
+              aria-label={t('database.view.kanbanGroupBy')}
+              className="h-auto min-h-11 w-auto gap-1.5 px-2 py-1 text-xs"
+            >
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {selectProperties.map((p) => (
+                <SelectItem key={p.id} value={p.id}>
+                  {p.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            size="sm"
+            disabled={adding || !pendingKanbanProp}
+            onClick={() => void addKanbanView()}
+            className="min-h-11"
+          >
+            {t('common.add')}
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => setKanbanPending(false)}
             className="min-h-11"
           >
             {t('common.cancel')}

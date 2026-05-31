@@ -213,6 +213,8 @@
   "database.view.dateProperty": "خاصية تاريخ {type}",
   "database.view.disabled.calendar": "أضف خاصية تاريخ للتفعيل",
   "database.view.disabled.timeline": "أضف خاصيتي تاريخ لعرض المخطط الزمني",
+  "database.view.disabled.kanban": "أضف خاصية تحديد لتفعيل اللوحة",
+  "database.view.kanbanGroupBy": "خاصية تجميع اللوحة",
   "database.view.type.table": "جدول",
   "database.view.type.gallery": "معرض",
   "database.view.type.list": "قائمة",
