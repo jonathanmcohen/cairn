@@ -292,6 +292,8 @@
   "cover.preset.slate": "Pizarra",
   "editor.lockedBadge.until": "🔒 Bloqueado hasta {time}",
   "editor.lockedBadge.indefinite": "🔒 Bloqueado",
+  "editor.bibliography.toggle": "Bibliografía",
+  "editor.bibliography.toggleHint": "Mostrar u ocultar la sección de Referencias generada automáticamente",
   "slash.group.basic": "Básico",
   "slash.group.media": "Multimedia",
   "slash.group.database": "Base de datos",

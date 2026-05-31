@@ -292,6 +292,8 @@
   "cover.preset.slate": "إردوازي",
   "editor.lockedBadge.until": "🔒 مقفل حتى {time}",
   "editor.lockedBadge.indefinite": "🔒 مقفل",
+  "editor.bibliography.toggle": "المراجع",
+  "editor.bibliography.toggleHint": "إظهار أو إخفاء قسم المراجع الذي يتم إنشاؤه تلقائيًا",
   "slash.group.basic": "أساسي",
   "slash.group.media": "وسائط",
   "slash.group.database": "قاعدة بيانات",
