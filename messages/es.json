@@ -227,6 +227,7 @@
   "database.addRow": "Añadir fila",
   "database.emptyHint": "Aún no hay filas — añade tu primera fila.",
   "database.empty.firstRow": "Añade tu primera fila",
+  "database.untitled": "Sin título",
   "common.remove": "Eliminar",
   "database.filter.button": "Filtro",
   "database.filter.none": "Sin filtros.",

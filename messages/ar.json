@@ -227,6 +227,7 @@
   "database.addRow": "إضافة صف",
   "database.emptyHint": "لا توجد صفوف بعد — أضف صفك الأول.",
   "database.empty.firstRow": "أضف صفك الأول",
+  "database.untitled": "بدون عنوان",
   "common.remove": "إزالة",
   "database.filter.button": "تصفية",
   "database.filter.none": "لا توجد عوامل تصفية.",

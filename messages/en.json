@@ -227,6 +227,7 @@
   "database.addRow": "Add row",
   "database.emptyHint": "No rows yet — add your first row.",
   "database.empty.firstRow": "Add your first row",
+  "database.untitled": "Untitled",
   "common.remove": "Remove",
   "database.filter.button": "Filter",
   "database.filter.none": "No filters.",
