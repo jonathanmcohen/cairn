@@ -1,5 +1,6 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import QRCode from 'qrcode';
 import { useState } from 'react';
 import { RecoveryCodesCard } from '@/components/security/recovery-codes-card';
@@ -16,40 +17,56 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
   const [token, setToken] = useState('');
   const [disableCode, setDisableCode] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   async function begin() {
     setError(null);
-    const r = await fetch('/api/auth/2fa/enroll', { method: 'POST' });
-    if (!r.ok) return setError('Could not start enrollment.');
-    const data = (await r.json()) as EnrollData;
-    setEnroll(data);
-    setQr(await QRCode.toDataURL(data.otpauthUri));
+    setBusy(true);
+    try {
+      const r = await fetch('/api/auth/2fa/enroll', { method: 'POST' });
+      if (!r.ok) return setError('Could not start enrollment.');
+      const data = (await r.json()) as EnrollData;
+      setEnroll(data);
+      setQr(await QRCode.toDataURL(data.otpauthUri));
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function confirm() {
     setError(null);
-    const r = await fetch('/api/auth/2fa/enroll', {
-      method: 'PUT',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ token }),
-    });
-    if (!r.ok) return setError('That code was not valid. Try again.');
-    setEnabled(true);
-    setEnroll(null);
-    setQr(null);
-    setToken('');
+    setBusy(true);
+    try {
+      const r = await fetch('/api/auth/2fa/enroll', {
+        method: 'PUT',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token }),
+      });
+      if (!r.ok) return setError('That code was not valid. Try again.');
+      setEnabled(true);
+      setEnroll(null);
+      setQr(null);
+      setToken('');
+    } finally {
+      setBusy(false);
+    }
   }
 
   async function disable() {
     setError(null);
-    const r = await fetch('/api/auth/2fa/disable', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ code: disableCode }),
-    });
-    if (!r.ok) return setError('Enter a valid code or recovery code to disable.');
-    setEnabled(false);
-    setDisableCode('');
+    setBusy(true);
+    try {
+      const r = await fetch('/api/auth/2fa/disable', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ code: disableCode }),
+      });
+      if (!r.ok) return setError('Enter a valid code or recovery code to disable.');
+      setEnabled(false);
+      setDisableCode('');
+    } finally {
+      setBusy(false);
+    }
   }
 
   if (enabled) {
@@ -73,7 +90,13 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
             onChange={(e) => setDisableCode(e.target.value)}
           />
         </div>
-        <Button variant="destructive" onClick={() => void disable()}>
+        <Button variant="destructive" disabled={busy} onClick={() => void disable()}>
+          {busy ? (
+            <Loader2
+              aria-hidden="true"
+              className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+            />
+          ) : null}
           Disable 2FA
         </Button>
         {error && <p className="text-destructive text-sm">{error}</p>}
@@ -90,7 +113,13 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
           <p className="text-muted-foreground text-sm">
             Protect your account with an authenticator app.
           </p>
-          <Button variant="default" onClick={() => void begin()}>
+          <Button variant="default" disabled={busy} onClick={() => void begin()}>
+            {busy ? (
+              <Loader2
+                aria-hidden="true"
+                className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+              />
+            ) : null}
             {t('security.twoFactor.setup')}
           </Button>
         </>
@@ -126,7 +155,15 @@ export function TwoFactorCard({ initiallyEnabled }: { initiallyEnabled: boolean 
               onChange={(e) => setToken(e.target.value)}
             />
           </div>
-          <Button onClick={() => void confirm()}>Confirm &amp; enable</Button>
+          <Button disabled={busy} onClick={() => void confirm()}>
+            {busy ? (
+              <Loader2
+                aria-hidden="true"
+                className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+              />
+            ) : null}
+            Confirm &amp; enable
+          </Button>
         </div>
       )}
       {error && <p className="text-destructive text-sm">{error}</p>}
