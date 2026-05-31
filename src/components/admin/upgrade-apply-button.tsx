@@ -1,19 +1,31 @@
 'use client';
 
 import { useState } from 'react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
+import { useT } from '@/lib/i18n/provider';
 
 /**
  * v0.9.0 G8 P42 — admin "Apply upgrade now" client button.
  *
  * POSTs to `/api/admin/upgrade/apply` and reads the SSE stream into a local
  * log. The RSC page only crosses the boundary with the primitive `disabled`
- * prop; the button owns its own state machine.
+ * prop; the button owns its own state machine. #169 — the irreversible restart
+ * is gated behind a themed confirm dialog (no fire-on-first-click).
  */
 export function UpgradeApplyButton({ disabled }: { disabled: boolean }): React.ReactElement {
+  const t = useT();
+  const confirm = useConfirm();
   const [running, setRunning] = useState(false);
   const [log, setLog] = useState<string[]>([]);
 
   async function onClick(): Promise<void> {
+    const ok = await confirm({
+      title: t('admin.upgrade.confirmTitle'),
+      description: t('admin.upgrade.confirmBody'),
+      confirmLabel: t('admin.upgrade.confirmCta'),
+      variant: 'danger',
+    });
+    if (!ok) return;
     setRunning(true);
     setLog([]);
     let res: Response;

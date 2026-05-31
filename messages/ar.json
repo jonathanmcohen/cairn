@@ -485,5 +485,8 @@
   "statusBanner.error": "خطأ",
   "statusBanner.success": "تم بنجاح",
   "statusBanner.warning": "تحذير",
-  "workspaceSettings.saved": "تم حفظ الإعدادات."
+  "workspaceSettings.saved": "تم حفظ الإعدادات.",
+  "admin.upgrade.confirmTitle": "تطبيق التحديث الآن؟",
+  "admin.upgrade.confirmBody": "سيؤدي هذا إلى إعادة تشغيل Cairn لتطبيق الإصدار الجديد. قد تتعطل التعديلات الجارية.",
+  "admin.upgrade.confirmCta": "تطبيق التحديث"
 }

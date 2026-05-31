@@ -485,5 +485,8 @@
   "statusBanner.error": "Error",
   "statusBanner.success": "Success",
   "statusBanner.warning": "Warning",
-  "workspaceSettings.saved": "Settings saved."
+  "workspaceSettings.saved": "Settings saved.",
+  "admin.upgrade.confirmTitle": "Apply upgrade now?",
+  "admin.upgrade.confirmBody": "This restarts Cairn to apply the new version. In-progress edits may be interrupted.",
+  "admin.upgrade.confirmCta": "Apply upgrade"
 }
