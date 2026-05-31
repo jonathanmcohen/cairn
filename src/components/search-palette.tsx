@@ -229,7 +229,7 @@ export function SearchPalette({
           value={query}
           onValueChange={setQuery}
           placeholder={t('palette.searchPlaceholder')}
-          className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
+          className="w-full bg-transparent px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         />
         <fieldset className="flex items-center gap-1 border-t px-3 py-1.5">
           <legend className="sr-only">{t('search.mode.label')}</legend>

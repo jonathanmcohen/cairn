@@ -107,7 +107,7 @@ export function RelationCell({
             type="text"
             value={query}
             placeholder="Search rows…"
-            className="rounded border bg-transparent px-1.5 py-0.5 text-xs outline-none"
+            className="rounded border bg-transparent px-1.5 py-0.5 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
             onChange={(e) => setQuery(e.target.value)}
             onBlur={() => setTimeout(() => setOpen(false), 150)}
           />
