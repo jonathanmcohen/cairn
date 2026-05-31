@@ -1,10 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { RuleForm } from '@/components/automation/rule-form';
+import { RuleCanvas } from '@/components/automation/builder/rule-canvas';
+import { RunHistory } from '@/components/automation/builder/run-history';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import type * as schema from '@/db/schema';
+import { useT } from '@/lib/i18n/provider';
 
 export type RuleListRow = {
   id: string;
@@ -38,9 +40,11 @@ export function RuleList({
   initialRules: RuleListRow[];
   canMutate: boolean;
 }) {
+  const t = useT();
   const confirm = useConfirm();
   const [rules, setRules] = useState<RuleListRow[]>(initialRules);
   const [editing, setEditing] = useState<RuleListRow | null>(null);
+  const [editTab, setEditTab] = useState<'builder' | 'runs'>('builder');
   const [creating, setCreating] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
@@ -118,11 +122,43 @@ export function RuleList({
       ) : null}
 
       {creating ? (
-        <RuleForm mode="create" onClose={(saved) => handleSaved(saved, 'create')} />
+        <RuleCanvas mode="create" onClose={(saved) => handleSaved(saved, 'create')} />
       ) : null}
 
       {editing ? (
-        <RuleForm mode="edit" rule={editing} onClose={(saved) => handleSaved(saved, 'edit')} />
+        <div className="space-y-3">
+          <div role="tablist" className="flex gap-1.5">
+            <Button
+              type="button"
+              size="sm"
+              role="tab"
+              aria-selected={editTab === 'builder'}
+              variant={editTab === 'builder' ? 'default' : 'outline'}
+              onClick={() => setEditTab('builder')}
+            >
+              {t('automation.builder.tab.builder')}
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              role="tab"
+              aria-selected={editTab === 'runs'}
+              variant={editTab === 'runs' ? 'default' : 'outline'}
+              onClick={() => setEditTab('runs')}
+            >
+              {t('automation.builder.tab.runs')}
+            </Button>
+          </div>
+          {editTab === 'builder' ? (
+            <RuleCanvas
+              mode="edit"
+              rule={editing}
+              onClose={(saved) => handleSaved(saved, 'edit')}
+            />
+          ) : (
+            <RunHistory ruleId={editing.id} />
+          )}
+        </div>
       ) : null}
 
       {rules.length === 0 ? (
@@ -184,7 +220,10 @@ export function RuleList({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => setEditing(r)}
+                          onClick={() => {
+                            setEditTab('builder');
+                            setEditing(r);
+                          }}
                         >
                           Edit
                         </Button>
