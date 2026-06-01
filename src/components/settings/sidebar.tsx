@@ -137,7 +137,10 @@ export function SettingsSidebar({
       {
         id: 'admin',
         label: t('settings.nav.admin'),
-        href: '/settings/admin' as Route,
+        // Parent click navigates straight to the first real leaf. The bare
+        // /settings/admin route still 308-redirects here server-side, but the
+        // nav no longer depends on that round-trip (audit item A).
+        href: '/settings/admin/audit' as Route,
         children: adminChildren,
       },
       {
@@ -231,7 +234,10 @@ export function SettingsSidebar({
       className="sticky top-4 w-48 shrink-0 space-y-1"
     >
       {visible.map((s) => {
-        const active = pathname === s.href || pathname.startsWith(`${s.href}/`);
+        const active =
+          s.id === 'admin'
+            ? pathname.startsWith('/settings/admin')
+            : pathname === s.href || pathname.startsWith(`${s.href}/`);
         return (
           <div key={s.id}>
             <Link
