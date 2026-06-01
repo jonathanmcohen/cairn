@@ -423,6 +423,13 @@
       "breakpoints": true
     },
     {
+      "idx": 60,
+      "version": "7",
+      "when": 1780587797491,
+      "tag": "0060_chat_oauth_installs",
+      "breakpoints": true
+    },
+    {
       "idx": 61,
       "version": "7",
       "when": 1780674197491,
