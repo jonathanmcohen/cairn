@@ -30,6 +30,6 @@ it('moving the first action down emits the swapped order', () => {
   const onChange = vi.fn();
   renderList(onChange);
   fireEvent.click(screen.getByLabelText('Move action down'));
-  const next = onChange.mock.calls[0][0] as ActionCard[];
+  const next = onChange.mock.calls[0]?.[0] as ActionCard[];
   expect(next.map((a) => a.id)).toEqual(['a2', 'a1']);
 });

@@ -20,7 +20,7 @@ it('adds a nested group when Add group is clicked', () => {
   const onChange = vi.fn();
   renderGroup({ id: 'g0', logic: 'and', children: [] }, onChange);
   fireEvent.click(screen.getByText('Add group'));
-  const next = onChange.mock.calls[0][0] as ConditionGroupModel;
+  const next = onChange.mock.calls[0]?.[0] as ConditionGroupModel;
   expect(next.children).toHaveLength(1);
   expect((next.children[0] as ConditionGroupModel).logic).toBe('and');
 });
