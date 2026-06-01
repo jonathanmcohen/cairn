@@ -56,6 +56,12 @@ export const REDACT_PATHS: string[] = [
   'signingSecret',
   '*.signing_secret',
   'signing_secret',
+  // v0.9.8 G6 (audit F) — OAuth code-exchange surfaces an access_token /
+  // accessToken shape before it is sealed; redact it wherever it appears.
+  '*.accessToken',
+  'accessToken',
+  '*.access_token',
+  'access_token',
   // v0.9.0 G8 P40 — SIEM forwarder credentials (Splunk HEC token, Datadog
   // API key, S3 access keys). The dispatcher never serializes a forwarder
   // row through pino, but a stray "log the row" call would dump the secret
