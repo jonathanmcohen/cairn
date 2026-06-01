@@ -140,16 +140,22 @@ export function NotificationsPageList({
     }
   }, [cursor, filter, loadingMore]);
 
-  const onMarkRead = useCallback(async (id: string) => {
-    const res = await fetch(`/api/notifications/${id}/read`, {
-      method: 'POST',
-      credentials: 'include',
-    });
-    if (!res.ok) return;
-    setItems((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)),
-    );
-  }, []);
+  const onMarkRead = useCallback(
+    async (id: string) => {
+      const res = await fetch(`/api/notifications/${id}/read`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      if (!res.ok) return;
+      setItems((prev) =>
+        prev.map((n) => (n.id === id ? { ...n, readAt: new Date().toISOString() } : n)),
+      );
+      // v0.9.8 G4 (G) — the server-rendered unread bell badge derives from the
+      // same rows; re-run the server tree so it decrements without a reload.
+      router.refresh();
+    },
+    [router],
+  );
 
   return (
     <>
