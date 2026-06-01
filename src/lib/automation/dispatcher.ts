@@ -1,9 +1,10 @@
-import { and, eq } from 'drizzle-orm';
+import { and, asc, eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { logger } from '@/lib/observability/logger';
 import { runAction } from './actions';
-import { evaluateCondition } from './condition';
+import { evaluateConditionTree } from './condition-tree';
+import { flatConditionToTree } from './condition-tree-backfill';
 import type { TriggerEvent } from './events';
 
 // TRIGGER_EVENTS + TriggerEvent live in the dependency-free `./events` module so
@@ -47,7 +48,21 @@ export async function evaluateRules(
     if (rules.length === 0) return;
 
     for (const rule of rules) {
-      const matched = evaluateCondition(rule.condition, payload);
+      // Prefer the nested tree (v0.9.8); fall back to the singular condition.
+      const tree = rule.conditionTree ?? flatConditionToTree(rule.condition);
+      let matched: boolean;
+      try {
+        matched = evaluateConditionTree(tree, payload);
+      } catch (err) {
+        // Depth-cap or malformed tree → record a failed run, don't run actions.
+        await db.insert(schema.automationRuns).values({
+          ruleId: rule.id,
+          triggerPayload: (payload ?? {}) as Record<string, unknown>,
+          status: 'failed',
+          error: err instanceof Error ? err.message : String(err),
+        });
+        continue;
+      }
       if (!matched) {
         await db.insert(schema.automationRuns).values({
           ruleId: rule.id,
@@ -56,17 +71,31 @@ export async function evaluateRules(
         });
         continue;
       }
+
+      // Ordered actions (v0.9.8). Fall back to the singular action if the
+      // ordered table has no rows for this rule (defensive — the trigger keeps
+      // it populated, but a manually-inserted rule may not have run it yet).
+      const ordered = await db
+        .select()
+        .from(schema.automationRuleActions)
+        .where(eq(schema.automationRuleActions.ruleId, rule.id))
+        .orderBy(asc(schema.automationRuleActions.sortOrder));
+      const actions =
+        ordered.length > 0
+          ? ordered.map((a) => ({
+              type: a.actionType as schema.AutomationActionType,
+              config: a.actionConfig,
+            }))
+          : [{ type: rule.actionType as schema.AutomationActionType, config: rule.actionConfig }];
+
       try {
-        await actionRunner.runAction(
-          rule.actionType as schema.AutomationActionType,
-          rule.actionConfig,
-          payload,
-          {
+        for (const action of actions) {
+          await actionRunner.runAction(action.type, action.config, payload, {
             ruleId: rule.id,
             workspaceId: rule.workspaceId,
             createdBy: rule.createdBy,
-          },
-        );
+          });
+        }
         await db.insert(schema.automationRuns).values({
           ruleId: rule.id,
           triggerPayload: (payload ?? {}) as Record<string, unknown>,
