@@ -62,6 +62,7 @@ describe('GET chat-bridge oauth callback (slack)', () => {
       .insert(schema.users)
       .values({ email: 'a@b.c', name: 'A', passwordHash: 'x' })
       .returning();
+    if (!ws || !user) throw new Error('seed insert returned no rows');
     activeCtx = { userId: user.id, workspaceId: ws.id, role: 'admin' };
     const state = await signOauthState({ workspaceId: ws.id, platform: 'slack', nonce: 'n' });
     const { GET } = await import('@/app/api/admin/chat-bridge/oauth/slack/callback/route');
@@ -76,6 +77,7 @@ describe('GET chat-bridge oauth callback (slack)', () => {
       .select()
       .from(schema.chatOauthInstalls)
       .where(eq(schema.chatOauthInstalls.workspaceId, ws.id));
+    if (!row) throw new Error('expected a persisted install row');
     expect(row.externalTeamId).toBe('T-INSTALL');
     expect(openBotToken(row.botTokenEncrypted)).toBe('xoxb-secret');
     expect(row.scopes).toEqual(['chat:write']);

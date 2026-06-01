@@ -18,6 +18,7 @@ describe('chat_oauth_installs schema (migration 0060)', () => {
       .insert(schema.users)
       .values({ email: 'admin@example.com', name: 'Admin', passwordHash: 'x' })
       .returning();
+    if (!ws || !user) throw new Error('seed insert returned no rows');
 
     const [row] = await db
       .insert(schema.chatOauthInstalls)
@@ -30,6 +31,7 @@ describe('chat_oauth_installs schema (migration 0060)', () => {
         installedBy: user.id,
       })
       .returning();
+    if (!row) throw new Error('install insert returned no row');
 
     expect(row.platform).toBe('slack');
     expect(row.externalTeamId).toBe('T123');
@@ -54,6 +56,7 @@ describe('chat_oauth_installs schema (migration 0060)', () => {
       .insert(schema.users)
       .values({ email: 'u@example.com', name: 'U', passwordHash: 'x' })
       .returning();
+    if (!ws || !user) throw new Error('seed insert returned no rows');
     const base = {
       workspaceId: ws.id,
       platform: 'discord' as const,
