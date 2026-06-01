@@ -27,6 +27,19 @@ export type AutomationOperator =
 
 export type AutomationActionType = 'notify' | 'send_webhook' | 'set_property' | 'create_page';
 
+/** A single leaf in the condition tree (mirrors src/lib/automation/condition-tree.ts). */
+export type ConditionTreeLeaf = {
+  field: string;
+  op: AutomationOperator;
+  value: unknown;
+};
+
+/** A logic group joining children with AND/OR; children may be groups (nested). */
+export type ConditionTreeGroup = {
+  logic: 'and' | 'or';
+  children: Array<ConditionTreeLeaf | ConditionTreeGroup>;
+};
+
 export const automationRules = pgTable(
   'automation_rules',
   {
@@ -41,6 +54,10 @@ export const automationRules = pgTable(
     // {property: string, operator: string, value: unknown} — see src/lib/automation/condition.ts.
     // Empty object means "always match".
     condition: jsonb('condition').$type<AutomationCondition>().notNull().default({}),
+    // Nested AND/OR tree (v0.9.8). When non-null the dispatcher evaluates this
+    // instead of the singular `condition`. Backfilled in migration 0058 as one
+    // implicit {logic:'and', children:[...]} group from the flat condition.
+    conditionTree: jsonb('condition_tree').$type<ConditionTreeGroup | null>(),
     // 'notify' | 'send_webhook' | 'set_property' | 'create_page' — runner registry in P17.
     actionType: text('action_type').notNull(),
     // Action-type-specific config; shape validated by the runner.
