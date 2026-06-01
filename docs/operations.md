@@ -439,3 +439,11 @@ Operational consequences:
   `reason=bad-sig|expired|page-mismatch|malformed` with the decoded (untrusted)
   `tokenPageId`/`exp` — never the secret or the raw token. `bad-sig` almost
   always means the two services' secrets drifted.
+- **DNS resolvability is a hard dependency.** The browser connects directly to
+  `COLLAB_URL` and the app mints tokens against `PUBLIC_URL`; both must resolve
+  from the **client's** network, not only inside Docker. A non-resolving
+  hostname (or a reverse proxy that drops the WebSocket upgrade) presents the
+  same `cairn-collab: rejected connect` / `Unauthorized` symptom as a secret
+  mismatch. Since v0.9.8 the client retries the token fetch with exponential
+  backoff and shows a dismissible "Collab offline — reconnecting…" banner, so
+  the editor recovers automatically once resolution is restored.

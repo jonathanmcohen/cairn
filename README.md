@@ -275,6 +275,26 @@ cairn-collab: rejected connect reason=bad-sig document=<page-id> tokenPageId=<pa
 
 Check the logs with `docker compose logs cairn-collab`.
 
+#### DNS resolvability
+
+The browser connects **directly** to the collab WebSocket at `COLLAB_URL`
+(and the app mints tokens against `PUBLIC_URL`), so **both hostnames must
+resolve from the end-user's network**, not just from inside the Docker
+network. If `COLLAB_URL`/`PUBLIC_URL` point at a hostname that resolves only
+on the host (or behind a reverse proxy that isn't wired through), the client
+sees a failed WebSocket handshake and the editor logs `cairn-collab: rejected
+connect` / falls back to local-only edits — even though `AUTH_SECRET` matches.
+
+Symptoms and checks:
+
+- `cairn-collab: rejected connect` in the collab logs, or a browser-console
+  WebSocket error against the `COLLAB_URL` host → confirm the host resolves
+  publicly (`nslookup <collab-host>` from a client machine) and that your
+  reverse proxy forwards the WebSocket upgrade headers.
+- Since v0.9.8 the editor surfaces a dismissible **"Collab offline —
+  reconnecting…"** banner and retries the token fetch with exponential
+  backoff, so a transient DNS/proxy blip self-heals once resolution returns.
+
 ## Local development
 
 `pnpm dev` / `build` / `test` read the same `.env` directly, so it must contain
