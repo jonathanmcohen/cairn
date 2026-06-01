@@ -145,6 +145,13 @@ export const AUDIT_ACTIONS = [
   // v0.9.6 G8b (#70) — user revoked active sessions ("sign out everywhere").
   // metadata: { scope: 'others' | 'all', revoked } — counts only, no sid.
   'auth.sessions_revoked',
+  // v0.9.8 G1 (audit item A/B) — federated-search peer management from the
+  // admin console (/settings/admin/federated). metadata: { name, baseUrl }
+  // on create; {} on enable/disable/delete. Never the shared secret.
+  'federation.peer_created',
+  'federation.peer_enabled',
+  'federation.peer_disabled',
+  'federation.peer_deleted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -173,4 +180,6 @@ export type AuditTargetType =
   // v0.9.0 G7 P37 — dedicated install + channel-link target types so the
   // audit UI can render a meaningful label for slash + sync events.
   | 'chat_install'
-  | 'chat_channel_link';
+  | 'chat_channel_link'
+  // v0.9.8 G1 — federated-search peer rows (peer_instances table).
+  | 'peer_instance';

@@ -161,6 +161,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'upgrade.rolled_back': 'Upgrade rolled back',
   // v0.9.6 G8b (#70) — user revoked active sessions ("sign out everywhere").
   'auth.sessions_revoked': 'Sessions revoked',
+  'federation.peer_created': 'Federated peer added',
+  'federation.peer_enabled': 'Federated peer enabled',
+  'federation.peer_disabled': 'Federated peer disabled',
+  'federation.peer_deleted': 'Federated peer removed',
 };
 
 function actionLabel(action: string): string {
