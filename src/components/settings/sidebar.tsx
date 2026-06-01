@@ -49,6 +49,11 @@ export function SettingsSidebar({
         href: '/settings/admin/siem' as Route,
       },
       {
+        id: 'admin-federated',
+        label: t('settings.nav.admin.federated'),
+        href: '/settings/admin/federated' as Route,
+      },
+      {
         id: 'admin-webhooks',
         label: t('settings.nav.admin.webhooks'),
         href: '/settings/admin/webhooks' as Route,

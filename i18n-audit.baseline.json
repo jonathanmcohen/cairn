@@ -493,6 +493,12 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/(app)/settings/admin/federated/federated-manager.tsx",
+      "line": 119,
+      "text": "https://peer.example.com",
+      "kind": "jsx_attr"
+    },
+    {
       "file": "app/(app)/settings/admin/sso/oidc/[idpId]/edit/page.tsx",
       "line": 30,
       "text": "Edit OIDC provider",
