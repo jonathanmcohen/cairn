@@ -9,6 +9,7 @@ import { useAnnounce } from '@/components/a11y/live-region';
 import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
+import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BibliographyToggle } from './bibliography-toggle';
@@ -579,6 +580,9 @@ export function Editor({
             <BibliographyToggle
               pageId={pageId}
               initialDisabled={initialDisableBibliography}
+              citationCount={
+                editor ? aggregateCitations(editor.getJSON(), citationStyle).length : 0
+              }
               onChange={setBibDisabled}
             />
             <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
