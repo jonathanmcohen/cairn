@@ -39,14 +39,21 @@ export function SidebarFavorites({ favorites }: { favorites: PrefEntry[] }) {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
-  const postOrder = useCallback(async (orderedFavoriteIds: string[]) => {
-    await fetch('/api/favorites/reorder', {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ orderedFavoriteIds }),
-    });
-  }, []);
+  const postOrder = useCallback(
+    async (orderedFavoriteIds: string[]) => {
+      const res = await fetch('/api/favorites/reorder', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ orderedFavoriteIds }),
+      });
+      // v0.9.8 G4 (G) — the favorites order is server-rendered; re-run the
+      // server tree so the persisted order survives the next SSR (e.g. on
+      // navigation) instead of only living in local React state.
+      if (res.ok) router.refresh();
+    },
+    [router],
+  );
 
   const onDragEnd = useCallback(
     (e: DragEndEvent) => {

@@ -33,3 +33,23 @@ describe('SidebarFavorites — real-time refresh on remove', () => {
     fetchSpy.mockRestore();
   });
 });
+
+// v0.9.8 G4 (G) — the reorder path (postOrder) must also refresh so the next
+// SSR of the sidebar renders the persisted order instead of a stale one.
+describe('<SidebarFavorites> live refetch on reorder', () => {
+  it('calls router.refresh() after a keyboard reorder persists', async () => {
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 204 }));
+
+    render(<SidebarFavorites favorites={favs} />);
+
+    // ArrowDown on the first row moves it down and persists the new order.
+    const firstRow = screen.getByText('Alpha').closest('li');
+    if (!firstRow) throw new Error('first favorites row not found');
+    fireEvent.keyDown(firstRow, { key: 'ArrowDown' });
+
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(refresh).toHaveBeenCalledTimes(1));
+  });
+});
