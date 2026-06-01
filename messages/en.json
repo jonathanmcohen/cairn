@@ -611,5 +611,15 @@
   "e2e.rekey.error": "Key rotation failed: {message}",
   "e2e.rekey.noKeypairWarning": "This member has not enrolled an encryption key, so they cannot be included in a rekey.",
   "e2e.rekey.loadFailed": "Could not load the workspace members.",
-  "settings.nav.security.encryption": "Encryption"
+  "settings.nav.security.encryption": "Encryption",
+  "chatOauth.heading": "Connect via OAuth",
+  "chatOauth.description": "Install the Cairn bot directly with one click. Prefer manual setup? Paste a webhook URL and signing secret below instead.",
+  "chatOauth.connectSlack": "Add to Slack",
+  "chatOauth.connectDiscord": "Add to Discord",
+  "chatOauth.installedSlack": "Slack connected via OAuth (team {team}).",
+  "chatOauth.installedDiscord": "Discord connected via OAuth (server {team}).",
+  "chatOauth.manualFallback": "Manual webhook setup",
+  "e2ee.disabledTitle": "End-to-end encryption is turned off in this build.",
+  "e2ee.disabledBody": "This deployment was built with CAIRN_ENABLE_E2E_ENCRYPTION=false (the safe default). To enable it, set CAIRN_ENABLE_E2E_ENCRYPTION=true and NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=true in your environment, then rebuild and redeploy. See the admin docs for the full procedure.",
+  "e2ee.docsLink": "Read the encryption admin guide"
 }

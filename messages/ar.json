@@ -615,5 +615,15 @@
   "e2e.rekey.error": "فشل تدوير المفتاح: {message}",
   "e2e.rekey.noKeypairWarning": "لم يسجّل هذا العضو مفتاح تشفير، لذا لا يمكن تضمينه في التدوير.",
   "e2e.rekey.loadFailed": "تعذّر تحميل أعضاء مساحة العمل.",
-  "settings.nav.security.encryption": "التشفير"
+  "settings.nav.security.encryption": "التشفير",
+  "chatOauth.heading": "الاتصال عبر OAuth",
+  "chatOauth.description": "ثبّت روبوت Cairn مباشرةً بنقرة واحدة. تفضّل الإعداد اليدوي؟ الصق عنوان webhook وسر التوقيع أدناه بدلاً من ذلك.",
+  "chatOauth.connectSlack": "إضافة إلى Slack",
+  "chatOauth.connectDiscord": "إضافة إلى Discord",
+  "chatOauth.installedSlack": "تم ربط Slack عبر OAuth (الفريق {team}).",
+  "chatOauth.installedDiscord": "تم ربط Discord عبر OAuth (الخادم {team}).",
+  "chatOauth.manualFallback": "إعداد webhook اليدوي",
+  "e2ee.disabledTitle": "التشفير من طرف إلى طرف معطّل في هذه النسخة.",
+  "e2ee.disabledBody": "تم بناء هذا النشر باستخدام CAIRN_ENABLE_E2E_ENCRYPTION=false (الإعداد الافتراضي الآمن). لتفعيله، اضبط CAIRN_ENABLE_E2E_ENCRYPTION=true و NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=true في بيئتك، ثم أعد البناء وأعد النشر. راجع وثائق الإدارة للحصول على الإجراء الكامل.",
+  "e2ee.docsLink": "اقرأ دليل إدارة التشفير"
 }

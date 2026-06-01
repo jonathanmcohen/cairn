@@ -611,5 +611,15 @@
   "e2e.rekey.error": "Error al rotar la clave: {message}",
   "e2e.rekey.noKeypairWarning": "Este miembro no ha registrado una clave de cifrado, por lo que no se puede incluir en una rotación.",
   "e2e.rekey.loadFailed": "No se pudieron cargar los miembros del espacio de trabajo.",
-  "settings.nav.security.encryption": "Cifrado"
+  "settings.nav.security.encryption": "Cifrado",
+  "chatOauth.heading": "Conectar mediante OAuth",
+  "chatOauth.description": "Instala el bot de Cairn directamente con un clic. ¿Prefieres la configuración manual? Pega abajo una URL de webhook y un secreto de firma.",
+  "chatOauth.connectSlack": "Añadir a Slack",
+  "chatOauth.connectDiscord": "Añadir a Discord",
+  "chatOauth.installedSlack": "Slack conectado mediante OAuth (equipo {team}).",
+  "chatOauth.installedDiscord": "Discord conectado mediante OAuth (servidor {team}).",
+  "chatOauth.manualFallback": "Configuración manual de webhook",
+  "e2ee.disabledTitle": "El cifrado de extremo a extremo está desactivado en esta compilación.",
+  "e2ee.disabledBody": "Esta instalación se compiló con CAIRN_ENABLE_E2E_ENCRYPTION=false (el valor predeterminado seguro). Para habilitarlo, establece CAIRN_ENABLE_E2E_ENCRYPTION=true y NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=true en tu entorno, luego recompila y vuelve a desplegar. Consulta la documentación de administración para el procedimiento completo.",
+  "e2ee.docsLink": "Leer la guía de administración del cifrado"
 }

@@ -249,7 +249,7 @@
     {
       "file": "app/(app)/admin/chat-bridge/page.tsx",
       "line": 46,
-      "text": "Forward page + comment events to Slack or Discord, and let teammates reply in-thread to\n          create Cairn comments. Paste your incoming webhook URL and signing secret below; full\n          OAuth install is coming in v0.10.",
+      "text": "Forward page + comment events to Slack or Discord, and let teammates reply in-thread to\n          create Cairn comments.",
       "kind": "jsx_text"
     },
     {
