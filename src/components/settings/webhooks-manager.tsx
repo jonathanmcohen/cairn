@@ -44,9 +44,9 @@ function fmtDate(iso: string): string {
 }
 
 function statusClass(status: string): string {
-  if (status === 'success') return 'text-green-600 dark:text-green-400';
+  if (status === 'success') return 'text-success';
   if (status === 'failed') return 'text-destructive';
-  return 'text-amber-600 dark:text-amber-400'; // pending
+  return 'text-warning'; // pending
 }
 
 function isHttpUrl(value: string): boolean {

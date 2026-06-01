@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { PageAclManager } from '@/components/pages/page-acl-manager';
 import { Button } from '@/components/ui/button';
 import { DateField } from '@/components/ui/date-field';
 import { Label } from '@/components/ui/label';
@@ -180,6 +181,10 @@ export function SharePanel({
           {status}
         </div>
       )}
+
+      <div className="border-t pt-4">
+        <PageAclManager pageId={pageId} />
+      </div>
     </div>
   );
 }

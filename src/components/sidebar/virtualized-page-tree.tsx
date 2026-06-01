@@ -1,7 +1,7 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronDown, ChevronRight, Folder } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Folder, Image as ImageIcon } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
@@ -20,9 +20,9 @@ import { usePageRowActions } from './use-page-row-actions';
  */
 function renderNodeIcon(stored: string | null): React.ReactNode {
   const parsed = parseIcon(stored);
-  if (!parsed) return '📄';
+  if (!parsed) return <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
   if (parsed.kind === 'emoji') return parsed.value;
-  return <span aria-hidden="true">🖼️</span>;
+  return <ImageIcon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
 }
 
 const ROW_HEIGHT_PX = 32; // Matches the existing sidebar row.
@@ -200,7 +200,9 @@ export function VirtualizedPageTree({
                   <span className="w-4 shrink-0 text-center" aria-hidden="true">
                     {row.icon ?? <Folder className="inline h-3 w-3" />}
                   </span>
-                  <span className="truncate">{row.name}</span>
+                  <span className="truncate" title={row.name}>
+                    {row.name}
+                  </span>
                 </button>
               </li>
             );
@@ -292,7 +294,9 @@ function PageTreeRow({
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
                   {renderNodeIcon(node.icon)}
                 </span>
-                <span className="min-w-0 flex-1 truncate">{node.title}</span>
+                <span className="min-w-0 flex-1 truncate" title={node.title}>
+                  {node.title}
+                </span>
               </div>
               <span
                 data-row-actions=""

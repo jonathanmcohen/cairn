@@ -8,8 +8,15 @@ afterEach(() => {
 
 vi.mock('@/lib/search/see-also', () => ({
   findRelatedPages: vi.fn(async () => [
-    { id: 'a', title: 'Alpha', icon: '🅰️', snippet: 'alpha body', score: 0.95 },
+    { id: 'a', title: 'Alpha', icon: 'emoji::🅰️', snippet: 'alpha body', score: 0.95 },
     { id: 'b', title: 'Beta', icon: null, snippet: 'beta body', score: 0.82 },
+    {
+      id: 'c',
+      title: 'Gamma',
+      icon: 'file::11111111-1111-1111-1111-111111111111',
+      snippet: 'gamma body',
+      score: 0.7,
+    },
   ]),
 }));
 vi.mock('@/db/client', () => ({ getDb: () => ({}) }));
@@ -24,6 +31,25 @@ describe('<SeeAlsoPanel>', () => {
     // Snippet rendered for each item.
     expect(screen.getByText(/alpha body/)).toBeTruthy();
     expect(screen.getByText(/beta body/)).toBeTruthy();
+  });
+
+  it('renders the parsed emoji, never the raw shortcode prefix', async () => {
+    const { SeeAlsoPanel } = await import('@/components/pages/see-also-panel');
+    const ui = await SeeAlsoPanel({ pageId: 'src', viewerUserId: 'u1' });
+    const { container } = render(<>{ui}</>);
+    // The bare unicode emoji is rendered…
+    expect(screen.getByText('🅰️')).toBeTruthy();
+    // …and the `emoji::` / `file::` prefix never reaches the DOM.
+    expect(container.textContent ?? '').not.toContain('emoji::');
+    expect(container.textContent ?? '').not.toContain('file::');
+  });
+
+  it('shows a neutral placeholder for file-backed icons', async () => {
+    const { SeeAlsoPanel } = await import('@/components/pages/see-also-panel');
+    const ui = await SeeAlsoPanel({ pageId: 'src', viewerUserId: 'u1' });
+    render(<>{ui}</>);
+    // Gamma's file:: icon collapses to the 🖼️ placeholder.
+    expect(screen.getByText('🖼️')).toBeTruthy();
   });
 
   it('renders an accessible heading and a nav landmark', async () => {

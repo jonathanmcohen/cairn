@@ -1,6 +1,6 @@
 'use client';
 
-import { MoreHorizontal, Plus } from 'lucide-react';
+import { Loader2, MoreHorizontal, Plus } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { DropdownMenu } from 'radix-ui';
 import { useT } from '@/lib/i18n/provider';
@@ -34,13 +34,14 @@ function SelfManaged({ node }: { node: FlatPageNode }) {
 function Cluster({ api, sourceId }: { api: PageRowActionsApi; sourceId: string }) {
   const t = useT();
   const router = useRouter();
-  const { actions, moveOpen, setMoveOpen } = api;
+  const { actions, moveOpen, setMoveOpen, busy } = api;
   const addChild = actions.find((a) => a.id === 'addChild');
   return (
     <div className="flex items-center">
       <button
         type="button"
         aria-label={t('pageRow.addChild')}
+        disabled={busy}
         className={ICON_BTN}
         onClick={(e) => {
           e.preventDefault();
@@ -48,7 +49,11 @@ function Cluster({ api, sourceId }: { api: PageRowActionsApi; sourceId: string }
           void addChild?.run();
         }}
       >
-        <Plus aria-hidden="true" className="h-4 w-4" />
+        {busy ? (
+          <Loader2 aria-hidden="true" className="h-4 w-4 animate-spin motion-reduce:animate-none" />
+        ) : (
+          <Plus aria-hidden="true" className="h-4 w-4" />
+        )}
       </button>
       <DropdownMenu.Root>
         <DropdownMenu.Trigger

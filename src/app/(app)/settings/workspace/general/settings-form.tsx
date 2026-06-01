@@ -11,6 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { StatusBanner } from '@/components/ui/status-banner';
 import { useT } from '@/lib/i18n/provider';
 
 type Initial = {
@@ -81,22 +82,8 @@ export function SettingsForm({
 
   return (
     <form onSubmit={submit} className="flex max-w-lg flex-col gap-4">
-      {error ? (
-        <div
-          role="alert"
-          className="rounded border border-red-200 bg-red-50 p-3 text-sm text-red-800"
-        >
-          {error}
-        </div>
-      ) : null}
-      {saved ? (
-        <div
-          role="status"
-          className="rounded border border-green-200 bg-green-50 p-3 text-sm text-green-900"
-        >
-          Settings saved.
-        </div>
-      ) : null}
+      {error ? <StatusBanner variant="error">{error}</StatusBanner> : null}
+      {saved ? <StatusBanner variant="success">{t('workspaceSettings.saved')}</StatusBanner> : null}
 
       <div className="flex flex-col gap-1">
         <span className="text-sm font-medium">{t('workspaceSettings.icon.label')}</span>

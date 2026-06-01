@@ -41,7 +41,7 @@ export function SuggestionToolbar({
           className={
             active
               ? 'rounded bg-primary px-2 py-1 text-primary-foreground'
-              : 'rounded px-2 py-1 text-muted-foreground hover:bg-accent'
+              : 'rounded px-2 py-1 text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
           }
         >
           {active ? 'Suggesting' : 'Suggest edits'}

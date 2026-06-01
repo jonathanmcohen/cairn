@@ -11,6 +11,7 @@ import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { canTransition } from './status-rules';
 
 export class IllegalStatusTransition extends Error {
   constructor(
@@ -22,26 +23,12 @@ export class IllegalStatusTransition extends Error {
   }
 }
 
-/**
- * Allowed-transition matrix:
- *   draft     → review, archived
- *   review    → draft, published
- *   published → review, archived
- *   archived  → draft
- *
- * Note: `published` cannot jump directly back to `draft` — it must pass
- * through `review` first (audit-trail discipline).
- */
-const ALLOWED: Record<schema.PageStatus, ReadonlySet<schema.PageStatus>> = {
-  draft: new Set<schema.PageStatus>(['review', 'archived']),
-  review: new Set<schema.PageStatus>(['draft', 'published']),
-  published: new Set<schema.PageStatus>(['review', 'archived']),
-  archived: new Set<schema.PageStatus>(['draft']),
-};
-
-export function canTransition(from: schema.PageStatus, to: schema.PageStatus): boolean {
-  return ALLOWED[from]?.has(to) ?? false;
-}
+// The allowed-transition matrix + `canTransition` now live in the client-safe
+// `./status-rules` module (so the status picker can import them without pulling
+// this server-only file's audit→SIEM→prom-client graph into the browser).
+// Imported for internal use by `transitionStatus` and re-exported for the many
+// existing server importers.
+export { canTransition };
 
 /**
  * Transition `pageId` to a new status.

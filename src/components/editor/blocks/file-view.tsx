@@ -2,8 +2,9 @@
 
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper } from '@tiptap/react';
-import { Paperclip } from 'lucide-react';
+import { MessageSquare, Paperclip } from 'lucide-react';
 import { useState } from 'react';
+import { FileComments } from '@/components/comments/file-comments';
 import { useT } from '@/lib/i18n/provider';
 
 /**
@@ -16,7 +17,9 @@ export function FileView({ node, editor, updateAttributes }: NodeViewProps) {
   const t = useT();
   const href = node.attrs.href as string | null;
   const name = (node.attrs.name as string | null) ?? 'file';
+  const fileId = (node.attrs.fileId as string | null) ?? null;
   const [uploading, setUploading] = useState(false);
+  const [showComments, setShowComments] = useState(false);
 
   async function upload(file: File) {
     setUploading(true);
@@ -63,6 +66,34 @@ export function FileView({ node, editor, updateAttributes }: NodeViewProps) {
           <Paperclip aria-hidden className="size-4 shrink-0 text-muted-foreground" />
           <span className="truncate">{name}</span>
         </a>
+        {/* v0.9.7 G16 #163 — file comments are reachable once the node carries a
+            resolved fileId (set on upload). The node-view has no session context,
+            so we pass an empty currentUserId + a conservative editor role; the
+            file-comments route re-checks requireRole server-side as the real
+            authority. */}
+        {fileId && (
+          <div className="mt-2">
+            <button
+              type="button"
+              onClick={() => setShowComments((v) => !v)}
+              aria-pressed={showComments}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <MessageSquare aria-hidden className="size-3.5" />
+              {t('editor.file.comments')}
+            </button>
+            {showComments && (
+              <div className="mt-2" contentEditable={false}>
+                <FileComments
+                  fileId={fileId}
+                  canComment={editor.isEditable}
+                  currentUserId=""
+                  currentRole="editor"
+                />
+              </div>
+            )}
+          </div>
+        )}
       </NodeViewWrapper>
     );
   }

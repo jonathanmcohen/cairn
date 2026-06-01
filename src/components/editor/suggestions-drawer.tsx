@@ -1,5 +1,6 @@
 'use client';
 
+import { X } from 'lucide-react';
 import { Dialog } from 'radix-ui';
 import { useT } from '@/lib/i18n/provider';
 
@@ -41,9 +42,9 @@ export function SuggestionsDrawer({
             </Dialog.Title>
             <Dialog.Close
               aria-label={t('pageActions.suggest.close')}
-              className="rounded px-2 py-1 text-muted-foreground text-sm hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-8 w-8 items-center justify-center rounded text-muted-foreground hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
             >
-              ✕
+              <X aria-hidden="true" className="h-4 w-4" />
             </Dialog.Close>
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto p-2">

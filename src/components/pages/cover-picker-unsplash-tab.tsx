@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { useT } from '@/lib/i18n/provider';
 
 type UnsplashPhoto = {
   id: string;
@@ -16,9 +17,11 @@ export type UnsplashTabProps = {
 };
 
 export function UnsplashTab({ accessKey, onPick }: UnsplashTabProps) {
+  const t = useT();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<UnsplashPhoto[]>([]);
   const [loading, setLoading] = useState(false);
+  const [searched, setSearched] = useState(false);
 
   async function search() {
     if (!query.trim()) return;
@@ -39,6 +42,7 @@ export function UnsplashTab({ accessKey, onPick }: UnsplashTabProps) {
       setResults(json.results ?? []);
     } finally {
       setLoading(false);
+      setSearched(true);
     }
   }
 
@@ -54,34 +58,38 @@ export function UnsplashTab({ accessKey, onPick }: UnsplashTabProps) {
         <Input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search Unsplash"
+          placeholder={t('cover.unsplash.placeholder')}
         />
         <Button type="submit" disabled={loading}>
-          {loading ? 'Searching…' : 'Search'}
+          {loading ? t('cover.unsplash.searching') : t('cover.unsplash.search')}
         </Button>
       </form>
-      <div className="grid grid-cols-3 gap-2">
-        {results.map((p) => (
-          <button
-            key={p.id}
-            type="button"
-            onClick={() => onPick(p.urls.regular)}
-            className="overflow-hidden rounded border hover:opacity-80"
-            aria-label={`Photo by ${p.user.name}`}
-          >
-            {/** biome-ignore lint/performance/noImgElement: external host */}
-            <img
-              src={p.urls.thumb}
-              alt={`By ${p.user.name}`}
-              className="h-24 w-full object-cover"
-            />
-          </button>
-        ))}
-      </div>
-      {results.length > 0 && (
-        <p className="text-xs text-muted-foreground">
-          Photos via Unsplash — please credit photographers per Unsplash terms.
+      {searched && !loading && results.length === 0 ? (
+        <p className="py-6 text-center text-sm text-muted-foreground">
+          {t('cover.unsplash.empty')}
         </p>
+      ) : (
+        <div className="grid grid-cols-3 gap-2">
+          {results.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => onPick(p.urls.regular)}
+              className="overflow-hidden rounded border hover:opacity-80"
+              aria-label={`Photo by ${p.user.name}`}
+            >
+              {/** biome-ignore lint/performance/noImgElement: external host */}
+              <img
+                src={p.urls.thumb}
+                alt={`By ${p.user.name}`}
+                className="h-24 w-full object-cover"
+              />
+            </button>
+          ))}
+        </div>
+      )}
+      {results.length > 0 && (
+        <p className="text-xs text-muted-foreground">{t('cover.unsplash.credit')}</p>
       )}
     </div>
   );

@@ -23,6 +23,7 @@ export type UpdatePageInput = {
     icon: string | null;
     coverUrl: string | null;
     content: unknown;
+    metadata: Record<string, unknown>;
   }>;
   expectedUpdatedAt?: Date;
   // v0.9.0 G2 P14 — caller identity used by the page-lock gate. `byUserId` is
@@ -66,6 +67,12 @@ export async function updatePage(
     if (input.patch.title !== undefined) values.title = input.patch.title;
     if (input.patch.icon !== undefined) values.icon = input.patch.icon;
     if (input.patch.coverUrl !== undefined) values.coverUrl = input.patch.coverUrl;
+
+    // v0.9.7 G19 #166 — merge any metadata writes (content datetime side-channel
+    // + explicit metadata patch e.g. citation prefs) over the existing row
+    // metadata so no single channel clobbers the others.
+    let mergedMetadata = (current.metadata ?? {}) as Record<string, unknown>;
+    let metadataChanged = false;
     if (input.patch.content !== undefined) {
       values.content = input.patch.content as never;
       // v0.9.0 G3 P20 — extract ISO timestamps from every `datetime` block in
@@ -75,9 +82,15 @@ export async function updatePage(
       const dts = extractDateTimesFromDoc(
         input.patch.content as Parameters<typeof extractDateTimesFromDoc>[0],
       );
-      const epochs = dts.map((d) => d.epochMs);
-      const existing = (current.metadata ?? {}) as Record<string, unknown>;
-      values.metadata = { ...existing, datetimes: epochs };
+      mergedMetadata = { ...mergedMetadata, datetimes: dts.map((d) => d.epochMs) };
+      metadataChanged = true;
+    }
+    if (input.patch.metadata !== undefined) {
+      mergedMetadata = { ...mergedMetadata, ...input.patch.metadata };
+      metadataChanged = true;
+    }
+    if (metadataChanged) {
+      values.metadata = mergedMetadata;
     }
 
     const [updated] = await tx

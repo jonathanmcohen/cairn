@@ -24,6 +24,12 @@ const PatchInput = z.object({
   icon: z.string().max(8).nullable().optional(),
   coverUrl: z.string().nullable().optional(),
   content: z.unknown().optional(),
+  metadata: z
+    .object({
+      citation_style: z.enum(['apa', 'mla', 'chicago']).optional(),
+      disable_bibliography: z.boolean().optional(),
+    })
+    .optional(),
   expectedUpdatedAt: z.string().datetime().optional(),
 });
 
@@ -40,6 +46,7 @@ export async function PATCH(req: Request, { params }: RouteCtx): Promise<Respons
         icon: parsed.icon === undefined ? undefined : parsed.icon,
         coverUrl: parsed.coverUrl === undefined ? undefined : parsed.coverUrl,
         content: parsed.content,
+        metadata: parsed.metadata,
       },
       expectedUpdatedAt: parsed.expectedUpdatedAt ? new Date(parsed.expectedUpdatedAt) : undefined,
       // v0.9.0 G2 P14 — page-lock gate. Editors can only write through their

@@ -22,7 +22,7 @@ export function SidebarRecents({ recents }: { recents: PrefEntry[] }) {
           <li key={r.pageId}>
             <Link
               href={`/pages/${r.pageId}` as Route}
-              className="flex items-center gap-2 truncate rounded px-2 py-1 text-sm hover:bg-accent"
+              className="flex items-center gap-2 truncate rounded px-2 py-1 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               <span aria-hidden="true" className="w-4 shrink-0 text-center">
                 {r.icon ?? ''}

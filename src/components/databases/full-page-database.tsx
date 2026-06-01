@@ -3,7 +3,9 @@
 import { useState } from 'react';
 import { CalendarView } from './calendar-view';
 import { DatabaseExportMenu } from './export-menu';
+import { FiltersConfig } from './filters-config';
 import { GalleryView } from './gallery-view';
+import { GroupByConfig } from './group-by-config';
 import { KanbanView } from './kanban-view';
 import { ListView } from './list-view';
 import { PropertyPanel } from './property-panel';
@@ -53,10 +55,17 @@ export function FullPageDatabase({ databaseId }: { databaseId: string }) {
             dateProperties={meta.properties
               .filter((p) => p.type === 'date')
               .map((p) => ({ id: p.id, name: p.name }))}
+            selectProperties={meta.properties
+              .filter((p) => p.type === 'select')
+              .map((p) => ({ id: p.id, name: p.name }))}
             onChange={setViewId}
             onViewsChanged={refresh}
           />
           <div className="flex items-center gap-2">
+            {(activeView.type === 'list' || activeView.type === 'kanban') && (
+              <GroupByConfig {...viewProps} />
+            )}
+            <FiltersConfig {...viewProps} />
             <SortConfig {...viewProps} />
             <DatabaseExportMenu databaseId={databaseId} />
           </div>

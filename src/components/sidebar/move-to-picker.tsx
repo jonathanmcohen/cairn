@@ -1,6 +1,6 @@
 'use client';
 
-import { CornerLeftUp } from 'lucide-react';
+import { CornerLeftUp, FileText, Image as ImageIcon } from 'lucide-react';
 import { Dialog } from 'radix-ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
@@ -30,9 +30,9 @@ export type MoveToPickerProps = {
 
 function renderIcon(stored: string | null): React.ReactNode {
   const parsed = parseIcon(stored);
-  if (!parsed) return '📄';
+  if (!parsed) return <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
   if (parsed.kind === 'emoji') return parsed.value;
-  return <span aria-hidden="true">🖼️</span>;
+  return <ImageIcon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
 }
 
 /** Collect `sourceId` plus every descendant id so they can't be destinations. */

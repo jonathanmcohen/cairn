@@ -88,7 +88,7 @@ export function CellEditor({
         <input
           type="number"
           aria-label={property.name}
-          className="w-full bg-transparent outline-hidden"
+          className="w-full bg-transparent rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           defaultValue={local === null || local === undefined ? '' : String(local)}
           onBlur={(e) => void save(e.target.value === '' ? null : Number(e.target.value))}
         />
@@ -129,7 +129,7 @@ export function CellEditor({
         <input
           type="text"
           aria-label={property.name}
-          className="w-full bg-transparent outline-hidden"
+          className="w-full bg-transparent rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
           defaultValue={
             Array.isArray(local)
               ? local.join(', ')

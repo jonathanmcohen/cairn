@@ -1,5 +1,6 @@
 'use client';
 
+import { CornerDownLeft, X } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
 
@@ -67,7 +68,7 @@ export function EditorLinkPopover({
         onClick={apply}
         className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-sm hover:bg-accent hover:text-accent-foreground focus-visible:ring-1 focus-visible:ring-ring"
       >
-        ↵
+        <CornerDownLeft aria-hidden="true" className="h-4 w-4" />
       </button>
       {initialHref ? (
         <button
@@ -77,7 +78,7 @@ export function EditorLinkPopover({
           onClick={onRemove}
           className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-destructive text-sm hover:bg-accent focus-visible:ring-1 focus-visible:ring-ring"
         >
-          ✕
+          <X aria-hidden="true" className="h-4 w-4" />
         </button>
       ) : null}
     </div>

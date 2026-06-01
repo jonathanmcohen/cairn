@@ -4,24 +4,13 @@ import * as schema from '@/db/schema';
 import { logger } from '@/lib/observability/logger';
 import { runAction } from './actions';
 import { evaluateCondition } from './condition';
+import type { TriggerEvent } from './events';
 
-/**
- * Closed enum of trigger events. Mirrors v0.5 `WebhookEvent` from
- * src/lib/webhooks/dispatch.ts so any event a webhook can subscribe to can
- * also fire an automation rule. Kept as a const tuple so the UI dropdown
- * (P18) can iterate it.
- */
-export const TRIGGER_EVENTS = [
-  'page.created',
-  'page.updated',
-  'page.deleted',
-  'row.created',
-  'row.updated',
-  'row.deleted',
-  'comment.created',
-] as const;
-
-export type TriggerEvent = (typeof TRIGGER_EVENTS)[number];
+// TRIGGER_EVENTS + TriggerEvent live in the dependency-free `./events` module so
+// Client Components can import them without dragging this server-only dispatcher
+// (DB client, action runners) into the browser bundle. Re-exported here for
+// existing server-side consumers (API routes, this dispatcher).
+export { TRIGGER_EVENTS, type TriggerEvent } from './events';
 
 /**
  * Indirection holder — the dispatcher calls `actionRunner.runAction(...)` so

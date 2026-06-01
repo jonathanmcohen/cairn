@@ -99,3 +99,66 @@ describe('<ViewSwitcher> create-then-switch (#115)', () => {
     );
   });
 });
+
+describe('<ViewSwitcher> kanban enablement (#162)', () => {
+  beforeEach(() => {
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(JSON.stringify({ id: 'view-k', type: 'kanban', name: 'Board' }), {
+        status: 201,
+        headers: { 'content-type': 'application/json' },
+      }),
+    );
+  });
+
+  it('offers Board and creates it with the chosen select property as groupBy', async () => {
+    const onChange = vi.fn();
+    const onViewsChanged = vi.fn();
+    renderWithI18n(
+      <ViewSwitcher
+        databaseId="db1"
+        views={[{ id: 'view-1', type: 'table', name: 'Table' }]}
+        activeId="view-1"
+        dateProperties={[]}
+        selectProperties={[{ id: 'sel1', name: 'Status' }]}
+        onChange={onChange}
+        onViewsChanged={onViewsChanged}
+      />,
+    );
+    const trigger = screen.getByRole('combobox', { name: /add view/i });
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+    fireEvent.click(await screen.findByRole('option', { name: /board/i }));
+    // A group-by selector + confirm appear; the default select prop is pre-picked.
+    fireEvent.click(screen.getByRole('button', { name: /^Add$/ }));
+    await waitFor(() => expect(onViewsChanged).toHaveBeenCalled());
+    const kanbanCall = (
+      global.fetch as unknown as { mock: { calls: [string, RequestInit][] } }
+    ).mock.calls.at(-1);
+    const body = JSON.parse(kanbanCall?.[1].body as string) as {
+      type: string;
+      config: { groupBy: string };
+    };
+    expect(body.type).toBe('kanban');
+    expect(body.config.groupBy).toBe('sel1');
+    expect(onChange).toHaveBeenCalledWith('view-k');
+  });
+
+  it('disables Board when there is no select property', async () => {
+    renderWithI18n(
+      <ViewSwitcher
+        databaseId="db1"
+        views={[{ id: 'view-1', type: 'table', name: 'Table' }]}
+        activeId="view-1"
+        dateProperties={[]}
+        selectProperties={[]}
+        onChange={() => {}}
+        onViewsChanged={() => {}}
+      />,
+    );
+    const trigger = screen.getByRole('combobox', { name: /add view/i });
+    trigger.focus();
+    fireEvent.keyDown(trigger, { key: 'Enter' });
+    const board = await screen.findByRole('option', { name: /board/i });
+    expect(board.getAttribute('aria-disabled')).toBe('true');
+  });
+});

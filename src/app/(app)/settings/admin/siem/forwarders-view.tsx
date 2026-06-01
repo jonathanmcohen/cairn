@@ -39,14 +39,16 @@ export function ForwardersView({ forwarders }: { forwarders: ForwarderRow[] }) {
               >
                 <div className="flex items-center justify-between gap-4">
                   <div>
-                    <div className="font-medium">
+                    <div className="font-medium" title={f.name}>
                       {f.name} <span className="text-muted-foreground text-xs">({f.kind})</span>
                     </div>
-                    <div className="text-muted-foreground text-xs">{f.endpoint}</div>
+                    <div className="truncate text-muted-foreground text-xs" title={f.endpoint}>
+                      {f.endpoint}
+                    </div>
                   </div>
                   <div className="text-xs">
                     {f.enabled ? (
-                      <span className="rounded bg-green-100 px-2 py-1 text-green-800 dark:bg-green-900 dark:text-green-100">
+                      <span className="rounded bg-success/15 px-2 py-1 text-success">
                         {t('settingsAdmin.siem.enabled')}
                       </span>
                     ) : (

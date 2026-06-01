@@ -1,32 +1,22 @@
 'use client';
 
+import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFocusTrap } from '@/lib/a11y/focus-trap';
+import { meetsAA } from '@/lib/color/contrast';
 import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
+import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY } from '@/lib/pages/cover-presets';
 import { UnsplashTab } from './cover-picker-unsplash-tab';
 
-const COLOR_PRESETS = [
-  '#0f172a',
-  '#1f2937',
-  '#374151',
-  '#4b5563',
-  '#2563eb',
-  '#4f46e5',
-  '#7c3aed',
-  '#a21caf',
-  '#e11d48',
-  '#ea580c',
-  '#d97706',
-  '#ca8a04',
-  '#059669',
-  '#0d9488',
-  '#0891b2',
-  '#475569',
-] as const;
+// The page title overlays/sits-below the cover on the theme --foreground token.
+// In the dark UI that resolves to hsl(0 0% 98%) ≈ #fafafa — the contrast
+// reference for the user-pickable custom-hex warning (finding Y).
+const TITLE_REFERENCE = '#fafafa';
 
 type TabKey = 'color' | 'unsplash' | 'url' | 'upload';
 
@@ -48,11 +38,14 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
   const t = useT();
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  // #169 — trap Tab + handle Escape while the custom modal is open.
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [tab, setTab] = useState<TabKey>('color');
   const [customHex, setCustomHex] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
+  const [saving, setSaving] = useState(false);
 
-  async function save(next: PageCover) {
+  async function persist(next: PageCover) {
     const res = await fetch(`/api/pages/${pageId}/cover`, {
       method: 'PATCH',
       headers: { 'content-type': 'application/json' },
@@ -65,13 +58,29 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
     }
   }
 
+  async function save(next: PageCover) {
+    if (saving) return;
+    setSaving(true);
+    try {
+      await persist(next);
+    } finally {
+      setSaving(false);
+    }
+  }
+
   async function upload(file: File) {
-    const form = new FormData();
-    form.set('file', file);
-    const res = await fetch('/api/files', { method: 'POST', body: form });
-    if (!res.ok) return;
-    const json = (await res.json()) as { id: string };
-    void save({ kind: 'upload', value: json.id });
+    if (saving) return;
+    setSaving(true);
+    try {
+      const form = new FormData();
+      form.set('file', file);
+      const res = await fetch('/api/files', { method: 'POST', body: form });
+      if (!res.ok) return;
+      const json = (await res.json()) as { id: string };
+      await persist({ kind: 'upload', value: json.id });
+    } finally {
+      setSaving(false);
+    }
   }
 
   const tabBtn = (key: TabKey, label: string) => (
@@ -92,7 +101,19 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
 
   return (
     <>
-      <Button variant="ghost" size="sm" className="min-h-11" onClick={() => setOpen(true)}>
+      <Button
+        variant="ghost"
+        size="sm"
+        className="min-h-11"
+        disabled={saving}
+        onClick={() => setOpen(true)}
+      >
+        {saving ? (
+          <Loader2
+            aria-hidden="true"
+            className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+          />
+        ) : null}
         {'kind' in current ? t('cover.change') : t('cover.add')}
       </Button>
       {open && (
@@ -104,8 +125,17 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
             onClick={() => setOpen(false)}
           />
           <div
+            ref={trapRef}
             role="dialog"
             aria-label={t('cover.dialogTitle')}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                setOpen(false);
+              }
+            }}
+            tabIndex={-1}
             className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
           >
             <div className="border-b px-4 py-3">
@@ -121,44 +151,85 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
             </div>
             <div className="space-y-3 p-4">
               {tab === 'color' && (
-                <div className="space-y-3">
-                  <div className="grid grid-cols-8 gap-2">
-                    {COLOR_PRESETS.map((hex) => (
-                      <button
-                        key={hex}
-                        type="button"
-                        className="h-8 w-8 rounded border-2 border-transparent hover:border-foreground"
-                        style={{ backgroundColor: hex }}
-                        onClick={() => void save({ kind: 'color', value: hex })}
-                        aria-label={t('cover.useColor', { hex })}
-                      />
-                    ))}
+                <div className="space-y-4">
+                  <Button
+                    type="button"
+                    className="w-full"
+                    disabled={saving}
+                    onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
+                  >
+                    {t('cover.useDefault')}
+                  </Button>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {t('cover.section.gradients')}
+                    </p>
+                    <div className="grid grid-cols-7 gap-2">
+                      {COVER_PRESETS.filter((p) => p.type === 'gradient').map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground disabled:opacity-40"
+                          style={{ backgroundImage: p.css }}
+                          disabled={saving}
+                          onClick={() => void save({ kind: 'preset', value: p.key })}
+                          aria-label={t('cover.usePreset', { name: t(p.nameKey) })}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Label htmlFor="cover-hex" className="w-24">
-                      {t('cover.customHex')}
-                    </Label>
-                    <Input
-                      id="cover-hex"
-                      value={customHex}
-                      onChange={(e) => setCustomHex(e.target.value)}
-                      placeholder="#abcdef"
-                      className="w-32"
-                    />
-                    <Button
-                      type="button"
-                      onClick={() => {
-                        if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex)) {
-                          void save({ kind: 'color', value: customHex });
-                        }
-                      }}
-                    >
-                      Use
-                    </Button>
+                  <div className="space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">
+                      {t('cover.section.neutrals')}
+                    </p>
+                    <div className="grid grid-cols-7 gap-2">
+                      {COVER_PRESETS.filter((p) => p.type === 'neutral').map((p) => (
+                        <button
+                          key={p.key}
+                          type="button"
+                          className="h-10 w-full rounded border-2 border-transparent hover:border-foreground disabled:opacity-40"
+                          style={{ backgroundColor: p.css }}
+                          disabled={saving}
+                          onClick={() => void save({ kind: 'preset', value: p.key })}
+                          aria-label={t('cover.usePreset', { name: t(p.nameKey) })}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <div className="space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <Label htmlFor="cover-hex" className="w-24">
+                        {t('cover.customHex')}
+                      </Label>
+                      <Input
+                        id="cover-hex"
+                        value={customHex}
+                        onChange={(e) => setCustomHex(e.target.value)}
+                        placeholder="#abcdef"
+                        className="w-32"
+                      />
+                      <Button
+                        type="button"
+                        disabled={saving}
+                        onClick={() => {
+                          if (/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex)) {
+                            void save({ kind: 'color', value: customHex });
+                          }
+                        }}
+                      >
+                        {t('cover.use')}
+                      </Button>
+                    </div>
+                    {/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex) &&
+                      !meetsAA(customHex, TITLE_REFERENCE) && (
+                        <p role="alert" className="text-xs text-destructive">
+                          {t('cover.contrastWarning')}
+                        </p>
+                      )}
                   </div>
                   {'kind' in current && (
-                    <Button variant="outline" onClick={() => void save({})}>
-                      Remove cover
+                    <Button variant="outline" disabled={saving} onClick={() => void save({})}>
+                      {t('cover.remove')}
                     </Button>
                   )}
                 </div>
@@ -183,6 +254,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                   </div>
                   <Button
                     type="button"
+                    disabled={saving}
                     onClick={() => {
                       if (/^https:\/\/\S+$/.test(coverUrl.trim())) {
                         void save({ kind: 'unsplash', value: coverUrl.trim() });
@@ -199,14 +271,13 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                   <input
                     type="file"
                     accept="image/*"
+                    disabled={saving}
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       if (file) void upload(file);
                     }}
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Images are stored locally and served through signed URLs.
-                  </p>
+                  <p className="text-xs text-muted-foreground">{t('cover.uploadHint')}</p>
                 </div>
               )}
             </div>

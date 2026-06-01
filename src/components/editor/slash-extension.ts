@@ -4,6 +4,7 @@ import { ReactRenderer } from '@tiptap/react';
 import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
 import {
   Asterisk,
+  BookMarked,
   Bookmark,
   CalendarClock,
   ChevronRight,
@@ -39,7 +40,11 @@ import {
 } from 'lucide-react';
 import tippy, { type Instance, type Props as TippyProps } from 'tippy.js';
 import { FootnoteMark } from './blocks/footnote-mark';
-import { openEditorDialog } from './editor-dialog-bus';
+import {
+  asFormResult,
+  type EditorDialogCitationResult,
+  openEditorDialog,
+} from './editor-dialog-bus';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
@@ -149,7 +154,8 @@ export const footnoteMenuItem: CitationSlashEntry = {
   icon: Asterisk,
   keywords: ['note', 'fn'],
   run: (editor: Editor): void => {
-    void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((result) => {
+    void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((raw) => {
+      const result = asFormResult(raw);
       const content = result?.text;
       if (!content) return;
       if (editor.isDestroyed) return;
@@ -169,7 +175,8 @@ export const citationMenuItem: CitationSlashEntry = {
   icon: Quote,
   keywords: ['cite', 'ref', 'reference', 'bibliography'],
   run: (editor: Editor): void => {
-    void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((result) => {
+    void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((raw) => {
+      const result = asFormResult(raw);
       if (!result) return;
       const author = result.author?.trim() ?? '';
       const title = result.title?.trim() ?? '';
@@ -202,6 +209,63 @@ export const citationMenuItem: CitationSlashEntry = {
               raw_authors: [author],
               raw_title: title,
               raw_year: year,
+            },
+          })
+          .run();
+      });
+    });
+  },
+};
+
+/**
+ * v0.9.7 G19 #166 — DOI / PubMed citation lookup slash entry.
+ *
+ * Opens the P21 `CitationAddDialog` via the editor dialog bus, awaits the
+ * resolved `CitationMeta`, lazily registers `CitationExtension` (so the React
+ * node-view + Add-citation affordance render), recomputes all three style
+ * variants from the meta, and inserts a `citation` node. Distinct from the
+ * manual-entry `/citation` item above (which collects free-text author/title).
+ */
+export const citationLookupMenuItem: CitationSlashEntry = {
+  command: '/cite-doi',
+  title: 'Citation (DOI/PubMed lookup)',
+  description: 'Look up a reference by DOI or PubMed ID',
+  icon: BookMarked,
+  keywords: ['cite', 'doi', 'pubmed', 'lookup', 'reference', 'crossref'],
+  run: (editor: Editor): void => {
+    void openEditorDialog({
+      kind: 'citationLookup',
+      title: 'Citation (DOI/PubMed lookup)',
+    }).then((result) => {
+      if (!result || !('kind' in result) || result.kind !== 'citationLookup') return;
+      const { meta } = result as EditorDialogCitationResult;
+      void Promise.all([
+        import('@/lib/citations/format'),
+        import('./extensions/citation').then((m) => m.CitationExtension),
+      ]).then(([fmt, CitationExt]) => {
+        if (editor.isDestroyed) return;
+        if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
+          editor.setOptions({
+            extensions: [...editor.extensionManager.extensions, CitationExt],
+          });
+        }
+        editor
+          .chain()
+          .focus()
+          .insertContent({
+            type: 'citation',
+            attrs: {
+              id: meta.doi ?? meta.pmid ?? crypto.randomUUID(),
+              doi: meta.doi ?? null,
+              pubmed_id: meta.pmid ?? null,
+              formatted_apa: fmt.formatApa(meta),
+              formatted_mla: fmt.formatMla(meta),
+              formatted_chicago: fmt.formatChicago(meta),
+              raw_authors: meta.authors.map((a) =>
+                a.given ? `${a.family}, ${a.given}` : a.family,
+              ),
+              raw_title: meta.title,
+              raw_year: meta.year ?? null,
             },
           })
           .run();
@@ -615,6 +679,7 @@ const items: SlashItem[] = [
   pdfSlashItem,
   toSlashItem(footnoteMenuItem, 'advanced'),
   toSlashItem(citationMenuItem, 'advanced'),
+  toSlashItem(citationLookupMenuItem, 'advanced'),
   toSlashItem(datetimeMenuItem, 'advanced'),
   {
     title: 'Flashcard',
@@ -622,7 +687,8 @@ const items: SlashItem[] = [
     category: 'advanced',
     icon: Layers,
     command: (editor) => {
-      void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((result) => {
+      void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((raw) => {
+        const result = asFormResult(raw);
         if (!result) return;
         const { front, back, deck } = result;
         if (!front || !back) return;

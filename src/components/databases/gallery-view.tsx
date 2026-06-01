@@ -1,8 +1,13 @@
 'use client';
 
+import { useState } from 'react';
+import { EmptyState } from '@/components/empty-state/empty-state';
+import { useT } from '@/lib/i18n/provider';
 import type { ViewProps } from './table-view';
 
-export function GalleryView({ meta, rows }: ViewProps) {
+export function GalleryView({ databaseId, meta, rows, onChange }: ViewProps) {
+  const t = useT();
+  const [, setAdding] = useState(false);
   const titleProp = meta.properties.find((p) => p.type === 'text') ?? meta.properties[0];
   const otherProps = meta.properties.filter((p) => p.id !== titleProp?.id);
 
@@ -13,8 +18,31 @@ export function GalleryView({ meta, rows }: ViewProps) {
     return String(value);
   }
 
+  async function addRow() {
+    setAdding(true);
+    try {
+      await fetch(`/api/databases/${databaseId}/rows`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({}),
+      });
+      onChange();
+    } finally {
+      setAdding(false);
+    }
+  }
+
   if (rows.length === 0) {
-    return <div className="p-4 text-sm text-muted-foreground">No rows yet.</div>;
+    return (
+      <div className="p-4">
+        <EmptyState
+          headline={t('db.gallery.empty.title')}
+          guidance={t('db.gallery.empty.guidance')}
+          ctaLabel={t('database.empty.firstRow')}
+          onCta={() => void addRow()}
+        />
+      </div>
+    );
   }
 
   return (
@@ -23,7 +51,7 @@ export function GalleryView({ meta, rows }: ViewProps) {
         const title = titleProp ? renderValue(r.cells[titleProp.id]) : '';
         return (
           <div key={r.row.id} className="rounded-md border bg-background p-3 shadow-xs">
-            <div className="mb-2 font-medium">{title || 'Untitled'}</div>
+            <div className="mb-2 font-medium">{title || t('database.untitled')}</div>
             <dl className="space-y-1">
               {otherProps.map((p) => {
                 const val = renderValue(r.cells[p.id]);

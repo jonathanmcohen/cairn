@@ -15,6 +15,15 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  // Skip the in-`next build` TypeScript phase. After "Compiled successfully",
+  // Next spawns a separate type-checking worker that OOMs (SIGKILL) on the
+  // self-hosted CI runner. This phase is redundant: type safety is enforced by
+  // the dedicated `pnpm typecheck` (tsc --noEmit) CI step and the local
+  // pre-commit gate, both of which fail the build on real type errors.
+  // NOTE: Cairn uses Biome (no `next lint`/ESLint), so no `eslint` override is
+  // needed here — only the in-build TS worker is the OOM culprit. (Next 16 also
+  // no longer accepts an `eslint` key in this config.)
+  typescript: { ignoreBuildErrors: true },
   // Next 16's NFT tracer pulls source `.ts/.tsx` files (and other repo-root
   // content like CHANGELOG.md, tests/, Dockerfile) into `.next/standalone/`.
   // At runtime on Node 22+ these `.ts` files can be picked up by Node's

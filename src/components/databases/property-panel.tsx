@@ -173,7 +173,7 @@ export function PropertyPanel({
           placeholder="Property name"
           value={name}
           onChange={(e) => setName(e.target.value)}
-          className="rounded border bg-transparent px-2 py-1 text-sm outline-hidden"
+          className="rounded border bg-transparent px-2 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
         />
         <Select value={type} onValueChange={(next) => setType(next as (typeof TYPES)[number])}>
           <SelectTrigger aria-label={t('propertyPanel.typeAriaLabel')} className="w-40 text-sm">

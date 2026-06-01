@@ -7,13 +7,16 @@ import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
+import { openQuickCapture } from '@/components/quick-capture/controller';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { usePrompt } from '@/components/ui/input-dialog';
+import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
 import { highlightMatch } from '@/lib/palette/highlight';
 import { getRecents, pushRecent } from '@/lib/palette/recents';
+import { SEARCH_MODES, useSearchMode } from '@/lib/search/use-search-mode';
 import { prettyKeys, shortcutFor } from '@/lib/shortcuts/format';
 
 /**
@@ -59,6 +62,7 @@ export function SearchPalette({
   const prompt = usePrompt();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
+  const { mode, setMode } = useSearchMode();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -67,6 +71,9 @@ export function SearchPalette({
   const [saved, setSaved] = useState<SavedSearch[]>([]);
   const [recentIds, setRecentIds] = useState<string[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  // #169 — trap Tab/Shift+Tab inside the palette while it's open. cmdk owns
+  // arrow-key list nav; the trap only governs Tab, so they don't collide.
+  const trapRef = useFocusTrap<HTMLDivElement>(open);
 
   // #109: focus the input whenever the palette opens. autoFocus on
   // Command.Input handles the common (fresh-mount) path; this effect covers
@@ -94,6 +101,7 @@ export function SearchPalette({
           | 'system',
         toast: (m) => toast(m),
         openNotifications: () => router.push('/notifications' as Route),
+        quickCapture: () => openQuickCapture(),
       }),
     );
   }, [router, currentPageId, currentUserId, setTheme, theme]);
@@ -167,7 +175,7 @@ export function SearchPalette({
     const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`, {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}&mode=${mode}`, {
           signal: controller.signal,
         });
         if (res.ok) {
@@ -184,7 +192,7 @@ export function SearchPalette({
       clearTimeout(t);
       controller.abort();
     };
-  }, [query]);
+  }, [query, mode]);
 
   function onSelect(id: string) {
     setOpen(false);
@@ -205,6 +213,8 @@ export function SearchPalette({
         onClick={() => setOpen(false)}
       />
       <Command
+        ref={trapRef}
+        data-cairn-palette=""
         className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl"
         shouldFilter={false}
         onKeyDown={(e) => {
@@ -225,8 +235,27 @@ export function SearchPalette({
           value={query}
           onValueChange={setQuery}
           placeholder={t('palette.searchPlaceholder')}
-          className="w-full bg-transparent px-4 py-3 text-sm outline-hidden placeholder:text-muted-foreground"
+          className="w-full bg-transparent px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
         />
+        <fieldset className="flex items-center gap-1 border-t px-3 py-1.5">
+          <legend className="sr-only">{t('search.mode.label')}</legend>
+          <span className="mr-1 text-xs text-muted-foreground">{t('search.mode.label')}</span>
+          {SEARCH_MODES.map((m) => (
+            <button
+              key={m}
+              type="button"
+              aria-pressed={mode === m}
+              onClick={() => setMode(m)}
+              className={`rounded px-2 py-0.5 text-xs ${
+                mode === m
+                  ? 'bg-accent font-medium text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50'
+              }`}
+            >
+              {t(`search.mode.${m}`)}
+            </button>
+          ))}
+        </fieldset>
         <Command.List className="max-h-80 overflow-y-auto border-t">
           {hasQuery && results.length > 0 && (
             <Command.Group heading={t('palette.pages')}>

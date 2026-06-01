@@ -4,6 +4,7 @@ import { CheckSquare, LayoutTemplate, LogOut, Settings, Trash } from 'lucide-rea
 import Link from 'next/link';
 import { useT } from '@/lib/i18n/provider';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
+import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
 
@@ -16,13 +17,14 @@ import { Button } from './ui/button';
  * as the primary "PAGES" tree items so the hierarchy reads as first-class.
  */
 const NAV_ITEM_CLASS =
-  'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent';
+  'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
 
 export function SidebarFooterNav({ version }: { version: string }) {
   const t = useT();
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
       <ReviewDueCounter />
+      <StudyLink />
       <Link href="/my-tasks" className={NAV_ITEM_CLASS}>
         <CheckSquare aria-hidden="true" className="h-4 w-4" />
         My tasks

@@ -1,7 +1,9 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
+import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
 import { useRef } from 'react';
+import { useT } from '@/lib/i18n/provider';
 import { CellEditor } from './cell-editor';
 import type { ColumnLayoutItem } from './column-ergonomics';
 import type { VisibleNode } from './row-tree';
@@ -20,6 +22,8 @@ export type VirtualizedRowBodyProps = {
   onChange: () => void;
   onAddChild: (parentId: string) => void;
   adding: boolean;
+  /** G16 #163 — open the row peek/comments panel for a row. */
+  onPeek: (rowId: string) => void;
 };
 
 /**
@@ -44,7 +48,9 @@ export function VirtualizedRowBody({
   onChange,
   onAddChild,
   adding,
+  onPeek,
 }: VirtualizedRowBodyProps) {
+  const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
   const virtualizer = useVirtualizer({
     count: visible.length,
@@ -146,12 +152,16 @@ export function VirtualizedRowBody({
                       {node.hasChildren ? (
                         <button
                           type="button"
-                          aria-label={isCollapsed ? 'Expand row' : 'Collapse row'}
+                          aria-label={isCollapsed ? t('db.row.expand') : t('db.row.collapse')}
                           aria-expanded={!isCollapsed}
                           onClick={() => onToggle(node.row.id)}
-                          className="size-4 shrink-0 text-muted-foreground"
+                          className="flex size-4 shrink-0 items-center justify-center text-muted-foreground"
                         >
-                          {isCollapsed ? '▸' : '▾'}
+                          {isCollapsed ? (
+                            <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+                          ) : (
+                            <ChevronDown aria-hidden="true" className="h-3.5 w-3.5" />
+                          )}
                         </button>
                       ) : (
                         <span className="size-4 shrink-0" aria-hidden="true" />
@@ -165,12 +175,21 @@ export function VirtualizedRowBody({
                       />
                       <button
                         type="button"
-                        aria-label="Add sub-item"
+                        aria-label={t('db.row.addSubItem')}
                         disabled={adding}
                         onClick={() => onAddChild(node.row.id)}
                         className="ml-1 shrink-0 text-xs text-muted-foreground opacity-0 hover:bg-accent focus:opacity-100 group-hover:opacity-100"
                       >
                         +
+                      </button>
+                      {/* G16 #163 — open the row peek panel (comments thread). */}
+                      <button
+                        type="button"
+                        aria-label={t('databases.row.peek')}
+                        onClick={() => onPeek(node.row.id)}
+                        className="ml-1 inline-flex shrink-0 items-center text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                      >
+                        <MessageSquare className="size-4" aria-hidden />
                       </button>
                     </span>
                   ) : (

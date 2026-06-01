@@ -4,21 +4,19 @@ import { cache } from 'react';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError } from './http-error';
+import { hasMinRole, type MemberRole } from './roles';
 import { isSessionActive } from './session-store';
 
+export type { MemberRole };
 // Re-export so existing consumers that already import `HttpError` from
 // `@/lib/auth/require-role` keep working without a churn-only rename.
-export { HttpError };
-
-export type MemberRole = schema.MemberRole;
-
-const RANK: Record<MemberRole, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
+// `hasMinRole` + `MemberRole` now live in the client-safe `./roles` module
+// (so client components can use them without dragging this server-only file's
+// `prom-client`/`cluster` graph into the browser bundle). Re-export here so the
+// many existing server-side importers keep working unchanged.
+export { HttpError, hasMinRole };
 
 export const ACTIVE_WORKSPACE_COOKIE = 'cairn_ws';
-
-export function hasMinRole(actual: MemberRole, required: MemberRole): boolean {
-  return RANK[actual] >= RANK[required];
-}
 
 export type AuthContext = {
   userId: string;

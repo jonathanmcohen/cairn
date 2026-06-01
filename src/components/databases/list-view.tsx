@@ -1,6 +1,8 @@
 'use client';
 
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { EmptyState } from '@/components/empty-state/empty-state';
 import { PullToRefresh } from '@/components/mobile/pull-to-refresh';
 import {
   Select,
@@ -11,6 +13,7 @@ import {
 } from '@/components/ui/select';
 import { type CalcFn, type CalcResult, computeCalcFooter } from '@/lib/databases/calc-footer';
 import { groupRows } from '@/lib/databases/group';
+import { useT } from '@/lib/i18n/provider';
 import { patchCalcFooter } from './calc-footer-row';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { ViewProps } from './table-view';
@@ -42,6 +45,7 @@ function listFormatValue(r: CalcResult): string {
 }
 
 export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) {
+  const t = useT();
   const [adding, setAdding] = useState(false);
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   const toggle = (id: string) =>
@@ -56,9 +60,9 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
   const titleProp = meta.properties.find((p) => p.type === 'text') ?? meta.properties[0];
 
   function rowTitle(cells: Record<string, unknown>): string {
-    if (!titleProp) return 'Untitled';
+    if (!titleProp) return t('db.row.untitled');
     const v = cells[titleProp.id];
-    return typeof v === 'string' && v.length > 0 ? v : 'Untitled';
+    return typeof v === 'string' && v.length > 0 ? v : t('db.row.untitled');
   }
 
   async function addRow(opts?: { groupValue?: string; parentRowId?: string }) {
@@ -101,12 +105,16 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
           {hasChildren ? (
             <button
               type="button"
-              aria-label={isCollapsed ? 'Expand row' : 'Collapse row'}
+              aria-label={isCollapsed ? t('db.row.expand') : t('db.row.collapse')}
               aria-expanded={!isCollapsed}
               onClick={onToggle}
-              className="size-4 shrink-0 text-muted-foreground"
+              className="flex size-4 shrink-0 items-center justify-center text-muted-foreground"
             >
-              {isCollapsed ? '▸' : '▾'}
+              {isCollapsed ? (
+                <ChevronRight aria-hidden="true" className="h-3.5 w-3.5" />
+              ) : (
+                <ChevronDown aria-hidden="true" className="h-3.5 w-3.5" />
+              )}
             </button>
           ) : (
             <span className="size-4 shrink-0" aria-hidden="true" />
@@ -125,7 +133,7 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
                     ? JSON.stringify(v)
                     : String(v);
               return text ? (
-                <span key={p.id} className="truncate">
+                <span key={p.id} className="truncate" title={text}>
                   {text}
                 </span>
               ) : null;
@@ -133,7 +141,7 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
           {rowId && onAddSub ? (
             <button
               type="button"
-              aria-label="Add sub-item"
+              aria-label={t('db.row.addSubItem')}
               disabled={adding}
               onClick={onAddSub}
               className="shrink-0 rounded px-1 hover:bg-accent"
@@ -171,8 +179,8 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
                 onValueChange={(next) => void setFn(p.id, next as CalcFn | 'none')}
               >
                 <SelectTrigger
-                  aria-label={`Calc for ${p.name}`}
-                  className="h-6 min-h-6 w-auto border-0 px-1 py-0 text-[10px] text-muted-foreground shadow-none hover:bg-accent"
+                  aria-label={t('db.calc.label', { name: p.name })}
+                  className="h-6 min-h-6 w-auto border-0 px-1 py-0 text-xs text-muted-foreground shadow-none hover:bg-accent"
                 >
                   <SelectValue />
                 </SelectTrigger>
@@ -250,7 +258,9 @@ export function ListView({ databaseId, meta, rows, view, onChange }: ViewProps) 
           );
         })}
         {rows.length === 0 && (
-          <div className="px-1 py-4 text-sm text-muted-foreground">No rows yet.</div>
+          <div className="px-1 py-4">
+            <EmptyState headline={t('db.list.empty')} guidance={t('db.gallery.empty.guidance')} />
+          </div>
         )}
         <button
           type="button"

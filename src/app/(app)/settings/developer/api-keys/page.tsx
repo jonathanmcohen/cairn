@@ -1,6 +1,7 @@
 import { desc, eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
+import { ApiDocsLinks } from '@/components/settings/api-docs-links';
 import { type ApiKeyRow, ApiKeysManager } from '@/components/settings/api-keys-manager';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { CopyButton } from '@/components/settings/copy-button';
@@ -98,6 +99,8 @@ export default async function ApiKeysSettingsPage() {
           </div>
         </dl>
       </section>
+
+      <ApiDocsLinks />
     </div>
   );
 }

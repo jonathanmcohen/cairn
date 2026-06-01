@@ -5,6 +5,7 @@ import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
 import { ApprovalPanel } from '@/components/pages/approval-panel';
+import { BacklinksToggle } from '@/components/pages/backlinks-toggle';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { CoverPicker } from '@/components/pages/cover-picker';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
@@ -14,9 +15,13 @@ import { PageDetailShell } from '@/components/pages/page-detail-shell';
 import { PageModeShell } from '@/components/pages/page-mode-shell';
 import { PageModeToggles } from '@/components/pages/page-mode-toggles';
 import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
+import { StatusPicker } from '@/components/pages/status-picker';
+import { SubmitForReviewButton } from '@/components/pages/submit-for-review-button';
 import { TocSidebar } from '@/components/pages/toc-sidebar';
+import { TranslationsPicker } from '@/components/pages/translations-picker';
 import { getDb } from '@/db/client';
 import type * as schema from '@/db/schema';
+import type { PageStatus } from '@/db/schema';
 import { auth } from '@/lib/auth/config';
 import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
 import { userColor } from '@/lib/collab/user-color';
@@ -62,6 +67,12 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   const showEncryptAction =
     env().NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION && canEdit && !page.encrypted;
 
+  // v0.9.7 G19 #166 — per-page citation prefs ride on `pages.metadata`.
+  const pageMeta = (page.metadata ?? {}) as {
+    citation_style?: 'apa' | 'mla' | 'chicago';
+    disable_bibliography?: boolean;
+  };
+
   return (
     <PageDetailShell>
       <PageModeShell>
@@ -81,6 +92,14 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           <div className="min-w-0 flex-1 basis-full sm:basis-auto">
             <PageTitleInput pageId={page.id} initial={page.title} />
           </div>
+          {/* v0.9.7 G16 #163 — lifecycle status badge/picker + backlinks panel
+              toggle, surfaced in the header action bar. */}
+          <StatusPicker
+            pageId={page.id}
+            initialStatus={page.status as PageStatus}
+            canEdit={canEdit}
+          />
+          <BacklinksToggle pageId={page.id} />
           {/* a8 #17 — Focus/Reader mode toggles join the same action bar as the
               page actions below, separated by a thin rule, so the header reads
               as one coherent control group instead of two competing toolbars. */}
@@ -126,6 +145,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           canDecide={hasMinRole(ctx.role, 'admin')}
           inReview={page.status === 'review'}
         />
+        {/* v0.9.7 G16 #163 — editor-facing "Submit for review" control, gated to
+            the statuses transitionStatus allows into review (draft/published). */}
+        {canEdit && (page.status === 'draft' || page.status === 'published') && (
+          <SubmitForReviewButton pageId={page.id} />
+        )}
         <Editor
           pageId={page.id}
           workspaceId={page.workspaceId}
@@ -136,6 +160,8 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           encrypted={page.encrypted}
           locked={lockState.locked}
           lockedUntilIso={lockState.lockedUntil ? lockState.lockedUntil.toISOString() : null}
+          initialDisableBibliography={pageMeta.disable_bibliography ?? false}
+          citationStyle={pageMeta.citation_style ?? 'apa'}
         />
       </PageModeShell>
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the
@@ -163,6 +189,10 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           the editor. The helper excludes encrypted pages server-side. */}
       <div className="mt-10">
         <SeeAlsoPanel pageId={page.id} viewerUserId={ctx.userId} />
+      </div>
+      {/* v0.9.7 G16 #163 — page translations linker; read-only for viewers. */}
+      <div className="mt-10">
+        <TranslationsPicker pageId={page.id} canEdit={canEdit} />
       </div>
     </PageDetailShell>
   );

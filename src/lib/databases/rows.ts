@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { observeDb } from '@/lib/observability/metrics';
+import { materializeReminders } from '@/lib/reminders/materialize';
 import { emit } from '@/lib/webhooks/dispatch';
 import { compileFilters, type FilterCondition } from './filter';
 import { computeFormula, type FormulaContext } from './formula';
@@ -167,6 +168,16 @@ export async function updateCells(
       .update(schema.dbRows)
       .set({ updatedAt: new Date() })
       .where(eq(schema.dbRows.id, input.rowId));
+  });
+  // G16 #163 — reminders are materialized off committed cell values. Run
+  // outside the write transaction so materializeReminders sees the new dates
+  // (it opens its own reads/writes against db, not tx). Idempotent per
+  // (row_id, property_id); a no-op when no date property carries a reminder
+  // config, so non-date / non-reminder writes pay only one cheap props read.
+  await materializeReminders(db, {
+    workspaceId: input.workspaceId,
+    databaseId: input.databaseId,
+    rowId: input.rowId,
   });
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
   void emit('row.updated', input.workspaceId, { id: input.rowId, databaseId: input.databaseId });

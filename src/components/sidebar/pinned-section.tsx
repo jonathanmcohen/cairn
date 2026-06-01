@@ -54,7 +54,7 @@ export function PinnedSection() {
           <li key={p.pageId}>
             <Link
               href={`/pages/${p.pageId}` as Route}
-              className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent"
+              className="flex items-center gap-2 rounded-md px-2 py-1 text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
               {p.icon ? (
                 <span aria-hidden="true" className="text-base leading-none">

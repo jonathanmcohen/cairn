@@ -1,6 +1,6 @@
 'use client';
 
-import { Plus } from 'lucide-react';
+import { MessageSquare, Plus } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
@@ -20,6 +20,7 @@ import { useT } from '@/lib/i18n/provider';
 import { CalcFooterRow } from './calc-footer-row';
 import { CellEditor } from './cell-editor';
 import { columnLayout } from './column-ergonomics';
+import { RowPeekPanel } from './row-peek-panel';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { DatabaseMeta, RowData } from './use-database-data';
 import { VirtualizedRowBody } from './virtualized-row-body';
@@ -120,6 +121,8 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
   const [adding, setAdding] = useState(false);
   const rowMutateAllowed = useActionAllowed('db-row-mutate');
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
+  // G16 #163 — the row currently open in the peek/comments panel (null = closed).
+  const [peekRowId, setPeekRowId] = useState<string | null>(null);
   const toggle = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -183,7 +186,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         onChange={onChange}
         className="border-b hover:bg-accent/40"
       >
-        {columns.map((c) => {
+        {columns.map((c, i) => {
           const stickyStyle =
             c.frozen && c.insetInlineStart !== null
               ? {
@@ -198,13 +201,26 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
               style={stickyStyle}
               className={c.frozen ? 'bg-card px-3 py-2.5' : 'px-3 py-2.5'}
             >
-              <CellEditor
-                databaseId={databaseId}
-                rowId={r.row.id}
-                property={c.prop}
-                value={r.cells[c.id]}
-                onSaved={onChange}
-              />
+              <span className="inline-flex items-center gap-1">
+                {i === 0 && (
+                  // G16 #163 — open the row peek panel (comments thread).
+                  <button
+                    type="button"
+                    aria-label={t('databases.row.peek')}
+                    onClick={() => setPeekRowId(r.row.id)}
+                    className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                  >
+                    <MessageSquare className="size-4" aria-hidden />
+                  </button>
+                )}
+                <CellEditor
+                  databaseId={databaseId}
+                  rowId={r.row.id}
+                  property={c.prop}
+                  value={r.cells[c.id]}
+                  onSaved={onChange}
+                />
+              </span>
             </td>
           );
         })}
@@ -252,6 +268,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         onChange={onChange}
         onAddChild={(parentId) => void addRow(parentId)}
         adding={adding}
+        onPeek={(rowId) => setPeekRowId(rowId)}
       />
     );
   }
@@ -434,6 +451,23 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           </Select>
         )}
       </div>
+      {/* G16 #163 — row peek panel hosting the (previously unreachable)
+          RowComments thread. TableView has no viewer-context props; the comment
+          routes re-check requireRole server-side as the authority, so we pass a
+          conservative editor role + empty userId here. */}
+      {peekRowId && (
+        <RowPeekPanel
+          databaseId={databaseId}
+          rowId={peekRowId}
+          open={peekRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setPeekRowId(null);
+          }}
+          canComment
+          currentUserId=""
+          currentRole="editor"
+        />
+      )}
     </div>
   );
 }
