@@ -6,6 +6,12 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import { recordDocAccess } from '@/lib/offline/doc-index';
 import { evictUntilUnderCap } from '@/lib/offline/evict';
+import {
+  type BackoffConfig,
+  DEFAULT_COLLAB_BACKOFF,
+  scheduleWithBackoff,
+  shouldRetryCollab,
+} from './collab-backoff';
 
 export type CollabStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -34,21 +40,46 @@ export function useCollabDoc(workspaceId: string, pageId: string): UseCollabDoc 
   const [status, setStatus] = useState<CollabStatus>('connecting');
   const [offlineReady, setOfflineReady] = useState(false);
 
+  // v0.9.8 G3 (audit item I) — resilient connect loop. A token-fetch failure
+  // is no longer terminal: we retry the token re-fetch with exponential
+  // backoff (base/max caps + jitter) and recreate the HocuspocusProvider after
+  // a successful re-fetch. A post-connect `disconnect` also triggers the loop
+  // so a dropped socket re-mints a fresh (TTL-bound) token before reconnecting.
   useEffect(() => {
     let cancelled = false;
-    let p: HocuspocusProvider | null = null;
+    let attempt = 0;
+    let current: HocuspocusProvider | null = null;
+    let cancelTimer: (() => void) | null = null;
+    const backoff: BackoffConfig = DEFAULT_COLLAB_BACKOFF;
 
-    void (async () => {
+    const scheduleRetry = () => {
+      if (!shouldRetryCollab({ kind: 'token-failed', cancelled })) return;
+      cancelTimer?.();
+      cancelTimer = scheduleWithBackoff(attempt, backoff, () => {
+        attempt += 1;
+        void connect();
+      });
+    };
+
+    async function connect(): Promise<void> {
+      if (cancelled) return;
+      // Drop any prior provider before recreating (avoids two sockets on the
+      // same Y.Doc after a reconnect).
+      current?.destroy();
+      current = null;
+      setStatus('connecting');
       try {
         const res = await fetch(`/api/collab/token?pageId=${encodeURIComponent(pageId)}`);
         if (!res.ok) {
           if (!cancelled) setStatus('error');
+          scheduleRetry();
           return;
         }
         const { token, collabUrl } = (await res.json()) as { token: string; collabUrl: string };
         if (cancelled) return;
 
-        p = new HocuspocusProvider({
+        attempt = 0; // reset backoff on a successful token fetch
+        const p = new HocuspocusProvider({
           url: collabUrl,
           name: pageId, // doc name = pageId
           token,
@@ -57,17 +88,27 @@ export function useCollabDoc(workspaceId: string, pageId: string): UseCollabDoc 
             if (cancelled) return;
             setStatus(s === 'connected' ? 'connected' : 'connecting');
           },
-          onDisconnect: () => !cancelled && setStatus('disconnected'),
+          onDisconnect: () => {
+            if (cancelled) return;
+            setStatus('disconnected');
+            // Re-mint a token and recreate the provider with backoff.
+            scheduleRetry();
+          },
         });
-        if (!cancelled) setProvider(p);
+        current = p;
+        setProvider(p);
       } catch {
         if (!cancelled) setStatus('error');
+        scheduleRetry();
       }
-    })();
+    }
+
+    void connect();
 
     return () => {
       cancelled = true;
-      p?.destroy();
+      cancelTimer?.();
+      current?.destroy();
       ydoc.destroy();
     };
   }, [pageId, ydoc]);

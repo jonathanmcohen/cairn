@@ -61,3 +61,20 @@ export function scheduleWithBackoff(
   const handle = setTimeout(callback, delay);
   return () => clearTimeout(handle);
 }
+
+export type CollabRetryEvent = {
+  kind: 'token-failed' | 'disconnected' | 'connected';
+  /** True once the effect has been torn down (unmount or dep change). */
+  cancelled: boolean;
+};
+
+/**
+ * Decide whether the collab connect effect should schedule another backoff
+ * retry. Retry on a token-fetch failure or a post-connect disconnect, but
+ * never after the effect is cancelled (so a torn-down effect can't resurrect
+ * a provider on a stale Y.Doc).
+ */
+export function shouldRetryCollab(event: CollabRetryEvent): boolean {
+  if (event.cancelled) return false;
+  return event.kind === 'token-failed' || event.kind === 'disconnected';
+}

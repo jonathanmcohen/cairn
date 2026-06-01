@@ -4,6 +4,7 @@ import {
   computeBackoffDelay,
   DEFAULT_COLLAB_BACKOFF,
   scheduleWithBackoff,
+  shouldRetryCollab,
 } from '@/components/editor/collab-backoff';
 
 // jitter() is injected so the math is deterministic. rand=0 => no jitter
@@ -76,5 +77,24 @@ describe('scheduleWithBackoff', () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe('shouldRetryCollab', () => {
+  it('retries on a token-fetch failure (no provider yet)', () => {
+    expect(shouldRetryCollab({ kind: 'token-failed', cancelled: false })).toBe(true);
+  });
+
+  it('retries on a provider disconnect after a prior success', () => {
+    expect(shouldRetryCollab({ kind: 'disconnected', cancelled: false })).toBe(true);
+  });
+
+  it('does NOT retry once the effect is cancelled (unmount/dep change)', () => {
+    expect(shouldRetryCollab({ kind: 'token-failed', cancelled: true })).toBe(false);
+    expect(shouldRetryCollab({ kind: 'disconnected', cancelled: true })).toBe(false);
+  });
+
+  it('does NOT retry a clean connect', () => {
+    expect(shouldRetryCollab({ kind: 'connected', cancelled: false })).toBe(false);
   });
 });
