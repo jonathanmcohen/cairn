@@ -5,6 +5,44 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.8] - 2026-06-01
+
+Hotfix release reconciling the v0.9.7 production browser audit (items A–L).
+**Operators must redeploy from `ghcr.io/jonathanmcohen/cairn:v0.9.8`** — several
+audit findings (cover default, Admin tab, SSO route, E2EE banner, bibliography
+badge) were artifacts of a stale running container; the source was already
+correct on `main` and is now verified by tests.
+
+### Audit reconciliation (already-correct on main; verified + improved)
+- **Cover (C)** — confirmed default preset is `slate-dusk` (no orange); expanded
+  curated palette; contrast warning now evaluates against the title-overlay color.
+- **Admin tab (A)** — fixed the Admin parent-nav click; added the federated-search
+  admin page and a dedicated user-management page.
+- **SSO (B)** — moved SSO pages under `/settings/admin/sso/*` with redirects from
+  the old `/admin/sso/*` paths (API routes unchanged).
+- **E2EE (E)** — kept `CAIRN_ENABLE_E2E_ENCRYPTION` default-off; verified the
+  flag-ON enroll → encrypt → decrypt → rekey path end-to-end; rewrote the admin
+  banner to explain the env var; added an encryption admin guide.
+- **Bibliography (D)** — added a live citation count to the bibliography toggle.
+
+### New / built (F, G, H, I, J)
+- **Chat OAuth (F)** — full Slack + Discord OAuth installers (migration 0060
+  `chat_oauth_installs`): signed short-TTL CSRF state, SSRF-gated redirect URIs,
+  bot tokens AES-256-GCM-sealed at rest and never logged. The manual
+  webhook+secret path remains as a fallback. Removed the "coming in v0.10" copy.
+- **Live refetch (G)** — `router.refresh()` on comment-add, favorites-reorder, and
+  notification mark-read so server-rendered counts/badges/ordering stay consistent.
+- **Orphan sweep (H)** — new `pages:purge-orphans` CLI (dry-run + soft-delete).
+- **Collab resilience (I)** — exponential backoff + token re-fetch retry +
+  dismissible offline banner; DNS-dependency ops note.
+- **Workflow builder (J)** — AND/OR condition grouping (migration 0058), drag-
+  reorder actions (migration 0059), searchable templates gallery, and a run-history
+  sub-tab (migration 0061).
+
+### Migrations
+- 0058 workflow condition tree · 0059 action ordering · 0060 chat OAuth installs
+  · 0061 automation run history.
+
 ## [0.9.7] - 2026-05-31
 
 Post-release browser-audit-2 fixes (findings S–Y; closes #153–#159) plus a
