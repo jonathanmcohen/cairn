@@ -407,6 +407,20 @@
       "when": 1780328597491,
       "tag": "0057_page_acls_page_id_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1780414997491,
+      "tag": "0058_automation_condition_tree",
+      "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "7",
+      "when": 1780501397491,
+      "tag": "0059_automation_action_sort_order",
+      "breakpoints": true
     }
   ]
 }
