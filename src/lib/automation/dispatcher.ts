@@ -6,6 +6,7 @@ import { runAction } from './actions';
 import { evaluateConditionTree } from './condition-tree';
 import { flatConditionToTree } from './condition-tree-backfill';
 import type { TriggerEvent } from './events';
+import { pruneRunHistory } from './run-retention';
 
 // TRIGGER_EVENTS + TriggerEvent live in the dependency-free `./events` module so
 // Client Components can import them without dragging this server-only dispatcher
@@ -61,6 +62,7 @@ export async function evaluateRules(
           status: 'failed',
           error: err instanceof Error ? err.message : String(err),
         });
+        await pruneRunHistory(db, rule.id);
         continue;
       }
       if (!matched) {
@@ -69,6 +71,7 @@ export async function evaluateRules(
           triggerPayload: (payload ?? {}) as Record<string, unknown>,
           status: 'condition_unmet',
         });
+        await pruneRunHistory(db, rule.id);
         continue;
       }
 
@@ -116,6 +119,7 @@ export async function evaluateRules(
           '[automation] action failed',
         );
       }
+      await pruneRunHistory(db, rule.id);
     }
   } catch (err) {
     // Never propagate into the originating mutation.
