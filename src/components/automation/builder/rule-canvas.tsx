@@ -2,7 +2,7 @@
 
 import { Loader2 } from 'lucide-react';
 import { useId, useMemo, useState } from 'react';
-import { ActionCardHost } from '@/components/automation/builder/action-card-host';
+import { ActionList } from '@/components/automation/builder/action-list';
 import { ConditionGroup } from '@/components/automation/builder/condition-group';
 import { FlowConnector } from '@/components/automation/builder/flow-connector';
 import { TemplatesGallery } from '@/components/automation/builder/templates-gallery';
@@ -67,16 +67,6 @@ export function RuleCanvas(props: Props) {
     if ((TRIGGER_EVENTS as readonly string[]).includes(next)) {
       setModel((m) => ({ ...m, triggerEvent: next as TriggerEvent }));
     }
-  }
-
-  function setActionAt(
-    index: number,
-    next: { type: schema.AutomationActionType; config: Record<string, unknown> },
-  ) {
-    setModel((m) => ({
-      ...m,
-      actions: m.actions.map((a, i) => (i === index ? { ...a, ...next } : a)),
-    }));
   }
 
   function addAction() {
@@ -181,16 +171,10 @@ export function RuleCanvas(props: Props) {
             onChange={(conditions) => setModel((m) => ({ ...m, conditions }))}
           />
 
-          {model.actions.map((action, i) => (
-            <div key={action.id}>
-              <FlowConnector variant="branch" />
-              <ActionCardHost
-                type={action.type}
-                config={action.config}
-                onChange={(next) => setActionAt(i, next)}
-              />
-            </div>
-          ))}
+          <ActionList
+            actions={model.actions}
+            onChange={(actions) => setModel((m) => ({ ...m, actions }))}
+          />
 
           <Button type="button" size="sm" variant="outline" onClick={addAction}>
             {t('automation.builder.addAction')}

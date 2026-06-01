@@ -195,12 +195,33 @@ export type PersistedRule = {
   builder: BuilderModel | null;
 };
 
-/** Reattach UI ids to a stored builder group recursively. */
+/**
+ * Reattach UI ids to a stored builder group recursively. Defensive against a
+ * pre-v0.9.8 blob shape (`{combinator, rows:[{property,operator,value}]}`), which
+ * is normalized to the recursive `{logic, children:[{field,op,value}]}` form.
+ */
 function rehydrateGroup(group: ConditionGroupModel): ConditionGroupModel {
+  // Legacy flat blob: { combinator, rows: [{ property, operator, value }] }.
+  const legacy = group as unknown as {
+    combinator?: 'and' | 'or';
+    rows?: Array<{ id?: string; property: string; operator: AutomationOperator; value: unknown }>;
+  };
+  if (Array.isArray(legacy.rows)) {
+    return {
+      id: group.id ?? newId(),
+      logic: legacy.combinator === 'or' ? 'or' : 'and',
+      children: legacy.rows.map((r) => ({
+        id: r.id ?? newId(),
+        field: r.property,
+        op: r.operator,
+        value: r.value,
+      })),
+    };
+  }
   return {
     id: group.id ?? newId(),
     logic: group.logic === 'or' ? 'or' : 'and',
-    children: group.children.map((c) =>
+    children: (group.children ?? []).map((c) =>
       isGroupModel(c)
         ? rehydrateGroup(c)
         : { id: c.id ?? newId(), field: c.field, op: c.op, value: c.value },
