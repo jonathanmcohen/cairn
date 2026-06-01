@@ -83,10 +83,10 @@ export default async function AdminSsoPage() {
           <h2 className="text-xl font-semibold">Identity providers</h2>
           <div className="flex gap-2">
             <Button asChild size="sm">
-              <Link href={'/admin/sso/oidc/new' as Route}>Add OIDC</Link>
+              <Link href={'/settings/admin/sso/oidc/new' as Route}>Add OIDC</Link>
             </Button>
             <Button asChild size="sm" variant="outline">
-              <Link href={'/admin/sso/saml/new' as Route}>Add SAML</Link>
+              <Link href={'/settings/admin/sso/saml/new' as Route}>Add SAML</Link>
             </Button>
           </div>
         </div>
@@ -107,8 +107,8 @@ export default async function AdminSsoPage() {
                   <Link
                     href={
                       (idp.type === 'oidc'
-                        ? `/admin/sso/oidc/${idp.id}/edit`
-                        : `/admin/sso/saml/${idp.id}/edit`) as Route
+                        ? `/settings/admin/sso/oidc/${idp.id}/edit`
+                        : `/settings/admin/sso/saml/${idp.id}/edit`) as Route
                     }
                   >
                     Edit

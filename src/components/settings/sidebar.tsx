@@ -68,8 +68,9 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.apiKeys'),
         href: '/settings/admin/api-keys' as Route,
       },
-      // Outbound links to full admin consoles that live outside the hub.
-      { id: 'admin-sso', label: t('settings.nav.admin.sso'), href: '/admin/sso' as Route },
+      // SSO console now lives inside the settings hub (audit item B).
+      { id: 'admin-sso', label: t('settings.nav.admin.sso'), href: '/settings/admin/sso' as Route },
+      // Outbound link to the chat-bridge console that still lives outside the hub.
       {
         id: 'admin-chat-bridge',
         label: t('settings.nav.admin.chatBridge'),
