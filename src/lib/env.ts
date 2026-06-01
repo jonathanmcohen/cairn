@@ -40,6 +40,13 @@ const Schema = z.object({
   CAIRN_GOOGLE_OAUTH_CLIENT_ID: z.string().optional(),
   CAIRN_GOOGLE_OAUTH_CLIENT_SECRET: z.string().optional(),
   CAIRN_CONNECTOR_CSV_PATH: z.string().optional(),
+  // v0.9.8 G6 (audit F) — chat OAuth installer credentials (optional; the
+  // manual webhook+secret fallback works without them). Read via process.env
+  // in the route to avoid the cached-env() gotcha.
+  CAIRN_SLACK_CLIENT_ID: z.string().optional(),
+  CAIRN_SLACK_CLIENT_SECRET: z.string().optional(),
+  CAIRN_DISCORD_CLIENT_ID: z.string().optional(),
+  CAIRN_DISCORD_CLIENT_SECRET: z.string().optional(),
   NEXT_PUBLIC_CAIRN_OFFLINE_DOC_LIMIT_MB: z.coerce.number().int().positive().default(256),
   // v0.8.0 G7 P20 — operator opt-in: when set, the build inlines this key so
   // the <CoverPicker> can render the Unsplash tab. Leaving it unset hides the
