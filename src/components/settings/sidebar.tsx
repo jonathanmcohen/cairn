@@ -36,12 +36,12 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.audit'),
         href: '/settings/admin/audit' as Route,
       },
-      // User management lives under Workspace > Members; surface it from Admin
-      // too so admins find member role/deactivate controls without hunting.
+      // Dedicated workspace user-management surface (audit item A). Replaces
+      // the old cross-link into Workspace > Members.
       {
         id: 'admin-members',
         label: t('settings.nav.admin.members'),
-        href: '/settings/workspace/members' as Route,
+        href: '/settings/admin/users' as Route,
       },
       {
         id: 'admin-siem',
