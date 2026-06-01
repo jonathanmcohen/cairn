@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import type { Route } from 'next';
+import { EncryptionDisabledNotice } from '@/components/admin/encryption-disabled-notice';
 import { WorkspaceE2EToggle } from '@/components/admin/workspace-e2e-toggle';
 import { WorkspaceRekeyAction } from '@/components/admin/workspace-rekey-action';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
@@ -51,10 +52,7 @@ export default async function AdminEncryptionPage() {
           ) : null}
         </>
       ) : (
-        <p className="text-destructive text-sm">
-          End-to-end encryption is disabled in this build
-          (NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=false).
-        </p>
+        <EncryptionDisabledNotice />
       )}
     </section>
   );
