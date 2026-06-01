@@ -177,6 +177,7 @@ export function RuleCanvas(props: Props) {
 
           <ConditionGroup
             group={model.conditions}
+            depth={0}
             onChange={(conditions) => setModel((m) => ({ ...m, conditions }))}
           />
 
