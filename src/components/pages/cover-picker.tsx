@@ -2,21 +2,22 @@
 
 import { Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { meetsAA } from '@/lib/color/contrast';
+import { resolveTitleForeground } from '@/lib/color/title-contrast';
 import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
 import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY } from '@/lib/pages/cover-presets';
 import { UnsplashTab } from './cover-picker-unsplash-tab';
 
-// The page title overlays/sits-below the cover on the theme --foreground token.
-// In the dark UI that resolves to hsl(0 0% 98%) ≈ #fafafa — the contrast
-// reference for the user-pickable custom-hex warning (finding Y).
-const TITLE_REFERENCE = '#fafafa';
+// The page title overlays/sits-below the cover on the theme `--foreground`
+// token. Finding C: resolve the REAL computed token (light vs dark differ)
+// rather than hardcoding `#fafafa`, then warn when the custom-hex cover fails
+// AA against that actual color.
 
 type TabKey = 'color' | 'unsplash' | 'url' | 'upload';
 
@@ -44,6 +45,14 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
   const [customHex, setCustomHex] = useState('');
   const [coverUrl, setCoverUrl] = useState('');
   const [saving, setSaving] = useState(false);
+  const [titleColor, setTitleColor] = useState('#fafafa');
+
+  // Read the live `--foreground` token once the modal mounts (client-only).
+  useEffect(() => {
+    if (!open || typeof window === 'undefined') return;
+    const computed = getComputedStyle(document.documentElement).getPropertyValue('--foreground');
+    setTitleColor(resolveTitleForeground(computed));
+  }, [open]);
 
   async function persist(next: PageCover) {
     const res = await fetch(`/api/pages/${pageId}/cover`, {
@@ -221,7 +230,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                       </Button>
                     </div>
                     {/^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/.test(customHex) &&
-                      !meetsAA(customHex, TITLE_REFERENCE) && (
+                      !meetsAA(titleColor, customHex) && (
                         <p role="alert" className="text-xs text-destructive">
                           {t('cover.contrastWarning')}
                         </p>
