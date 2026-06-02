@@ -2,7 +2,7 @@
 
 **Audited build:** v0.9.8 live at `https://cairn.local.jonco.dev`
 **Audit date:** 2026-06-02
-**Findings:** 82 (waves 1–5). All filed as GitHub issues labeled `v0.9.9` (#185–258).
+**Findings:** 95 (waves 1–6). All filed as GitHub issues labeled `v0.9.9` (#185–269).
 **Status:** Triage + filing complete. v0.9.9 NOT yet built — held for go/no-go.
 
 ---
@@ -67,6 +67,17 @@ v0.9.8 CI thrashed because implementer subagents gated only their *touched* test
 **Verified working (no issue):** #81 `/login` redirects authed users ✅ · #82 mention-picker autocomplete + inline trigger hints ✅.
 
 **Investigator confirmed #72/#80 are real source P0s (not stale-deploy); #73 root cause is the comment write/serialization path, not the composer (composer caret/insert is correct).**
+
+### Wave-6 additions (editor markdown / audit log / ACL surfacing)
+#259 per-page ACL panel unreachable — **backend SHIPPED** (page_acls migration 0057 + acl.ts + `PageAclManager` built v0.9.8 G20, mounts in share-panel.tsx) but not wired into the page ⋯ menu; just surface it, NOT a missing feature (#94, P1) · #260 `**bold**` markers not stripped (#83, P1) · #261 strikethrough shortcut unsupported (#84) · #262 CSS `quotes` bleeds curly quotes onto blockquote+li (#86, P1 visible corruption) · #263 gallery add-view no-op (#95, cf #67/#244 popover race) · #264 add-view Calendar/Timeline/Board grayed unexplained (#87) · #265 audit-log Actor/Target raw IDs not resolved (#91/#92) · #266 saved-search sidebar no live-update (#88) · #267 passkeys page leaks operator env-var names to all users (#89) · #268 docs/operations.md plain path not link (#90, P3) · #269 audit-log expand button on empty metadata (#93, P3).
+**Verified working (no issue):** #85 `*italic*`/`` `code` `` markdown shortcuts clean ✅.
+
+### Consolidated P0 list (go/no-go priority order)
+1. **#251 sign-out broken** (security — users cannot log out; CSRF-less POST, `signOut()` action never invoked).
+2. **#185 general-500** (ops-rooted: missing migration 0054; fix = redeploy+migrate, code-harden prevents recurrence). Same root explains the #2/#3/#5 "broken sidebar route" misreports (hrefs correct in source).
+3. **#254 slash parser** (#38/#76/#77 — systematic; sync deleteRange + async/early-return command).
+4. **#252 comment mention renders raw markdown** (read-path missing parser).
+5. **#259 per-page ACL** — only P0-if-feature-gap; **it is NOT** — backend + component shipped, just surface from ⋯ menu (downgraded to P1).
 
 ---
 
