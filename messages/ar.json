@@ -138,6 +138,7 @@
   "outline.title": "المخطط",
   "outline.hide": "إخفاء المخطط",
   "outline.empty": "لا توجد عناوين.",
+  "outline.untitled": "بدون عنوان",
   "security.twoFactor.setup": "إعداد المصادقة الثنائية",
   "security.passkeys.title": "مفاتيح المرور",
   "security.passkeys.blurb": "سجّل الدخول باستخدام Face ID أو Touch ID أو Windows Hello أو مفتاح أمان مادي بدلاً من كلمة المرور.",

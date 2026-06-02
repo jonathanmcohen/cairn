@@ -138,6 +138,7 @@
   "outline.title": "Esquema",
   "outline.hide": "Ocultar esquema",
   "outline.empty": "Sin encabezados.",
+  "outline.untitled": "Sin título",
   "security.twoFactor.setup": "Configurar 2FA",
   "security.passkeys.title": "Claves de acceso",
   "security.passkeys.blurb": "Inicia sesión con Face ID, Touch ID, Windows Hello o una llave de seguridad física en lugar de una contraseña.",

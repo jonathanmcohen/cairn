@@ -138,6 +138,7 @@
   "outline.title": "Outline",
   "outline.hide": "Hide outline",
   "outline.empty": "No headings.",
+  "outline.untitled": "Untitled",
   "security.twoFactor.setup": "Set up 2FA",
   "security.passkeys.title": "Passkeys",
   "security.passkeys.blurb": "Sign in with Face ID, Touch ID, Windows Hello, or a hardware security key instead of a password.",
