@@ -343,6 +343,7 @@
   "lock.banner.anEditor": "أحد المحررين",
   "lock.banner.youCanUnlock": "يمكنك إلغاء قفل هذه الصفحة.",
   "lock.banner.adminCanUnlock": "يمكن فقط لـ {name} أو لمسؤول إلغاء قفلها.",
+  "editor.suggest.lockedHint": "ألغِ قفل الصفحة لاقتراح التعديلات",
   "editor.bibliography.toggle": "المراجع",
   "editor.bibliography.toggleHint": "إظهار أو إخفاء قسم المراجع الذي يتم إنشاؤه تلقائيًا",
   "editor.bibliography.count": "{count} اقتباسات",

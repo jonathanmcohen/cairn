@@ -343,6 +343,7 @@
   "lock.banner.anEditor": "an editor",
   "lock.banner.youCanUnlock": "You can unlock this page.",
   "lock.banner.adminCanUnlock": "Only {name} or an admin can unlock it.",
+  "editor.suggest.lockedHint": "Unlock the page to suggest edits",
   "editor.bibliography.toggle": "Bibliography",
   "editor.bibliography.toggleHint": "Show or hide the auto-generated References section",
   "editor.bibliography.count": "{count} citations",

@@ -120,6 +120,12 @@ export function Editor({
   const pageMode = usePageModeOptional();
   const readerMode = pageMode?.reader ?? false;
   const effectiveEditable = editable && !readerMode && !locked;
+  // #188 — controls that represent an *edit affordance* stay mounted but
+  // disabled while the page is locked, rather than disappearing (which read as
+  // a broken UI). `mountableEditable` = the user could edit if not locked;
+  // `editLocked` = currently suppressed by a lock only.
+  const mountableEditable = editable && !readerMode;
+  const editLocked = mountableEditable && locked;
 
   // Announce collab connection-status transitions through the shell's polite
   // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
@@ -548,16 +554,17 @@ export function Editor({
           outline) and the toggles carry explicit active states (aria-pressed +
           bg-primary fill) so the bar reads as distinct, structured controls
           rather than a row of bare labels — IN EVERY ROLE. The
-          presence+status+outline group always renders (editor AND viewer); only
-          the suggest-edits group is gated on `effectiveEditable`, and its
-          trailing separator lives INSIDE that gate so it never dangles when a
-          viewer omits the group. The status pill rests as a hairline-bordered
+          presence+status+outline group always renders (editor AND viewer); the
+          suggest-edits + bibliography group is gated on `mountableEditable`
+          (#188 — it stays mounted-but-disabled under lock instead of vanishing),
+          and its trailing separator lives INSIDE that gate so it never dangles
+          when a viewer omits the group. The status pill rests as a hairline-bordered
           chip (no `bg-muted` fill, which read as an active/selected state at
           rest). Styling only — handlers/state are unchanged, and the
           interactivity changes for these controls are owned by the -23- plan. */}
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
-        {effectiveEditable && (
+        {mountableEditable && (
           <>
             <SuggestionToolbar
               editor={editor}
@@ -570,6 +577,7 @@ export function Editor({
               onAccept={(id) => void resolve('accept', id)}
               onReject={(id) => void resolve('reject', id)}
               onOpenDrawer={() => setDrawerOpen(true)}
+              disabled={editLocked}
             />
             <SuggestionsDrawer
               open={drawerOpen}

@@ -16,6 +16,7 @@ export function SuggestionToolbar({
   onAccept,
   onReject,
   onOpenDrawer,
+  disabled = false,
 }: {
   editor: TiptapEditor | null;
   active: boolean;
@@ -28,20 +29,29 @@ export function SuggestionToolbar({
   onReject: (suggestionId: string) => void;
   /** #85/#145 — open the suggestions drawer listing open suggestions. */
   onOpenDrawer: () => void;
+  /**
+   * #188 — when the page is locked the toggle stays mounted (so the bar's
+   * structure doesn't change), but is disabled with a hint, rather than
+   * disappearing (which reads as a broken UI).
+   */
+  disabled?: boolean;
 }) {
   const t = useT();
-  const markDisabled = !editor || editor.state.selection.empty;
+  const markDisabled = disabled || !editor || editor.state.selection.empty;
   return (
     <Tooltip.Provider delayDuration={300}>
       <div className="flex items-center gap-2">
         <button
           type="button"
           aria-pressed={active}
+          disabled={disabled}
+          aria-disabled={disabled || undefined}
+          title={disabled ? t('editor.suggest.lockedHint') : undefined}
           onClick={onToggle}
           className={
             active
-              ? 'rounded bg-primary px-2 py-1 text-primary-foreground'
-              : 'rounded px-2 py-1 text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              ? 'rounded bg-primary px-2 py-1 text-primary-foreground disabled:opacity-50'
+              : 'rounded px-2 py-1 text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
           }
         >
           {active ? 'Suggesting' : 'Suggest edits'}

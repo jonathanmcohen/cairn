@@ -343,6 +343,7 @@
   "lock.banner.anEditor": "un editor",
   "lock.banner.youCanUnlock": "Puedes desbloquear esta página.",
   "lock.banner.adminCanUnlock": "Solo {name} o un administrador puede desbloquearla.",
+  "editor.suggest.lockedHint": "Desbloquea la página para sugerir cambios",
   "editor.bibliography.toggle": "Bibliografía",
   "editor.bibliography.toggleHint": "Mostrar u ocultar la sección de Referencias generada automáticamente",
   "editor.bibliography.count": "{count} citas",
