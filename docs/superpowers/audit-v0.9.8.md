@@ -2,8 +2,8 @@
 
 **Audited build:** v0.9.8 live at `https://cairn.local.jonco.dev`
 **Audit date:** 2026-06-02
-**Findings:** 99 (waves 1–7). All filed as GitHub issues labeled `v0.9.9` (#185–270).
-**Status:** Triage + filing complete. v0.9.9 NOT yet built — held for go/no-go.
+**Findings:** 105 (waves 1–8). All filed as GitHub issues labeled `v0.9.9` (#185–274).
+**Status:** Triage + filing complete. AUDIT CLOSED. v0.9.9 NOT yet built — held for go/no-go.
 
 ---
 
@@ -76,8 +76,24 @@ v0.9.8 CI thrashed because implementer subagents gated only their *touched* test
 #270 page-review Approve → raw "Decision failed (409)", no actionable copy (#96, P1 — likely self-approval or stale-state conflict; map 409 to friendly message) · **#95-revised** folded into #263 (gallery add-view DOES create the view; real bug is the tabs row not refreshing on add — refetch/optimistic-insert, same class as #266/#75).
 **Verified working (no issue):** #97 code-block language picker (searchable, Auto-detect/Plain/TS/TSX/JS/JSX) ✅ · #98 code-block copy icon (hover, well-placed) ✅. #99 bibliography `0` badge click — **untestable** (0 citations on test page; retest with populated citations).
 
-### Refetch-gap cluster (cross-cutting pattern)
-Multiple findings share one root: server-rendered or list surfaces not re-fetching after a mutation (app uses `router.refresh()`, not TanStack). Members: #266 saved-search sidebar, #75 version-history snapshot, #263 gallery add-view tabs, plus the v0.9.8 #178 family. **Worth a single shared fix pass** (audit every mutation for a refresh/optimistic-insert) rather than scattered one-offs.
+### Wave-8 additions (final — audit closed at 105)
+#271 block right-click context menu missing (#101, P1 — Notion-style Duplicate/Delete/Comment/Convert/Color/Move/Copy-link; reuse block-handle actions) · #272 approval 409 never auto-clears (#100, pairs #270) · #273 toggle-list collapse behavior ambiguous (#102) · #274 inconsistent slash-command ergonomics modal-vs-inline (#104, P1 — pick one pattern; ties #245/#254).
+**Verified working (no issue):** #103 /flashcard modal (Front/Back/Deck) ✅ · #105 suggestion-Accept live drawer refresh ✅ (counter 3→2 live — proves the refresh-gap is per-surface, not global).
+
+### Refetch-gap cluster (cross-cutting pattern — own scope group)
+One root across many findings: server-rendered / list surfaces not re-fetching after a mutation (app uses `router.refresh()`, not TanStack), inconsistently applied.
+- **WORKS:** suggestion-Accept (#105), filter-add 2nd-click, snapshot server-save toast, approval state.
+- **BROKEN:** #75 snapshot drawer · #266 saved-search sidebar · #263 add-view tabs · cover swatch picker (no current-state echo).
+**Fix as a single pass:** audit every mutation for refresh/optimistic-insert; standardize the pattern rather than scattered one-offs.
+
+### Final consolidated P0 list (go/no-go order)
+1. **#251** sign-out broken (security)
+2. **#185** general-500 (ops: migration 0054 → redeploy also clears #2/#3/#5 misreports)
+3. **#254/#274** slash parser leak + inconsistent ergonomics
+4. **#252** comment renders raw markdown mention
+5. **#270/#272/#100** approval-error UX (raw 409 + persistent)
+6. **#271** block right-click context menu missing
+- (#94/#259 ACL = P1 — backend shipped, just unwired, NOT a P0 feature gap)
 
 ### Consolidated P0 list (go/no-go priority order)
 1. **#251 sign-out broken** (security — users cannot log out; CSRF-less POST, `signOut()` action never invoked).
