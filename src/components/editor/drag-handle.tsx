@@ -14,6 +14,7 @@ import type { Editor } from '@tiptap/react';
 import { GripVertical, Plus } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
+import { blockActions } from './use-block-actions';
 
 type Pos = { top: number; left: number; height: number };
 
@@ -66,95 +67,23 @@ export function DragHandle({ editor }: { editor: Editor }) {
 
   if (!pos) return null;
 
+  // #271 — block mutations come from the shared `blockActions` hook so the
+  // DragHandle menu and the right-click BlockContextMenu stay in lockstep.
   function action(kind: 'up' | 'down' | 'dup' | 'del') {
     if (targetPos === null) return;
-    const { doc } = editor.state;
-    const $pos = doc.resolve(targetPos);
-    // The top-level block containing the resolved position.
-    const blockStart = $pos.before(1);
-    const blockEnd = $pos.after(1);
-    const node = doc.nodeAt(blockStart);
-    if (!node) return;
-
-    if (kind === 'del') {
-      editor
-        .chain()
-        .focus()
-        .command(({ tr }) => {
-          tr.delete(blockStart, blockEnd);
-          return true;
-        })
-        .run();
-    } else if (kind === 'dup') {
-      editor
-        .chain()
-        .focus()
-        .command(({ tr }) => {
-          tr.insert(blockEnd, node.copy(node.content));
-          return true;
-        })
-        .run();
-    } else if (kind === 'up') {
-      // Find the sibling immediately before this block at depth 1.
-      const before = doc.childBefore(blockStart);
-      const prev = before.node;
-      if (!prev) return;
-      const prevStart = before.offset;
-      editor
-        .chain()
-        .focus()
-        .command(({ tr }) => {
-          // Delete current block, then insert it before the previous sibling.
-          tr.delete(blockStart, blockEnd);
-          tr.insert(prevStart, node.copy(node.content));
-          return true;
-        })
-        .run();
-    } else if (kind === 'down') {
-      // Find the sibling immediately after this block at depth 1.
-      const after = doc.childAfter(blockEnd);
-      const next = after.node;
-      if (!next) return;
-      editor
-        .chain()
-        .focus()
-        .command(({ tr }) => {
-          // Delete current block first; positions after blockEnd shift left by
-          // the deleted node's size. The next sibling now ends at
-          // blockEnd + next.nodeSize - node.nodeSize. Insert there.
-          tr.delete(blockStart, blockEnd);
-          const insertAt = blockEnd + next.nodeSize - node.nodeSize;
-          tr.insert(insertAt, node.copy(node.content));
-          return true;
-        })
-        .run();
-    }
+    const a = blockActions(editor, targetPos);
+    if (kind === 'del') a.delete();
+    else if (kind === 'dup') a.duplicate();
+    else if (kind === 'up') a.moveUp();
+    else if (kind === 'down') a.moveDown();
     setOpen(false);
   }
 
   // v0.9.4 #96 — insert an empty paragraph below the hovered block and drop the
-  // caret into it, so the user can immediately type `/` to open the slash menu
-  // (the Task-2 placeholder paints "Type '/' for commands" there). Yjs-safe:
-  // inserts a standard paragraph node + moves the selection (document structure
-  // synced by y-prosemirror), never node-view-local state.
+  // caret into it, so the user can immediately type `/` to open the slash menu.
   function insertBelow() {
     if (targetPos === null) return;
-    const { doc, schema } = editor.state;
-    const $pos = doc.resolve(targetPos);
-    const blockEnd = $pos.after(1);
-    const paragraph = schema.nodes.paragraph?.createAndFill();
-    if (!paragraph) return;
-    editor
-      .chain()
-      .focus()
-      .command(({ tr }) => {
-        tr.insert(blockEnd, paragraph);
-        return true;
-      })
-      // Place the caret inside the new empty paragraph (blockEnd + 1).
-      .setTextSelection(blockEnd + 1)
-      .focus()
-      .run();
+    blockActions(editor, targetPos).insertBelow();
     setOpen(false);
   }
 
