@@ -268,3 +268,22 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
     scroll-behavior: auto !important;
   }
 }
+
+/*
+ * #262 — Tailwind typography's generated quotes must apply ONLY to inline <q>,
+ * not to blockquote or list items (where they bled in as stray `"` glyphs).
+ * Scope open/close-quote to <q> and explicitly clear the generated content on
+ * blockquote/li.
+ */
+.prose q::before {
+  content: open-quote;
+}
+.prose q::after {
+  content: close-quote;
+}
+.prose blockquote::before,
+.prose blockquote::after,
+.prose li::before,
+.prose li::after {
+  content: none;
+}
