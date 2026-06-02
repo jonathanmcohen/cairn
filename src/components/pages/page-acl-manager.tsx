@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/select';
 import { useT } from '@/lib/i18n/provider';
 
-type Permission = 'view' | 'comment' | 'edit';
+type Permission = 'view' | 'comment' | 'edit' | 'owner';
 
 type AclRow = {
   userId: string;
@@ -25,6 +25,12 @@ type AclRow = {
 };
 
 type Member = { id: string; name: string; email: string; image: string | null };
+
+type InviteRow = {
+  id: string;
+  email: string;
+  permission: Permission;
+};
 
 type PageAclManagerProps = { pageId: string };
 
@@ -43,6 +49,8 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
   const [matches, setMatches] = useState<Member[]>([]);
   const [permission, setPermission] = useState<Permission>('view');
   const [status, setStatus] = useState<string | null>(null);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [invites, setInvites] = useState<InviteRow[]>([]);
 
   const reload = useCallback(async () => {
     // Resilient: a failed/absent ACL fetch (e.g. rendered in a context that
@@ -60,9 +68,25 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
     }
   }, [pageId]);
 
+  const reloadInvites = useCallback(async () => {
+    // Resilient like reload(): an absent/failed endpoint renders an empty list.
+    try {
+      const res = await fetch(`/api/pages/${pageId}/acl-invites`);
+      if (!res.ok) {
+        setInvites([]);
+        return;
+      }
+      const data = (await res.json()) as { invites?: InviteRow[] };
+      setInvites(data.invites ?? []);
+    } catch {
+      setInvites([]);
+    }
+  }, [pageId]);
+
   useEffect(() => {
     void reload();
-  }, [reload]);
+    void reloadInvites();
+  }, [reload, reloadInvites]);
 
   useEffect(() => {
     if (query.trim().length === 0) {
@@ -123,6 +147,62 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
     }
   }
 
+  async function invite(): Promise<void> {
+    const email = inviteEmail.trim();
+    if (email.length === 0) return;
+    const res = await fetch(`/api/pages/${pageId}/acl-invites`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ email, permission }),
+    });
+    if (res.ok) {
+      setStatus(t('share.acl.invited'));
+      setInviteEmail('');
+      await reloadInvites();
+      setTimeout(() => setStatus(null), 1500);
+    } else {
+      setStatus(t('share.acl.inviteError'));
+    }
+  }
+
+  async function revokeInvite(inviteId: string): Promise<void> {
+    const res = await fetch(`/api/pages/${pageId}/acl-invites`, {
+      method: 'DELETE',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ inviteId }),
+    });
+    if (res.ok) {
+      setStatus(t('share.acl.saved'));
+      await reloadInvites();
+      setTimeout(() => setStatus(null), 1500);
+    } else {
+      setStatus(t('share.acl.error'));
+    }
+  }
+
+  async function transfer(row: AclRow): Promise<void> {
+    const ok = await confirm({
+      title: t('share.acl.transferConfirmTitle'),
+      description: t('share.acl.transferConfirmBody', { name: row.name || row.email }),
+      confirmLabel: t('share.acl.transferConfirmAction'),
+      cancelLabel: t('share.acl.transferConfirmCancel'),
+      variant: 'danger',
+    });
+    if (!ok) return;
+    const res = await fetch(`/api/pages/${pageId}/acls`, {
+      method: 'PUT',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ userId: row.userId, permission: 'owner' }),
+    });
+    if (res.ok) {
+      setStatus(t('share.acl.saved'));
+      await reload();
+      setTimeout(() => setStatus(null), 1500);
+    } else {
+      setStatus(t('share.acl.error'));
+    }
+  }
+
   return (
     <div className="space-y-3">
       <div>
@@ -144,6 +224,14 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
                 <span className="text-muted-foreground text-xs">
                   {t(`share.acl.permission.${row.permission}`)}
                 </span>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => void transfer(row)}
+                >
+                  {t('share.acl.transfer')}
+                </Button>
                 <Button type="button" variant="outline" size="sm" onClick={() => void remove(row)}>
                   {t('share.acl.remove')}
                 </Button>
@@ -170,6 +258,7 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
               <SelectItem value="view">{t('share.acl.permission.view')}</SelectItem>
               <SelectItem value="comment">{t('share.acl.permission.comment')}</SelectItem>
               <SelectItem value="edit">{t('share.acl.permission.edit')}</SelectItem>
+              <SelectItem value="owner">{t('share.acl.permission.owner')}</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -185,6 +274,51 @@ export function PageAclManager({ pageId }: PageAclManagerProps) {
                   <span className="truncate">{m.name || m.email}</span>
                   <span className="text-muted-foreground text-xs">{t('share.acl.add')}</span>
                 </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="acl-invite">{t('share.acl.inviteByEmail')}</Label>
+        <div className="flex gap-2">
+          <Input
+            id="acl-invite"
+            type="email"
+            value={inviteEmail}
+            aria-label={t('share.acl.inviteByEmail')}
+            placeholder={t('share.acl.invitePlaceholder')}
+            onChange={(e) => setInviteEmail(e.target.value)}
+          />
+          <Button type="button" variant="outline" size="sm" onClick={() => void invite()}>
+            {t('share.acl.invite')}
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <div className="font-medium text-sm">{t('share.acl.pendingTitle')}</div>
+        {invites.length === 0 ? (
+          <p className="text-muted-foreground text-xs">{t('share.acl.pendingEmpty')}</p>
+        ) : (
+          <ul className="space-y-2">
+            {invites.map((inv) => (
+              <li key={inv.id} className="flex items-center justify-between gap-2">
+                <span className="min-w-0 truncate text-sm">{inv.email}</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-muted-foreground text-xs">
+                    {t(`share.acl.permission.${inv.permission}`)}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => void revokeInvite(inv.id)}
+                  >
+                    {t('share.acl.revokeInvite')}
+                  </Button>
+                </span>
               </li>
             ))}
           </ul>
