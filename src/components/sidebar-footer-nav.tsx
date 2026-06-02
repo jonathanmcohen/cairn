@@ -2,6 +2,7 @@
 
 import { CheckSquare, LayoutTemplate, LogOut, Settings, Trash } from 'lucide-react';
 import Link from 'next/link';
+import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { StudyLink } from './sidebar/study-link';
@@ -47,7 +48,9 @@ export function SidebarFooterNav({ version }: { version: string }) {
           icon and muted-foreground treatment so it reads differently from the
           `text-foreground` nav links above it. */}
       <div className="-mx-3 mt-3 flex items-center gap-2 border-t border-border px-3 pt-3">
-        <form action="/api/auth/signout" method="post" className="flex-1">
+        {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST to
+            /api/auth/signout that Auth.js v5 rejected → sign-out was broken). */}
+        <form action={signOutAction} className="flex-1">
           <Button
             variant="ghost"
             size="sm"
