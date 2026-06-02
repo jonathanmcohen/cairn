@@ -8,6 +8,7 @@ import type { Comment } from '@/db/schema';
 import type { MemberRole } from '@/lib/auth/require-role';
 import type { CommentAnchor } from '@/lib/comments/anchor';
 import { useT } from '@/lib/i18n/provider';
+import { renderCommentBody } from '@/lib/mentions/render';
 import { CommentComposer } from './comment-composer';
 
 const ROLE_RANK: Record<MemberRole, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
@@ -186,7 +187,10 @@ export function CommentPanel({
             )}
           </div>
         </div>
-        <p className="whitespace-pre-wrap break-words">{comment.body}</p>
+        {/* #72 — render `@[Name](uuid)` mention tokens as pills instead of raw
+            markdown. `whitespace-pre-wrap` keeps newlines; renderCommentBody
+            interleaves text runs with <MentionPill>s. */}
+        <p className="whitespace-pre-wrap break-words">{renderCommentBody(comment.body)}</p>
         {anchor != null &&
           (isBlockAnchor(anchor) ? (
             <button
