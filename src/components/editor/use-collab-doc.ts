@@ -40,7 +40,8 @@ function collabWebSocket(): typeof WebSocket | undefined {
   class RegisteredWebSocket extends w.WebSocket {
     constructor(url: string | URL, protocols?: string | string[]) {
       super(url, protocols);
-      const registry = (w.__cairnSockets ??= []);
+      if (!w.__cairnSockets) w.__cairnSockets = [];
+      const registry = w.__cairnSockets;
       registry.push(this as unknown as WebSocket);
       const prune = () => {
         const i = registry.indexOf(this as unknown as WebSocket);
@@ -112,7 +113,10 @@ export function useCollabDoc(workspaceId: string, pageId: string): UseCollabDoc 
           document: ydoc,
           // Transparent socket-registry wrapper (see collabWebSocket). undefined
           // → Hocuspocus falls back to the global WebSocket (SSR / no window).
-          WebSocketPolyfill: collabWebSocket(),
+          // WebSocketPolyfill is a valid runtime option forwarded to the internal
+          // websocket, but it's typed on the websocket config, not the provider
+          // config literal — hence the cast.
+          ...({ WebSocketPolyfill: collabWebSocket() } as Record<string, unknown>),
           onStatus: ({ status: s }) => {
             if (cancelled) return;
             setStatus(s === 'connected' ? 'connected' : 'connecting');
