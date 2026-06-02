@@ -33,6 +33,7 @@ import { DatabaseNode } from './database-extension';
 import { EditorLinkShortcut } from './editor-link-shortcut';
 import { FileAttachmentWithView } from './file-view-extension';
 import { CairnImageWithView } from './image-view-extension';
+import { MarkdownMarkInputRules } from './marks/markdown-input-rules';
 import { SuggestionDelete } from './marks/suggestion-delete';
 import { SuggestionInsert } from './marks/suggestion-insert';
 import { MentionExtension } from './mention-extension';
@@ -74,6 +75,10 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     // schema.ts intentionally keeps the plain CodeBlockLowlight (no NodeView)
     // since server-side parsing never renders React views.
     createCairnCodeBlock(lowlight),
+    // #260 / #261 — input rules that strip the `**`/`~~` markdown delimiters when
+    // typing `**bold**` / `~~strike~~` (StarterKit's bold/strike marks stay; this
+    // adds delete-the-marker input rules against them by schema name).
+    MarkdownMarkInputRules,
     TaskList,
     TaskItem.configure({ nested: true }),
     CalloutWithView,
