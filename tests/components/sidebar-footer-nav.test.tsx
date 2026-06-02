@@ -6,6 +6,9 @@ import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 // ReviewDueCounter + ThemeToggle pull in client hooks that error under jsdom.
 vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
+// The Sign out form's `action={signOutAction}` imports @/lib/auth/config, which
+// validates env() at module load and throws under jsdom. Mock the action.
+vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
 vi.mock('@/lib/i18n/provider', async () => {
   const en = (await import('@/../messages/en.json')).default as Record<string, string>;
   return {

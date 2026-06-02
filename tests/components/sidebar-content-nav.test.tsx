@@ -8,6 +8,9 @@ import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 // is a literal in the component, not a translated string, so an echo mock is
 // sufficient here.
 vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
+// The Sign out form imports @/lib/auth/config (env() validation) via the action;
+// mock it so the env-validating graph isn't loaded under jsdom.
+vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
 
 afterEach(cleanup);
 
