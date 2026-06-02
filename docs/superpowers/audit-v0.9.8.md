@@ -2,7 +2,7 @@
 
 **Audited build:** v0.9.8 live at `https://cairn.local.jonco.dev`
 **Audit date:** 2026-06-02
-**Findings:** 95 (waves 1–6). All filed as GitHub issues labeled `v0.9.9` (#185–269).
+**Findings:** 99 (waves 1–7). All filed as GitHub issues labeled `v0.9.9` (#185–270).
 **Status:** Triage + filing complete. v0.9.9 NOT yet built — held for go/no-go.
 
 ---
@@ -71,6 +71,13 @@ v0.9.8 CI thrashed because implementer subagents gated only their *touched* test
 ### Wave-6 additions (editor markdown / audit log / ACL surfacing)
 #259 per-page ACL panel unreachable — **backend SHIPPED** (page_acls migration 0057 + acl.ts + `PageAclManager` built v0.9.8 G20, mounts in share-panel.tsx) but not wired into the page ⋯ menu; just surface it, NOT a missing feature (#94, P1) · #260 `**bold**` markers not stripped (#83, P1) · #261 strikethrough shortcut unsupported (#84) · #262 CSS `quotes` bleeds curly quotes onto blockquote+li (#86, P1 visible corruption) · #263 gallery add-view no-op (#95, cf #67/#244 popover race) · #264 add-view Calendar/Timeline/Board grayed unexplained (#87) · #265 audit-log Actor/Target raw IDs not resolved (#91/#92) · #266 saved-search sidebar no live-update (#88) · #267 passkeys page leaks operator env-var names to all users (#89) · #268 docs/operations.md plain path not link (#90, P3) · #269 audit-log expand button on empty metadata (#93, P3).
 **Verified working (no issue):** #85 `*italic*`/`` `code` `` markdown shortcuts clean ✅.
+
+### Wave-7 additions (final)
+#270 page-review Approve → raw "Decision failed (409)", no actionable copy (#96, P1 — likely self-approval or stale-state conflict; map 409 to friendly message) · **#95-revised** folded into #263 (gallery add-view DOES create the view; real bug is the tabs row not refreshing on add — refetch/optimistic-insert, same class as #266/#75).
+**Verified working (no issue):** #97 code-block language picker (searchable, Auto-detect/Plain/TS/TSX/JS/JSX) ✅ · #98 code-block copy icon (hover, well-placed) ✅. #99 bibliography `0` badge click — **untestable** (0 citations on test page; retest with populated citations).
+
+### Refetch-gap cluster (cross-cutting pattern)
+Multiple findings share one root: server-rendered or list surfaces not re-fetching after a mutation (app uses `router.refresh()`, not TanStack). Members: #266 saved-search sidebar, #75 version-history snapshot, #263 gallery add-view tabs, plus the v0.9.8 #178 family. **Worth a single shared fix pass** (audit every mutation for a refresh/optimistic-insert) rather than scattered one-offs.
 
 ### Consolidated P0 list (go/no-go priority order)
 1. **#251 sign-out broken** (security — users cannot log out; CSRF-less POST, `signOut()` action never invoked).
