@@ -7,6 +7,31 @@
 
 ---
 
+## ⚠️ Regressions & unfulfilled prior scope (READ FIRST)
+
+Cross-referencing the 112 findings against promised scope in v0.7.0 / v0.9.6 / v0.9.7 / v0.9.8 shows a **systemic pattern: checklist-completed scope shipped without UI acceptance-testing the surface that ties it together.** 12 findings trace to features marked "done" in earlier releases. All retitled `[REGRESSION vX]` + labeled `regression`; they lead v0.9.9.
+
+| Issue | Finding | Promised in | What broke |
+|-------|---------|-------------|------------|
+| **#251** | #80 sign out broken | **v0.1.0** | **Auth's most basic action — broken across ~16 releases. CSRF-less POST; `signOut()` action never invoked. P0 security.** |
+| **#252** | #72 comment renders raw `@[Jon](uuid)` | v0.3.0 | mention render pipeline never applied to comment bodies |
+| **#254** | #38/76/77/111/112 slash parser | **v0.9.6** | v0.9.6 spec explicitly listed "citation/file slash insert silent" as a fix; still silent across /equation /citation /mermaid /embed /bookmark **and now corrupts persisted block hierarchy** (stray char → heading → /toc) |
+| **#259** | #94 per-page permissions UI | **v0.7.0 headline** | one of 12 v0.7.0 features; backend shipped (`page_acls` migration 0057 + `PageAclManager` component) but **UI never wired to the ⋯ menu** — `/pages/:id/permissions` + `/share` 404 |
+| **#264** | #87 DB add-view grayed | v0.9.6 | v0.9.6 promised "add-view tooltips + icons + empty-state CTA"; disabled types still unannotated |
+| **#189** | #10 toolbar no tooltips | v0.9.7 | v0.9.7 added WCAG AA labels to automation builder — same bar not applied to page-editor toolbar |
+| **#190** | #11 submit-for-review hierarchy | v0.9.7 | review workflow shipped; button-weight polish gap |
+| **#266** | #88 saved-search sidebar | v0.9.7 | saved searches shipped; sidebar live-refresh missing |
+| **#188** | #9 lock hides biblio tabs | v0.9.6×v0.9.8 | lock (v0.9.6) × Bibliography (v0.9.8) interaction never regression-tested |
+| **#256** | #75 version drawer no refetch | v0.5.0 | version history shipped v0.5.0; drawer refetch-on-save missing |
+| **#185** | #1 general-500 | pre-0.9.x | hard regression (also stale-deploy: missing migration 0054) |
+| **#214** | #35 orange covers not backfilled | v0.9.8 | palette shipped without a backfill migration |
+
+**Root-cause pattern:** features land backend-first or component-first, marked complete on the plan checklist, but the end-to-end UI surface (route reachable? button wired? render path applied? prior feature still works alongside the new one?) is never click-tested on a deployed image. The stale-deploy cluster (#185/#2/#3/#5) compounds it — even correct fixes weren't verified live.
+
+**RECOMMENDATION — add an "end-to-end UI acceptance" gate before any v0.9.9 ship:** a literal click-through of every URL slug + every promised feature on the **deployed image** (not just `pnpm build` + unit tests). Concretely: a Playwright smoke that visits every route in the sidebar + settings nav and asserts 200 + a known element, plus a per-feature acceptance checklist in each plan group's gate. This is the missing gate that let 12 "done" features regress unnoticed.
+
+---
+
 ## Executive summary
 
 Four-wave functional + UI/UX sweep of the shipped v0.9.8 build surfaced 71 findings. Triage outcome:
