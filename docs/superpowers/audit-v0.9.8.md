@@ -163,3 +163,105 @@ Live-audit screenshots referenced by the auditor are in the engagement thread; a
 
 ## Next step
 Held for **go/no-go**. On GO: brainstorm the open design decisions (avatar scope, draft-default migration/back-compat, export HTML/DOCX library, row-detail data model, runner migration) → write spec → numbered plan suite → build subagent-driven, gated, single PR.
+
+---
+
+## Appendix — Full findings index (1–112 → GH issue)
+
+Per-finding fix detail lives in `docs/superpowers/v0.9.9-scope.md` (grouped by theme G0–G11). This index maps every audit finding number to its GitHub issue + title. `[REGRESSION]`/`[PARTIAL]` prefix = promised in a prior release (see lead section). Screenshot evidence: referenced in the engagement thread; attach per-issue as available.
+
+- #185 — [REGRESSION pre-0.9] #1 [P0] /settings/workspace/general 500 — long-standing, predates v0.9.x
+- #186 — #4/6/7 [P1] Chat bridge outside settings hub — relocate + dedupe nav
+- #187 — #8 [P2] Workspace export: three terms for one page
+- #188 — [REGRESSION v0.9.6×v0.9.8] #9 [P1] Lock-mode hides Suggest-edits+Bibliography — lock v0.9.6 × biblio v0.9.8 untested interaction
+- #189 — [REGRESSION v0.9.7] #10 [P2] Page-editor toolbar no tooltips — v0.9.7 added WCAG labels to automation builder, not this bar
+- #190 — [REGRESSION v0.9.7] #11 [P2] Submit-for-review button hierarchy — review workflow shipped v0.9.7
+- #191 — #12 [P2] SSO Add buttons inconsistent variants
+- #192 — #13 [P2] Active sessions show raw user-agent + Docker bridge IP
+- #193 — #14 [P1] Security→Encryption self-service: misleading heading + red copy + no docs link
+- #194 — #15 [P2] SMTP-disabled notification banner has no CTA
+- #195 — #16 [P1] Notif prefs only 2 events; approval/status/lock types absent
+- #196 — #17 [P2] Connectors page: two ~'connectors' sections
+- #197 — #18 [P2] Connectors page: inconsistent create-button labels
+- #198 — #19 [P2] Account→Profile: display name not editable
+- #199 — #20 [P2] Account→Profile: no avatar upload
+- #200 — #21 [P2] Account→Theme: tiny swatches + no live preview
+- #201 — #22 [P2] Account→Theme: hex input doesn't show current hex for presets
+- #202 — #23 [P2] /favorites no main-sidebar entry
+- #203 — #24 [P2] API-key quotas empty state needs 'Mint a token →' link
+- #204 — #25 [P2] /favorites empty state missing icon
+- #205 — #26 [P2] Backlinks unlinked-mention snippets inconsistent (SQL bug)
+- #206 — #27 [P1] New-page onboarding: literal 'Untitled', no autofocus/nudge
+- #207 — #28 [P1] Sidebar not sticky — scrolls out of viewport on long pages
+- #208 — #29 [P2] Sidebar too tall / not compact
+- #209 — #30 [P2] PAGES tree fixed-px height, not flex
+- #210 — #31 [P2] Default OS scrollbar in Pages tree
+- #211 — #32 [P2] Scroll chaining: Pages tree edge bubbles to document
+- #212 — #33 [P3] No scroll-position affordance in tall Pages tree
+- #213 — #34 [P2] No expand-all/collapse-all on PAGES section
+- #214 — [UNFINISHED v0.9.8] #35 [P1] Legacy orange covers not backfilled — v0.9.8 shipped palette, no migration
+- #215 — #36 [P1] New-page creation: no naming step (extends #206)
+- #216 — #37 [P1] New pages default to Published not Draft
+- #217 — [REGRESSION v0.9.6] #38 [P0] Slash/mention raw text persists — superseded by #254 (root-caused)
+- #218 — #39 [P2] In-page database: dead vertical space + floating unlabeled icons
+- #219 — #40 [P2] SEE ALSO similarity scores all identical 9%
+- #220 — #41 [P2] Semantic search results: no snippets/scores
+- #221 — #42 [P2] Notification bell flyout: bare empty state
+- #222 — #43 [P2] Trash/Flashcards/Favorites bare empty states
+- #223 — #44 [P2] Theme toggle: dead first click (system→dark→light cycle)
+- #224 — #45 [P1] Light-mode regressions (cover/approval banner/inline raw text/code blocks)
+- #225 — #46 [P2] 'Invite member' navigates to page, not modal; label mismatch
+- #226 — #47 [P2] No copy-link affordance after invite creation
+- #227 — #48 [P3] Bell flyout close-button low contrast
+- #228 — #49 [P2] Cover picker: 'Use default cover' is giant primary CTA
+- #229 — #50 [P2] Cover picker gradient layout 6+2 awkward
+- #230 — #51 [P2] Cover picker custom hex doesn't prefill current value
+- #231 — #52 [P2] Icon picker category icons have no tooltips
+- #232 — #53 [P1] Suggestions drawer shows no diff preview
+- #233 — #54 [P2] Suggest-edits chip interaction inconsistent
+- #234 — #55 [P1] Outline is a tiny popover, barely usable
+- #235 — #56 [P2] Export options scattered across two menus + missing HTML/DOCX
+- #236 — #57 [P2] Eye (focus/read) + Expand (hide sidebar) icons have no tooltip
+- #237 — #58 [P2] Focus/read mode: no exit affordance beyond same icon
+- #238 — #59 [P2] Expand mode hides sidebar with no re-show toggle
+- #239 — #60 [P2] Cover image not clickable to edit
+- #240 — #61 [P2] Add cmd+shift+E export shortcut + surface shortcuts in ⋯ menu
+- #241 — #62 [P1] Database row click only edits cell, no row-detail panel
+- #242 — #65 [P1] DB property type labels lowercase/underscored
+- #243 — #66 [P1] DB missing common property types
+- #244 — #67 [P2] DB '+ Add filter' first click no-op (popover race)
+- #245 — #71 [P2] DB row + button and drag handle in wrong position
+- #246 — #64 [P1] /equation insert has no visible input affordance
+- #247 — #63 [P2] Expand/focus mode state persists across navigation
+- #248 — #68 [P2] Template gallery preview is one-line only
+- #249 — #70 [P2] Publish-to-web confirm modal lacks URL preview
+- #250 — #69 [P2] Template gallery cards: two pills make card busy
+- #251 — [REGRESSION v0.1.0] #80 [P0] Sign out broken — auth shipped v0.1.0, broken across 16 releases (security)
+- #252 — [REGRESSION v0.3.0] #72 [P0] Comment renders raw @[Jon](uuid) — mention pipeline since v0.3.0
+- #253 — #73 [P1] Comment mention: trailing text after @-pick dropped
+- #254 — [REGRESSION v0.9.6] #38/76/77/111/112 [P0] Slash parser leak — v0.9.6 promised 'citation/file slash insert' fix; still silent + corrupts block hierarchy
+- #255 — #74 [P2] Comment cards lack Edit affordance
+- #256 — [REGRESSION v0.5.0] #75 [P2] Version-history drawer no refetch on save — version history v0.5.0
+- #257 — #78 [P2] Webhook events list incomplete (CRUD only)
+- #258 — #79 [P2] Webhook form: no select-all/recommended event helpers
+- #259 — [REGRESSION v0.7.0] #94 [P1] Per-page permissions UI missing — v0.7.0 headline feature; backend shipped (page_acls 0057 + PageAclManager) but never wired to ⋯ menu
+- #260 — #83 [P1] Markdown **bold** leaves asterisks visible
+- #261 — #84 [P2] Strikethrough markdown shortcut not supported
+- #262 — #86 [P1] CSS quotes pseudo bleeds curly quotes onto blockquote + li
+- #263 — #95 [P2] Gallery 'Add view' click no-op (likely popover race, cf #67)
+- #264 — [REGRESSION v0.9.6] #87 [P2] DB Add-view types grayed — v0.9.6 promised add-view tooltips/icons/empty-state
+- #265 — #91/#92 [P2] Audit log Actor + Target show raw IDs not resolved names
+- #266 — [REGRESSION v0.9.7] #88 [P2] Saved-search sidebar no live-update — saved searches shipped v0.9.7
+- #267 — #89 [P2] Passkeys page leaks operator env-var names to all users
+- #268 — #90 [P3] docs/operations.md referenced as plain path, not link
+- #269 — #93 [P3] Audit log expand button shows even when metadata empty {}
+- #270 — #96 [P1] Page review Approve → raw 'Decision failed (409)' error
+- #271 — #101 [P1] Block right-click context menu missing
+- #272 — #100 [P2] Approval 409 error never auto-clears
+- #273 — #102 [P2] Toggle list collapse behavior ambiguous
+- #274 — #104 [P1] Inconsistent slash-command ergonomics (modal vs inline)
+- #275 — #107 [P1] Selection toolbar minimal — missing color/highlight/turn-into/comment/align
+- #276 — #108 [P2] No heading collapse affordance
+- #277 — #106 [P2] Token scope names have no tooltip
+
+_Verified-working (no issue): #81 /login redirect · #82 mention autocomplete · #85 italic/code markdown · #97 code-block lang picker · #98 code-block copy · #103 /flashcard modal · #105 suggestion-accept live refresh · #109 mint-token modal · #110 /toc block · #99 biblio-0-badge untestable._
