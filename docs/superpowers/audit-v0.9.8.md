@@ -2,7 +2,7 @@
 
 **Audited build:** v0.9.8 live at `https://cairn.local.jonco.dev`
 **Audit date:** 2026-06-02
-**Findings:** 105 (waves 1–8). All filed as GitHub issues labeled `v0.9.9` (#185–274).
+**Findings:** 112 (waves 1–9). All filed as GitHub issues labeled `v0.9.9` (#185–277).
 **Status:** Triage + filing complete. AUDIT CLOSED. v0.9.9 NOT yet built — held for go/no-go.
 
 ---
@@ -85,6 +85,12 @@ One root across many findings: server-rendered / list surfaces not re-fetching a
 - **WORKS:** suggestion-Accept (#105), filter-add 2nd-click, snapshot server-save toast, approval state.
 - **BROKEN:** #75 snapshot drawer · #266 saved-search sidebar · #263 add-view tabs · cover swatch picker (no current-state echo).
 **Fix as a single pass:** audit every mutation for refresh/optimistic-insert; standardize the pattern rather than scattered one-offs.
+
+### Wave-9 additions (FINAL — 112 total)
+#275 selection toolbar minimal (#107, P1 — add color/highlight/turn-into H1-3/comment-on-selection ⌘⇧M/align/sub-superscript/inline-math) · #276 no heading collapse affordance (#108) · #277 token scope names need tooltips (#106, security UX) · **#111/#112 → reinforced #254** (slash parser corruption propagates: stray char elevated to heading shows in /toc block = document-structure corruption, not cosmetic; /embed in empty area didn't open menu — raises #254 to top-P0).
+**Verified working (no issue):** #109 mint-token modal (name/5 presets/16 custom scopes/expiry) ✅ · #110 /toc block auto-renders linked outline ✅.
+
+**#254 priority escalation:** wave-9 confirms the slash parser bug corrupts persisted block hierarchy (#111 stray-char-as-heading bleeds into TOC), not just cosmetic leftover text. Highest-priority editor fix.
 
 ### Final consolidated P0 list (go/no-go order)
 1. **#251** sign-out broken (security)
