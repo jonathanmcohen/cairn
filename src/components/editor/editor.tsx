@@ -13,6 +13,7 @@ import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BibliographyToggle } from './bibliography-toggle';
+import { BlockContextMenu } from './block-context-menu';
 import { BulkUploader } from './bulk-uploader';
 import { CollabOfflineBanner } from './collab-offline-banner';
 import { DragHandle } from './drag-handle';
@@ -139,6 +140,9 @@ export function Editor({
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // #271 — doc position of the block under the last right-click, resolved by the
+  // BlockContextMenu trigger's capture handler.
+  const [contextTargetPos, setContextTargetPos] = useState<number | null>(null);
   // #117 — the EditorLinkShortcut extension (and the ⌘/ sheet registry entry)
   // dispatch a `cairn:editor:open-link` window event when the user presses the
   // insert-link shortcut. Bumping this counter lets <EditorBubbleMenu> open its
@@ -651,7 +655,33 @@ export function Editor({
           {editor && effectiveEditable && (
             <EditorBubbleMenu editor={editor} openLinkSignal={openLinkSignal} />
           )}
-          <EditorContent editor={editor} />
+          {/* #271 — right-click block context menu. The capture handler resolves
+              the block under the pointer via posAtCoords before radix opens the
+              menu; mutating items are gated on effectiveEditable, read-only
+              viewers still get Comment + Copy-link. */}
+          {editor ? (
+            <BlockContextMenu
+              editor={editor}
+              targetPos={contextTargetPos ?? 0}
+              pageId={pageId}
+              editable={effectiveEditable}
+            >
+              {/* biome-ignore lint/a11y/useKeyWithClickEvents: capture is for the
+                  contextmenu (right-click) target only; keyboard users open the
+                  same actions via the DragHandle menu. */}
+              <div
+                onContextMenuCapture={(e) => {
+                  const pos =
+                    editor.view.posAtCoords({ left: e.clientX, top: e.clientY })?.pos ?? null;
+                  setContextTargetPos(pos);
+                }}
+              >
+                <EditorContent editor={editor} />
+              </div>
+            </BlockContextMenu>
+          ) : (
+            <EditorContent editor={editor} />
+          )}
           {editor && !bibDisabled && <Bibliography doc={editor.getJSON()} style={citationStyle} />}
         </div>
       </div>
