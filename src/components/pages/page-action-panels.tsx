@@ -8,6 +8,7 @@ import { PageExportMenu } from '@/components/pages/export-menu';
 import { LockToggle } from '@/components/pages/lock-toggle';
 import { VersionHistory } from '@/components/pages/version-history';
 import { MoveToPicker } from '@/components/sidebar/move-to-picker';
+import { IconTooltip, TooltipProvider } from '@/components/ui/tooltip';
 import type { MemberRole } from '@/lib/auth/require-role';
 import { useT } from '@/lib/i18n/provider';
 
@@ -71,20 +72,39 @@ export function PageActionPanels({
   });
 
   return (
-    <>
+    <TooltipProvider delayDuration={300}>
       {/* The grouping separator that preceded the action cluster in page.tsx
           lives here so the action-bar grouping is preserved. */}
       <span className="h-6 w-px shrink-0 self-center bg-border" aria-hidden="true" />
-      <CommentsToggle
-        pageId={pageId}
-        canComment={canComment}
-        currentUserId={currentUserId}
-        currentRole={currentRole}
-        {...bind('comments')}
-      />
-      <VersionHistory pageId={pageId} canEdit={canEditVersions} {...bind('versions')} />
+      {/* Each toggle renders a Button + (when open) a sibling drawer as a
+          fragment, so the IconTooltip wraps them in a `display:contents` span:
+          the span is the radix Trigger (focus/hover bubble up to it from the
+          inner button) without adding layout, and the inner button keeps its
+          own aria-label as the accessible name. */}
+      <IconTooltip label={t('pageActions.tooltip.comments')} side="bottom">
+        <span className="contents">
+          <CommentsToggle
+            pageId={pageId}
+            canComment={canComment}
+            currentUserId={currentUserId}
+            currentRole={currentRole}
+            {...bind('comments')}
+          />
+        </span>
+      </IconTooltip>
+      <IconTooltip label={t('pageActions.tooltip.history')} side="bottom">
+        <span className="contents">
+          <VersionHistory pageId={pageId} canEdit={canEditVersions} {...bind('versions')} />
+        </span>
+      </IconTooltip>
       <PageExportMenu pageId={pageId} {...bind('export')} />
-      {canLock && <LockToggle pageId={pageId} {...bind('lock')} />}
+      {canLock && (
+        <IconTooltip label={t('pageActions.tooltip.lock')} side="bottom">
+          <span className="contents">
+            <LockToggle pageId={pageId} {...bind('lock')} />
+          </span>
+        </IconTooltip>
+      )}
       {canMove && (
         <>
           <button
@@ -104,6 +124,6 @@ export function PageActionPanels({
           />
         </>
       )}
-    </>
+    </TooltipProvider>
   );
 }
