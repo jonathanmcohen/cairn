@@ -41,6 +41,8 @@
   "collab.offline.region": "حالة التعاون",
   "editor.blockActions": "إجراءات الكتلة",
   "editor.insertBelow": "إدراج كتلة بالأسفل",
+  "editor.heading.collapse": "طيّ القسم",
+  "editor.heading.expand": "توسيع القسم",
   "editor.codeBlock.language": "لغة الكود",
   "editor.codeBlock.searchLanguage": "البحث في اللغات…",
   "editor.codeBlock.noLanguage": "لم يتم العثور على لغة",

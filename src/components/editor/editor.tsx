@@ -21,6 +21,7 @@ import { EditorDialogs } from './editor-dialogs';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { Bibliography } from './extensions/bibliography';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
+import { HeadingCollapse } from './heading-collapse';
 import { composeGalleryInsert } from './image-extension';
 import { LockBadge } from './lock-badge';
 import { OutlinePanel } from './outline-panel';
@@ -641,6 +642,9 @@ export function Editor({
       <div className="flex gap-4">
         <div className="relative min-w-0 flex-1">
           {editor && <DragHandle editor={editor} />}
+          {/* #276 — hover chevron to collapse the section under a heading
+              (per-viewer presentation state, no Yjs write). */}
+          {editor && <HeadingCollapse editor={editor} />}
           {/* #116 — inline formatting bubble menu. Only the editable, collab-
               bound editor gets it (viewers / reader-mode never see formatting
               controls). It surfaces on text selection; see shouldShow. */}

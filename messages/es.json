@@ -41,6 +41,8 @@
   "collab.offline.region": "Estado de la colaboración",
   "editor.blockActions": "Acciones de bloque",
   "editor.insertBelow": "Insertar bloque debajo",
+  "editor.heading.collapse": "Contraer sección",
+  "editor.heading.expand": "Expandir sección",
   "editor.codeBlock.language": "Lenguaje del código",
   "editor.codeBlock.searchLanguage": "Buscar lenguajes…",
   "editor.codeBlock.noLanguage": "No se encontró ningún lenguaje",

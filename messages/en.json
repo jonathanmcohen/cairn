@@ -41,6 +41,8 @@
   "collab.offline.region": "Collaboration status",
   "editor.blockActions": "Block actions",
   "editor.insertBelow": "Insert block below",
+  "editor.heading.collapse": "Collapse section",
+  "editor.heading.expand": "Expand section",
   "editor.codeBlock.language": "Code language",
   "editor.codeBlock.searchLanguage": "Search languages…",
   "editor.codeBlock.noLanguage": "No language found",
