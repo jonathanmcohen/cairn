@@ -180,8 +180,8 @@ export type SetPageAclInput = {
 
 /**
  * Upsert a page ACL row + record an audit event in one transaction. The audit
- * action is `page_acl.created` for new rows, `page_acl.changed` for updates
- * (existing row found before the upsert).
+ * action is `page.permission_granted` for new rows, `page.permission_changed`
+ * for updates (existing row found before the upsert).
  *
  * The metadata records `{userId, permission}` — both are safe (no secret
  * substrings; userId is opaque, permission is a closed enum).
@@ -215,7 +215,7 @@ export async function setPageAcl(
     await recordAudit(tx, {
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
-      action: existing ? 'page_acl.changed' : 'page_acl.created',
+      action: existing ? 'page.permission_changed' : 'page.permission_granted',
       targetType: 'page_acl',
       targetId: input.pageId,
       metadata: {
@@ -235,7 +235,7 @@ export type RemovePageAclInput = {
 };
 
 /**
- * Delete a page ACL row + record a `page_acl.removed` audit event in one tx.
+ * Delete a page ACL row + record a `page.permission_revoked` audit event in one tx.
  * Idempotent: returns silently if no ACL exists for the (pageId, userId) pair.
  */
 export async function removePageAcl(
@@ -255,7 +255,7 @@ export async function removePageAcl(
     await recordAudit(tx, {
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
-      action: 'page_acl.removed',
+      action: 'page.permission_revoked',
       targetType: 'page_acl',
       targetId: input.pageId,
       metadata: { userId: input.userId, permission: row?.permission ?? null },

@@ -32,10 +32,15 @@ export const AUDIT_ACTIONS = [
   'page_acl.removed',
   // v0.9.9 Plan B (#259) — page-level ownership transfer (stored 'owner' tier).
   'page.ownership_transferred',
-  // v0.9.9 Plan B (#259) — page-level email invites to not-yet-members.
+  // v0.9.9 Plan B (#259, #265) — documented per-page permission vocabulary. The
+  // legacy page_acl.* events above stay emitted-and-recognized for SIEM
+  // back-compat; these are the human-facing names the audit UI labels and the
+  // ACL grant/invite/transfer code emits.
   'page.permission_invited',
   'page.permission_invite_revoked',
   'page.permission_granted',
+  'page.permission_changed',
+  'page.permission_revoked',
   // v0.8.0 G3 P8 — quick-capture inbox events (spec §5.5).
   'inbox.captured',
   'inbox.triaged',

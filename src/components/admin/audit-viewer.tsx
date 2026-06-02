@@ -85,6 +85,13 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'page_acl.created': 'Page ACL granted',
   'page_acl.changed': 'Page ACL permission changed',
   'page_acl.removed': 'Page ACL removed',
+  // v0.9.9 Plan B (#259, #265) — documented per-page permission vocabulary.
+  'page.permission_granted': 'Page permission granted',
+  'page.permission_changed': 'Page permission changed',
+  'page.permission_revoked': 'Page permission revoked',
+  'page.permission_invited': 'Page invite sent',
+  'page.permission_invite_revoked': 'Page invite revoked',
+  'page.ownership_transferred': 'Page ownership transferred',
   // v0.8.0 G3 P8 — quick-capture inbox events.
   'inbox.captured': 'Inbox capture saved',
   'inbox.triaged': 'Inbox item triaged',
@@ -169,7 +176,7 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'federation.peer_deleted': 'Federated peer removed',
 };
 
-function actionLabel(action: string): string {
+export function actionLabel(action: string): string {
   return (ACTION_LABEL as Record<string, string>)[action] ?? action;
 }
 
