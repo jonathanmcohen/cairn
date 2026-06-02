@@ -96,3 +96,33 @@ export async function compareJournalToDb<S extends Record<string, unknown>>(inpu
   }
   return { applied, pending, drifted, driftReason };
 }
+
+/**
+ * #1 (P0) — fail-loud guard for the boot path. `migrate()` applies pending
+ * migrations, but the v0.9.4 outage was a SILENT skip: the migrator resolved
+ * the wrong folder, found zero pending migrations, printed success, and served
+ * a half-migrated DB (every workspace fetch then 42703'd on the missing
+ * `workspaces.icon`). This guard runs AFTER migrate() and THROWS if the live
+ * `__drizzle_migrations` table still trails the bundled journal (pending) or
+ * is ahead of it (drift) — turning a silent half-migration into a loud,
+ * non-zero-exit boot failure rather than a degraded serving DB.
+ */
+export async function assertNoPendingMigrations<S extends Record<string, unknown>>(input: {
+  journal: Journal;
+  db: PostgresJsDatabase<S>;
+}): Promise<void> {
+  const result = await compareJournalToDb(input);
+  if (result.pending.length > 0) {
+    throw new Error(
+      `FATAL: ${result.pending.length} pending migration(s) after migrate() — ` +
+        `the database is half-migrated (first pending: ${result.pending[0]?.tag}). ` +
+        'Refusing to serve a half-migrated database.',
+    );
+  }
+  if (result.drifted) {
+    throw new Error(
+      `FATAL: migration drift detected — ${result.driftReason ?? 'database is ahead of the bundled journal'}. ` +
+        'Refusing to serve a drifted database.',
+    );
+  }
+}

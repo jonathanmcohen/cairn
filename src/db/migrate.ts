@@ -8,6 +8,11 @@ loadEnv({ quiet: true });
 
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+// Relative (NOT @/-aliased) import: this module runs under `node
+// dist/server/entrypoint.js` where the TS path-map is not resolved. The
+// upgrade/migrations helper only depends on drizzle-orm + node builtins, so it
+// is safe to pull into this minimal ESM orchestrator. See entrypoint.ts note.
+import { assertNoPendingMigrations, loadBundledJournal } from '../lib/upgrade/migrations.js';
 
 // Resolve the migrations folder ABSOLUTELY from this module's location, NOT
 // from process.cwd(). A cwd-relative `./drizzle/migrations` silently resolves
@@ -42,6 +47,11 @@ export async function runMigrations(connectionString: string): Promise<void> {
     await sql`SELECT pg_advisory_lock(${MIGRATION_ADVISORY_LOCK_KEY})`;
     try {
       await migrate(db, { migrationsFolder: MIGRATIONS_FOLDER });
+      // #1 (P0) — fail loud if the DB still trails (or leads) the bundled
+      // journal AFTER migrate(). The v0.9.4 outage was a SILENT skip (wrong
+      // folder → 0 pending → success → half-migrated DB served). Throwing here
+      // turns that into a non-zero-exit boot failure instead.
+      await assertNoPendingMigrations({ journal: await loadBundledJournal(), db });
     } finally {
       await sql`SELECT pg_advisory_unlock(${MIGRATION_ADVISORY_LOCK_KEY})`;
     }
