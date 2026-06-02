@@ -84,6 +84,20 @@ const nextConfig = {
         destination: '/settings/admin/sso',
         permanent: true,
       },
+      // v0.9.9 A4 (#2/#3) — muscle-memory / stale-bookmark aliases for settings
+      // pages that moved into the hub. The live source hrefs are already correct
+      // (/settings/workspace/trash, /settings/developer/tokens); these 308
+      // aliases make the older typed URLs resolve instead of 404-ing.
+      {
+        source: '/trash-retention',
+        destination: '/settings/workspace/trash',
+        permanent: true,
+      },
+      {
+        source: '/access-tokens',
+        destination: '/settings/developer/tokens',
+        permanent: true,
+      },
     ];
   },
 };
