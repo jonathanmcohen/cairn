@@ -2,7 +2,7 @@
 
 **Audited build:** v0.9.8 live at `https://cairn.local.jonco.dev`
 **Audit date:** 2026-06-02
-**Findings:** 71 (waves 1–4). All filed as GitHub issues labeled `v0.9.9` (#185–250).
+**Findings:** 82 (waves 1–5). All filed as GitHub issues labeled `v0.9.9` (#185–258).
 **Status:** Triage + filing complete. v0.9.9 NOT yet built — held for go/no-go.
 
 ---
@@ -30,7 +30,10 @@ v0.9.8 CI thrashed because implementer subagents gated only their *touched* test
 | # | Issue | Severity | Note |
 |---|-------|----------|------|
 | 1 | #185 | P0 | general 500 — narrow select + error.tsx + entrypoint fail-loud; root = missing migration 0054 (ops) |
-| 38 | #217 | P0-adj | slash/mention raw text persists (content corruption); investigate parser-at-save vs renderer |
+| 80 | #251 | **P0** | **Sign out broken (security)** — `sidebar-footer-nav.tsx:50` posts CSRF-less to `/api/auth/signout`; Auth.js v5 rejects it; exported `signOut()` server action (config.ts:220) never invoked; no `/logout` route. Confirmed real source bug (task #213 left it incomplete). Fix: wire `signOut()` server action OR client `signOut()` from next-auth/react. Same defect duplicated in `sessions-card.tsx:121`. |
+| 72 | #252 | **P0** | **Comment mentions render raw markdown** — `comment-panel.tsx:189` renders `{comment.body}` raw; `@[Name](uuid)` storage token never parsed to a pill on the read path (only `extractMentions` for notifications). Editor has `renderHTML`; comments don't use it. Fix: mention parse-and-render util on comment bodies. |
+| 76/77 | #254 | **P0** | **Slash parser systematic breakage** (supersedes #38/#217) — `slash-extension.ts:786` `command` does synchronous unconditional `deleteRange(range)` then fires an often-async/early-returning `props.command` (dialog cancel, lazy-load). In non-paragraph blocks (H1) the range doesn't bound the `/` trigger → stray char + merged text; on cancel nothing inserts but text already deleted → lone `/`. No `preventDefault` on Enter (slash-menu.tsx:112). Fix: restore-on-cancel + range that includes trigger + guard Enter. |
+| 38 | #217 | P0-adj | slash/mention raw text persists (content corruption) — root-caused by #254. |
 
 ### G2 — Sidebar shell rebuild (cohesive group)
 #207 sticky · #208 compact density · #209 flex-grow tree · #210 thin themed scrollbar · #211 overscroll-contain · #212 scroll-position affordance (P3) · #213 expand/collapse-all · ties to #237/#238/#239 (read/expand mode exit + sidebar reveal). All touch `sidebar-content.tsx` + `virtualized-page-tree.tsx` + `(app)` shell layout — rebuild together.
@@ -58,6 +61,12 @@ v0.9.8 CI thrashed because implementer subagents gated only their *touched* test
 
 ### G10 — Templates
 #247 expand-state reset on navigation (#63) · #248 template preview drawer/thumbnail (#68) · #249 publish-to-web URL preview (#70) · #250 template card pill consolidation (#69)
+
+### Wave-5 additions (comments / webhooks / auth)
+#251 sign-out P0 (#80) · #252 comment mention render P0 (#72) · #253 comment trailing-text dropped on @-pick — write-path P1 (#73) · #254 slash parser systematic P0 (#76/#77) · #255 comment Edit affordance (#74) · #256 version-history save refetch (#75) · #257 webhook event list incomplete vs audit log (#78) · #258 webhook select-all/recommended (#79).
+**Verified working (no issue):** #81 `/login` redirects authed users ✅ · #82 mention-picker autocomplete + inline trigger hints ✅.
+
+**Investigator confirmed #72/#80 are real source P0s (not stale-deploy); #73 root cause is the comment write/serialization path, not the composer (composer caret/insert is correct).**
 
 ---
 
