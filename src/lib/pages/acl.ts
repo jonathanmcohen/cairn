@@ -34,7 +34,7 @@ export function permissionAtLeast(
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type AclRow = { permission: 'view' | 'comment' | 'edit' | null; depth: number };
+type AclRow = { permission: 'view' | 'comment' | 'edit' | 'owner' | null; depth: number };
 type RoleRow = { role: schema.MemberRole };
 
 /**
@@ -95,7 +95,12 @@ export async function resolveEffectivePermission(
   `)) as unknown as AclRow[];
 
   const hit = aclRows[0];
-  if (hit?.permission === 'view' || hit?.permission === 'comment' || hit?.permission === 'edit') {
+  if (
+    hit?.permission === 'view' ||
+    hit?.permission === 'comment' ||
+    hit?.permission === 'edit' ||
+    hit?.permission === 'owner'
+  ) {
     return hit.permission;
   }
 
@@ -169,7 +174,7 @@ export type SetPageAclInput = {
   workspaceId: string;
   pageId: string;
   userId: string;
-  permission: 'view' | 'comment' | 'edit';
+  permission: 'view' | 'comment' | 'edit' | 'owner';
   actorUserId: string;
 };
 
@@ -254,6 +259,52 @@ export async function removePageAcl(
       targetType: 'page_acl',
       targetId: input.pageId,
       metadata: { userId: input.userId, permission: row?.permission ?? null },
+    });
+  });
+}
+
+export type TransferPageOwnershipInput = {
+  workspaceId: string;
+  pageId: string;
+  fromUserId: string;
+  toUserId: string;
+  actorUserId: string;
+};
+
+/**
+ * Transfer page-level ownership: grant the new owner a stored 'owner' ACL row
+ * and demote the prior owner to 'edit'. Both writes + the audit row happen in a
+ * single transaction. Records `page.ownership_transferred` with metadata
+ * `{fromUserId, toUserId}`. Idempotent on the demotion (no-op if the prior
+ * owner had no ACL row).
+ */
+export async function transferPageOwnership(
+  db: PostgresJsDatabase<typeof schema>,
+  input: TransferPageOwnershipInput,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    // Grant the new owner.
+    await tx
+      .insert(schema.pageAcls)
+      .values({ pageId: input.pageId, userId: input.toUserId, permission: 'owner' })
+      .onConflictDoUpdate({
+        target: [schema.pageAcls.pageId, schema.pageAcls.userId],
+        set: { permission: 'owner', updatedAt: new Date() },
+      });
+    // Demote the prior owner to edit (idempotent; no-op if they had no row).
+    await tx
+      .update(schema.pageAcls)
+      .set({ permission: 'edit', updatedAt: new Date() })
+      .where(
+        and(eq(schema.pageAcls.pageId, input.pageId), eq(schema.pageAcls.userId, input.fromUserId)),
+      );
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'page.ownership_transferred',
+      targetType: 'page_acl',
+      targetId: input.pageId,
+      metadata: { fromUserId: input.fromUserId, toUserId: input.toUserId },
     });
   });
 }

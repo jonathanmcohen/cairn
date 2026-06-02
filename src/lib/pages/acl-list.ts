@@ -7,7 +7,7 @@ export type PageAclListItem = {
   name: string;
   email: string;
   image: string | null;
-  permission: 'view' | 'comment' | 'edit';
+  permission: 'view' | 'comment' | 'edit' | 'owner';
 };
 
 /**
@@ -34,7 +34,12 @@ export async function listPageAcls(
     .orderBy(asc(schema.users.name));
 
   return rows.flatMap((r) => {
-    if (r.permission !== 'view' && r.permission !== 'comment' && r.permission !== 'edit') {
+    if (
+      r.permission !== 'view' &&
+      r.permission !== 'comment' &&
+      r.permission !== 'edit' &&
+      r.permission !== 'owner'
+    ) {
       return [];
     }
     return [

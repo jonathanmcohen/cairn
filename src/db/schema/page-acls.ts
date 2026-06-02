@@ -12,7 +12,8 @@ export const pageAcls = pgTable(
     userId: uuid('user_id')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
-    // 'view' | 'comment' | 'edit'  — enforced at the lib layer (resolveEffectivePermission)
+    // 'view' | 'comment' | 'edit' | 'owner' — enforced by CHECK (migration 0062)
+    // and the lib layer (resolveEffectivePermission / setPageAcl).
     permission: text('permission').notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -24,4 +25,4 @@ export const pageAcls = pgTable(
 
 export type PageAcl = typeof pageAcls.$inferSelect;
 export type NewPageAcl = typeof pageAcls.$inferInsert;
-export type PageAclPermission = 'view' | 'comment' | 'edit';
+export type PageAclPermission = 'view' | 'comment' | 'edit' | 'owner';

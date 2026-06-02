@@ -30,6 +30,8 @@ export const AUDIT_ACTIONS = [
   'page_acl.created',
   'page_acl.changed',
   'page_acl.removed',
+  // v0.9.9 Plan B (#259) — page-level ownership transfer (stored 'owner' tier).
+  'page.ownership_transferred',
   // v0.8.0 G3 P8 — quick-capture inbox events (spec §5.5).
   'inbox.captured',
   'inbox.triaged',
