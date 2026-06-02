@@ -190,32 +190,33 @@ export function PageMenu({
               {t('pageMenu.publish')}
             </button>
           ) : (
-            <>
-              <button
-                type="button"
-                className={ITEM_CLASS}
-                onClick={() => void unpublish()}
-                disabled={!shareAllowed}
-                title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
-              >
-                <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
-                {t('pageMenu.unpublish')}
-              </button>
-              <button
-                type="button"
-                className={ITEM_CLASS}
-                disabled={!shareAllowed}
-                title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
-                onClick={() => {
-                  setShareOpen(true);
-                  setOpen(false);
-                }}
-              >
-                <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
-                {t('share.manage')}
-              </button>
-            </>
+            <button
+              type="button"
+              className={ITEM_CLASS}
+              onClick={() => void unpublish()}
+              disabled={!shareAllowed}
+              title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
+            >
+              <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {t('pageMenu.unpublish')}
+            </button>
           )}
+          {/* Share & permissions is available for every page (published or not):
+              the dialog mounts the per-page ACL manager, which must be reachable
+              for private pages too (#259). */}
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            disabled={!shareAllowed}
+            title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
+            onClick={() => {
+              setShareOpen(true);
+              setOpen(false);
+            }}
+          >
+            <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('share.menuLabel')}
+          </button>
           <div className="my-1 border-t" />
           <button
             type="button"

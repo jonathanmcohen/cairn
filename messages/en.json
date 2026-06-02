@@ -198,6 +198,7 @@
   "publishConfirm.body": "Anyone with the link can view this page. Continue?",
   "publishConfirm.confirm": "Publish",
   "share.manage": "Manage sharing…",
+  "share.menuLabel": "Share & permissions",
   "share.title": "Share",
   "share.description": "Control who can view and duplicate this page.",
   "share.copyLink": "Copy public link",

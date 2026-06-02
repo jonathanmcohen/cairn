@@ -198,6 +198,7 @@
   "publishConfirm.body": "Cualquier persona con el enlace puede ver esta página. ¿Continuar?",
   "publishConfirm.confirm": "Publicar",
   "share.manage": "Administrar uso compartido…",
+  "share.menuLabel": "Compartir y permisos",
   "share.title": "Compartir",
   "share.description": "Controla quién puede ver y duplicar esta página.",
   "share.copyLink": "Copiar enlace público",

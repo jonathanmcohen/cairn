@@ -8,15 +8,17 @@ import en from '../../messages/en.json';
 vi.mock('@/components/pwa/offline-context', () => ({ useActionAllowed: () => true }));
 afterEach(cleanup);
 
-describe('PageMenu share launcher (#120)', () => {
-  it('opens the Share modal from "Manage sharing…" when published', () => {
+describe('PageMenu Share & permissions (#259)', () => {
+  it('exposes Share & permissions for an unpublished page and opens the dialog', () => {
     render(
       <I18nProvider locale="en" messages={en as Record<string, string>}>
-        <PageMenu pageId="p1" initialPublished initialSlug="my-page" />
+        <PageMenu pageId="11111111-1111-4111-8111-111111111111" initialPublished={false} />
       </I18nProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: en['pageMenu.trigger'] }));
-    fireEvent.click(screen.getByRole('button', { name: en['share.menuLabel'] }));
+    const share = screen.getByRole('button', { name: en['share.menuLabel'] });
+    expect(share).toBeTruthy();
+    fireEvent.click(share);
     expect(screen.getByRole('dialog', { name: en['share.title'] })).toBeTruthy();
   });
 });
