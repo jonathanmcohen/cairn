@@ -6,6 +6,13 @@ import { NotificationDrawer } from '@/components/notifications/drawer';
 // useFocusTrap returns a ref; stub to a plain ref object so jsdom doesn't choke.
 vi.mock('@/lib/a11y/focus-trap', () => ({ useFocusTrap: () => ({ current: null }) }));
 
+// NotificationDrawer calls useRouter()/router.refresh() (G4); without a mock the
+// next/navigation invariant throws. The refresh stub keeps the mark-read →
+// SWR-mutate path load-bearing while satisfying the router contract.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+}));
+
 afterEach(cleanup);
 
 const feed = {

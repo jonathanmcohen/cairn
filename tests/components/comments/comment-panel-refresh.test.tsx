@@ -4,6 +4,11 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { CommentPanel } from '@/components/comments/comment-panel';
 
 vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
+// CommentPanel calls useRouter()/router.refresh() (G4); without a mock the
+// next/navigation invariant throws ("expected app router to be mounted").
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+}));
 vi.mock('@/components/comments/comment-composer', () => ({
   CommentComposer: ({ value, onChange }: { value: string; onChange: (v: string) => void }) => (
     <textarea aria-label="composer" value={value} onChange={(e) => onChange(e.target.value)} />
