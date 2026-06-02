@@ -13,8 +13,18 @@ const RuleUpdate = z
     name: z.string().min(1).max(200).optional(),
     triggerEvent: z.enum(TRIGGER_EVENTS).optional(),
     condition: z.record(z.string(), z.unknown()).optional(),
+    conditionTree: z.record(z.string(), z.unknown()).nullish(),
     actionType: z.enum(ACTION_TYPES).optional(),
     actionConfig: z.record(z.string(), z.unknown()).optional(),
+    actions: z
+      .array(
+        z.object({
+          type: z.enum(ACTION_TYPES),
+          config: z.record(z.string(), z.unknown()),
+          sortOrder: z.number().int().nonnegative(),
+        }),
+      )
+      .optional(),
     enabled: z.boolean().optional(),
     builder: z.record(z.string(), z.unknown()).nullish(),
   })
@@ -33,6 +43,8 @@ export async function PATCH(req: Request, { params }: Ctx): Promise<Response> {
     if (patch.triggerEvent !== undefined) updateValues.triggerEvent = patch.triggerEvent;
     if (patch.condition !== undefined)
       updateValues.condition = patch.condition as schema.AutomationCondition;
+    if (patch.conditionTree !== undefined)
+      updateValues.conditionTree = patch.conditionTree as schema.AutomationRule['conditionTree'];
     if (patch.actionType !== undefined) updateValues.actionType = patch.actionType;
     if (patch.actionConfig !== undefined) updateValues.actionConfig = patch.actionConfig;
     if (patch.enabled !== undefined) updateValues.enabled = patch.enabled;
@@ -50,6 +62,24 @@ export async function PATCH(req: Request, { params }: Ctx): Promise<Response> {
       )
       .returning();
     if (!updated) return NextResponse.json({ error: 'not found' }, { status: 404 });
+    if (patch.actions !== undefined) {
+      // Replace the ordered-actions set so drag-reorder persists.
+      await getDb()
+        .delete(schema.automationRuleActions)
+        .where(eq(schema.automationRuleActions.ruleId, updated.id));
+      if (patch.actions.length > 0) {
+        await getDb()
+          .insert(schema.automationRuleActions)
+          .values(
+            patch.actions.map((a) => ({
+              ruleId: updated.id,
+              actionType: a.type,
+              actionConfig: a.config,
+              sortOrder: a.sortOrder,
+            })),
+          );
+      }
+    }
     return NextResponse.json(updated);
   } catch (err) {
     return errorResponse(err);

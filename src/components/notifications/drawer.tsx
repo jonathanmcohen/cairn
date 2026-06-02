@@ -3,6 +3,7 @@
 import { Check, Loader2, X } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import useSWR from 'swr';
 import { Button } from '@/components/ui/button';
@@ -85,6 +86,7 @@ export function NotificationDrawer({
   onMarked?: () => void;
 }) {
   const titleId = useId();
+  const router = useRouter();
   const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [markingAll, setMarkingAll] = useState(false);
@@ -127,6 +129,8 @@ export function NotificationDrawer({
       await fetch(`/api/notifications/${id}/read`, { method: 'POST', credentials: 'include' });
       await mutate();
       onMarked?.();
+      // v0.9.8 G4 (G) — refresh the server-rendered bell badge.
+      router.refresh();
     } finally {
       setBusyId(null);
     }
@@ -138,6 +142,8 @@ export function NotificationDrawer({
       await fetch('/api/notifications/mark-all-read', { method: 'POST', credentials: 'include' });
       await mutate();
       onMarked?.();
+      // v0.9.8 G4 (G) — refresh the server-rendered bell badge.
+      router.refresh();
     } finally {
       setMarkingAll(false);
     }

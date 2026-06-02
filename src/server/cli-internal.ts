@@ -34,6 +34,7 @@ export interface CliArgs {
     | 'connector:sync'
     | 'trash:purge'
     | 'pages:auto-unlock'
+    | 'pages:purge-orphans'
     | 'flashcards:notify-due'
     | 'siem:retry-sweep'
     | 'siem:daily-archive'
@@ -56,6 +57,12 @@ export interface CliArgs {
   file?: string;
   batchSize?: number;
   connectorId?: string;
+  /** v0.9.8 G4 (H) — pages:purge-orphans age threshold in days. Undefined here;
+   *  the default (30) is applied by the dispatcher in cli.ts. */
+  olderThanDays?: number;
+  /** v0.9.8 G4 (H) — when true, pages:purge-orphans lists candidates without
+   *  soft-deleting them. */
+  dryRun: boolean;
 }
 
 const KNOWN_COMMANDS = [
@@ -72,6 +79,10 @@ const KNOWN_COMMANDS = [
   // `locked_until` has passed. No flags; reads DATABASE_URL like every other
   // CLI subcommand.
   'pages:auto-unlock',
+  // v0.9.8 G4 (H) — soft-deletes orphan-empty-Untitled pages older than
+  // --older-than days (default 30). --dry-run lists candidates only. Reads
+  // existing columns; no schema migration.
+  'pages:purge-orphans',
   // v0.9.0 G3 P19 — global daily sweep that inserts one `flashcards_due`
   // notification per (user, workspace) with at least one due card. Idempotent
   // within a UTC day; no flags.
@@ -114,6 +125,8 @@ export function parseArgs(argv: string[]): CliArgs {
   let batchSize: number | undefined;
   let connectorId: string | undefined;
   let workspaceId: string | undefined;
+  let olderThanDays: number | undefined;
+  let dryRun = false;
 
   for (let i = 0; i < rest.length; i++) {
     const a = rest[i];
@@ -154,6 +167,14 @@ export function parseArgs(argv: string[]): CliArgs {
       }
       batchSize = n;
     } else if (a === '--connector') connectorId = rest[++i];
+    else if (a === '--older-than') {
+      const raw = rest[++i];
+      const n = Number(raw);
+      if (raw === undefined || !Number.isInteger(n) || n < 1) {
+        throw new Error('--older-than requires a positive integer');
+      }
+      olderThanDays = n;
+    } else if (a === '--dry-run') dryRun = true;
     else throw new Error(`Unknown flag: ${a}`);
   }
   if (cmd === 'backup' && !out) throw new Error('backup requires --out <dir>');
@@ -188,5 +209,7 @@ export function parseArgs(argv: string[]): CliArgs {
     file,
     batchSize,
     connectorId,
+    olderThanDays,
+    dryRun,
   };
 }

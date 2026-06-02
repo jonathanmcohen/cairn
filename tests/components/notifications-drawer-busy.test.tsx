@@ -18,6 +18,12 @@ vi.mock('swr', () => ({
   default: () => ({ data: feed, mutate: async () => {}, isLoading: false }),
 }));
 
+// NotificationDrawer calls useRouter()/router.refresh() (G4); without a mock the
+// next/navigation invariant throws ("expected app router to be mounted").
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+}));
+
 import { NotificationDrawer } from '@/components/notifications/drawer';
 
 afterEach(cleanup);

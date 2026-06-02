@@ -249,7 +249,7 @@
     {
       "file": "app/(app)/admin/chat-bridge/page.tsx",
       "line": 46,
-      "text": "Forward page + comment events to Slack or Discord, and let teammates reply in-thread to\n          create Cairn comments. Paste your incoming webhook URL and signing secret below; full\n          OAuth install is coming in v0.10.",
+      "text": "Forward page + comment events to Slack or Discord, and let teammates reply in-thread to\n          create Cairn comments.",
       "kind": "jsx_text"
     },
     {
@@ -493,147 +493,81 @@
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/oidc/[idpId]/edit/page.tsx",
-      "line": 30,
-      "text": "Edit OIDC provider",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 44,
+      "text": "Loading…",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/oidc/new/page.tsx",
-      "line": 12,
-      "text": "New OIDC provider",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 49,
+      "text": "No cards due",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 75,
-      "text": "Single sign-on",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 51,
+      "text": "Add a flashcard to any page with the `/flashcard` slash command.",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 77,
-      "text": "Configure OIDC, SAML, and SCIM provisioning for this workspace.",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 59,
+      "text": "Session complete",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 83,
-      "text": "Identity providers",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 60,
+      "text": "card(s).",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 60,
+      "text": "Reviewed",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/flashcards/study/page.tsx",
       "line": 86,
-      "text": "Add OIDC",
+      "text": "Card",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 89,
-      "text": "Add SAML",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 86,
+      "text": "of",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 94,
-      "text": "No identity providers configured.",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 98,
+      "text": "Show answer",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 102,
-      "text": "· Created",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 108,
+      "text": "Again",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 114,
-      "text": "Edit",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 116,
+      "text": "Hard",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
+      "file": "app/(app)/flashcards/study/page.tsx",
       "line": 124,
-      "text": "SCIM 2.0 provisioning tokens",
+      "text": "Good",
       "kind": "jsx_text"
     },
     {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 126,
-      "text": "/api/scim/v2/Users",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 126,
-      "text": "and",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 126,
-      "text": "Bearer tokens for the SCIM 2.0 endpoint at",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 127,
-      "text": ". Filters:",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 127,
-      "text": "/Groups",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 127,
-      "text": "and",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 127,
-      "text": "userName eq",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 128,
-      "text": "meta.lastModified gt",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 128,
-      "text": "only.",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 134,
-      "text": "Recent SSO audit entries",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/page.tsx",
-      "line": 136,
-      "text": "No recent SSO audit events.",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/saml/[idpId]/edit/page.tsx",
-      "line": 33,
-      "text": "Edit SAML provider",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/admin/sso/saml/new/page.tsx",
-      "line": 12,
-      "text": "New SAML provider",
+      "file": "app/(app)/flashcards/study/page.tsx",
+      "line": 132,
+      "text": "Easy",
       "kind": "jsx_text"
     },
     {
@@ -961,6 +895,12 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/(app)/settings/admin/federated/federated-manager.tsx",
+      "line": 119,
+      "text": "https://peer.example.com",
+      "kind": "jsx_attr"
+    },
+    {
       "file": "app/(app)/settings/admin/mfa/page.tsx",
       "line": 34,
       "text": "Workspace MFA policy",
@@ -988,6 +928,150 @@
       "file": "app/(app)/settings/admin/mfa/page.tsx",
       "line": 38,
       "text": "and passkeys at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/oidc/[idpId]/edit/page.tsx",
+      "line": 30,
+      "text": "Edit OIDC provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/oidc/new/page.tsx",
+      "line": 12,
+      "text": "New OIDC provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 75,
+      "text": "Single sign-on",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 77,
+      "text": "Configure OIDC, SAML, and SCIM provisioning for this workspace.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 83,
+      "text": "Identity providers",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 86,
+      "text": "Add OIDC",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 89,
+      "text": "Add SAML",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 94,
+      "text": "No identity providers configured.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 102,
+      "text": "· Created",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 114,
+      "text": "Edit",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 124,
+      "text": "SCIM 2.0 provisioning tokens",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 126,
+      "text": "/api/scim/v2/Users",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 126,
+      "text": "and",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 126,
+      "text": "Bearer tokens for the SCIM 2.0 endpoint at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 127,
+      "text": ". Filters:",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 127,
+      "text": "/Groups",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 127,
+      "text": "and",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 127,
+      "text": "userName eq",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 128,
+      "text": "meta.lastModified gt",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 128,
+      "text": "only.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 134,
+      "text": "Recent SSO audit entries",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/page.tsx",
+      "line": 136,
+      "text": "No recent SSO audit events.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/saml/[idpId]/edit/page.tsx",
+      "line": 33,
+      "text": "Edit SAML provider",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/sso/saml/new/page.tsx",
+      "line": 12,
+      "text": "New SAML provider",
       "kind": "jsx_text"
     },
     {
@@ -2117,84 +2201,6 @@
       "line": 48,
       "text": "Swagger UI",
       "kind": "jsx_attr"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 44,
-      "text": "Loading…",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 49,
-      "text": "No cards due",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 51,
-      "text": "Add a flashcard to any page with the `/flashcard` slash command.",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 59,
-      "text": "Session complete",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 60,
-      "text": "card(s).",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 60,
-      "text": "Reviewed",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 86,
-      "text": "Card",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 86,
-      "text": "of",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 98,
-      "text": "Show answer",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 108,
-      "text": "Again",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 116,
-      "text": "Hard",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 124,
-      "text": "Good",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/flashcards/study/page.tsx",
-      "line": 132,
-      "text": "Easy",
-      "kind": "jsx_text"
     },
     {
       "file": "app/invite/[token]/page.tsx",

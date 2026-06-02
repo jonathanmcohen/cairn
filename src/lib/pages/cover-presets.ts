@@ -77,6 +77,20 @@ export const COVER_PRESETS: readonly CoverPreset[] = [
     solid: '#0c4a6e',
     nameKey: 'cover.preset.oceanFade',
   },
+  {
+    key: 'rose-quartz',
+    type: 'gradient',
+    css: 'linear-gradient(135deg, #831843 0%, #500724 100%)',
+    solid: '#831843',
+    nameKey: 'cover.preset.roseQuartz',
+  },
+  {
+    key: 'cobalt-fade',
+    type: 'gradient',
+    css: 'linear-gradient(135deg, #1e3a8a 0%, #172554 100%)',
+    solid: '#1e3a8a',
+    nameKey: 'cover.preset.cobaltFade',
+  },
   // --- Muted neutrals (css === solid) ---
   {
     key: 'graphite',
@@ -105,6 +119,20 @@ export const COVER_PRESETS: readonly CoverPreset[] = [
     css: '#334155',
     solid: '#334155',
     nameKey: 'cover.preset.slate',
+  },
+  {
+    key: 'charcoal',
+    type: 'neutral',
+    css: '#18181b',
+    solid: '#18181b',
+    nameKey: 'cover.preset.charcoal',
+  },
+  {
+    key: 'walnut',
+    type: 'neutral',
+    css: '#3f3f46',
+    solid: '#3f3f46',
+    nameKey: 'cover.preset.walnut',
   },
 ] as const;
 

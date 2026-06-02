@@ -5,6 +5,12 @@ import { CommentPanel } from '@/components/comments/comment-panel';
 import { I18nProvider } from '@/lib/i18n/provider';
 import enMessages from '../../../messages/en.json';
 
+// CommentPanel calls useRouter()/router.refresh() (G4); without a mock the
+// next/navigation invariant throws ("expected app router to be mounted").
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn(), replace: vi.fn() }),
+}));
+
 beforeEach(() => {
   vi.stubGlobal(
     'fetch',

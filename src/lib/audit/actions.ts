@@ -126,6 +126,10 @@ export const AUDIT_ACTIONS = [
   'chat.slash_invoked',
   'chat.channel_linked',
   'chat.channel_unlinked',
+  // v0.9.8 G6 (audit F) — full Slack/Discord OAuth install completed. Metadata:
+  // { platform, externalTeamId, op, scopeCount } — counts + ids only, NEVER the
+  // sealed bot token.
+  'chat.oauth_installed',
   // v0.9.0 G8 P39 — meta-audit emitted when a SIEM forwarder delivery
   // exhausts its retry budget. Excluded from the SIEM dispatch hook so a
   // perpetually dead forwarder cannot create an infinite delivery loop.
@@ -145,6 +149,13 @@ export const AUDIT_ACTIONS = [
   // v0.9.6 G8b (#70) — user revoked active sessions ("sign out everywhere").
   // metadata: { scope: 'others' | 'all', revoked } — counts only, no sid.
   'auth.sessions_revoked',
+  // v0.9.8 G1 (audit item A/B) — federated-search peer management from the
+  // admin console (/settings/admin/federated). metadata: { name, baseUrl }
+  // on create; {} on enable/disable/delete. Never the shared secret.
+  'federation.peer_created',
+  'federation.peer_enabled',
+  'federation.peer_disabled',
+  'federation.peer_deleted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -173,4 +184,8 @@ export type AuditTargetType =
   // v0.9.0 G7 P37 — dedicated install + channel-link target types so the
   // audit UI can render a meaningful label for slash + sync events.
   | 'chat_install'
-  | 'chat_channel_link';
+  | 'chat_channel_link'
+  // v0.9.8 G6 (audit F) — full-OAuth install rows (chat_oauth_installs table).
+  | 'chat_oauth_install'
+  // v0.9.8 G1 — federated-search peer rows (peer_instances table).
+  | 'peer_instance';

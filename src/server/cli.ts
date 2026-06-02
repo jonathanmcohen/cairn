@@ -325,6 +325,7 @@ async function main(): Promise<void> {
         `  cli connector:sync [--connector <id>]\n` +
         `  cli trash:purge --workspace-id=<id>\n` +
         `  cli pages:auto-unlock\n` +
+        `  cli pages:purge-orphans [--older-than N] [--dry-run]\n` +
         `  cli flashcards:notify-due\n` +
         `  cli siem:retry-sweep\n` +
         `  cli siem:daily-archive\n` +
@@ -426,6 +427,29 @@ async function main(): Promise<void> {
     const { runAutoUnlockCli } = await import('../lib/pages/auto-unlock-cli.js');
     const summary = await runAutoUnlockCli();
     console.log(`[pages:auto-unlock] unlocked=${summary.unlockedCount}`);
+  } else if (args.command === 'pages:purge-orphans') {
+    // v0.9.8 G4 (H) — global sweep that soft-deletes orphan-empty-Untitled
+    // pages older than --older-than days (default 30). --dry-run lists only.
+    const olderThanDays = args.olderThanDays ?? 30;
+    const { runOrphanPurgeCli } = await import('../lib/pages/orphan-purge-cli.js');
+    const summary = await runOrphanPurgeCli({ olderThanDays, dryRun: args.dryRun });
+    if (args.dryRun) {
+      console.log(
+        `[pages:purge-orphans] dry-run olderThanDays=${olderThanDays} candidates=${summary.candidates.length}`,
+      );
+      for (const c of summary.candidates) {
+        console.log(`  ${c.pageId} (workspace ${c.workspaceId})`);
+      }
+    } else {
+      console.log(
+        `[pages:purge-orphans] olderThanDays=${olderThanDays} purged=${summary.purgedCount}`,
+      );
+    }
+    await recordCliAudit(conn, 'pages.orphans_purged', {
+      olderThanDays,
+      dryRun: args.dryRun,
+      count: args.dryRun ? summary.candidates.length : summary.purgedCount,
+    });
   } else if (args.command === 'flashcards:notify-due') {
     // v0.9.0 G3 P19 — global daily sweep. Inserts one `flashcards_due`
     // notification per (user, workspace) with at least one due card today.

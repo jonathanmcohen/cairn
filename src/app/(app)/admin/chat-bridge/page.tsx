@@ -13,6 +13,7 @@ import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { requireRole } from '@/lib/auth/require-role';
 import { ChatBridgeForm } from './chat-bridge-form';
+import { ChatOauthButtons } from './chat-oauth-buttons';
 
 export const dynamic = 'force-dynamic';
 
@@ -38,16 +39,33 @@ export default async function ChatBridgePage() {
   const slack = hooks.find((h) => h.kind === 'slack') ?? null;
   const discord = hooks.find((h) => h.kind === 'discord') ?? null;
 
+  const oauthRows = await getDb()
+    .select({
+      platform: schema.chatOauthInstalls.platform,
+      externalTeamId: schema.chatOauthInstalls.externalTeamId,
+      revokedAt: schema.chatOauthInstalls.revokedAt,
+    })
+    .from(schema.chatOauthInstalls)
+    .where(eq(schema.chatOauthInstalls.workspaceId, ctx.workspaceId));
+  const slackOauth = oauthRows.find((r) => r.platform === 'slack' && r.revokedAt === null) ?? null;
+  const discordOauth =
+    oauthRows.find((r) => r.platform === 'discord' && r.revokedAt === null) ?? null;
+
   return (
     <div className="mx-auto max-w-3xl space-y-8">
       <header>
         <h1 className="text-2xl font-semibold">Chat bridge</h1>
         <p className="mt-2 text-sm text-muted-foreground">
           Forward page + comment events to Slack or Discord, and let teammates reply in-thread to
-          create Cairn comments. Paste your incoming webhook URL and signing secret below; full
-          OAuth install is coming in v0.10.
+          create Cairn comments.
         </p>
       </header>
+      <ChatOauthButtons
+        slackOauthInstalled={!!slackOauth}
+        slackTeam={slackOauth?.externalTeamId ?? null}
+        discordOauthInstalled={!!discordOauth}
+        discordTeam={discordOauth?.externalTeamId ?? null}
+      />
       <ChatBridgeForm
         slackInstalled={!!slack}
         slackTeamId={(slack?.platformMetadata as { team_id?: string } | null)?.team_id ?? null}

@@ -1,6 +1,7 @@
 'use client';
 
 import { Check, MessageSquarePlus, RotateCcw, Trash2, X } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { Comment } from '@/db/schema';
@@ -64,6 +65,7 @@ export function CommentPanel({
   onClose,
 }: CommentPanelProps) {
   const t = useT();
+  const router = useRouter();
   const [comments, setComments] = useState<Comment[]>([]);
   const [draft, setDraft] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -104,6 +106,9 @@ export function CommentPanel({
     const created = (await res.json()) as Comment;
     setComments((prev) => [...prev, created]);
     setDraft('');
+    // v0.9.8 G4 (G) — the page's server-rendered comment count/badge derives
+    // from the same data; re-run the server tree so it stays consistent.
+    router.refresh();
   }
 
   async function setResolved(comment: Comment, resolved: boolean) {

@@ -17,10 +17,10 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function renderToggle(initial: boolean) {
+function renderToggle(initial: boolean, citationCount = 0) {
   return render(
     <I18nProvider locale="en" messages={enMessages}>
-      <BibliographyToggle pageId="page-1" initialDisabled={initial} />
+      <BibliographyToggle pageId="page-1" initialDisabled={initial} citationCount={citationCount} />
     </I18nProvider>,
   );
 }
@@ -31,6 +31,12 @@ describe('BibliographyToggle', () => {
     const btn = screen.getByRole('button', { name: /Bibliography/i });
     // Not disabled → bibliography shown → pressed.
     expect(btn.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('renders the live citation count badge (finding D)', () => {
+    renderToggle(false, 3);
+    // The count is exposed both as visible text and an aria-label.
+    expect(screen.getByLabelText('3 citations')).toBeTruthy();
   });
 
   it('PATCHes disable_bibliography=true when toggled off', async () => {

@@ -16,10 +16,13 @@ import { useT } from '@/lib/i18n/provider';
 export function BibliographyToggle({
   pageId,
   initialDisabled,
+  citationCount,
   onChange,
 }: {
   pageId: string;
   initialDisabled: boolean;
+  /** Live count of unique citations in the doc (finding D). */
+  citationCount: number;
   onChange?: (disabled: boolean) => void;
 }) {
   const t = useT();
@@ -60,11 +63,22 @@ export function BibliographyToggle({
       title={t('editor.bibliography.toggleHint')}
       className={
         shown
-          ? 'rounded bg-primary px-2 py-1 text-primary-foreground text-xs disabled:opacity-60'
-          : 'rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent disabled:opacity-60'
+          ? 'inline-flex items-center gap-1.5 rounded bg-primary px-2 py-1 text-primary-foreground text-xs disabled:opacity-60'
+          : 'inline-flex items-center gap-1.5 rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent disabled:opacity-60'
       }
     >
       {t('editor.bibliography.toggle')}
+      <span
+        role="status"
+        aria-label={t('editor.bibliography.count', { count: citationCount })}
+        className={
+          citationCount > 0
+            ? 'inline-flex min-w-4 items-center justify-center rounded-full bg-background px-1 font-medium text-[10px] text-foreground'
+            : 'inline-flex min-w-4 items-center justify-center rounded-full px-1 text-[10px] opacity-50'
+        }
+      >
+        {citationCount}
+      </span>
     </button>
   );
 }

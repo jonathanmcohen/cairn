@@ -11,8 +11,13 @@
  */
 import { eq } from 'drizzle-orm';
 import { Lock } from 'lucide-react';
+import { cookies, headers } from 'next/headers';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { LOCALE_COOKIE } from '@/lib/i18n/config';
+import { getMessages } from '@/lib/i18n/messages';
+import { resolveLocale } from '@/lib/i18n/resolve';
+import { createT } from '@/lib/i18n/t';
 import { isLocked } from '@/lib/pages/lock';
 import { UnlockButton } from './lock-toggle';
 
@@ -41,7 +46,15 @@ export async function LockBanner({
   const state = await isLocked(getDb(), pageId);
   if (!state.locked) return null;
 
-  let lockerName = 'an editor';
+  const cookieStore = await cookies();
+  const hdrs = await headers();
+  const locale = resolveLocale(
+    cookieStore.get(LOCALE_COOKIE)?.value ?? null,
+    hdrs.get('accept-language'),
+  );
+  const t = createT(locale, getMessages(locale));
+
+  let lockerName = t('lock.banner.anEditor');
   if (state.lockedBy) {
     const [row] = await getDb()
       .select({ name: schema.users.name })
@@ -62,12 +75,16 @@ export async function LockBanner({
     >
       <Lock className="h-4 w-4 text-amber-700 dark:text-amber-300" aria-hidden />
       <span className="min-w-0 flex-1">
-        Locked by <strong>{lockerName}</strong>
+        {t('lock.banner.lockedBy', { name: lockerName })}
         {state.lockedUntil ? (
-          <> · auto-unlocks in {formatRelative(state.lockedUntil)}</>
+          <> · {t('lock.banner.autoUnlock', { duration: formatRelative(state.lockedUntil) })}</>
         ) : (
-          <> · indefinite</>
+          <> · {t('lock.banner.indefinite')}</>
         )}
+        {' · '}
+        {canUnlock
+          ? t('lock.banner.youCanUnlock')
+          : t('lock.banner.adminCanUnlock', { name: lockerName })}
       </span>
       {canUnlock && (
         <UnlockButton pageId={pageId} isAdminOverride={!isSelfLocker && viewerIsAdmin} />

@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { asc, eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getDb } from '@/db/client';
@@ -23,7 +23,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`TRUNCATE automation_runs, automation_rules, pages, workspaces, users, workspace_members, sessions, accounts RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE automation_rule_actions, automation_runs, automation_rules, pages, workspaces, users, workspace_members, sessions, accounts RESTART IDENTITY CASCADE`;
 });
 
 let active: { name: string; value: string } | undefined;
@@ -477,5 +477,51 @@ describe('automation rules CRUD', () => {
     const final = await GET();
     const finalBody = await final.json();
     expect(finalBody.rules).toHaveLength(0);
+  });
+});
+
+describe('POST /api/automation/rules — tree + ordered actions', () => {
+  it('persists condition_tree and ordered automation_rule_actions', async () => {
+    const w = await ws();
+    const admin = await user('admin');
+    await addMember(w, admin, 'admin');
+    active = { name: 'cairn_ws', value: w };
+    await setUser({ userId: admin });
+
+    const { POST } = await import('@/app/api/automation/rules/route');
+    const res = await POST(
+      new Request('http://t/api/automation/rules', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          name: 'Ordered',
+          triggerEvent: 'row.created',
+          condition: { property: 'row.id', operator: 'equals', value: 'x' },
+          conditionTree: {
+            logic: 'and',
+            children: [{ field: 'row.id', op: 'equals', value: 'x' }],
+          },
+          actionType: 'notify',
+          actionConfig: { userId: admin },
+          actions: [
+            { type: 'notify', config: { userId: admin }, sortOrder: 0 },
+            { type: 'send_webhook', config: { webhookId: 'w1' }, sortOrder: 1 },
+          ],
+        }),
+      }),
+    );
+    expect(res.status).toBe(201);
+    const row = (await res.json()) as { id: string; conditionTree: unknown };
+    expect(row.conditionTree).toEqual({
+      logic: 'and',
+      children: [{ field: 'row.id', op: 'equals', value: 'x' }],
+    });
+    const actions = await getDb()
+      .select()
+      .from(schema.automationRuleActions)
+      .where(eq(schema.automationRuleActions.ruleId, row.id))
+      .orderBy(asc(schema.automationRuleActions.sortOrder));
+    // One row from the INSERT trigger (sort_order 0) is replaced by the explicit set.
+    expect(actions.map((a) => a.actionType)).toEqual(['notify', 'send_webhook']);
   });
 });

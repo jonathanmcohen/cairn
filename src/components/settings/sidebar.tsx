@@ -36,17 +36,22 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.audit'),
         href: '/settings/admin/audit' as Route,
       },
-      // User management lives under Workspace > Members; surface it from Admin
-      // too so admins find member role/deactivate controls without hunting.
+      // Dedicated workspace user-management surface (audit item A). Replaces
+      // the old cross-link into Workspace > Members.
       {
         id: 'admin-members',
         label: t('settings.nav.admin.members'),
-        href: '/settings/workspace/members' as Route,
+        href: '/settings/admin/users' as Route,
       },
       {
         id: 'admin-siem',
         label: t('settings.nav.admin.siem'),
         href: '/settings/admin/siem' as Route,
+      },
+      {
+        id: 'admin-federated',
+        label: t('settings.nav.admin.federated'),
+        href: '/settings/admin/federated' as Route,
       },
       {
         id: 'admin-webhooks',
@@ -68,8 +73,9 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.apiKeys'),
         href: '/settings/admin/api-keys' as Route,
       },
-      // Outbound links to full admin consoles that live outside the hub.
-      { id: 'admin-sso', label: t('settings.nav.admin.sso'), href: '/admin/sso' as Route },
+      // SSO console now lives inside the settings hub (audit item B).
+      { id: 'admin-sso', label: t('settings.nav.admin.sso'), href: '/settings/admin/sso' as Route },
+      // Outbound link to the chat-bridge console that still lives outside the hub.
       {
         id: 'admin-chat-bridge',
         label: t('settings.nav.admin.chatBridge'),
@@ -137,7 +143,10 @@ export function SettingsSidebar({
       {
         id: 'admin',
         label: t('settings.nav.admin'),
-        href: '/settings/admin' as Route,
+        // Parent click navigates straight to the first real leaf. The bare
+        // /settings/admin route still 308-redirects here server-side, but the
+        // nav no longer depends on that round-trip (audit item A).
+        href: '/settings/admin/audit' as Route,
         children: adminChildren,
       },
       {
@@ -231,7 +240,10 @@ export function SettingsSidebar({
       className="sticky top-4 w-48 shrink-0 space-y-1"
     >
       {visible.map((s) => {
-        const active = pathname === s.href || pathname.startsWith(`${s.href}/`);
+        const active =
+          s.id === 'admin'
+            ? pathname.startsWith('/settings/admin')
+            : pathname === s.href || pathname.startsWith(`${s.href}/`);
         return (
           <div key={s.id}>
             <Link

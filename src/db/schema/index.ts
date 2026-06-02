@@ -4,12 +4,15 @@ export * from './auth';
 // v0.9.6 G8b (#70) — sid-keyed session store for listable + revocable JWT
 // sessions (no full DB session adapter; jwt strategy retained).
 export * from './auth-sessions';
+export * from './automation-rule-actions';
 export * from './automation-rules';
 export * from './automation-runs';
 // v0.9.0 G7 P37 — chat-bridge install + channel-link tables (slash commands
 // + channel↔page sync). Separate from `chat_posted_messages` (P36 outbound
 // log) and from `webhooks` (P36 install metadata).
 export * from './chat-bridge';
+// v0.9.8 G6 (audit F) — chat OAuth installs (full Slack/Discord OAuth).
+export * from './chat-oauth';
 // v0.9.0 G7 P36 — chat-bridge posted-message log (maps Slack/Discord posts
 // back to a Cairn page + parent comment so inbound replies resolve correctly).
 export * from './chat-posted-messages';

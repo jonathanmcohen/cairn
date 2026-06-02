@@ -67,6 +67,25 @@ const nextConfig = {
       },
     ];
   },
+  async redirects() {
+    // Audit item B: the SSO console moved into the settings hub
+    // (/admin/sso* → /settings/admin/sso*). Keep old bookmarks/deep links
+    // working with a permanent (308) redirect. The wildcard rule covers
+    // oidc/new, oidc/:id/edit, saml/new, saml/:id/edit; the bare rule covers
+    // the index. API routes under /api/admin/sso/* are NOT redirected.
+    return [
+      {
+        source: '/admin/sso/:path*',
+        destination: '/settings/admin/sso/:path*',
+        permanent: true,
+      },
+      {
+        source: '/admin/sso',
+        destination: '/settings/admin/sso',
+        permanent: true,
+      },
+    ];
+  },
 };
 
 // NOTE: the PWA service worker is NOT wired through next.config here. We use

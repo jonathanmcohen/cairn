@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 
 type DueCard = {
   id: string;
@@ -14,8 +14,11 @@ type DueCard = {
  * Client-side study session (v0.9.0 G3 P19). Fetches the user's due queue via
  * `/api/flashcards/due`, shows one card at a time, and POSTs each grade to
  * `/api/flashcards/grade`. Optional `?deck=<tag>` filter narrows the queue.
+ *
+ * `useSearchParams()` requires a `<Suspense>` boundary (Next 16 client bail-out),
+ * so the body lives in `StudyInner` and the default export wraps it.
  */
-export default function StudyPage(): React.JSX.Element {
+function StudyInner(): React.JSX.Element {
   const params = useSearchParams();
   const deck = params.get('deck');
   const [queue, setQueue] = useState<DueCard[] | null>(null);
@@ -134,5 +137,17 @@ export default function StudyPage(): React.JSX.Element {
         </div>
       )}
     </div>
+  );
+}
+
+export default function StudyPage(): React.JSX.Element {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto max-w-xl p-8 text-center text-muted-foreground">Loading…</div>
+      }
+    >
+      <StudyInner />
+    </Suspense>
   );
 }

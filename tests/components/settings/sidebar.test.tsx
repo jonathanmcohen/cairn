@@ -146,7 +146,7 @@ describe('<SettingsSidebar>', () => {
     pathnameMock.mockReturnValue('/settings/admin');
     renderSidebar({ isAdmin: true });
     expect(screen.getByRole('link', { name: 'SSO & SCIM' }).getAttribute('href')).toBe(
-      '/admin/sso',
+      '/settings/admin/sso',
     );
     expect(screen.getByRole('link', { name: 'Chat bridge' }).getAttribute('href')).toBe(
       '/admin/chat-bridge',

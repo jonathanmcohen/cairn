@@ -9,10 +9,12 @@ import { useAnnounce } from '@/components/a11y/live-region';
 import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
+import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BibliographyToggle } from './bibliography-toggle';
 import { BulkUploader } from './bulk-uploader';
+import { CollabOfflineBanner } from './collab-offline-banner';
 import { DragHandle } from './drag-handle';
 import { EditorBubbleMenu } from './editor-bubble-menu';
 import { EditorDialogs } from './editor-dialogs';
@@ -540,6 +542,7 @@ export function Editor({
   return (
     <div className="relative">
       <EditorDialogs />
+      <CollabOfflineBanner status={status} />
       {/* a30 #39 (round-2 styling) — top control strip. Thin `h-4 w-px bg-border`
           separators divide the logical groups (suggest-edits / presence+status /
           outline) and the toggles carry explicit active states (aria-pressed +
@@ -579,6 +582,9 @@ export function Editor({
             <BibliographyToggle
               pageId={pageId}
               initialDisabled={initialDisableBibliography}
+              citationCount={
+                editor ? aggregateCitations(editor.getJSON(), citationStyle).length : 0
+              }
               onChange={setBibDisabled}
             />
             <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />

@@ -12,8 +12,18 @@ const RuleInput = z.object({
   name: z.string().min(1).max(200),
   triggerEvent: z.enum(TRIGGER_EVENTS),
   condition: z.record(z.string(), z.unknown()).default({}),
+  conditionTree: z.record(z.string(), z.unknown()).nullish(),
   actionType: z.enum(ACTION_TYPES),
   actionConfig: z.record(z.string(), z.unknown()),
+  actions: z
+    .array(
+      z.object({
+        type: z.enum(ACTION_TYPES),
+        config: z.record(z.string(), z.unknown()),
+        sortOrder: z.number().int().nonnegative(),
+      }),
+    )
+    .optional(),
   enabled: z.boolean().optional().default(true),
   builder: z.record(z.string(), z.unknown()).nullish(),
 });
@@ -43,6 +53,7 @@ export async function POST(req: Request): Promise<Response> {
         name: body.name,
         triggerEvent: body.triggerEvent,
         condition: body.condition as schema.AutomationCondition,
+        conditionTree: (body.conditionTree ?? null) as schema.AutomationRule['conditionTree'],
         actionType: body.actionType,
         actionConfig: body.actionConfig,
         builder: (body.builder ?? null) as schema.AutomationRule['builder'],
@@ -50,6 +61,22 @@ export async function POST(req: Request): Promise<Response> {
         createdBy: ctx.userId,
       })
       .returning();
+    if (row && body.actions && body.actions.length > 0) {
+      // Replace the trigger-backfilled singular action with the explicit ordered set.
+      await getDb()
+        .delete(schema.automationRuleActions)
+        .where(eq(schema.automationRuleActions.ruleId, row.id));
+      await getDb()
+        .insert(schema.automationRuleActions)
+        .values(
+          body.actions.map((a) => ({
+            ruleId: row.id,
+            actionType: a.type,
+            actionConfig: a.config,
+            sortOrder: a.sortOrder,
+          })),
+        );
+    }
     return NextResponse.json(row, { status: 201 });
   } catch (err) {
     return errorResponse(err);

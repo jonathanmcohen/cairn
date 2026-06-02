@@ -26,6 +26,20 @@ describe('chat-bridge secret redaction', () => {
     expect(all).toContain('[Redacted]');
   });
 
+  it('redacts OAuth access_token / accessToken anywhere in the payload', () => {
+    const lines: string[] = [];
+    const log = createTestLogger((line) => lines.push(line));
+    log.info({
+      exchange: { accessToken: 'xoxb-oauth-secret', externalTeamId: 'T1', platform: 'slack' },
+      raw: { access_token: 'disc-oauth-secret' },
+    });
+    const all = lines.join('\n');
+    expect(all).not.toContain('xoxb-oauth-secret');
+    expect(all).not.toContain('disc-oauth-secret');
+    expect(all).toContain('T1');
+    expect(all).toContain('[Redacted]');
+  });
+
   it('still emits non-secret fields verbatim', () => {
     const lines: string[] = [];
     const log = createTestLogger((line) => lines.push(line));

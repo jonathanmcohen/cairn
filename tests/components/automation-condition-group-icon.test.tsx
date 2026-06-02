@@ -10,12 +10,13 @@ afterEach(cleanup);
 describe('<ConditionGroup> remove button', () => {
   it('renders a lucide svg, not ✕', () => {
     const group = {
-      combinator: 'and' as const,
-      rows: [{ id: 'c1', property: '', operator: 'equals' as const, value: null }],
+      id: 'g',
+      logic: 'and' as const,
+      children: [{ id: 'c1', field: '', op: 'equals' as const, value: null }],
     };
     const { container } = render(
       <I18nProvider locale="en" messages={enMessages}>
-        <ConditionGroup group={group} onChange={() => {}} />
+        <ConditionGroup group={group} onChange={() => {}} depth={0} />
       </I18nProvider>,
     );
     expect(container.textContent ?? '').not.toMatch(/✕/);

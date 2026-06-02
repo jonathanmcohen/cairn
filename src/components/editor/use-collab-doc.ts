@@ -6,6 +6,12 @@ import { IndexeddbPersistence } from 'y-indexeddb';
 import * as Y from 'yjs';
 import { recordDocAccess } from '@/lib/offline/doc-index';
 import { evictUntilUnderCap } from '@/lib/offline/evict';
+import {
+  type BackoffConfig,
+  DEFAULT_COLLAB_BACKOFF,
+  scheduleWithBackoff,
+  shouldRetryCollab,
+} from './collab-backoff';
 
 export type CollabStatus = 'connecting' | 'connected' | 'disconnected' | 'error';
 
@@ -20,6 +26,33 @@ export type UseCollabDoc = {
 // process.env.NEXT_PUBLIC_CAIRN_OFFLINE_DOC_LIMIT_MB directly works on the
 // client. We do NOT call `env()` here — the server-side schema validates
 // DATABASE_URL/AUTH_SECRET which are not in the client bundle.
+// v0.9.8 G3 (audit item I) — register every collab WebSocket on `window` so an
+// operator (and the offline-banner e2e) can observe / force-drop the live
+// transport. HocuspocusProvider opens its socket through the configured
+// `WebSocketPolyfill`; this subclass is a transparent pass-through that simply
+// pushes each instance into `window.__cairnSockets` and prunes it on close. No
+// behavioural change to the connection itself — same native WebSocket.
+function collabWebSocket(): typeof WebSocket | undefined {
+  if (typeof window === 'undefined' || typeof window.WebSocket === 'undefined') return undefined;
+  const w = window as unknown as { __cairnSockets?: WebSocket[]; WebSocket: typeof WebSocket };
+  // Always read the *current* window.WebSocket at construction time so a test
+  // that monkey-patches it (to refuse reconnects) is honoured.
+  class RegisteredWebSocket extends w.WebSocket {
+    constructor(url: string | URL, protocols?: string | string[]) {
+      super(url, protocols);
+      if (!w.__cairnSockets) w.__cairnSockets = [];
+      const registry = w.__cairnSockets;
+      registry.push(this as unknown as WebSocket);
+      const prune = () => {
+        const i = registry.indexOf(this as unknown as WebSocket);
+        if (i !== -1) registry.splice(i, 1);
+      };
+      this.addEventListener('close', prune);
+    }
+  }
+  return RegisteredWebSocket as unknown as typeof WebSocket;
+}
+
 function offlineCapBytes(): number {
   const raw = process.env.NEXT_PUBLIC_CAIRN_OFFLINE_DOC_LIMIT_MB;
   const mb = raw ? Number.parseInt(raw, 10) : 256;
@@ -34,40 +67,81 @@ export function useCollabDoc(workspaceId: string, pageId: string): UseCollabDoc 
   const [status, setStatus] = useState<CollabStatus>('connecting');
   const [offlineReady, setOfflineReady] = useState(false);
 
+  // v0.9.8 G3 (audit item I) — resilient connect loop. A token-fetch failure
+  // is no longer terminal: we retry the token re-fetch with exponential
+  // backoff (base/max caps + jitter) and recreate the HocuspocusProvider after
+  // a successful re-fetch. A post-connect `disconnect` also triggers the loop
+  // so a dropped socket re-mints a fresh (TTL-bound) token before reconnecting.
   useEffect(() => {
     let cancelled = false;
-    let p: HocuspocusProvider | null = null;
+    let attempt = 0;
+    let current: HocuspocusProvider | null = null;
+    let cancelTimer: (() => void) | null = null;
+    const backoff: BackoffConfig = DEFAULT_COLLAB_BACKOFF;
 
-    void (async () => {
+    const scheduleRetry = () => {
+      if (!shouldRetryCollab({ kind: 'token-failed', cancelled })) return;
+      cancelTimer?.();
+      cancelTimer = scheduleWithBackoff(attempt, backoff, () => {
+        attempt += 1;
+        void connect();
+      });
+    };
+
+    async function connect(): Promise<void> {
+      if (cancelled) return;
+      // Drop any prior provider before recreating (avoids two sockets on the
+      // same Y.Doc after a reconnect).
+      current?.destroy();
+      current = null;
+      setStatus('connecting');
       try {
         const res = await fetch(`/api/collab/token?pageId=${encodeURIComponent(pageId)}`);
         if (!res.ok) {
           if (!cancelled) setStatus('error');
+          scheduleRetry();
           return;
         }
         const { token, collabUrl } = (await res.json()) as { token: string; collabUrl: string };
         if (cancelled) return;
 
-        p = new HocuspocusProvider({
+        attempt = 0; // reset backoff on a successful token fetch
+        const p = new HocuspocusProvider({
           url: collabUrl,
           name: pageId, // doc name = pageId
           token,
           document: ydoc,
+          // Transparent socket-registry wrapper (see collabWebSocket). undefined
+          // → Hocuspocus falls back to the global WebSocket (SSR / no window).
+          // WebSocketPolyfill is a valid runtime option forwarded to the internal
+          // websocket, but it's typed on the websocket config, not the provider
+          // config literal — hence the cast.
+          ...({ WebSocketPolyfill: collabWebSocket() } as Record<string, unknown>),
           onStatus: ({ status: s }) => {
             if (cancelled) return;
             setStatus(s === 'connected' ? 'connected' : 'connecting');
           },
-          onDisconnect: () => !cancelled && setStatus('disconnected'),
+          onDisconnect: () => {
+            if (cancelled) return;
+            setStatus('disconnected');
+            // Re-mint a token and recreate the provider with backoff.
+            scheduleRetry();
+          },
         });
-        if (!cancelled) setProvider(p);
+        current = p;
+        setProvider(p);
       } catch {
         if (!cancelled) setStatus('error');
+        scheduleRetry();
       }
-    })();
+    }
+
+    void connect();
 
     return () => {
       cancelled = true;
-      p?.destroy();
+      cancelTimer?.();
+      current?.destroy();
       ydoc.destroy();
     };
   }, [pageId, ydoc]);

@@ -27,11 +27,12 @@ describe('migration-journal helper', () => {
     const client = postgres(connectionString, { max: 1 });
     const db = drizzle(client);
     try {
-      // Drizzle stores its migration metadata in the "drizzle" schema by
-      // default, but our compare helper queries current_schema(). We make
-      // sure the public-schema variant is missing entirely so the helper
-      // returns pending=all.
+      // compareJournalToDb looks for __drizzle_migrations in BOTH the "drizzle"
+      // schema and current_schema(). The shared Testcontainers singleton may
+      // already carry a drizzle-schema table from another file's runMigrations()
+      // in the same shard, so drop both variants to guarantee pending=all.
       await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations`);
+      await db.execute(sql`DROP TABLE IF EXISTS drizzle.__drizzle_migrations`);
       const j = await loadBundledJournal();
       const cmp = await compareJournalToDb({ journal: j, db });
       expect(cmp.pending).toHaveLength(j.entries.length);
@@ -47,6 +48,7 @@ describe('migration-journal helper', () => {
     const db = drizzle(client);
     try {
       await db.execute(sql`DROP TABLE IF EXISTS __drizzle_migrations`);
+      await db.execute(sql`DROP TABLE IF EXISTS drizzle.__drizzle_migrations`);
       await db.execute(sql`
         CREATE TABLE __drizzle_migrations (
           id serial PRIMARY KEY,

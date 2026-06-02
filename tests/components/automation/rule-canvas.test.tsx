@@ -132,7 +132,7 @@ it('edit mode seeded with a builder blob rehydrates the stored combinator', asyn
     lastRunAt: null,
     builder: {
       triggerEvent: 'page.created',
-      conditions: { combinator: 'or', rows: [] },
+      conditions: { id: 'g', logic: 'or', children: [] },
       actions: [{ id: 'a1', type: 'notify', config: { userId: 'u1' } }],
     },
   };

@@ -24,14 +24,22 @@ describe('BUILDER_TEMPLATES', () => {
     expect(ids).toContain('archive-on-done');
   });
 
+  it('every template exposes a searchable descKey', () => {
+    for (const tpl of BUILDER_TEMPLATES) {
+      expect(typeof tpl.descKey).toBe('string');
+      expect(tpl.descKey.length).toBeGreaterThan(0);
+    }
+  });
+
   it('archive-on-done builds a row.updated trigger with a status equals Done condition', () => {
     const tpl = BUILDER_TEMPLATES.find((t) => t.id === 'archive-on-done');
     if (!tpl) throw new Error('missing template');
     const model = tpl.build();
     expect(model.triggerEvent).toBe('row.updated');
-    expect(model.conditions.rows).toHaveLength(1);
-    expect(model.conditions.rows[0]?.property).toBe('row.cells.status');
-    expect(model.conditions.rows[0]?.operator).toBe('equals');
-    expect(model.conditions.rows[0]?.value).toBe('Done');
+    expect(model.conditions.children).toHaveLength(1);
+    const leaf = model.conditions.children[0];
+    expect(leaf && 'field' in leaf ? leaf.field : null).toBe('row.cells.status');
+    expect(leaf && 'op' in leaf ? leaf.op : null).toBe('equals');
+    expect(leaf && 'value' in leaf ? leaf.value : null).toBe('Done');
   });
 });
