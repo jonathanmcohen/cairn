@@ -148,6 +148,24 @@ export function Editor({
     window.addEventListener('cairn:editor:open-link', onOpen);
     return () => window.removeEventListener('cairn:editor:open-link', onOpen);
   }, []);
+
+  // #275 — ⌘⇧M (Mod+Shift+M) comments the current selection: dispatch the
+  // `cairn:editor:comment-selection` event the comments rail listens for. Mirror
+  // of the `cairn:editor:open-link` pattern. Only fires with a non-empty
+  // selection and when the surface is editable (locked/reader/viewer no-op).
+  useEffect(() => {
+    if (!effectiveEditable) return;
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'm' || e.key === 'M')) {
+        const ed = editorRef.current;
+        if (!ed || ed.state.selection.empty) return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('cairn:editor:comment-selection'));
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [effectiveEditable]);
   // Suggestion mode (editor+ only). `activeSuggestionId` is the open proposal
   // that new insert/delete marks attach to while suggesting; `resolvable` is the
   // suggestionId under the current selection (drives the Accept/Reject buttons).

@@ -2,7 +2,13 @@ import type { HocuspocusProvider } from '@hocuspocus/provider';
 import type { AnyExtension } from '@tiptap/core';
 import Collaboration from '@tiptap/extension-collaboration';
 import CollaborationCaret from '@tiptap/extension-collaboration-caret';
+import { Color } from '@tiptap/extension-color';
+import Highlight from '@tiptap/extension-highlight';
 import { TaskItem, TaskList } from '@tiptap/extension-list';
+import Subscript from '@tiptap/extension-subscript';
+import Superscript from '@tiptap/extension-superscript';
+import TextAlign from '@tiptap/extension-text-align';
+import { TextStyle } from '@tiptap/extension-text-style';
 import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
@@ -79,6 +85,18 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     // typing `**bold**` / `~~strike~~` (StarterKit's bold/strike marks stay; this
     // adds delete-the-marker input rules against them by schema name).
     MarkdownMarkInputRules,
+    // #275 — selection bubble toolbar marks/attrs. All Yjs-safe (attrs-only):
+    //  - TextStyle  — wrapper mark carrying `color`; required by Color.   SAFE
+    //  - Color      — sets the `color` attr on a TextStyle mark.          SAFE
+    //  - Highlight  — mark with a `color` attr (multicolor).              SAFE
+    //  - TextAlign  — node attr `textAlign` on heading/paragraph.         SAFE
+    //  - Subscript / Superscript — plain marks, no attrs.                 SAFE
+    TextStyle,
+    Color,
+    Highlight.configure({ multicolor: true }),
+    TextAlign.configure({ types: ['heading', 'paragraph'] }),
+    Subscript,
+    Superscript,
     TaskList,
     TaskItem.configure({ nested: true }),
     CalloutWithView,

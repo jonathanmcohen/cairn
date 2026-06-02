@@ -1,7 +1,7 @@
 'use client';
 
 import { MessageSquare } from 'lucide-react';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { CommentPanel } from '@/components/comments/comment-panel';
 import { Button } from '@/components/ui/button';
 import type { MemberRole } from '@/lib/auth/require-role';
@@ -32,10 +32,23 @@ export function CommentsToggle({
   const t = useT();
   const [internalOpen, setInternalOpen] = useState(false);
   const open = controlledOpen ?? internalOpen;
-  const setOpen = (next: boolean) => {
-    if (onOpenChange) onOpenChange(next);
-    else setInternalOpen(next);
-  };
+  const setOpen = useCallback(
+    (next: boolean) => {
+      if (onOpenChange) onOpenChange(next);
+      else setInternalOpen(next);
+    },
+    [onOpenChange],
+  );
+
+  // #275 — the selection bubble toolbar (and ⌘⇧M) dispatch a
+  // `cairn:editor:comment-selection` window event when the user wants to comment
+  // on the current selection. Opening the comments rail here keeps the rail the
+  // single owner of the composer; the rail is anchored to the live selection.
+  useEffect(() => {
+    const onCommentSelection = () => setOpen(true);
+    window.addEventListener('cairn:editor:comment-selection', onCommentSelection);
+    return () => window.removeEventListener('cairn:editor:comment-selection', onCommentSelection);
+  }, [setOpen]);
 
   return (
     <>
