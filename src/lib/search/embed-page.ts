@@ -6,6 +6,14 @@ import { getEmbeddingProvider } from '@/lib/search/embed';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
+// v0.9.9 F6 (#40) — bound the embed INPUT to a leading prefix. Full-document
+// mean-pooling washes long pages toward the corpus centroid, compressing
+// pairwise cosine distances into a near-uniform band (the #40 "all ~9%"
+// finding). A bounded prefix keeps the lead/topic sentences dominant — matching
+// the SNIPPET model — so neighbors stay distinguishable. The content_hash is
+// still computed over the FULL text so any edit still triggers a re-embed.
+const EMBED_INPUT_MAX = 2000;
+
 export type EmbedPageResult =
   | { status: 'embedded'; pageId: string }
   | { status: 'skipped'; pageId: string }
@@ -54,7 +62,8 @@ export async function embedPage(db: Db, pageId: string): Promise<EmbedPageResult
   }
 
   const provider = getEmbeddingProvider();
-  const vec = await provider.embed(text);
+  // Hash over the full text (above); embed only the bounded prefix (#40).
+  const vec = await provider.embed(text.slice(0, EMBED_INPUT_MAX));
   // Drizzle's vector customType (P11) accepts number[] on input; convert
   // the Float32Array via Array.from to land on the JS-array contract.
   const embedding = Array.from(vec);
