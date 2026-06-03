@@ -28,7 +28,11 @@ describe('<FavoritesList>', () => {
   });
 
   it('shows the empty state when there are no favorites', () => {
+    // v0.9.9 Plan I (#204) — the empty branch now renders the shared
+    // EmptyFavorites variant (icon + headline + Browse-pages CTA) instead of a
+    // bare paragraph.
     renderList([]);
-    expect(screen.getByText('No favorites yet. Star a page to pin it here.')).toBeTruthy();
+    expect(screen.getByText('No favorites yet')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Browse pages' }).getAttribute('href')).toBe('/');
   });
 });
