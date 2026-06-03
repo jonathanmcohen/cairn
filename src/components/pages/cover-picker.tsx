@@ -44,12 +44,30 @@ export type CoverPickerProps = {
    * Components with optimistic local state need to pass a function.
    */
   onChange?: (cover: PageCover) => void;
+  /** #239 — controlled open state. When provided, the picker is driven externally. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** #239 — hide the built-in "Add/Change cover" trigger button (controlled mode). */
+  hideTrigger?: boolean;
 };
 
-export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPickerProps) {
+export function CoverPicker({
+  pageId,
+  current,
+  unsplashKey,
+  onChange,
+  open: openProp,
+  onOpenChange,
+  hideTrigger,
+}: CoverPickerProps) {
   const t = useT();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setOpenState(next);
+  };
   // #169 — trap Tab + handle Escape while the custom modal is open.
   const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [tab, setTab] = useState<TabKey>('color');
@@ -124,21 +142,23 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="min-h-11"
-        disabled={saving}
-        onClick={() => setOpen(true)}
-      >
-        {saving ? (
-          <Loader2
-            aria-hidden="true"
-            className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
-          />
-        ) : null}
-        {'kind' in current ? t('cover.change') : t('cover.add')}
-      </Button>
+      {!hideTrigger && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="min-h-11"
+          disabled={saving}
+          onClick={() => setOpen(true)}
+        >
+          {saving ? (
+            <Loader2
+              aria-hidden="true"
+              className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+            />
+          ) : null}
+          {'kind' in current ? t('cover.change') : t('cover.add')}
+        </Button>
+      )}
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[15vh]">
           <button

@@ -371,6 +371,7 @@
   "cover.uploadHint": "Images are stored locally and served through signed URLs.",
   "cover.useColor": "Use {hex}",
   "cover.useDefault": "Use default cover",
+  "cover.editAria": "Edit cover",
   "cover.section.gradients": "Gradients",
   "cover.section.neutrals": "Solid colors",
   "cover.usePreset": "Use {name} cover",

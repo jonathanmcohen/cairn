@@ -167,4 +167,16 @@ describe('<CoverPicker> layout polish (Plan M)', () => {
       '',
     );
   });
+
+  it('honors a controlled `open` prop and suppresses the trigger (#239)', () => {
+    const onOpenChange = vi.fn();
+    render(
+      wrap(<CoverPicker pageId="p1" current={{}} open onOpenChange={onOpenChange} hideTrigger />),
+    );
+    // Dialog is shown without clicking the trigger…
+    expect(screen.getByRole('dialog', { name: enMessages['cover.dialogTitle'] })).toBeTruthy();
+    // …and the built-in trigger button is suppressed (hideTrigger).
+    expect(screen.queryByRole('button', { name: enMessages['cover.add'] })).toBeNull();
+    expect(screen.queryByRole('button', { name: enMessages['cover.change'] })).toBeNull();
+  });
 });

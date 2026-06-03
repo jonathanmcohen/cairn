@@ -371,6 +371,7 @@
   "cover.uploadHint": "Las imágenes se almacenan localmente y se sirven mediante URL firmadas.",
   "cover.useColor": "Usar {hex}",
   "cover.useDefault": "Usar portada predeterminada",
+  "cover.editAria": "Editar portada",
   "cover.section.gradients": "Degradados",
   "cover.section.neutrals": "Colores sólidos",
   "cover.usePreset": "Usar portada {name}",

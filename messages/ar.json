@@ -371,6 +371,7 @@
   "cover.uploadHint": "تُخزَّن الصور محليًا وتُقدَّم عبر روابط موقَّعة.",
   "cover.useColor": "استخدام {hex}",
   "cover.useDefault": "استخدام الغلاف الافتراضي",
+  "cover.editAria": "تحرير الغلاف",
   "cover.section.gradients": "تدرجات لونية",
   "cover.section.neutrals": "ألوان صلبة",
   "cover.usePreset": "استخدام غلاف {name}",
