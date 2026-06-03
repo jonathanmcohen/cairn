@@ -6,6 +6,8 @@ import esMessages from '../../messages/es.json' with { type: 'json' };
 const NEW_KEYS = [
   'pageActions.suggest.diffDeletedLabel',
   'pageActions.suggest.diffInsertedLabel',
+  'pageActions.suggest.toggleSuggest',
+  'pageActions.suggest.toggleSuggesting',
 ] as const;
 const catalogs = { en: enMessages, es: esMessages, ar: arMessages } as Record<
   string,

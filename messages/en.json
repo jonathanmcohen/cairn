@@ -255,6 +255,8 @@
   "pageActions.suggest.close": "Close suggestions panel",
   "pageActions.suggest.diffDeletedLabel": "Removed text",
   "pageActions.suggest.diffInsertedLabel": "Added text",
+  "pageActions.suggest.toggleSuggest": "Suggest edits",
+  "pageActions.suggest.toggleSuggesting": "Suggesting — click to stop",
   "common.close": "Close",
   "common.cancel": "Cancel",
   "publishConfirm.title": "Publish to web",

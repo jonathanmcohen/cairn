@@ -255,6 +255,8 @@
   "pageActions.suggest.close": "إغلاق لوحة الاقتراحات",
   "pageActions.suggest.diffDeletedLabel": "نص محذوف",
   "pageActions.suggest.diffInsertedLabel": "نص مضاف",
+  "pageActions.suggest.toggleSuggest": "اقتراح تعديلات",
+  "pageActions.suggest.toggleSuggesting": "جارٍ الاقتراح — انقر للإيقاف",
   "common.close": "إغلاق",
   "common.cancel": "إلغاء",
   "publishConfirm.title": "النشر على الويب",
