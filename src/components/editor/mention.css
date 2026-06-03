@@ -7,6 +7,16 @@
   font-weight: 500;
   white-space: nowrap;
 }
-.mention:hover {
+/* #224 J2c — under light mode + a saturated accent the 10% wash dropped below
+   AA for the pill text. Light mode gets a stronger tint + darker text anchor;
+   dark mode keeps the subtle wash. */
+:root:not(.dark) .mention {
+  background-color: hsl(var(--primary) / 0.14);
+  color: hsl(var(--primary));
+}
+.dark .mention {
   background-color: hsl(var(--primary) / 0.18);
+}
+.mention:hover {
+  background-color: hsl(var(--primary) / 0.24);
 }
