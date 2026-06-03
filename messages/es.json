@@ -706,5 +706,9 @@
   "chatOauth.manualFallback": "Configuración manual de webhook",
   "e2ee.disabledTitle": "El cifrado de extremo a extremo está desactivado en esta compilación.",
   "e2ee.disabledBody": "Esta instalación se compiló con CAIRN_ENABLE_E2E_ENCRYPTION=false (el valor predeterminado seguro). Para habilitarlo, establece CAIRN_ENABLE_E2E_ENCRYPTION=true y NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=true en tu entorno, luego recompila y vuelve a desplegar. Consulta la documentación de administración para el procedimiento completo.",
-  "e2ee.docsLink": "Leer la guía de administración del cifrado"
+  "e2ee.docsLink": "Leer la guía de administración del cifrado",
+  "passkeys.notConfigured.title": "Las llaves de acceso no están disponibles",
+  "passkeys.notConfigured.userBody": "Esta instancia de Cairn aún no tiene las llaves de acceso habilitadas. Pide a la persona administradora de tu espacio de trabajo que las active.",
+  "passkeys.notConfigured.adminBody": "WebAuthn no está configurado. Define CAIRN_RP_ID y CAIRN_RP_ORIGIN en el entorno de despliegue y vuelve a desplegar para habilitar el registro de llaves de acceso.",
+  "passkeys.notConfigured.adminDocs": "Consulta la guía de operaciones"
 }

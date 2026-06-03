@@ -710,5 +710,9 @@
   "chatOauth.manualFallback": "إعداد webhook اليدوي",
   "e2ee.disabledTitle": "التشفير من طرف إلى طرف معطّل في هذه النسخة.",
   "e2ee.disabledBody": "تم بناء هذا النشر باستخدام CAIRN_ENABLE_E2E_ENCRYPTION=false (الإعداد الافتراضي الآمن). لتفعيله، اضبط CAIRN_ENABLE_E2E_ENCRYPTION=true و NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=true في بيئتك، ثم أعد البناء وأعد النشر. راجع وثائق الإدارة للحصول على الإجراء الكامل.",
-  "e2ee.docsLink": "اقرأ دليل إدارة التشفير"
+  "e2ee.docsLink": "اقرأ دليل إدارة التشفير",
+  "passkeys.notConfigured.title": "مفاتيح المرور غير متاحة",
+  "passkeys.notConfigured.userBody": "لم يتم تفعيل مفاتيح المرور في نسخة Cairn هذه بعد. اطلب من مسؤول مساحة العمل تفعيلها.",
+  "passkeys.notConfigured.adminBody": "لم يتم إعداد WebAuthn. اضبط CAIRN_RP_ID وCAIRN_RP_ORIGIN في بيئة النشر ثم أعد النشر لتفعيل تسجيل مفاتيح المرور.",
+  "passkeys.notConfigured.adminDocs": "راجع دليل التشغيل"
 }

@@ -3,10 +3,12 @@ import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 import { PasskeyEnrollment } from '@/components/security/passkey-enrollment';
 import { PasskeyListItem } from '@/components/security/passkey-list-item';
+import { PasskeysNotConfigured } from '@/components/security/passkeys-not-configured';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { auth } from '@/lib/auth/config';
+import { getAuthContext, hasMinRole } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 
 export const dynamic = 'force-dynamic';
@@ -25,6 +27,8 @@ export default async function PasskeysSettingsPage() {
 
   const e = env();
   if (!e.CAIRN_RP_ID || !e.CAIRN_RP_ORIGIN) {
+    const ctx = await getAuthContext();
+    const isAdmin = hasMinRole(ctx?.role ?? 'viewer', 'admin');
     return (
       <main className="mx-auto max-w-2xl space-y-6 p-6">
         <SettingsBreadcrumb
@@ -32,12 +36,7 @@ export default async function PasskeysSettingsPage() {
           page="Passkeys"
         />
         <h1 className="font-semibold text-2xl">Passkeys</h1>
-        <div className="rounded border p-4 text-muted-foreground text-sm">
-          The operator of this Cairn instance has not configured WebAuthn. Set
-          <code className="mx-1 rounded bg-muted px-1">CAIRN_RP_ID</code>+
-          <code className="mx-1 rounded bg-muted px-1">CAIRN_RP_ORIGIN</code> in the deployment env
-          to enable passkey enrollment. See <code>docs/operations.md</code>.
-        </div>
+        <PasskeysNotConfigured isAdmin={isAdmin} />
       </main>
     );
   }

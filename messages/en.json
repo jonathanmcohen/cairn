@@ -706,5 +706,9 @@
   "chatOauth.manualFallback": "Manual webhook setup",
   "e2ee.disabledTitle": "End-to-end encryption is turned off in this build.",
   "e2ee.disabledBody": "This deployment was built with CAIRN_ENABLE_E2E_ENCRYPTION=false (the safe default). To enable it, set CAIRN_ENABLE_E2E_ENCRYPTION=true and NEXT_PUBLIC_CAIRN_ENABLE_E2E_ENCRYPTION=true in your environment, then rebuild and redeploy. See the admin docs for the full procedure.",
-  "e2ee.docsLink": "Read the encryption admin guide"
+  "e2ee.docsLink": "Read the encryption admin guide",
+  "passkeys.notConfigured.title": "Passkeys aren't available",
+  "passkeys.notConfigured.userBody": "This Cairn instance doesn't have passkeys enabled yet. Ask your workspace administrator to turn them on.",
+  "passkeys.notConfigured.adminBody": "WebAuthn isn't configured. Set CAIRN_RP_ID and CAIRN_RP_ORIGIN in the deployment environment, then redeploy, to enable passkey enrollment.",
+  "passkeys.notConfigured.adminDocs": "See the operations guide"
 }
