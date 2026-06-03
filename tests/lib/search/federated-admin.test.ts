@@ -31,7 +31,7 @@ beforeEach(async () => {
 describe('federatedSearch — admin cross-workspace', () => {
   it('admin + includeAllWorkspaces=true sees hits in non-member workspaces', async () => {
     const home = await createTestWorkspaceWithUser(db, { role: 'admin' });
-    const other = await createTestWorkspaceWithUser(db);
+    const other = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, {
       workspaceId: other.workspaceId,
       createdBy: other.userId,
@@ -71,7 +71,7 @@ describe('federatedSearch — admin cross-workspace', () => {
 
   it('non-admin caller is NOT allowed to escalate via includeAllWorkspaces', async () => {
     const home = await createTestWorkspaceWithUser(db, { role: 'editor' });
-    const other = await createTestWorkspaceWithUser(db);
+    const other = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, {
       workspaceId: other.workspaceId,
       createdBy: other.userId,

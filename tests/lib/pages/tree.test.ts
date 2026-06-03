@@ -29,13 +29,13 @@ beforeEach(async () => {
 
 describe('getPageTree', () => {
   it('returns an empty array when no pages exist', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const tree = await getPageTree(db, u.workspaceId);
     expect(tree).toEqual([]);
   });
 
   it('returns a flat list of top-level pages with empty children', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'A' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'B' });
     const tree = await getPageTree(db, u.workspaceId);
@@ -44,7 +44,7 @@ describe('getPageTree', () => {
   });
 
   it('nests children under parents', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const root = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -69,7 +69,7 @@ describe('getPageTree', () => {
   });
 
   it('excludes soft-deleted pages', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const p = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'V' });
     await sql`UPDATE pages SET deleted_at = now() WHERE id = ${p.id}`;
     const tree = await getPageTree(db, u.workspaceId);
@@ -79,7 +79,7 @@ describe('getPageTree', () => {
 
 describe('flattenedPageTree', () => {
   it('returns a depth-first, sibling-by-createdAt flat list with correct depths', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     // Insert with small delays so createdAt ordering is deterministic
     // (Postgres timestamp resolution at microsecond level).
     const root1 = await createPage(db, {
@@ -136,13 +136,13 @@ describe('flattenedPageTree', () => {
   });
 
   it('returns an empty array for a workspace with no pages', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const flat = await flattenedPageTree(db, u.workspaceId);
     expect(flat).toEqual([]);
   });
 
   it('promotes orphans (parent soft-deleted) to roots', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     // Simulate an orphan whose parent has been soft-deleted: the parent row
     // still exists (FK satisfied) but is filtered out by the deletedAt
     // predicate, so flattenedPageTree never sees it.

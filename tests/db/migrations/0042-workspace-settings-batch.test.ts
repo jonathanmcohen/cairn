@@ -37,7 +37,10 @@ describe('migration 0042 — workspace settings batch', () => {
     expect(cols).toHaveLength(3);
     const byName = Object.fromEntries(cols.map((c) => [c.column_name, c]));
     expect(byName.trash_retention_days?.column_default).toContain('30');
-    expect(byName.default_page_status?.column_default).toContain("'published'");
+    // v0.9.9 K2 #216 — migration 0066 flipped this column default from
+    // 'published' to 'draft' (new pages are born as drafts, security-adjacent).
+    // This test reads the live information_schema after ALL migrations.
+    expect(byName.default_page_status?.column_default).toContain("'draft'");
     expect(byName.enable_federated_search?.column_default).toContain('false');
   });
 
@@ -56,7 +59,8 @@ describe('migration 0042 — workspace settings batch', () => {
       enable_federated_search: boolean;
     }>;
     expect(rows[0]?.trash_retention_days).toBe(30);
-    expect(rows[0]?.default_page_status).toBe('published');
+    // v0.9.9 K2 #216 — migration 0066 changed the effective default to 'draft'.
+    expect(rows[0]?.default_page_status).toBe('draft');
     expect(rows[0]?.enable_federated_search).toBe(false);
   });
 });

@@ -37,7 +37,7 @@ vi.mock('@/lib/auth/config', () => {
 });
 
 async function asUser(role: 'owner' | 'admin' | 'editor' | 'viewer') {
-  const u = await createTestWorkspaceWithUser(getDb(), { role });
+  const u = await createTestWorkspaceWithUser(getDb(), { role, defaultPageStatus: 'published' });
   const mod = (await import('@/lib/auth/config')) as unknown as {
     __set: (c: { userId: string } | null) => void;
   };

@@ -21,14 +21,29 @@ export type TestUser = {
  */
 export async function createTestWorkspaceWithUser(
   db: PostgresJsDatabase<typeof schema>,
-  opts: { role?: schema.MemberRole; email?: string; workspaceName?: string } = {},
+  opts: {
+    role?: schema.MemberRole;
+    email?: string;
+    workspaceName?: string;
+    // v0.9.9 K2 #216 — the workspace column default for new-page status is now
+    // 'draft'. Search/tree/orphan-purge tests that need their pages to be
+    // search-visible pass 'published' here to keep the pre-K2 behavior.
+    defaultPageStatus?: schema.PageStatus;
+  } = {},
 ): Promise<TestUser> {
   const role = opts.role ?? 'owner';
   const slug = uniqueSlug();
   const name = opts.workspaceName ?? `Workspace ${slug}`;
   const email = opts.email ?? `${role}-${slug}@example.com`;
 
-  const [ws] = await db.insert(schema.workspaces).values({ name, slug }).returning();
+  const [ws] = await db
+    .insert(schema.workspaces)
+    .values({
+      name,
+      slug,
+      ...(opts.defaultPageStatus ? { defaultPageStatus: opts.defaultPageStatus } : {}),
+    })
+    .returning();
   if (!ws) throw new Error('failed to create workspace');
   const [u] = await db
     .insert(schema.users)

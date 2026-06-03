@@ -69,7 +69,7 @@ beforeEach(async () => {
 
 describe('searchPages', () => {
   it('finds a page by exact title word', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'Roadmap' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'Untitled' });
     const results = await searchPages(db, { workspaceId: u.workspaceId, query: 'roadmap' });
@@ -78,7 +78,7 @@ describe('searchPages', () => {
   });
 
   it('finds a page by body text', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const p = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -104,7 +104,7 @@ describe('searchPages', () => {
   });
 
   it('typo-tolerant: finds Roadmap with "rodmap"', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'Roadmap' });
     const results = await searchPages(db, { workspaceId: u.workspaceId, query: 'rodmap' });
     expect(results.length).toBeGreaterThan(0);
@@ -112,7 +112,7 @@ describe('searchPages', () => {
   });
 
   it('excludes soft-deleted pages', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const p = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -124,15 +124,15 @@ describe('searchPages', () => {
   });
 
   it('excludes pages from other workspaces', async () => {
-    const a = await createTestWorkspaceWithUser(db);
-    const b = await createTestWorkspaceWithUser(db);
+    const a = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    const b = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: b.workspaceId, createdBy: b.userId, title: 'Secret' });
     const results = await searchPages(db, { workspaceId: a.workspaceId, query: 'secret' });
     expect(results).toEqual([]);
   });
 
   it('returns at most `limit` results', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     for (let i = 0; i < 15; i++) {
       await createPage(db, {
         workspaceId: u.workspaceId,
@@ -151,7 +151,7 @@ describe('searchPages', () => {
 
 describe('searchPages semantic', () => {
   it('returns a body snippet and a [0,1] rank for semantic hits (parity with fts)', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const pageId = await seedPageWithEmbedding(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -176,7 +176,7 @@ describe('searchPages semantic', () => {
 
 describe('getBreadcrumbs', () => {
   it('returns the ancestor chain for nested pages', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const root = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -203,7 +203,7 @@ describe('getBreadcrumbs', () => {
   });
 
   it('returns an empty chain for a top-level page', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const root = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,

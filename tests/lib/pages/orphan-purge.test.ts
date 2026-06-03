@@ -37,7 +37,7 @@ async function agePage(pageId: string, daysAgo: number): Promise<void> {
 }
 
 async function seedWs() {
-  return createTestWorkspaceWithUser(db, { role: 'owner' });
+  return createTestWorkspaceWithUser(db, { role: 'owner', defaultPageStatus: 'published' });
 }
 
 describe('runOrphanPurge', () => {

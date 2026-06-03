@@ -45,7 +45,7 @@ async function seedPeer(workspaceId: string, name: string, enabled = true): Prom
 
 describe('POST /api/search/federated/peer', () => {
   it('returns results when HMAC verifies', async () => {
-    const w = await createTestWorkspaceWithUser(db);
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await seedPeer(w.workspaceId, 'incoming');
     await createPage(db, {
       workspaceId: w.workspaceId,
@@ -72,7 +72,7 @@ describe('POST /api/search/federated/peer', () => {
   });
 
   it('rejects tampered request with 401', async () => {
-    const w = await createTestWorkspaceWithUser(db);
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await seedPeer(w.workspaceId, 'incoming');
 
     const { POST } = await import('@/app/api/search/federated/peer/route');
