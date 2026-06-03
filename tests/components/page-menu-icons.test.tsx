@@ -18,8 +18,9 @@ describe('<PageMenu> item icons', () => {
   it('renders a leading svg icon inside each open-menu action button', async () => {
     render(<PageMenu pageId="11111111-1111-1111-1111-111111111111" />);
     screen.getByRole('button', { name: 'Page menu' }).click();
-    // "Export as .md" is always present (published=false path). It must carry an icon.
-    const exportBtn = await screen.findByRole('button', { name: /export as \.md/i });
+    // Export was consolidated into the single action-bar Export menu (#56/#235); the
+    // page menu now carries an "Export…" hint row that opens it. It must keep an icon.
+    const exportBtn = await screen.findByRole('button', { name: /export…/i });
     expect(exportBtn.querySelector('svg')).toBeTruthy();
   });
 });
