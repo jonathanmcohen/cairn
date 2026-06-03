@@ -1,8 +1,9 @@
 'use client';
 
 import { Bookmark, Check, Pencil, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { emitMutation, subscribeMutation } from '@/lib/client/mutation-bus';
 import { useT } from '@/lib/i18n/provider';
 
 type Saved = {
@@ -25,22 +26,21 @@ export function SavedSearches() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [draftName, setDraftName] = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-    void (async () => {
-      try {
-        const r = await fetch('/api/search/saved');
-        if (!r.ok) return;
-        const data = (await r.json()) as { savedSearches: Saved[] };
-        if (!cancelled) setItems(data.savedSearches);
-      } catch {
-        // silent — section just stays empty
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
+  const load = useCallback(async () => {
+    try {
+      const r = await fetch('/api/search/saved');
+      if (!r.ok) return;
+      const data = (await r.json()) as { savedSearches: Saved[] };
+      setItems(data.savedSearches);
+    } catch {
+      // silent — section just stays empty
+    }
   }, []);
+
+  useEffect(() => {
+    void load();
+    return subscribeMutation('savedSearches', () => void load());
+  }, [load]);
 
   async function remove(id: string, name: string) {
     const ok = await confirm({
@@ -50,7 +50,10 @@ export function SavedSearches() {
     });
     if (!ok) return;
     const r = await fetch(`/api/search/saved/${id}`, { method: 'DELETE' });
-    if (r.ok) setItems((xs) => xs.filter((x) => x.id !== id));
+    if (r.ok) {
+      setItems((xs) => xs.filter((x) => x.id !== id));
+      emitMutation('savedSearches');
+    }
   }
 
   function startRename(s: Saved) {
@@ -73,6 +76,7 @@ export function SavedSearches() {
     });
     if (r.ok) {
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, name } : x)));
+      emitMutation('savedSearches');
     }
     cancelRename();
   }
