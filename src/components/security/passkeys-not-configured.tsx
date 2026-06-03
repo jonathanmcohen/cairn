@@ -1,8 +1,7 @@
 'use client';
 
+import { OPERATIONS_DOCS_URL } from '@/lib/docs-links';
 import { useT } from '@/lib/i18n/provider';
-
-const OPERATIONS_DOCS_URL = 'https://github.com/jonathanmcohen/cairn/blob/main/docs/operations.md';
 
 export function PasskeysNotConfigured({ isAdmin }: { isAdmin: boolean }) {
   const t = useT();
