@@ -67,23 +67,31 @@ export function SuggestionsDrawer({
                     {s.diff && (s.diff.deleted || s.diff.inserted) ? (
                       <p className="mt-2 break-words text-sm leading-relaxed">
                         {s.diff.deleted ? (
-                          <del
-                            aria-label={t('pageActions.suggest.diffDeletedLabel')}
-                            title={t('pageActions.suggest.diffDeletedLabel')}
-                            className="rounded-sm bg-red-500/10 px-0.5 text-red-700 line-through decoration-red-500/70 dark:text-red-300"
-                          >
-                            {s.diff.deleted}
-                          </del>
+                          <>
+                            <span className="sr-only">
+                              {t('pageActions.suggest.diffDeletedLabel')}:{' '}
+                            </span>
+                            <del
+                              title={t('pageActions.suggest.diffDeletedLabel')}
+                              className="rounded-sm bg-red-500/10 px-0.5 text-red-700 line-through decoration-red-500/70 dark:text-red-300"
+                            >
+                              {s.diff.deleted}
+                            </del>
+                          </>
                         ) : null}
                         {s.diff.deleted && s.diff.inserted ? ' ' : null}
                         {s.diff.inserted ? (
-                          <ins
-                            aria-label={t('pageActions.suggest.diffInsertedLabel')}
-                            title={t('pageActions.suggest.diffInsertedLabel')}
-                            className="rounded-sm bg-green-500/10 px-0.5 text-green-700 no-underline dark:text-green-300"
-                          >
-                            {s.diff.inserted}
-                          </ins>
+                          <>
+                            <span className="sr-only">
+                              {t('pageActions.suggest.diffInsertedLabel')}:{' '}
+                            </span>
+                            <ins
+                              title={t('pageActions.suggest.diffInsertedLabel')}
+                              className="rounded-sm bg-green-500/10 px-0.5 text-green-700 no-underline dark:text-green-300"
+                            >
+                              {s.diff.inserted}
+                            </ins>
+                          </>
                         ) : null}
                       </p>
                     ) : null}
