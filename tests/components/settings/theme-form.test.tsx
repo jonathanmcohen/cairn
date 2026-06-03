@@ -31,3 +31,20 @@ describe('ThemeForm live preview', () => {
     expect(preview.style.getPropertyValue('--primary')).toBe('217 91% 60%');
   });
 });
+
+describe('ThemeForm custom-hex prefill', () => {
+  it('prefills the custom-hex input with the active preset hex', () => {
+    render(
+      <I18nProvider locale="en" messages={enMessages as Record<string, string>}>
+        <ThemeForm initial={{ accent: 'blue', fontFamily: 'system', pageWidth: 'wide' }} />
+      </I18nProvider>,
+    );
+    expect((screen.getByLabelText('Custom hex') as HTMLInputElement).value).toBe('#2563eb');
+  });
+  it('selecting a preset updates the prefilled hex shown in the input', () => {
+    renderForm(); // initial accent 'default'
+    expect((screen.getByLabelText('Custom hex') as HTMLInputElement).value).toBe('#0f172a');
+    fireEvent.click(screen.getByRole('button', { name: 'Emerald' }));
+    expect((screen.getByLabelText('Custom hex') as HTMLInputElement).value).toBe('#059669');
+  });
+});
