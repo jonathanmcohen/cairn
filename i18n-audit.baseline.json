@@ -4598,6 +4598,24 @@
     },
     {
       "file": "components/settings/webhooks-manager.tsx",
+      "line": 330,
+      "text": "Select all",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 338,
+      "text": "Recommended",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 346,
+      "text": "Clear",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
       "line": 221,
       "text": "Rotated. Copy now — Cairn won&apos;t show it again. Existing receivers must adopt this\n              secret immediately or signatures will start failing.",
       "kind": "jsx_text"

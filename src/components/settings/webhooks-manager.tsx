@@ -30,13 +30,31 @@ type CreateResponse = {
   webhook: WebhookRow;
 };
 
-const EVENTS = [
+// v0.9.9 Plan I (#257/#258) — full audited event catalog, grouped by namespace.
+// `events` is a text[] column with no server-side allowlist/CHECK, so adding
+// strings here is forward-compatible.
+const EVENT_GROUPS = [
+  { label: 'Pages', events: ['page.created', 'page.updated', 'page.deleted'] },
+  { label: 'Rows', events: ['row.created', 'row.updated', 'row.deleted'] },
+  { label: 'Comments', events: ['comment.created', 'comment.resolved'] },
+  {
+    label: 'Lifecycle',
+    events: [
+      'page.status_changed',
+      'page.approved',
+      'page.approval_rejected',
+      'page.changes_requested',
+    ],
+  },
+  { label: 'Locks', events: ['page.locked', 'page.unlocked'] },
+  { label: 'Members', events: ['member.invited', 'member.joined', 'member.removed'] },
+] as const;
+const EVENTS = EVENT_GROUPS.flatMap((g) => g.events);
+const RECOMMENDED_EVENTS = [
   'page.created',
   'page.updated',
   'page.deleted',
-  'row.created',
-  'row.updated',
-  'row.deleted',
+  'page.approved',
 ] as const;
 
 function fmtDate(iso: string): string {
@@ -300,21 +318,52 @@ export function WebhooksManager({
                   required
                 />
               </div>
-              <fieldset className="space-y-2">
+              <fieldset className="space-y-3">
                 <legend className="text-sm font-medium">Events</legend>
-                <div className="grid grid-cols-2 gap-2">
-                  {EVENTS.map((event) => (
-                    <label key={event} className="flex items-center gap-2 text-sm">
-                      <input
-                        type="checkbox"
-                        checked={selectedEvents.includes(event)}
-                        onChange={() => toggleEvent(event)}
-                        className="size-4 rounded border-input"
-                      />
-                      <span className="font-mono">{event}</span>
-                    </label>
-                  ))}
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedEvents([...EVENTS])}
+                  >
+                    Select all
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSelectedEvents([...RECOMMENDED_EVENTS])}
+                  >
+                    Recommended
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedEvents([])}
+                  >
+                    Clear
+                  </Button>
                 </div>
+                {EVENT_GROUPS.map((group) => (
+                  <div key={group.label} className="space-y-1.5">
+                    <span className="font-medium text-muted-foreground text-xs">{group.label}</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      {group.events.map((event) => (
+                        <label key={event} className="flex items-center gap-2 text-sm">
+                          <input
+                            type="checkbox"
+                            checked={selectedEvents.includes(event)}
+                            onChange={() => toggleEvent(event)}
+                            className="size-4 rounded border-input"
+                          />
+                          <span className="font-mono">{event}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </fieldset>
               {error ? <p className="text-sm text-destructive">{error}</p> : null}
               <div className="flex gap-2">
