@@ -311,3 +311,21 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
   border: 2px solid transparent;
   background-clip: padding-box;
 }
+
+/* #224 J2a — preset covers were tuned for dark chrome; on a white light-mode
+   page the saturated band reads as harsh. Soften saturation + lift lightness
+   a touch in light mode only. Dark mode keeps full vibrancy. */
+.cairn-cover {
+  transition: filter 150ms ease;
+}
+:root:not(.dark) .cairn-cover {
+  filter: saturate(0.82) brightness(1.02);
+}
+
+/* #224 J2b — approval banner read fine in dark but the amber-50/30 wash was
+   low-contrast on white. Use the existing --warning token chain (defined for
+   both schemes) at a light tint with a warning-colored left border. */
+.cairn-approval-banner {
+  background: hsl(var(--warning) / 0.1);
+  border-color: hsl(var(--warning) / 0.45);
+}
