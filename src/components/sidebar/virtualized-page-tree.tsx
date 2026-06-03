@@ -105,9 +105,14 @@ function buildRows(pages: FlatPageNode[], spaces: SidebarSpace[] | undefined): R
 export function VirtualizedPageTree({
   initial,
   spaces,
+  collapseAll,
 }: {
   initial: FlatPageNode[];
   spaces?: SidebarSpace[];
+  /** When true, every space header is force-collapsed (driven by PagesSection's
+   *  expand/collapse-all toggle, #213). When false/undefined, per-header local
+   *  toggle state applies. */
+  collapseAll?: boolean;
 }) {
   const parentRef = useRef<HTMLDivElement>(null);
   // Local-only collapse state keyed by spaceId (or `__unfiled__`). Persists
@@ -124,7 +129,17 @@ export function VirtualizedPageTree({
 
   const rows = useMemo(() => {
     const allRows = buildRows(initial, spaces);
-    if (collapsed.size === 0) return allRows;
+    // When collapseAll is on, derive the full set of space keys from the
+    // headers so every section folds at once (#213); otherwise use the local
+    // per-header toggle state.
+    const effective = collapseAll
+      ? new Set(
+          allRows
+            .filter((r) => r.kind === 'space-header')
+            .map((r) => (r.kind === 'space-header' ? (r.spaceId ?? UNFILED_SPACE_ID) : '')),
+        )
+      : collapsed;
+    if (effective.size === 0) return allRows;
     // Hide page rows for collapsed sections. Walk linearly: any page row that
     // follows a collapsed header is skipped until the next header.
     const out: Row[] = [];
@@ -132,14 +147,14 @@ export function VirtualizedPageTree({
     for (const r of allRows) {
       if (r.kind === 'space-header') {
         const key = r.spaceId ?? UNFILED_SPACE_ID;
-        collapseCurrent = collapsed.has(key);
+        collapseCurrent = effective.has(key);
         out.push(r);
       } else if (!collapseCurrent) {
         out.push(r);
       }
     }
     return out;
-  }, [initial, spaces, collapsed]);
+  }, [initial, spaces, collapsed, collapseAll]);
 
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
@@ -177,7 +192,7 @@ export function VirtualizedPageTree({
           };
           if (row.kind === 'space-header') {
             const key = row.spaceId ?? UNFILED_SPACE_ID;
-            const isCollapsed = collapsed.has(key);
+            const isCollapsed = collapseAll || collapsed.has(key);
             return (
               <li
                 key={row.key}
