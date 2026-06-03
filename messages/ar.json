@@ -299,6 +299,7 @@
   "database.rowCount.one": "صف {count}",
   "database.rowCount.other": "{count} صفوف",
   "database.addRow": "إضافة صف",
+  "database.newRow": "صف جديد",
   "database.emptyHint": "لا توجد صفوف بعد — أضف صفك الأول.",
   "database.empty.firstRow": "أضف صفك الأول",
   "database.untitled": "بدون عنوان",

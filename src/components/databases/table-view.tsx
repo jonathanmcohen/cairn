@@ -418,7 +418,9 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
               </div>
             </div>
           ) : (
-            <div className="h-[600px] min-h-0">{body}</div>
+            // #39/#218 — size to content up to a max height instead of always
+            // reserving 600px (which left dead vertical space for short tables).
+            <div className="max-h-[600px] min-h-0">{body}</div>
           )}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -445,10 +447,12 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           type="button"
           onClick={() => void addRow()}
           disabled={adding || !rowMutateAllowed}
+          aria-label={t('database.addRow')}
           title={rowMutateAllowed ? undefined : 'Unavailable offline'}
-          className="flex-1 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
+          className="flex flex-1 items-center gap-1.5 px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent"
         >
-          + New row
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {t('database.newRow')}
         </button>
         {templates.length > 0 && (
           <Select

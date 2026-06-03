@@ -299,6 +299,7 @@
   "database.rowCount.one": "{count} row",
   "database.rowCount.other": "{count} rows",
   "database.addRow": "Add row",
+  "database.newRow": "New row",
   "database.emptyHint": "No rows yet — add your first row.",
   "database.empty.firstRow": "Add your first row",
   "database.untitled": "Untitled",

@@ -299,6 +299,7 @@
   "database.rowCount.one": "{count} fila",
   "database.rowCount.other": "{count} filas",
   "database.addRow": "Añadir fila",
+  "database.newRow": "Nueva fila",
   "database.emptyHint": "Aún no hay filas — añade tu primera fila.",
   "database.empty.firstRow": "Añade tu primera fila",
   "database.untitled": "Sin título",
