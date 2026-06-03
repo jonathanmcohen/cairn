@@ -1,8 +1,32 @@
 import type { Route } from 'next';
+import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
 import { getDb } from '@/db/client';
+import { LOCALE_COOKIE } from '@/lib/i18n/config';
+import { getMessages } from '@/lib/i18n/messages';
+import { resolveLocale } from '@/lib/i18n/resolve';
+import { createT } from '@/lib/i18n/t';
 import { parseIcon } from '@/lib/pages/icon-format';
 import { findRelatedPages } from '@/lib/search/see-also';
+
+/**
+ * v0.9.9 F6 (#219) — resolve the request locale for this Server Component the
+ * same way the root layout does (cookie → Accept-Language). Defensive: in unit
+ * tests the component is awaited directly with no request scope, so cookies()
+ * throws — fall back to the English catalog.
+ */
+async function serverT() {
+  try {
+    const [cookieStore, headerStore] = await Promise.all([cookies(), headers()]);
+    const locale = resolveLocale(
+      cookieStore.get(LOCALE_COOKIE)?.value ?? null,
+      headerStore.get('accept-language'),
+    );
+    return createT(locale, getMessages(locale));
+  } catch {
+    return createT('en', getMessages('en'));
+  }
+}
 
 /**
  * Render a related page's stored icon string. Routes through `parseIcon` so the
@@ -48,6 +72,9 @@ export async function SeeAlsoPanel(props: SeeAlsoPanelProps) {
 
   if (related.length === 0) return null;
 
+  const t = await serverT();
+  const matchStrengthLabel = t('seeAlso.matchStrength');
+
   return (
     <section
       className="rounded-md border bg-muted/20 p-3 text-sm"
@@ -80,6 +107,23 @@ export async function SeeAlsoPanel(props: SeeAlsoPanelProps) {
                 {r.snippet ? (
                   <p className="line-clamp-2 text-xs text-muted-foreground">{r.snippet}</p>
                 ) : null}
+                {/* v0.9.9 F6 (#219) — relative match-strength bar so neighbors
+                    look visibly different even when absolute cosines cluster. */}
+                {/* biome-ignore lint/a11y/useSemanticElements: a styled <meter> cannot host the inner fill bar (its appearance is non-customizable across browsers); a div with role="meter" + aria-value* gives the same semantics with the gradient fill. */}
+                <div
+                  role="meter"
+                  aria-label={matchStrengthLabel}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round((r.relativeScore ?? 0) * 100)}
+                  title={matchStrengthLabel}
+                  className="mt-1 h-1 w-full overflow-hidden rounded-full bg-muted"
+                >
+                  <div
+                    className="h-full rounded-full bg-primary/60"
+                    style={{ width: `${(r.relativeScore ?? 0) * 100}%` }}
+                  />
+                </div>
               </Link>
             </li>
           ))}

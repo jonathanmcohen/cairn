@@ -283,6 +283,7 @@
   "share.acl.transferConfirmCancel": "Cancelar",
   "database.view.add": "Añadir vista",
   "database.view.needProperty": "Calendario, Cronograma y Tablero necesitan una propiedad de fecha o selección; añade una desde el menú de propiedades.",
+  "seeAlso.matchStrength": "Nivel de coincidencia",
   "database.view.dateProperty": "Propiedad de fecha de {type}",
   "database.view.disabled.calendar": "Añade una propiedad de fecha para habilitarlo",
   "database.view.disabled.timeline": "Añade dos propiedades de fecha para Cronología",
