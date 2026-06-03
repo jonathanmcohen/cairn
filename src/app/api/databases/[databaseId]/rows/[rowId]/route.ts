@@ -40,6 +40,7 @@ export async function PATCH(req: Request, { params }: Ctx): Promise<Response> {
         databaseId,
         workspaceId: ctx.workspaceId,
         cells: parsed.cells,
+        editorUserId: ctx.userId,
       });
     }
     if (parsed.body !== undefined) {

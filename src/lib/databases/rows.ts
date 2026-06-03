@@ -46,7 +46,13 @@ export async function createRow(
     }
     const [row] = await tx
       .insert(schema.dbRows)
-      .values({ databaseId: input.databaseId, createdBy: input.createdBy })
+      // v0.9.9 F2 #243 — seed updatedBy with the creator so the last_edited_by
+      // computed type has a value before the first edit.
+      .values({
+        databaseId: input.databaseId,
+        createdBy: input.createdBy,
+        updatedBy: input.createdBy,
+      })
       .returning();
     if (!row) throw new Error('insert row failed');
 
@@ -106,6 +112,8 @@ export async function updateCells(
     workspaceId: string;
     cells: Record<string, unknown>;
     parentRowId?: string | null;
+    /** v0.9.9 F2 #243 — the editing user, recorded as db_rows.updated_by. */
+    editorUserId?: string;
   },
 ): Promise<void> {
   await db.transaction(async (tx) => {
@@ -175,7 +183,10 @@ export async function updateCells(
     }
     await tx
       .update(schema.dbRows)
-      .set({ updatedAt: new Date() })
+      .set({
+        updatedAt: new Date(),
+        ...(input.editorUserId ? { updatedBy: input.editorUserId } : {}),
+      })
       .where(eq(schema.dbRows.id, input.rowId));
   });
   // G16 #163 — reminders are materialized off committed cell values. Run
@@ -227,6 +238,35 @@ export function coerce(type: schema.PropertyType, value: unknown): unknown {
     case 'text':
     case 'url':
       return typeof value === 'string' ? value : String(value);
+    // v0.9.9 Plan F2 (#243) — new property types.
+    case 'email': {
+      if (typeof value !== 'string') return null;
+      const v = value.trim().toLowerCase();
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? v : null;
+    }
+    case 'phone':
+      return typeof value === 'string' ? value.trim() : null;
+    case 'person': {
+      if (!Array.isArray(value)) return [];
+      const seen = new Set<string>();
+      const ids: string[] = [];
+      for (const v of value) {
+        if (typeof v !== 'string') continue;
+        const t = v.trim();
+        if (!t || seen.has(t)) continue;
+        seen.add(t);
+        ids.push(t);
+      }
+      return ids;
+    }
+    case 'file':
+      return Array.isArray(value) ? value.filter((f) => f && typeof f === 'object') : [];
+    // Computed at read time from db_rows columns; never persisted as a cell.
+    case 'created_time':
+    case 'last_edited_time':
+    case 'created_by':
+    case 'last_edited_by':
+      return null;
   }
 }
 
@@ -364,6 +404,13 @@ async function listRowsInner(
         cells[fp.id] = computeFormula(expression, ctx);
       }
     }
+    // v0.9.9 F2 #243 — populate computed (read-only) cells from row columns.
+    for (const p of props) {
+      if (p.type === 'created_time') cells[p.id] = r.createdAt;
+      else if (p.type === 'last_edited_time') cells[p.id] = r.updatedAt;
+      else if (p.type === 'created_by') cells[p.id] = r.createdBy;
+      else if (p.type === 'last_edited_by') cells[p.id] = r.updatedBy;
+    }
     return { row: r, cells };
   });
 }
@@ -423,6 +470,14 @@ export async function getRowDetail(
     }
     const ctx: FormulaContext = { nameToId, cells };
     cells[fp.id] = computeFormula(expression, ctx);
+  }
+
+  // v0.9.9 F2 #243 — computed (read-only) cells from row columns.
+  for (const p of props) {
+    if (p.type === 'created_time') cells[p.id] = row.row.createdAt;
+    else if (p.type === 'last_edited_time') cells[p.id] = row.row.updatedAt;
+    else if (p.type === 'created_by') cells[p.id] = row.row.createdBy;
+    else if (p.type === 'last_edited_by') cells[p.id] = row.row.updatedBy;
   }
 
   return { row: row.row, cells, body: row.row.body };

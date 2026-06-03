@@ -16,8 +16,16 @@ export function compileSorts(
   for (const s of sorts) {
     const prop = propsById.get(s.propertyId);
     if (!prop) continue;
-    const expr = rawSql.raw(cellExpr(prop.type));
     const dir = rawSql.raw(s.direction.toUpperCase());
+    // v0.9.9 F2 #243 — computed (read-only) types order on the db_rows column
+    // directly; person/file are unsortable (skipped). All others read db_cells.
+    const rowCol = computedRowColumn(prop.type);
+    if (rowCol) {
+      parts.push(rawSql`${rowCol} ${dir} NULLS LAST`);
+      continue;
+    }
+    if (prop.type === 'person' || prop.type === 'file') continue;
+    const expr = rawSql.raw(cellExpr(prop.type));
     parts.push(rawSql`(
       SELECT ${expr} FROM db_cells dc
       WHERE dc.row_id = db_rows.id AND dc.property_id = ${s.propertyId}::uuid
@@ -38,5 +46,24 @@ function cellExpr(type: schema.PropertyType): string {
       return '(dc.value)::boolean';
     default:
       return 'dc.value::text';
+  }
+}
+
+/**
+ * v0.9.9 F2 #243 — the db_rows column to ORDER BY for a computed property type,
+ * or null for non-computed types.
+ */
+function computedRowColumn(type: schema.PropertyType): SQL | null {
+  switch (type) {
+    case 'created_time':
+      return rawSql`db_rows.created_at`;
+    case 'last_edited_time':
+      return rawSql`db_rows.updated_at`;
+    case 'created_by':
+      return rawSql`db_rows.created_by`;
+    case 'last_edited_by':
+      return rawSql`db_rows.updated_by`;
+    default:
+      return null;
   }
 }
