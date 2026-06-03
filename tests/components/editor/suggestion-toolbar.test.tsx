@@ -17,6 +17,17 @@ function wrap(ui: React.ReactNode) {
 
 const noop = () => {};
 
+const baseProps = {
+  editor: null,
+  openCount: 0,
+  onMarkInsert: noop,
+  onMarkDelete: noop,
+  resolvable: null,
+  onAccept: noop,
+  onReject: noop,
+  onOpenDrawer: noop,
+};
+
 describe('<SuggestionToolbar>', () => {
   it('renders the open-count as a button that opens the suggestions drawer (#85)', () => {
     const onOpenDrawer = vi.fn();
@@ -67,5 +78,28 @@ describe('<SuggestionToolbar>', () => {
     const del = screen.getByRole('button', { name: enMessages['pageActions.suggest.markDelete'] });
     expect(insert.querySelector('svg')).toBeTruthy();
     expect(del.querySelector('svg')).toBeTruthy();
+  });
+});
+
+describe('<SuggestionToolbar> chip is one clickable target (#233)', () => {
+  it('fires onToggle when the chip or its inner icon is clicked', () => {
+    const onToggle = vi.fn();
+    render(wrap(<SuggestionToolbar {...baseProps} active={false} onToggle={onToggle} />));
+    const chip = screen.getByTestId('suggest-toggle-chip');
+    expect(chip.getAttribute('aria-label')).toBe(enMessages['pageActions.suggest.toggleSuggest']);
+    fireEvent.click(chip);
+    const icon = chip.querySelector('svg');
+    expect(icon).not.toBeNull();
+    fireEvent.click(icon as SVGElement);
+    expect(onToggle).toHaveBeenCalledTimes(2);
+  });
+
+  it('exposes the active aria-label while suggesting', () => {
+    render(wrap(<SuggestionToolbar {...baseProps} active onToggle={noop} />));
+    const chip = screen.getByTestId('suggest-toggle-chip');
+    expect(chip.getAttribute('aria-label')).toBe(
+      enMessages['pageActions.suggest.toggleSuggesting'],
+    );
+    expect(chip.getAttribute('aria-pressed')).toBe('true');
   });
 });
