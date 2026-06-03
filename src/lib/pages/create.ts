@@ -51,7 +51,9 @@ export async function createPage(
         workspaceId: input.workspaceId,
         parentId: input.parentId ?? null,
         spaceId: input.spaceId ?? null,
-        title: input.title ?? 'Untitled',
+        // v0.9.9 K1 #215/#206 — a brand-new page is born title-less; the editor
+        // shows the localized placeholder, never a literal 'Untitled'.
+        title: input.title ?? '',
         icon: input.icon ?? formatIcon({ kind: 'emoji', value: DEFAULT_PAGE_ICON }),
         content: emptyDocument(),
         status: defaultStatus,

@@ -63,7 +63,7 @@ describe('POST /api/pages', () => {
     expect(r.status).toBe(201);
     const body = r.body as { id: string; title: string };
     expect(body.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(body.title).toBe('Untitled');
+    expect(body.title).toBe('');
   });
 
   it('editor can create a nested page', async () => {
