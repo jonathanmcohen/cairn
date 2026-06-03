@@ -4,9 +4,7 @@ import {
   Activity,
   Copy,
   CopyPlus,
-  Download,
   FilePlus2,
-  FileStack,
   FileUp,
   Globe,
   Link as LinkIcon,
@@ -86,12 +84,6 @@ export function PageMenu({
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
-
-  function download(url: string) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.click();
-  }
 
   async function importMd() {
     const input = document.createElement('input');
@@ -218,28 +210,9 @@ export function PageMenu({
             {t('share.menuLabel')}
           </button>
           <div className="my-1 border-t" />
-          <button
-            type="button"
-            className={ITEM_CLASS}
-            onClick={() => {
-              download(`/api/pages/${pageId}/export`);
-              setOpen(false);
-            }}
-          >
-            <Download aria-hidden="true" className="h-4 w-4 shrink-0" />
-            {t('pageMenu.exportMd')}
-          </button>
-          <button
-            type="button"
-            className={ITEM_CLASS}
-            onClick={() => {
-              download(`/api/pages/${pageId}/export?recursive=true`);
-              setOpen(false);
-            }}
-          >
-            <FileStack aria-hidden="true" className="h-4 w-4 shrink-0" />
-            {t('pageMenu.exportZip')}
-          </button>
+          {/* Export lives in the single action-bar Export menu (PageExportMenu)
+              — the lone export surface (#56/#235). The duplicate MD/ZIP buttons
+              that used to live here were removed; see export-menu.tsx. */}
           <button
             type="button"
             className={ITEM_CLASS}
