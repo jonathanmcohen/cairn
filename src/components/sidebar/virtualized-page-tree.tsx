@@ -25,7 +25,7 @@ function renderNodeIcon(stored: string | null): React.ReactNode {
   return <ImageIcon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
 }
 
-const ROW_HEIGHT_PX = 32; // Matches the existing sidebar row.
+export const ROW_HEIGHT_PX = 30; // Compact dense row (#208).
 const DEPTH_INDENT_PX = 16; // 16px per level; matches the v0.7 visual.
 const OVERSCAN = 8; // Extra rows above/below the viewport for smooth scroll.
 
@@ -244,12 +244,12 @@ function PageTreeRow({
     <li key={rowKey} data-virtual-row="" data-row-kind="page" data-depth={node.depth} style={style}>
       <PageRowContextMenu node={node} api={api}>
         <div
-          className="group relative flex items-center gap-1 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
+          className="group relative flex items-center gap-1.5 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
           style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
         >
           {api.renaming ? (
             <>
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center text-sm leading-none">
                 {renderNodeIcon(node.icon)}
               </span>
               <input
@@ -290,8 +290,8 @@ function PageTreeRow({
                 aria-label={t('pageRow.open', { title: node.title })}
                 className="absolute inset-0 rounded outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
               />
-              <div className="pointer-events-none flex min-w-0 flex-1 items-center gap-2 py-1">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center text-base leading-none">
+              <div className="pointer-events-none flex min-w-0 flex-1 items-center gap-1.5 py-0.5">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center text-sm leading-none">
                   {renderNodeIcon(node.icon)}
                 </span>
                 <span className="min-w-0 flex-1 truncate" title={node.title}>
