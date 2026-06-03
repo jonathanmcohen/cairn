@@ -118,7 +118,15 @@ export function NotificationPrefs() {
             role="status"
             className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-200"
           >
-            {t('notifications.smtp.disabledBanner')}
+            {t('notifications.smtp.disabledBanner')}{' '}
+            <a
+              href="https://github.com/jonathanmcohen/cairn/blob/main/docs/operations.md#email-smtp"
+              target="_blank"
+              rel="noreferrer"
+              className="font-medium underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
+            >
+              {t('notifications.smtp.docsLink')}
+            </a>
           </div>
         )}
         {error && <p className="text-sm text-destructive">{error}</p>}

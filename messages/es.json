@@ -187,6 +187,7 @@
   "notifications.type.commentReply": "Respuestas a comentarios",
   "notifications.smtp.disabledBanner": "Las notificaciones por correo están deshabilitadas: no hay un servidor SMTP configurado. Las notificaciones en la app siguen funcionando.",
   "notifications.smtp.disabledReason": "El correo requiere un servidor SMTP configurado, del que esta instancia de Cairn carece.",
+  "notifications.smtp.docsLink": "Configurar el envío de correo",
   "sidebar.nav.favorites": "Favoritos",
   "sidebar.nav.inbox": "Bandeja de entrada",
   "sidebar.nav.myTasks": "Mis tareas",

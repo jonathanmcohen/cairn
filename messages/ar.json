@@ -187,6 +187,7 @@
   "notifications.type.commentReply": "ردود التعليقات",
   "notifications.smtp.disabledBanner": "إشعارات البريد الإلكتروني معطّلة — لم يتم تكوين خادم SMTP. لا تزال إشعارات التطبيق تعمل.",
   "notifications.smtp.disabledReason": "يتطلب البريد الإلكتروني خادم SMTP مُكوَّنًا، وهو غير متوفر في نسخة كَيرن هذه.",
+  "notifications.smtp.docsLink": "إعداد تسليم البريد الإلكتروني",
   "sidebar.nav.favorites": "المفضلة",
   "sidebar.nav.inbox": "صندوق الوارد",
   "sidebar.nav.myTasks": "مهامي",

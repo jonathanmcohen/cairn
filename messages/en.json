@@ -187,6 +187,7 @@
   "notifications.type.commentReply": "Comment replies",
   "notifications.smtp.disabledBanner": "Email notifications are disabled — no SMTP server is configured. In-app notifications still work.",
   "notifications.smtp.disabledReason": "Email requires a configured SMTP server, which this Cairn instance does not have.",
+  "notifications.smtp.docsLink": "Configure email delivery",
   "sidebar.nav.favorites": "Favorites",
   "sidebar.nav.inbox": "Inbox",
   "sidebar.nav.myTasks": "My tasks",
