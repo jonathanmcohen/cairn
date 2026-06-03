@@ -43,6 +43,7 @@ import { FootnoteMark } from './blocks/footnote-mark';
 import {
   asFormResult,
   type EditorDialogCitationResult,
+  type EditorDialogEquationResult,
   openEditorDialog,
 } from './editor-dialog-bus';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
@@ -639,11 +640,20 @@ const items: SlashItem[] = [
     category: 'advanced',
     icon: Sigma,
     deferred: true,
+    // v0.9.9 E1a (#246/#274) — modal-first: collect LaTeX (+ display toggle)
+    // with a live KaTeX preview, then lazy-load `math` and insert a POPULATED
+    // node. No more empty-node-then-click. The trigger range is consumed only
+    // once the dialog resolves to a real insert (restore-on-cancel via #38).
     command: (editor, range) => {
-      void ensureLazyExtension(editor, 'math').then(() => {
-        if (editor.isDestroyed) return;
-        consumeSlashRange(editor, range);
-        editor.chain().focus().setMath({ latex: '', display: true }).run();
+      void openEditorDialog({ kind: 'equation', title: 'Insert equation' }).then((raw) => {
+        if (!raw || !('kind' in raw) || raw.kind !== 'equation') return;
+        const { latex, display } = raw as EditorDialogEquationResult;
+        if (!latex.trim()) return;
+        void ensureLazyExtension(editor, 'math').then(() => {
+          if (editor.isDestroyed) return;
+          consumeSlashRange(editor, range);
+          editor.chain().focus().setMath({ latex, display }).run();
+        });
       });
     },
     keywords: ['math', 'latex', 'katex', 'formula'],

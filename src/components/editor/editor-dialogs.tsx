@@ -5,6 +5,7 @@ import {
   CitationAddDialog,
   type CitationStyle,
 } from '@/components/editor/blocks/citation-add-dialog';
+import { EquationAddDialog } from '@/components/editor/blocks/equation-add-dialog';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -117,6 +118,18 @@ export function EditorDialogs() {
             },
           });
         }}
+      />
+    );
+  }
+
+  // v0.9.9 E1a (#246/#274) — the equation modal collects LaTeX + a display
+  // toggle with a live KaTeX preview via its own self-contained dialog.
+  if (request?.kind === 'equation') {
+    return (
+      <EquationAddDialog
+        open
+        onClose={() => settle(null)}
+        onInsert={(latex, display) => settle({ kind: 'equation', latex, display })}
       />
     );
   }
