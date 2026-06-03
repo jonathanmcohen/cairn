@@ -11,6 +11,7 @@ import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
+import { computeDiffPreview } from '@/lib/suggestions/diff-preview';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BibliographyToggle } from './bibliography-toggle';
 import { BlockContextMenu } from './block-context-menu';
@@ -455,7 +456,14 @@ export function Editor({
       if (cancelled) return;
       setOpenCount(data.suggestions.length);
       setOpenSuggestions(
-        data.suggestions.map((s) => ({ id: s.id, authorName: s.authorName ?? 'Anonymous' })),
+        data.suggestions.map((s) => {
+          const json = editorRef.current?.getJSON() as Json | undefined;
+          return {
+            id: s.id,
+            authorName: s.authorName ?? 'Anonymous',
+            diff: json ? computeDiffPreview(json, s.id) : undefined,
+          };
+        }),
       );
     })();
     return () => {
