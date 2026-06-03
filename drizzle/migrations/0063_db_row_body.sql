@@ -1,0 +1,1 @@
+ALTER TABLE "db_rows" ADD COLUMN "body" jsonb;

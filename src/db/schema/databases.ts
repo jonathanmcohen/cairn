@@ -89,6 +89,9 @@ export const dbRows = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
+    // v0.9.9 Plan F1 (#241) — per-row rich-text body (TipTap/ProseMirror JSON),
+    // edited from the row-detail drawer. Nullable, no default.
+    body: jsonb('body').$type<unknown>(),
   },
   (t) => ({
     // v0.8.0 P7 audit: `listRows` filters by `database_id` AND
