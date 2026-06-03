@@ -730,5 +730,11 @@
   "page.title.placeholder": "Sin título",
   "page.title.nudge": "Ponle un nombre a tu página para empezar.",
   "page.title.startBlank": "Empezar en blanco",
-  "page.title.fromTemplate": "Usar una plantilla"
+  "page.title.fromTemplate": "Usar una plantilla",
+  "invites.inviteMember": "Invitar miembro",
+  "invites.dialogTitle": "Invitar a un miembro",
+  "invites.dialogDescription": "Crea un enlace de invitación y compártelo con la persona que quieras añadir.",
+  "invites.copyLink": "Copiar enlace de invitación",
+  "invites.linkCreated": "Enlace de invitación creado: compártelo con la persona invitada:",
+  "invites.close": "Cerrar"
 }

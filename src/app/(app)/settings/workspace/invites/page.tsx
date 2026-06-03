@@ -3,6 +3,7 @@ import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { listPendingInvites } from '@/lib/workspaces/invites';
+import { InviteMemberDialog } from './invite-member-dialog';
 import { InvitesManager } from './invites-manager';
 
 export default async function AdminInvitesPage() {
@@ -23,7 +24,10 @@ export default async function AdminInvitesPage() {
         section={{ label: 'Workspace', href: '/settings/workspace' as Route }}
         page="Invites"
       />
-      <h1 className="mb-4 text-xl font-semibold">Invites</h1>
+      <div className="mb-4 flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Invites</h1>
+        <InviteMemberDialog workspaceId={ctx.workspaceId} />
+      </div>
       <InvitesManager workspaceId={ctx.workspaceId} invites={serialized} />
     </section>
   );

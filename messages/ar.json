@@ -734,5 +734,11 @@
   "page.title.placeholder": "بدون عنوان",
   "page.title.nudge": "أعطِ صفحتك اسمًا للبدء.",
   "page.title.startBlank": "ابدأ من فارغ",
-  "page.title.fromTemplate": "استخدم قالبًا"
+  "page.title.fromTemplate": "استخدم قالبًا",
+  "invites.inviteMember": "دعوة عضو",
+  "invites.dialogTitle": "دعوة عضو",
+  "invites.dialogDescription": "أنشئ رابط دعوة وشاركه مع الشخص الذي تريد إضافته.",
+  "invites.copyLink": "نسخ رابط الدعوة",
+  "invites.linkCreated": "تم إنشاء رابط الدعوة — شاركه مع المدعو:",
+  "invites.close": "إغلاق"
 }

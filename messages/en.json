@@ -730,5 +730,11 @@
   "page.title.placeholder": "Untitled",
   "page.title.nudge": "Give your page a name to get started.",
   "page.title.startBlank": "Start blank",
-  "page.title.fromTemplate": "Use a template"
+  "page.title.fromTemplate": "Use a template",
+  "invites.inviteMember": "Invite member",
+  "invites.dialogTitle": "Invite a member",
+  "invites.dialogDescription": "Create an invite link and share it with the person you want to add.",
+  "invites.copyLink": "Copy invite link",
+  "invites.linkCreated": "Invite link created — share it with the invitee:",
+  "invites.close": "Close"
 }
