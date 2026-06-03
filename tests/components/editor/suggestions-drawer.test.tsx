@@ -65,4 +65,41 @@ describe('<SuggestionsDrawer> (#85/#145)', () => {
     );
     expect(screen.getByText(enMessages['pageActions.suggest.drawerEmpty'])).toBeTruthy();
   });
+
+  it('renders an inline diff preview when a row carries one (#232)', () => {
+    render(
+      wrap(
+        <SuggestionsDrawer
+          open
+          onOpenChange={() => {}}
+          suggestions={[
+            { id: 's1', authorName: 'Ada', diff: { deleted: 'old text', inserted: 'new text' } },
+          ]}
+          onAccept={() => {}}
+          onReject={() => {}}
+          onView={() => {}}
+        />,
+      ),
+    );
+    const del = screen.getByText('old text');
+    expect(del.tagName).toBe('DEL');
+    const ins = screen.getByText('new text');
+    expect(ins.tagName).toBe('INS');
+  });
+
+  it('omits the diff block when a row has no diff', () => {
+    render(
+      wrap(
+        <SuggestionsDrawer
+          open
+          onOpenChange={() => {}}
+          suggestions={[{ id: 's1', authorName: 'Ada' }]}
+          onAccept={() => {}}
+          onReject={() => {}}
+          onView={() => {}}
+        />,
+      ),
+    );
+    expect(screen.queryByText(enMessages['pageActions.suggest.diffDeletedLabel'])).toBeNull();
+  });
 });
