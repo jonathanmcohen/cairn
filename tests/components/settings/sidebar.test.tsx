@@ -186,10 +186,12 @@ describe('<SettingsSidebar>', () => {
     }
   });
 
-  it('expands new Workspace children (Static site export / Trash retention / Pinned pages)', () => {
+  it('expands new Workspace children (Export / Trash retention / Pinned pages)', () => {
     pathnameMock.mockReturnValue('/settings/workspace');
     renderSidebar();
-    for (const label of ['Static site export', 'Trash retention', 'Pinned pages']) {
+    // v0.9.9 C6 (#187) — the static-site export nav label is now the single
+    // canonical "Export" term, matching the breadcrumb + page heading.
+    for (const label of ['Export', 'Trash retention', 'Pinned pages']) {
       expect(screen.getByRole('link', { name: label })).toBeTruthy();
     }
   });

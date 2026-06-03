@@ -503,7 +503,7 @@
   "settings.nav.developer.export": "Workspace archive",
   "settings.nav.developer.apiDocs": "API reference (Swagger)",
   "settings.nav.developer.downloadOpenapi": "Download OpenAPI spec",
-  "settings.nav.workspace.exportStatic": "Static site export",
+  "settings.nav.workspace.exportStatic": "Export",
   "settings.nav.workspace.trash": "Trash retention",
   "settings.nav.workspace.pinnedPages": "Pinned pages",
   "settings.nav.account.theme": "Theme",
