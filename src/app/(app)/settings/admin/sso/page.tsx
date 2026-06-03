@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { IdpAddButtons } from '@/components/admin/sso/idp-add-buttons';
 import { ScimTokenList, type ScimTokenRow } from '@/components/admin/sso/scim-token-list';
 import { Button } from '@/components/ui/button';
 import { getDb } from '@/db/client';
@@ -81,14 +82,7 @@ export default async function AdminSsoPage() {
       <section>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-xl font-semibold">Identity providers</h2>
-          <div className="flex gap-2">
-            <Button asChild size="sm">
-              <Link href={'/settings/admin/sso/oidc/new' as Route}>Add OIDC</Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link href={'/settings/admin/sso/saml/new' as Route}>Add SAML</Link>
-            </Button>
-          </div>
+          <IdpAddButtons />
         </div>
         {idps.length === 0 ? (
           <p className="text-sm text-muted-foreground">No identity providers configured.</p>
