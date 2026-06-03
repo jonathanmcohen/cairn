@@ -36,6 +36,18 @@ describe('<SidebarFooterNav> version link', () => {
     expect(link.className).toMatch(/focus-visible:ring/);
   });
 
+  it('renders Favorites + Inbox nav entries before My tasks (#202)', () => {
+    render(<SidebarFooterNav version="0.9.9" />);
+    const favorites = screen.getByRole('link', { name: 'Favorites' });
+    const inbox = screen.getByRole('link', { name: 'Inbox' });
+    expect(favorites.getAttribute('href')).toBe('/favorites');
+    expect(inbox.getAttribute('href')).toBe('/inbox');
+    const myTasks = screen.getByRole('link', { name: 'My tasks' });
+    const links = screen.getAllByRole('link');
+    expect(links.indexOf(favorites)).toBeLessThan(links.indexOf(myTasks));
+    expect(links.indexOf(inbox)).toBeLessThan(links.indexOf(myTasks));
+  });
+
   it('renders the Sign out control inside a visually separated group', () => {
     render(<SidebarFooterNav version="1.0.0" />);
     const signOut = screen.getByRole('button', { name: /sign out/i });

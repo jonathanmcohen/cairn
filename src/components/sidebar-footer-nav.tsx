@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckSquare, LayoutTemplate, LogOut, Settings, Trash } from 'lucide-react';
+import { CheckSquare, Inbox, LayoutTemplate, LogOut, Settings, Star, Trash } from 'lucide-react';
 import Link from 'next/link';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
@@ -26,21 +26,29 @@ export function SidebarFooterNav({ version }: { version: string }) {
     <div className="border-t p-3 text-sm text-muted-foreground">
       <ReviewDueCounter />
       <StudyLink />
+      <Link href="/favorites" className={NAV_ITEM_CLASS}>
+        <Star aria-hidden="true" className="h-4 w-4" />
+        {t('sidebar.nav.favorites')}
+      </Link>
+      <Link href="/inbox" className={NAV_ITEM_CLASS}>
+        <Inbox aria-hidden="true" className="h-4 w-4" />
+        {t('sidebar.nav.inbox')}
+      </Link>
       <Link href="/my-tasks" className={NAV_ITEM_CLASS}>
         <CheckSquare aria-hidden="true" className="h-4 w-4" />
-        My tasks
+        {t('sidebar.nav.myTasks')}
       </Link>
       <Link href="/templates" className={NAV_ITEM_CLASS}>
         <LayoutTemplate aria-hidden="true" className="h-4 w-4" />
-        Templates
+        {t('sidebar.nav.templates')}
       </Link>
       <Link href="/settings" className={NAV_ITEM_CLASS}>
         <Settings aria-hidden="true" className="h-4 w-4" />
-        Settings
+        {t('sidebar.nav.settings')}
       </Link>
       <Link href="/trash" className={NAV_ITEM_CLASS}>
         <Trash aria-hidden="true" className="h-4 w-4" />
-        Trash
+        {t('sidebar.nav.trash')}
       </Link>
       {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
           account/destructive Sign out group reads as a distinct boundary, not
