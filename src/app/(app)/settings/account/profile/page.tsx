@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
+import { ProfileForm } from '@/components/account/profile-form';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { CopyButton } from '@/components/settings/copy-button';
 import { getDb } from '@/db/client';
@@ -35,7 +36,9 @@ export default async function AccountProfilePage() {
         </div>
         <div>
           <dt className="text-muted-foreground">Display name</dt>
-          <dd>{user?.name ?? '—'}</dd>
+          <dd>
+            <ProfileForm initialName={user?.name ?? ''} />
+          </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">User ID</dt>

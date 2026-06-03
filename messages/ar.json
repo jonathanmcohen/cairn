@@ -740,5 +740,10 @@
   "invites.dialogDescription": "أنشئ رابط دعوة وشاركه مع الشخص الذي تريد إضافته.",
   "invites.copyLink": "نسخ رابط الدعوة",
   "invites.linkCreated": "تم إنشاء رابط الدعوة — شاركه مع المدعو:",
-  "invites.close": "إغلاق"
+  "invites.close": "إغلاق",
+  "profile.displayName": "الاسم المعروض",
+  "profile.save": "حفظ",
+  "profile.saving": "جارٍ الحفظ…",
+  "profile.saved": "تم تحديث الملف الشخصي",
+  "profile.saveError": "تعذّر تحديث ملفك الشخصي"
 }

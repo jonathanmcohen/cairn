@@ -736,5 +736,10 @@
   "invites.dialogDescription": "Create an invite link and share it with the person you want to add.",
   "invites.copyLink": "Copy invite link",
   "invites.linkCreated": "Invite link created — share it with the invitee:",
-  "invites.close": "Close"
+  "invites.close": "Close",
+  "profile.displayName": "Display name",
+  "profile.save": "Save",
+  "profile.saving": "Saving…",
+  "profile.saved": "Profile updated",
+  "profile.saveError": "Could not update your profile"
 }
