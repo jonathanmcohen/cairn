@@ -1,7 +1,7 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronDown, ChevronRight, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronRight, Maximize2, MessageSquare } from 'lucide-react';
 import { useRef } from 'react';
 import { useT } from '@/lib/i18n/provider';
 import { CellEditor } from './cell-editor';
@@ -24,6 +24,8 @@ export type VirtualizedRowBodyProps = {
   adding: boolean;
   /** G16 #163 — open the row peek/comments panel for a row. */
   onPeek: (rowId: string) => void;
+  /** v0.9.9 F1 #241 — open the full row-detail drawer for a row. */
+  onOpenDetail: (rowId: string) => void;
 };
 
 /**
@@ -49,6 +51,7 @@ export function VirtualizedRowBody({
   onAddChild,
   adding,
   onPeek,
+  onOpenDetail,
 }: VirtualizedRowBodyProps) {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -181,6 +184,15 @@ export function VirtualizedRowBody({
                         className="ml-1 shrink-0 text-xs text-muted-foreground opacity-0 hover:bg-accent focus:opacity-100 group-hover:opacity-100"
                       >
                         +
+                      </button>
+                      {/* v0.9.9 F1 #241 — open the full row-detail drawer. */}
+                      <button
+                        type="button"
+                        aria-label={t('databases.rowDetail.open')}
+                        onClick={() => onOpenDetail(node.row.id)}
+                        className="ml-1 inline-flex shrink-0 items-center text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                      >
+                        <Maximize2 className="size-3.5" aria-hidden />
                       </button>
                       {/* G16 #163 — open the row peek panel (comments thread). */}
                       <button

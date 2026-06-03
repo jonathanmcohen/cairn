@@ -101,6 +101,7 @@ describe('<VirtualizedRowBody>', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     // The sticky header still renders even when there are zero rows.
@@ -123,6 +124,7 @@ describe('<VirtualizedRowBody>', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const rendered = container.querySelectorAll('[data-virtual-row]');
@@ -143,6 +145,7 @@ describe('<VirtualizedRowBody>', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const header = container.querySelector('[data-virtual-header]') as HTMLElement;
@@ -169,6 +172,7 @@ describe('<VirtualizedRowBody>', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const btn = container.querySelector('[aria-label*="ollapse"]') as HTMLButtonElement;
@@ -192,6 +196,7 @@ describe('<VirtualizedRowBody>', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     expect(performance.now() - start).toBeLessThan(200);
@@ -215,6 +220,7 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const header = container.querySelector('[data-virtual-header]') as HTMLElement;
@@ -242,6 +248,7 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const firstHeader = container.querySelector('[data-virtual-header]');
@@ -257,6 +264,7 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onAddChild={() => {}}
         adding={false}
         onPeek={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const secondHeader = container.querySelector('[data-virtual-header]');

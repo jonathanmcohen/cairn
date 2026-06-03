@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare, Plus } from 'lucide-react';
+import { Maximize2, MessageSquare, Plus } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
@@ -20,6 +20,7 @@ import { useT } from '@/lib/i18n/provider';
 import { CalcFooterRow } from './calc-footer-row';
 import { CellEditor } from './cell-editor';
 import { columnLayout } from './column-ergonomics';
+import { RowDetailPanel } from './row-detail-panel';
 import { RowPeekPanel } from './row-peek-panel';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { DatabaseMeta, RowData } from './use-database-data';
@@ -123,6 +124,8 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   // G16 #163 — the row currently open in the peek/comments panel (null = closed).
   const [peekRowId, setPeekRowId] = useState<string | null>(null);
+  // v0.9.9 F1 #241 — the row currently open in the full row-detail drawer.
+  const [detailRowId, setDetailRowId] = useState<string | null>(null);
   const toggle = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -203,15 +206,26 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
             >
               <span className="inline-flex items-center gap-1">
                 {i === 0 && (
-                  // G16 #163 — open the row peek panel (comments thread).
-                  <button
-                    type="button"
-                    aria-label={t('databases.row.peek')}
-                    onClick={() => setPeekRowId(r.row.id)}
-                    className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
-                  >
-                    <MessageSquare className="size-4" aria-hidden />
-                  </button>
+                  <>
+                    {/* v0.9.9 F1 #241 — open the full row-detail drawer. */}
+                    <button
+                      type="button"
+                      aria-label={t('databases.rowDetail.open')}
+                      onClick={() => setDetailRowId(r.row.id)}
+                      className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                    >
+                      <Maximize2 className="size-3.5" aria-hidden />
+                    </button>
+                    {/* G16 #163 — open the row peek panel (comments thread). */}
+                    <button
+                      type="button"
+                      aria-label={t('databases.row.peek')}
+                      onClick={() => setPeekRowId(r.row.id)}
+                      className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                    >
+                      <MessageSquare className="size-4" aria-hidden />
+                    </button>
+                  </>
                 )}
                 <CellEditor
                   databaseId={databaseId}
@@ -269,6 +283,7 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         onAddChild={(parentId) => void addRow(parentId)}
         adding={adding}
         onPeek={(rowId) => setPeekRowId(rowId)}
+        onOpenDetail={(rowId) => setDetailRowId(rowId)}
       />
     );
   }
@@ -463,6 +478,25 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           onOpenChange={(o) => {
             if (!o) setPeekRowId(null);
           }}
+          canComment
+          currentUserId=""
+          currentRole="editor"
+        />
+      )}
+      {/* v0.9.9 F1 #241 — full row-detail drawer (properties + body + comments).
+          Like RowPeekPanel, TableView has no viewer-context props; the row routes
+          re-check requireRole server-side, so a conservative editor role + empty
+          userId is passed here. */}
+      {detailRowId && (
+        <RowDetailPanel
+          databaseId={databaseId}
+          rowId={detailRowId}
+          meta={meta}
+          open={detailRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setDetailRowId(null);
+          }}
+          refresh={onChange}
           canComment
           currentUserId=""
           currentRole="editor"
