@@ -751,5 +751,9 @@
   "profile.avatarUploading": "جارٍ الرفع…",
   "profile.avatarRemove": "إزالة الصورة الرمزية",
   "profile.avatarError": "تعذّر رفع تلك الصورة",
-  "profile.avatarHint": "PNG أو JPG أو GIF أو WebP، حتى حد الرفع لمساحة العمل."
+  "profile.avatarHint": "PNG أو JPG أو GIF أو WebP، حتى حد الرفع لمساحة العمل.",
+  "theme.toggle.light": "السمة الفاتحة",
+  "theme.toggle.system": "سمة النظام",
+  "theme.toggle.dark": "السمة الداكنة",
+  "theme.toggle.cycleHint": "تبديل السمة"
 }
