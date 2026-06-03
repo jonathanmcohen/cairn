@@ -214,3 +214,21 @@ pre code.hljs {
 [contenteditable="true"] .cairn-editor-link {
   cursor: text;
 }
+
+/* #224 J2d — inline code + blockquote had no token-driven rule and inherited
+   UA defaults that clashed on white. Anchor both to theme tokens so they read
+   in light + dark + any accent. Block code (pre code.hljs) already uses
+   --muted; this covers the inline + quote cases. */
+.ProseMirror :not(pre) > code {
+  background: hsl(var(--muted));
+  color: hsl(var(--foreground));
+  border-radius: 0.25rem;
+  padding: 0.1em 0.3em;
+  font-size: 0.875em;
+}
+.ProseMirror blockquote {
+  border-left: 3px solid hsl(var(--border));
+  color: hsl(var(--muted-foreground));
+  padding-left: 1rem;
+  margin: 0.5rem 0;
+}
