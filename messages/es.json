@@ -253,6 +253,8 @@
   "pageActions.suggest.reject": "Rechazar",
   "pageActions.suggest.viewInDoc": "Ver en el documento",
   "pageActions.suggest.close": "Cerrar el panel de sugerencias",
+  "pageActions.suggest.diffDeletedLabel": "Texto eliminado",
+  "pageActions.suggest.diffInsertedLabel": "Texto añadido",
   "common.close": "Cerrar",
   "common.cancel": "Cancelar",
   "publishConfirm.title": "Publicar en la web",

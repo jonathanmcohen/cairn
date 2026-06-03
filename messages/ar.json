@@ -253,6 +253,8 @@
   "pageActions.suggest.reject": "رفض",
   "pageActions.suggest.viewInDoc": "عرض في المستند",
   "pageActions.suggest.close": "إغلاق لوحة الاقتراحات",
+  "pageActions.suggest.diffDeletedLabel": "نص محذوف",
+  "pageActions.suggest.diffInsertedLabel": "نص مضاف",
   "common.close": "إغلاق",
   "common.cancel": "إلغاء",
   "publishConfirm.title": "النشر على الويب",

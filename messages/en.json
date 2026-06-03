@@ -253,6 +253,8 @@
   "pageActions.suggest.reject": "Reject",
   "pageActions.suggest.viewInDoc": "View in document",
   "pageActions.suggest.close": "Close suggestions panel",
+  "pageActions.suggest.diffDeletedLabel": "Removed text",
+  "pageActions.suggest.diffInsertedLabel": "Added text",
   "common.close": "Close",
   "common.cancel": "Cancel",
   "publishConfirm.title": "Publish to web",
