@@ -63,6 +63,8 @@ export function PageMenu({
   const [linkCopied, setLinkCopied] = useState(false);
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewCopied, setPreviewCopied] = useState(false);
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -85,6 +87,21 @@ export function PageMenu({
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
+
+  // When the publish-confirm dialog opens, fetch the non-mutating preview so the
+  // user sees the resolved public URL before committing to Publish (#70/#249).
+  useEffect(() => {
+    if (!confirmPublishOpen) return;
+    let cancelled = false;
+    void fetch(`/api/pages/${pageId}/publish`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b: { url: string } | null) => {
+        if (!cancelled && b) setPreviewUrl(`${window.location.origin}${b.url}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [confirmPublishOpen, pageId]);
 
   async function importMd() {
     const input = document.createElement('input');
@@ -313,12 +330,39 @@ export function PageMenu({
           setTimeout(() => setSavedAsTemplate(false), 2000);
         }}
       />
-      <Dialog open={confirmPublishOpen} onOpenChange={setConfirmPublishOpen}>
+      <Dialog
+        open={confirmPublishOpen}
+        onOpenChange={(next) => {
+          setConfirmPublishOpen(next);
+          if (!next) setPreviewUrl(null);
+        }}
+      >
         <DialogContent closeLabel={t('common.close')}>
           <DialogHeader>
             <DialogTitle>{t('publishConfirm.title')}</DialogTitle>
             <DialogDescription>{t('publishConfirm.body')}</DialogDescription>
           </DialogHeader>
+          {previewUrl && (
+            <div className="rounded-md border bg-muted/40 p-2">
+              <div className="text-muted-foreground text-xs">{t('publishConfirm.urlLabel')}</div>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 truncate text-sm">{previewUrl}</code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(previewUrl).then(() => {
+                      setPreviewCopied(true);
+                      setTimeout(() => setPreviewCopied(false), 1500);
+                    });
+                  }}
+                >
+                  {previewCopied ? t('publishConfirm.urlCopied') : t('publishConfirm.copyUrl')}
+                </Button>
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setConfirmPublishOpen(false)}>
               {t('common.cancel')}
