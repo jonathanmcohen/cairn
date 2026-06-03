@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CitationAddDialog,
   type CitationStyle,
@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { CitationMeta, FormattedCitation } from '@/lib/citations/types';
 import { useT } from '@/lib/i18n/provider';
+import type { TFunction } from '@/lib/i18n/t';
 import {
   type EditorDialogField,
   type EditorDialogRequest,
@@ -45,32 +46,36 @@ type Spec = {
   fields: EditorDialogField[];
 };
 
-// `citationLookup` has no entry here — it renders the self-contained
-// `CitationAddDialog` via an early-return branch below, not the generic form.
-const SPECS: Partial<Record<EditorDialogRequest['kind'], Spec>> = {
-  footnote: {
-    confirmLabel: 'Add',
-    fields: [{ name: 'text', label: 'Footnote text', required: true }],
-  },
-  citation: {
-    confirmLabel: 'Insert',
-    fields: [
-      { name: 'author', label: 'Author (Last, F.)', required: true },
-      { name: 'title', label: 'Title', required: true },
-      { name: 'year', label: 'Year', placeholder: 'e.g. 2020', required: true },
-      { name: 'doi', label: 'DOI (optional)' },
-      { name: 'pubmed', label: 'PubMed ID (optional)' },
-    ],
-  },
-  flashcard: {
-    confirmLabel: 'Add',
-    fields: [
-      { name: 'front', label: 'Front (question)', required: true },
-      { name: 'back', label: 'Back (answer)', required: true },
-      { name: 'deck', label: 'Deck tag (optional)' },
-    ],
-  },
-};
+// v0.9.9 E1c (#274/#64) — confirm/field labels are i18n-driven (resolved via
+// `t`) so the slash modals render in the active locale, matching the
+// self-contained equation/citation-lookup dialogs. `citationLookup` has no
+// entry here — it renders `CitationAddDialog` via an early-return branch.
+function buildSpecs(t: TFunction): Partial<Record<EditorDialogRequest['kind'], Spec>> {
+  return {
+    footnote: {
+      confirmLabel: t('common.add'),
+      fields: [{ name: 'text', label: t('editor.footnote.textLabel'), required: true }],
+    },
+    citation: {
+      confirmLabel: t('editor.citation.insert'),
+      fields: [
+        { name: 'author', label: 'Author (Last, F.)', required: true },
+        { name: 'title', label: 'Title', required: true },
+        { name: 'year', label: 'Year', placeholder: 'e.g. 2020', required: true },
+        { name: 'doi', label: 'DOI (optional)' },
+        { name: 'pubmed', label: 'PubMed ID (optional)' },
+      ],
+    },
+    flashcard: {
+      confirmLabel: t('common.add'),
+      fields: [
+        { name: 'front', label: t('editor.flashcard.front'), required: true },
+        { name: 'back', label: t('editor.flashcard.back'), required: true },
+        { name: 'deck', label: t('editor.flashcard.deck') },
+      ],
+    },
+  };
+}
 
 function blankValues(fields: EditorDialogField[]): Record<string, string> {
   return Object.fromEntries(fields.map((f) => [f.name, f.defaultValue ?? '']));
@@ -98,10 +103,15 @@ export function EditorDialogs() {
   const [doiLoading, setDoiLoading] = useState(false);
   const [doiError, setDoiError] = useState(false);
   const doiAbortRef = useRef<AbortController | null>(null);
+  const specs = useMemo(() => buildSpecs(t), [t]);
+  // Read current specs inside the (stable) subscribe handler without
+  // re-subscribing on locale change — only field NAMES are needed there.
+  const specsRef = useRef(specs);
+  specsRef.current = specs;
 
   useEffect(() => {
     return subscribeEditorDialog((req) => {
-      setValues(blankValues(SPECS[req.kind]?.fields ?? []));
+      setValues(blankValues(specsRef.current[req.kind]?.fields ?? []));
       setDoiLoading(false);
       setDoiError(false);
       doiAbortRef.current?.abort();
@@ -189,7 +199,7 @@ export function EditorDialogs() {
     );
   }
 
-  const spec = request ? SPECS[request.kind] : null;
+  const spec = request ? specs[request.kind] : null;
   const canSubmit = spec?.fields.every((f) => !f.required || values[f.name]?.trim()) ?? false;
 
   return (
