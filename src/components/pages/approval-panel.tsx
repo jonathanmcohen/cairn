@@ -113,10 +113,7 @@ export function ApprovalPanel(props: {
   };
 
   return (
-    <aside
-      aria-label="Page approval"
-      className="my-4 rounded-md border bg-amber-50/30 p-4 dark:bg-amber-950/20"
-    >
+    <aside aria-label="Page approval" className="cairn-approval-banner my-4 rounded-md border p-4">
       <h2 className="text-sm font-semibold uppercase tracking-wide">Approval</h2>
       {showButtons && (
         <div className="mt-3 space-y-2">
