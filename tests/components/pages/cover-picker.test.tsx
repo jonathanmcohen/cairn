@@ -103,3 +103,27 @@ describe('<CoverPicker> presets + contrast (findings U + Y)', () => {
     );
   });
 });
+
+describe('<CoverPicker> layout polish (Plan M)', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn(
+      async () => new Response(null, { status: 200 }),
+    ) as unknown as typeof fetch;
+  });
+
+  it('renders "Use default" as a secondary text-link, not a full-width primary CTA (#228)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{}} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.add'] }));
+    const useDefault = screen.getByRole('button', { name: enMessages['cover.useDefault'] });
+    // Demoted: link variant, not the primary/full-width CTA it used to be.
+    expect(useDefault.className).not.toContain('w-full');
+    expect(useDefault.className).toContain('text-muted-foreground');
+    // It now lives at the bottom of the tab, after the gradient swatches.
+    const firstGradient = screen.getByRole('button', {
+      name: enMessages['cover.usePreset'].replace('{name}', enMessages['cover.preset.slateDusk']),
+    });
+    expect(
+      firstGradient.compareDocumentPosition(useDefault) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+});

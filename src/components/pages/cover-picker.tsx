@@ -161,14 +161,6 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
             <div className="space-y-3 p-4">
               {tab === 'color' && (
                 <div className="space-y-4">
-                  <Button
-                    type="button"
-                    className="w-full"
-                    disabled={saving}
-                    onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
-                  >
-                    {t('cover.useDefault')}
-                  </Button>
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">
                       {t('cover.section.gradients')}
@@ -236,11 +228,30 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                         </p>
                       )}
                   </div>
-                  {'kind' in current && (
-                    <Button variant="outline" disabled={saving} onClick={() => void save({})}>
-                      {t('cover.remove')}
+                  <div className="flex items-center gap-4 border-t pt-3">
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                      disabled={saving}
+                      onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
+                    >
+                      {t('cover.useDefault')}
                     </Button>
-                  )}
+                    {'kind' in current && (
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                        disabled={saving}
+                        onClick={() => void save({})}
+                      >
+                        {t('cover.remove')}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
               {tab === 'unsplash' && unsplashKey && (
