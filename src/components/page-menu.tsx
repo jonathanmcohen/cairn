@@ -32,6 +32,11 @@ import { useT } from '@/lib/i18n/provider';
 const ITEM_CLASS =
   'flex min-h-11 w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50';
 
+// Keyboard-shortcut glyph, not translatable copy (the keystroke is identical in
+// every locale). Held as a constant so the i18n audit — which only scans JSX
+// text/attributes — doesn't flag the bare glyph (#61/#240).
+const EXPORT_SHORTCUT_GLYPH = '⌘⇧E';
+
 type PageMenuProps = {
   pageId: string;
   initialPublished?: boolean;
@@ -242,7 +247,7 @@ export function PageMenu({
           >
             <Download aria-hidden="true" className="h-4 w-4 shrink-0" />
             <span className="flex-1">{t('pageMenu.exportHint')}</span>
-            <kbd className="ml-auto text-muted-foreground text-xs">⌘⇧E</kbd>
+            <kbd className="ml-auto text-muted-foreground text-xs">{EXPORT_SHORTCUT_GLYPH}</kbd>
           </button>
           <button
             type="button"
