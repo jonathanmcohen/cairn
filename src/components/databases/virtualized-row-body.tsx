@@ -1,8 +1,14 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronDown, ChevronRight, Maximize2, MessageSquare } from 'lucide-react';
+import { ChevronDown, ChevronRight, GripVertical, Plus } from 'lucide-react';
 import { useRef } from 'react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useT } from '@/lib/i18n/provider';
 import { CellEditor } from './cell-editor';
 import type { ColumnLayoutItem } from './column-ergonomics';
@@ -22,10 +28,12 @@ export type VirtualizedRowBodyProps = {
   onChange: () => void;
   onAddChild: (parentId: string) => void;
   adding: boolean;
-  /** G16 #163 — open the row peek/comments panel for a row. */
-  onPeek: (rowId: string) => void;
   /** v0.9.9 F1 #241 — open the full row-detail drawer for a row. */
   onOpenDetail: (rowId: string) => void;
+  /** v0.9.9 F3 #245 — delete a row (lifted handler from TableView). */
+  onDeleteRow: (rowId: string) => void;
+  /** v0.9.9 F3 #245 — duplicate a row (lifted handler from TableView). */
+  onDuplicateRow: (rowId: string) => void;
 };
 
 /**
@@ -50,8 +58,9 @@ export function VirtualizedRowBody({
   onChange,
   onAddChild,
   adding,
-  onPeek,
   onOpenDetail,
+  onDeleteRow,
+  onDuplicateRow,
 }: VirtualizedRowBodyProps) {
   const t = useT();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -119,7 +128,7 @@ export function VirtualizedRowBody({
               key={node.row.id}
               data-virtual-row
               role="row"
-              className="flex border-b hover:bg-accent/40"
+              className="group flex border-b hover:bg-accent/40"
               style={{
                 position: 'absolute',
                 top: 0,
@@ -129,6 +138,42 @@ export function VirtualizedRowBody({
                 transform: `translateY(${vRow.start}px)`,
               }}
             >
+              {/* v0.9.9 F3 #245 — left gutter: insert (+) + actions (⋮⋮) handles,
+                  shown on row hover. Replaces the inline trailing affordances. */}
+              <div
+                data-row-gutter
+                className="flex shrink-0 items-center justify-center gap-0.5 opacity-0 focus-within:opacity-100 group-hover:opacity-100"
+                style={{ width: 32, minWidth: 32 }}
+              >
+                <button
+                  type="button"
+                  aria-label={t('db.row.insert')}
+                  disabled={adding}
+                  onClick={() => onAddChild(node.row.id)}
+                  className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <Plus className="size-3.5" aria-hidden="true" />
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    aria-label={t('db.row.menu')}
+                    className="flex size-5 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
+                  >
+                    <GripVertical className="size-3.5" aria-hidden="true" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start">
+                    <DropdownMenuItem onSelect={() => onOpenDetail(node.row.id)}>
+                      {t('db.row.open')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onSelect={() => onDuplicateRow(node.row.id)}>
+                      {t('db.row.duplicate')}
+                    </DropdownMenuItem>
+                    <DropdownMenuItem variant="danger" onSelect={() => onDeleteRow(node.row.id)}>
+                      {t('db.row.delete')}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
               {columns.map((c, i) => (
                 // biome-ignore lint/a11y/useSemanticElements: <td> requires a parent <tr>/<table>; the windowed body uses div-based ARIA grid semantics so position:absolute rows can lay out correctly.
                 <div
@@ -176,33 +221,6 @@ export function VirtualizedRowBody({
                         value={item.cells[c.id]}
                         onSaved={onChange}
                       />
-                      <button
-                        type="button"
-                        aria-label={t('db.row.addSubItem')}
-                        disabled={adding}
-                        onClick={() => onAddChild(node.row.id)}
-                        className="ml-1 shrink-0 text-xs text-muted-foreground opacity-0 hover:bg-accent focus:opacity-100 group-hover:opacity-100"
-                      >
-                        +
-                      </button>
-                      {/* v0.9.9 F1 #241 — open the full row-detail drawer. */}
-                      <button
-                        type="button"
-                        aria-label={t('databases.rowDetail.open')}
-                        onClick={() => onOpenDetail(node.row.id)}
-                        className="ml-1 inline-flex shrink-0 items-center text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
-                      >
-                        <Maximize2 className="size-3.5" aria-hidden />
-                      </button>
-                      {/* G16 #163 — open the row peek panel (comments thread). */}
-                      <button
-                        type="button"
-                        aria-label={t('databases.row.peek')}
-                        onClick={() => onPeek(node.row.id)}
-                        className="ml-1 inline-flex shrink-0 items-center text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
-                      >
-                        <MessageSquare className="size-4" aria-hidden />
-                      </button>
                     </span>
                   ) : (
                     <CellEditor

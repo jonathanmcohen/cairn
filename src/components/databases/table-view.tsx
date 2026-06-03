@@ -40,47 +40,23 @@ export type ViewProps = {
  * row via `position: absolute` and dismisses on outside click.
  */
 function LongPressRow({
-  databaseId,
   rowId,
-  onChange,
+  onDelete,
+  onDuplicate,
   className,
   children,
 }: {
-  databaseId: string;
   rowId: string;
-  onChange: () => void;
+  // v0.9.9 F3 #245 — handlers lifted into TableView (shared with the gutter
+  // menu). They take the rowId so the same body works for any row.
+  onDelete: (rowId: string) => void;
+  onDuplicate: (rowId: string) => void;
   className?: string;
   children: ReactNode;
 }) {
   const rowRef = useRef<HTMLTableRowElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const confirm = useConfirm();
   useLongPress(rowRef, { onLongPress: () => setMenuOpen(true) });
-
-  async function onDelete() {
-    setMenuOpen(false);
-    const ok = await confirm({
-      title: 'Delete this row?',
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    await fetch(`/api/databases/${databaseId}/rows/${rowId}`, { method: 'DELETE' });
-    onChange();
-  }
-
-  async function onDuplicate() {
-    setMenuOpen(false);
-    // Reuse the bulk-create endpoint shape: POST /rows with no body creates a
-    // blank row. A true "duplicate" would copy cells; defer to a future plan
-    // (the API doesn't expose a single-row clone today).
-    await fetch(`/api/databases/${databaseId}/rows`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({}),
-    });
-    onChange();
-  }
 
   return (
     <tr ref={rowRef} className={className} style={{ position: 'relative' }}>
@@ -99,14 +75,20 @@ function LongPressRow({
             <button
               type="button"
               className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
-              onClick={() => void onDuplicate()}
+              onClick={() => {
+                setMenuOpen(false);
+                onDuplicate(rowId);
+              }}
             >
               Duplicate row
             </button>
             <button
               type="button"
               className="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-accent"
-              onClick={() => void onDelete()}
+              onClick={() => {
+                setMenuOpen(false);
+                onDelete(rowId);
+              }}
             >
               Delete row
             </button>
@@ -119,6 +101,7 @@ function LongPressRow({
 
 export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const t = useT();
+  const confirm = useConfirm();
   const [adding, setAdding] = useState(false);
   const rowMutateAllowed = useActionAllowed('db-row-mutate');
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
@@ -180,14 +163,40 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
     onChange();
   }
 
+  // v0.9.9 F3 #245 — row delete/duplicate lifted here so both the left-gutter
+  // ⋮⋮ menu (VirtualizedRowBody / grouped rowTr) and the mobile long-press sheet
+  // share one implementation.
+  async function deleteRow(rowId: string) {
+    const ok = await confirm({
+      title: t('db.row.delete'),
+      confirmLabel: t('db.row.delete'),
+      variant: 'danger',
+    });
+    if (!ok) return;
+    await fetch(`/api/databases/${databaseId}/rows/${rowId}`, { method: 'DELETE' });
+    onChange();
+  }
+
+  async function duplicateRow(_rowId: string) {
+    // The API has no single-row clone yet; POST with no body creates a blank
+    // row (mirrors the prior long-press behavior). A true cell-copy duplicate
+    // is deferred to a follow-up.
+    await fetch(`/api/databases/${databaseId}/rows`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    onChange();
+  }
+
   function rowTr(r: RowData) {
     return (
       <LongPressRow
         key={r.row.id}
-        databaseId={databaseId}
         rowId={r.row.id}
-        onChange={onChange}
-        className="border-b hover:bg-accent/40"
+        onDelete={(id) => void deleteRow(id)}
+        onDuplicate={(id) => void duplicateRow(id)}
+        className="group border-b hover:bg-accent/40"
       >
         {columns.map((c, i) => {
           const stickyStyle =
@@ -282,8 +291,9 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         onChange={onChange}
         onAddChild={(parentId) => void addRow(parentId)}
         adding={adding}
-        onPeek={(rowId) => setPeekRowId(rowId)}
         onOpenDetail={(rowId) => setDetailRowId(rowId)}
+        onDeleteRow={(rowId) => void deleteRow(rowId)}
+        onDuplicateRow={(rowId) => void duplicateRow(rowId)}
       />
     );
   }

@@ -67,7 +67,8 @@ describe('<VirtualizedRowBody> disclosure icons', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );

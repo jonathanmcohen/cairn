@@ -100,7 +100,8 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -123,7 +124,8 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -144,7 +146,8 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -171,7 +174,8 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -195,7 +199,8 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -219,7 +224,8 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -247,7 +253,8 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
@@ -263,7 +270,8 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
         onOpenDetail={() => {}}
       />,
     );
