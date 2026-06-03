@@ -287,3 +287,27 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
 .prose li::after {
   content: none;
 }
+
+/* v0.9.9 C3 (#210/#211) — thin themed overlay scrollbar for the PAGES tree.
+   Uses --border so it adopts light/dark; scrollbar-gutter keeps layout stable;
+   overscroll-behavior contains scroll chaining so the tree never scrolls the
+   document underneath it. */
+.cairn-thin-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+.cairn-thin-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.cairn-thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.cairn-thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: hsl(var(--border));
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}

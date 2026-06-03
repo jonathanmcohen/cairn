@@ -162,7 +162,7 @@ export function VirtualizedPageTree({
   }
 
   return (
-    <div ref={parentRef} className="h-full overflow-y-auto">
+    <div ref={parentRef} className="h-full overflow-y-auto cairn-thin-scrollbar">
       <ul className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
         {rowVirtualizer.getVirtualItems().map((virtual) => {
           const row = rows[virtual.index];
