@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoverPicker } from '@/components/pages/cover-picker';
 import { I18nProvider } from '@/lib/i18n/provider';
+import { COVER_PRESETS } from '@/lib/pages/cover-presets';
 import enMessages from '../../../messages/en.json';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -125,5 +126,20 @@ describe('<CoverPicker> layout polish (Plan M)', () => {
     expect(
       firstGradient.compareDocumentPosition(useDefault) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it('lays gradient swatches out in a 4-wide grid (#229)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{}} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.add'] }));
+    const firstGradient = screen.getByRole('button', {
+      name: enMessages['cover.usePreset'].replace('{name}', enMessages['cover.preset.slateDusk']),
+    });
+    const grid = firstGradient.parentElement as HTMLElement;
+    expect(grid.className).toContain('grid-cols-4');
+    expect(grid.className).not.toContain('grid-cols-7');
+    // All curated gradients are present (palette currently has 9).
+    expect(grid.querySelectorAll('button')).toHaveLength(
+      COVER_PRESETS.filter((p) => p.type === 'gradient').length,
+    );
   });
 });

@@ -165,7 +165,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                     <p className="text-xs font-medium text-muted-foreground">
                       {t('cover.section.gradients')}
                     </p>
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {COVER_PRESETS.filter((p) => p.type === 'gradient').map((p) => (
                         <button
                           key={p.key}
@@ -183,7 +183,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                     <p className="text-xs font-medium text-muted-foreground">
                       {t('cover.section.neutrals')}
                     </p>
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {COVER_PRESETS.filter((p) => p.type === 'neutral').map((p) => (
                         <button
                           key={p.key}
