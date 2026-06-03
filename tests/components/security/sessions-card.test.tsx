@@ -62,6 +62,25 @@ describe('SessionsCard (#70)', () => {
     expect(screen.getByText('This device')).toBeTruthy();
   });
 
+  it('renders a friendly device label, not the raw UA (#192)', async () => {
+    fetchMock.mockResolvedValueOnce(
+      sessionsResponse([
+        {
+          id: 's1',
+          userAgent:
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          ip: '203.0.113.9',
+          createdAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString(),
+          current: true,
+        },
+      ]),
+    );
+    render(wrap(<SessionsCard />));
+    expect(await screen.findByText('Chrome on macOS')).toBeTruthy();
+    expect(screen.queryByText(/Mozilla\/5\.0/)).toBeNull();
+  });
+
   it('clicking "Sign out everywhere else" POSTs revoke-all then refetches', async () => {
     fetchMock
       .mockResolvedValueOnce(

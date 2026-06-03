@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
+import { friendlyUserAgent } from '@/lib/security/user-agent-label';
 
 type ApiSession = {
   id: string;
@@ -82,7 +83,7 @@ export function SessionsCard() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-medium text-sm">
-                    {s.userAgent ?? t('security.sessions.unknownDevice')}
+                    {friendlyUserAgent(s.userAgent) ?? t('security.sessions.unknownDevice')}
                   </span>
                   {s.current && (
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary text-xs">
