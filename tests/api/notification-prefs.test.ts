@@ -87,7 +87,14 @@ describe('GET /api/notifications/prefs', () => {
     const body = r.body as PrefsBody;
     expect(body.emailEnabled).toBe(true);
     const types = body.prefs.map((p) => p.notificationType).sort();
-    expect(types).toEqual(['comment_reply', 'mention']);
+    // v0.9.9 Plan I (#195) — five emailable types now.
+    expect(types).toEqual([
+      'comment_reply',
+      'mention',
+      'page_approval',
+      'page_lock',
+      'page_status',
+    ]);
     for (const p of body.prefs) {
       expect(p.emailEnabled).toBe(false);
       expect(p.digestOnly).toBe(false);

@@ -21,7 +21,7 @@ export const notifications = pgTable(
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
-    type: text('type').notNull(), // 'mention' | 'comment_reply' | 'reminder'
+    type: text('type').notNull(), // 'mention' | 'comment_reply' | 'reminder' | 'flashcards_due' | 'upgrade_available' | 'page_approval' | 'page_status' | 'page_lock'
     payload: jsonb('payload').$type<NotificationPayload>().notNull(),
     readAt: timestamp('read_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
@@ -36,7 +36,10 @@ export type NotificationType =
   | 'comment_reply'
   | 'reminder'
   | 'flashcards_due'
-  | 'upgrade_available';
+  | 'upgrade_available'
+  | 'page_approval'
+  | 'page_status'
+  | 'page_lock';
 export type CommentNotificationPayload = {
   pageId: string;
   commentId: string;
@@ -61,11 +64,32 @@ export type UpgradeAvailableNotificationPayload = {
   version: string;
   releaseNotesUrl: string;
 };
+// v0.9.9 Plan I (#195) — approval/status/lock notification payloads. The actor
+// is the user who took the action; the recipients are page collaborators
+// (prior version authors / favoriters) minus the actor.
+export type PageApprovalNotificationPayload = {
+  pageId: string;
+  actorId: string;
+  decision: 'approved' | 'rejected' | 'requested_changes';
+};
+export type PageStatusNotificationPayload = {
+  pageId: string;
+  actorId: string;
+  status: string;
+};
+export type PageLockNotificationPayload = {
+  pageId: string;
+  actorId: string;
+  locked: boolean;
+};
 export type NotificationPayload =
   | CommentNotificationPayload
   | ReminderNotificationPayload
   | FlashcardsDueNotificationPayload
-  | UpgradeAvailableNotificationPayload;
+  | UpgradeAvailableNotificationPayload
+  | PageApprovalNotificationPayload
+  | PageStatusNotificationPayload
+  | PageLockNotificationPayload;
 
 export type Notification = typeof notifications.$inferSelect;
 export type NewNotification = typeof notifications.$inferInsert;

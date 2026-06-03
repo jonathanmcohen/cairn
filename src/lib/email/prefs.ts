@@ -21,9 +21,19 @@ type Db = PostgresJsDatabase<typeof schema>;
  *     not a per-type pref. OMIT (no per-type email pathway).
  *   - `upgrade_available` — admin/release-watch notification targeting owners via
  *     a different path. OMIT from per-user email prefs.
+ *   - `page_approval`, `page_status`, `page_lock` (v0.9.9 Plan I #195) — created
+ *     via `notifications/create.ts` (notifyApprovalDecision / notifyStatusChange /
+ *     notifyPageLock), which route through `scheduleEmails` → `sendNotificationEmail`
+ *     → `getEmailPref`, so they DO consult the per-type pref. KEEP.
  * Exposing only the emailable subset avoids showing unwired toggles.
  */
-export const NOTIFICATION_TYPES = ['mention', 'comment_reply'] as const;
+export const NOTIFICATION_TYPES = [
+  'mention',
+  'comment_reply',
+  'page_approval',
+  'page_status',
+  'page_lock',
+] as const;
 export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
 
 /** A single per-type email preference. Opt-in: both flags default to false. */

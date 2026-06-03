@@ -25,6 +25,9 @@ type PrefsResponse = {
 const TYPE_LABEL_KEYS: Record<NotificationType, string> = {
   mention: 'notifications.type.mention',
   comment_reply: 'notifications.type.commentReply',
+  page_approval: 'notifications.type.pageApproval',
+  page_status: 'notifications.type.pageStatus',
+  page_lock: 'notifications.type.pageLock',
 };
 
 // The three mutually-exclusive choices, mapped to the (emailEnabled, digestOnly) pair.

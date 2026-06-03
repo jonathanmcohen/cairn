@@ -18,6 +18,10 @@ const COPY: Record<string, { verb: string; subject: string }> = {
     verb: 'has flashcards due for review',
     subject: 'Flashcards due for review',
   },
+  // v0.9.9 Plan I (#195) — approval / status / lock event copy.
+  page_approval: { verb: 'made an approval decision on a page', subject: 'Page approval decision' },
+  page_status: { verb: 'changed the status of a page', subject: 'Page status changed' },
+  page_lock: { verb: 'changed the lock state of a page', subject: 'Page lock changed' },
 };
 
 const FALLBACK_COPY = { verb: 'sent you a notification', subject: 'New notification' };
