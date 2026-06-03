@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { computeFormula } from '@/lib/databases/formula';
+import { propTypeLabel } from '@/lib/databases/property-labels';
 import { ROLLUP_FNS } from '@/lib/databases/rollup/config';
 import { useT } from '@/lib/i18n/provider';
 
@@ -24,6 +25,15 @@ const TYPES = [
   'formula',
   'relation',
   'rollup',
+  // v0.9.9 F2 #243 — new user-creatable types.
+  'person',
+  'file',
+  'email',
+  'phone',
+  'created_time',
+  'last_edited_time',
+  'created_by',
+  'last_edited_by',
 ] as const;
 
 type DbProperty = { id: string; name: string; type: string; config?: unknown };
@@ -180,9 +190,9 @@ export function PropertyPanel({
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {TYPES.map((t) => (
-              <SelectItem key={t} value={t}>
-                {t}
+            {TYPES.map((pt) => (
+              <SelectItem key={pt} value={pt}>
+                {propTypeLabel(pt, t)}
               </SelectItem>
             ))}
           </SelectContent>

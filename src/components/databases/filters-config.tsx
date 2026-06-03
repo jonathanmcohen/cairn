@@ -41,6 +41,31 @@ const OPS_BY_TYPE: Record<string, string[]> = {
   checkbox: ['is_true', 'is_false'],
   date: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty'],
   multi_select: ['contains', 'not_contains', 'is_empty'],
+  // v0.9.9 F2 #243 — email/phone share the text op list; created/last_edited
+  // time filter like dates against the row column. person/file/*_by are
+  // intentionally omitted (non-filterable in this version).
+  email: [
+    'contains',
+    'not_contains',
+    'eq',
+    'neq',
+    'starts_with',
+    'ends_with',
+    'is_empty',
+    'is_not_empty',
+  ],
+  phone: [
+    'contains',
+    'not_contains',
+    'eq',
+    'neq',
+    'starts_with',
+    'ends_with',
+    'is_empty',
+    'is_not_empty',
+  ],
+  created_time: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty'],
+  last_edited_time: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty'],
 };
 // Ops that take no value input.
 const NO_VALUE_OPS = new Set(['is_empty', 'is_not_empty', 'is_true', 'is_false']);
