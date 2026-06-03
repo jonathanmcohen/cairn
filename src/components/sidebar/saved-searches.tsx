@@ -3,7 +3,7 @@
 import { Bookmark, Check, Pencil, X } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useConfirm } from '@/components/ui/confirm-dialog';
-import { emitMutation, subscribeMutation } from '@/lib/client/mutation-bus';
+import { subscribeMutation } from '@/lib/client/mutation-bus';
 import { useT } from '@/lib/i18n/provider';
 
 type Saved = {
@@ -52,7 +52,6 @@ export function SavedSearches() {
     const r = await fetch(`/api/search/saved/${id}`, { method: 'DELETE' });
     if (r.ok) {
       setItems((xs) => xs.filter((x) => x.id !== id));
-      emitMutation('savedSearches');
     }
   }
 
@@ -76,7 +75,6 @@ export function SavedSearches() {
     });
     if (r.ok) {
       setItems((xs) => xs.map((x) => (x.id === id ? { ...x, name } : x)));
-      emitMutation('savedSearches');
     }
     cancelRename();
   }
