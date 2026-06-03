@@ -2,6 +2,7 @@
 
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
+import { EmptyFlashcardsDue } from '@/components/empty-state/variants';
 
 type DueCard = {
   id: string;
@@ -48,11 +49,8 @@ function StudyInner(): React.JSX.Element {
   }
   if (queue.length === 0) {
     return (
-      <div className="mx-auto max-w-xl p-8 text-center">
-        <h1 className="text-xl font-medium mb-2">No cards due</h1>
-        <p className="text-muted-foreground">
-          Add a flashcard to any page with the `/flashcard` slash command.
-        </p>
+      <div className="mx-auto max-w-xl p-8">
+        <EmptyFlashcardsDue />
       </div>
     );
   }

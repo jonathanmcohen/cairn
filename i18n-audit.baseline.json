@@ -3968,8 +3968,14 @@
     },
     {
       "file": "components/notifications/drawer.tsx",
-      "line": 183,
-      "text": "You're all caught up.",
+      "line": 185,
+      "text": "You&rsquo;re all caught up",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/notifications/drawer.tsx",
+      "line": 187,
+      "text": "New mentions, replies, and approvals will show up here.",
       "kind": "jsx_text"
     },
     {

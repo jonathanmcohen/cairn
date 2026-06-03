@@ -1,3 +1,4 @@
+import { BellOff, GraduationCap, Star, Trash2 } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state/empty-state';
 import { copy } from '@/lib/copy/messages';
 
@@ -32,6 +33,7 @@ export function EmptyDbTable({ onAddRow }: { onAddRow?: () => void }) {
 export function EmptyNotifications() {
   return (
     <EmptyState
+      icon={<BellOff aria-hidden="true" />}
       headline={copy('empty.notifications.headline')}
       guidance={copy('empty.notifications.guidance')}
     />
@@ -41,8 +43,33 @@ export function EmptyNotifications() {
 export function EmptyFavorites() {
   return (
     <EmptyState
+      icon={<Star aria-hidden="true" />}
       headline={copy('empty.favorites.headline')}
       guidance={copy('empty.favorites.guidance')}
+      ctaLabel={copy('empty.favorites.cta')}
+      ctaHref="/"
+    />
+  );
+}
+
+export function EmptyTrash() {
+  return (
+    <EmptyState
+      icon={<Trash2 aria-hidden="true" />}
+      headline={copy('empty.trash.headline')}
+      guidance={copy('empty.trash.guidance')}
+    />
+  );
+}
+
+export function EmptyFlashcardsDue() {
+  return (
+    <EmptyState
+      icon={<GraduationCap aria-hidden="true" />}
+      headline={copy('empty.flashcardsDue.headline')}
+      guidance={copy('empty.flashcardsDue.guidance')}
+      ctaLabel={copy('empty.flashcardsDue.cta')}
+      ctaHref="/"
     />
   );
 }

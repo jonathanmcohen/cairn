@@ -52,6 +52,17 @@ export const MESSAGES = {
   'empty.recents.guidance':
     'Pages you open will show here, sorted by most-recent. Open a page from the sidebar to start.',
 
+  'empty.trash.headline': 'Trash is empty',
+  'empty.trash.guidance':
+    'Deleted pages land here for 30 days, then are permanently removed. Nothing has been deleted recently.',
+
+  'empty.flashcardsDue.headline': 'No cards due',
+  'empty.flashcardsDue.guidance':
+    'You are caught up on reviews. Add a flashcard to any page with the /flashcard slash command.',
+  'empty.flashcardsDue.cta': 'Browse pages',
+
+  'empty.favorites.cta': 'Browse pages',
+
   // Onboarding wizard (P10) — polished step copy + CTAs.
   'wizard.welcome.headline': 'Welcome to Cairn',
   'wizard.welcome.guidance':
