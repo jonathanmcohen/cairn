@@ -944,121 +944,109 @@
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 75,
+      "line": 76,
       "text": "Single sign-on",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 77,
+      "line": 78,
       "text": "Configure OIDC, SAML, and SCIM provisioning for this workspace.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 83,
+      "line": 84,
       "text": "Identity providers",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 86,
-      "text": "Add OIDC",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 89,
-      "text": "Add SAML",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 94,
+      "line": 88,
       "text": "No identity providers configured.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 102,
+      "line": 96,
       "text": "· Created",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 114,
+      "line": 108,
       "text": "Edit",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 124,
+      "line": 118,
       "text": "SCIM 2.0 provisioning tokens",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 126,
+      "line": 120,
       "text": "/api/scim/v2/Users",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 126,
+      "line": 120,
       "text": "and",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 126,
+      "line": 120,
       "text": "Bearer tokens for the SCIM 2.0 endpoint at",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 127,
+      "line": 121,
       "text": ". Filters:",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 127,
+      "line": 121,
       "text": "/Groups",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 127,
+      "line": 121,
       "text": "and",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 127,
+      "line": 121,
       "text": "userName eq",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 128,
+      "line": 122,
       "text": "meta.lastModified gt",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 128,
+      "line": 122,
       "text": "only.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 134,
+      "line": 128,
       "text": "Recent SSO audit entries",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/admin/sso/page.tsx",
-      "line": 136,
+      "line": 130,
       "text": "No recent SSO audit events.",
       "kind": "jsx_text"
     },
@@ -1424,61 +1412,31 @@
     },
     {
       "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 34,
+      "line": 38,
       "text": "Passkeys",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 36,
-      "text": "The operator of this Cairn instance has not configured WebAuthn. Set",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 37,
-      "text": "CAIRN_RP_ID",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 38,
-      "text": "CAIRN_RP_ORIGIN",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 38,
-      "text": "in the deployment env\n          to enable passkey enrollment. See",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 39,
-      "text": "docs/operations.md",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 63,
+      "line": 62,
       "text": "Passkeys",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 65,
+      "line": 64,
       "text": "Add a hardware key, platform authenticator, or browser-managed passkey. They sign you in\n        without a password and are used for step-up confirmation on destructive actions.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 69,
+      "line": 68,
       "text": "You have no passkeys yet.",
       "kind": "jsx_text"
     },
     {
       "file": "app/(app)/settings/security/passkeys/page.tsx",
-      "line": 71,
+      "line": 70,
       "text": "Registered passkeys",
       "kind": "jsx_attr"
     },
@@ -2365,6 +2323,18 @@
       "kind": "jsx_text"
     },
     {
+      "file": "components/admin/sso/idp-add-buttons.tsx",
+      "line": 9,
+      "text": "Add OIDC",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/admin/sso/idp-add-buttons.tsx",
+      "line": 12,
+      "text": "Add SAML",
+      "kind": "jsx_text"
+    },
+    {
       "file": "components/admin/sso/oidc-form.tsx",
       "line": 78,
       "text": "Display name",
@@ -2972,121 +2942,121 @@
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 163,
+      "line": 173,
       "text": "+ Add property",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 173,
+      "line": 183,
       "text": "Property name",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 195,
+      "line": 205,
       "text": "Target database",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 196,
+      "line": 206,
       "text": "Target database…",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 199,
+      "line": 209,
       "text": "Target database…",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 211,
+      "line": 221,
       "text": "Add",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 214,
+      "line": 224,
       "text": "Cancel",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 231,
+      "line": 241,
       "text": "Create a reverse property on the target database",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 240,
+      "line": 250,
       "text": "Reverse property name",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 257,
+      "line": 267,
       "text": "Expression",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 263,
+      "line": 273,
       "text": "e.g. Price * Qty  or  if(Done, \"✓\", \"\")",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 282,
+      "line": 292,
       "text": "Computed at read time. Filtering/sorting on formulas is not supported in this\n                version.",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 298,
+      "line": 308,
       "text": "Relation property",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 299,
+      "line": 309,
       "text": "Relation property…",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 302,
+      "line": 312,
       "text": "Relation property…",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 315,
+      "line": 325,
       "text": "Target property",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 316,
+      "line": 326,
       "text": "Target property…",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 319,
+      "line": 329,
       "text": "Target property…",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 331,
+      "line": 341,
       "text": "Aggregation function",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/property-panel.tsx",
-      "line": 343,
+      "line": 353,
       "text": "Computed at read time. Filtering/sorting on rollups is not supported in this version.",
       "kind": "jsx_text"
     },
@@ -3122,43 +3092,37 @@
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 94,
+      "line": 71,
       "text": "Row actions",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 103,
+      "line": 83,
       "text": "Duplicate row",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 110,
+      "line": 93,
       "text": "Delete row",
       "kind": "jsx_text"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 426,
-      "text": "+ New row",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/databases/table-view.tsx",
-      "line": 437,
+      "line": 466,
       "text": "New row from template",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 441,
+      "line": 470,
       "text": "Templates…",
       "kind": "jsx_attr"
     },
     {
       "file": "components/databases/table-view.tsx",
-      "line": 444,
+      "line": 473,
       "text": "Templates…",
       "kind": "jsx_text"
     },
@@ -4136,49 +4100,49 @@
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 86,
+      "line": 117,
       "text": "Page approval",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 89,
+      "line": 120,
       "text": "Approval",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 93,
+      "line": 124,
       "text": "Comment (optional)",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 96,
+      "line": 127,
       "text": "Approval comment",
       "kind": "jsx_attr"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 102,
+      "line": 133,
       "text": "Approve",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 110,
+      "line": 141,
       "text": "Request changes",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 118,
+      "line": 149,
       "text": "Reject",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/approval-panel.tsx",
-      "line": 132,
+      "line": 163,
       "text": "by",
       "kind": "jsx_text"
     },
@@ -4268,13 +4232,13 @@
     },
     {
       "file": "components/pages/see-also-panel.tsx",
-      "line": 60,
+      "line": 87,
       "text": "See also",
       "kind": "jsx_text"
     },
     {
       "file": "components/pages/see-also-panel.tsx",
-      "line": 62,
+      "line": 89,
       "text": "See also",
       "kind": "jsx_attr"
     },
