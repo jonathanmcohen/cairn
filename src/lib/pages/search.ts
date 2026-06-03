@@ -44,6 +44,20 @@ export function compileSearchFilters(filters: SearchFilters): SQL[] {
   return frags;
 }
 
+/**
+ * Leading-excerpt for snippet parity in modes that have no tsquery to
+ * headline around (semantic kNN). Trims to a word boundary near `max` chars
+ * and appends an ellipsis when truncated. Pure — unit-testable, no DB.
+ */
+function excerpt(text: string | null, max = 160): string | null {
+  if (!text) return null;
+  const clean = text.replace(/\s+/g, ' ').trim();
+  if (clean.length <= max) return clean || null;
+  const cut = clean.slice(0, max);
+  const lastSpace = cut.lastIndexOf(' ');
+  return `${(lastSpace > 40 ? cut.slice(0, lastSpace) : cut).trimEnd()}…`;
+}
+
 export type SearchResult = {
   id: string;
   title: string;
@@ -163,7 +177,7 @@ async function searchSemantic(
   // author) — workspace_id + deleted_at IS NULL is the v0.7 surface; the
   // filter-compile reuse can come in a follow-up if real usage demands it.
   const rows = (await db.execute(rawSql`
-    SELECT p.id AS id, p.title AS title,
+    SELECT p.id AS id, p.title AS title, p.content_text AS content_text,
            (e.embedding <=> ${vecLiteral}::vector) AS distance
     FROM page_embeddings e
     JOIN pages p ON p.id = e.page_id
@@ -173,15 +187,21 @@ async function searchSemantic(
       AND p.status NOT IN ('draft','archived')
     ORDER BY e.embedding <=> ${vecLiteral}::vector ASC
     LIMIT ${limit}
-  `)) as unknown as { id: string; title: string; distance: number }[];
+  `)) as unknown as {
+    id: string;
+    title: string;
+    content_text: string | null;
+    distance: number;
+  }[];
 
-  // Convert cosine distance → rank score (1 - distance, clamped). The bigger,
-  // the more relevant; this mirrors the FTS path's "higher rank is better".
+  // Cosine distance ∈ [0,2]; map to a [0,1] relevance band (1 - d/2) so
+  // semantic/hybrid scores share the FTS path's "higher is better, ~[0,1]"
+  // contract and RRF/UI can treat every mode uniformly.
   return rows.map((r) => ({
     id: r.id,
     title: r.title,
-    snippet: null,
-    rank: Math.max(0, 1 - Number(r.distance)),
+    snippet: excerpt(r.content_text),
+    rank: Math.max(0, Math.min(1, 1 - Number(r.distance) / 2)),
     breadcrumb: [],
   }));
 }

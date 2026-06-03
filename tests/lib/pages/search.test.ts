@@ -1,6 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { createPage } from '@/lib/pages/create';
@@ -8,6 +9,44 @@ import { getBreadcrumbs, searchPages } from '@/lib/pages/search';
 import { updatePage } from '@/lib/pages/update';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
+
+// Deterministic 384-dim embedding so the kNN ordering/distance is predictable
+// without loading the real MiniLM model. The same vector is returned by the
+// mocked query-embed below, so cosine distance is 0 → rank 1.
+const FAKE_VEC = new Float32Array(384).fill(0).map((_, i) => (i < 8 ? 0.5 : 0.001));
+
+// Mock the embedding provider that searchSemantic() dynamically imports, so the
+// semantic path runs against real pgvector data without the heavy local model.
+vi.mock('@/lib/search/embed', () => ({
+  getEmbeddingProvider: () => ({
+    name: 'fake',
+    dim: 384,
+    embed: async () => FAKE_VEC,
+  }),
+}));
+
+async function seedPageWithEmbedding(
+  db: ReturnType<typeof drizzle<typeof schema>>,
+  input: { workspaceId: string; createdBy: string; title: string; contentText: string },
+): Promise<string> {
+  const page = await createPage(db, {
+    workspaceId: input.workspaceId,
+    createdBy: input.createdBy,
+    title: input.title,
+  });
+  // content_tsv is trigger-maintained off content_text; set the body directly.
+  await db
+    .update(schema.pages)
+    .set({ contentText: input.contentText })
+    .where(eq(schema.pages.id, page.id));
+  await db.insert(schema.pageEmbeddings).values({
+    pageId: page.id,
+    workspaceId: input.workspaceId,
+    embedding: Array.from(FAKE_VEC),
+    contentHash: `h-${page.id}`,
+  });
+  return page.id;
+}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle<typeof schema>>;
@@ -25,7 +64,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`TRUNCATE pages, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE page_embeddings, pages, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
 });
 
 describe('searchPages', () => {
@@ -107,6 +146,31 @@ describe('searchPages', () => {
       limit: 5,
     });
     expect(results.length).toBeLessThanOrEqual(5);
+  });
+});
+
+describe('searchPages semantic', () => {
+  it('returns a body snippet and a [0,1] rank for semantic hits (parity with fts)', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const pageId = await seedPageWithEmbedding(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'Quarterly planning',
+      contentText:
+        'the quarterly planning session covers OKRs, headcount, and the roadmap for the next twelve weeks.',
+    });
+    const results = await searchPages(db, {
+      workspaceId: u.workspaceId,
+      query: 'planning goals',
+      mode: 'semantic',
+      limit: 5,
+    });
+    const hit = results.find((r) => r.id === pageId);
+    expect(hit).toBeDefined();
+    expect(hit?.snippet).toBeTruthy();
+    expect(hit?.snippet).toContain('quarterly planning');
+    expect(hit?.rank).toBeGreaterThan(0);
+    expect(hit?.rank).toBeLessThanOrEqual(1);
   });
 });
 
