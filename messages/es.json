@@ -710,5 +710,9 @@
   "passkeys.notConfigured.title": "Las llaves de acceso no están disponibles",
   "passkeys.notConfigured.userBody": "Esta instancia de Cairn aún no tiene las llaves de acceso habilitadas. Pide a la persona administradora de tu espacio de trabajo que las active.",
   "passkeys.notConfigured.adminBody": "WebAuthn no está configurado. Define CAIRN_RP_ID y CAIRN_RP_ORIGIN en el entorno de despliegue y vuelve a desplegar para habilitar el registro de llaves de acceso.",
-  "passkeys.notConfigured.adminDocs": "Consulta la guía de operaciones"
+  "passkeys.notConfigured.adminDocs": "Consulta la guía de operaciones",
+  "approval.error.selfApprove": "No puedes aprobar tu propia revisión.",
+  "approval.error.resolved": "Esta revisión ya se resolvió. Actualiza para ver la última decisión.",
+  "approval.error.conflict": "No se pudo decidir esta revisión porque su estado cambió. Actualiza e inténtalo de nuevo.",
+  "approval.error.generic": "No se pudo registrar tu decisión. Inténtalo de nuevo."
 }

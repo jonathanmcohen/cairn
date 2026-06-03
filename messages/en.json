@@ -710,5 +710,9 @@
   "passkeys.notConfigured.title": "Passkeys aren't available",
   "passkeys.notConfigured.userBody": "This Cairn instance doesn't have passkeys enabled yet. Ask your workspace administrator to turn them on.",
   "passkeys.notConfigured.adminBody": "WebAuthn isn't configured. Set CAIRN_RP_ID and CAIRN_RP_ORIGIN in the deployment environment, then redeploy, to enable passkey enrollment.",
-  "passkeys.notConfigured.adminDocs": "See the operations guide"
+  "passkeys.notConfigured.adminDocs": "See the operations guide",
+  "approval.error.selfApprove": "You can't approve your own review.",
+  "approval.error.resolved": "This review was already resolved. Refresh to see the latest decision.",
+  "approval.error.conflict": "This review couldn't be decided — its state changed. Refresh and try again.",
+  "approval.error.generic": "Couldn't record your decision. Please try again."
 }

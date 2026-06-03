@@ -25,6 +25,7 @@ import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import type { AuditAction } from '@/lib/audit/actions';
 import { recordAudit } from '@/lib/audit/record';
+import { HttpError } from '@/lib/auth/http-error';
 import { env } from '@/lib/env';
 import { transitionStatus } from '@/lib/pages/status';
 import { type ApprovalDecision, signApproval } from './approval-signature';
@@ -108,6 +109,17 @@ export async function decide(
   const hasStatus = await pagesHasStatusColumn(db);
 
   return db.transaction(async (tx) => {
+    // #270 — an author can't approve their own review. We surface a stable,
+    // machine-readable 409 ('self-approval') the UI maps to actionable copy.
+    const [pageRow] = await tx
+      .select({ createdBy: schema.pages.createdBy })
+      .from(schema.pages)
+      .where(eq(schema.pages.id, input.pageId))
+      .limit(1);
+    if (pageRow && pageRow.createdBy === input.approverUserId) {
+      throw new HttpError(409, 'self-approval');
+    }
+
     const [versionRow] = await tx
       .select({ id: schema.pageVersions.id })
       .from(schema.pageVersions)

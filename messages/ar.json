@@ -714,5 +714,9 @@
   "passkeys.notConfigured.title": "مفاتيح المرور غير متاحة",
   "passkeys.notConfigured.userBody": "لم يتم تفعيل مفاتيح المرور في نسخة Cairn هذه بعد. اطلب من مسؤول مساحة العمل تفعيلها.",
   "passkeys.notConfigured.adminBody": "لم يتم إعداد WebAuthn. اضبط CAIRN_RP_ID وCAIRN_RP_ORIGIN في بيئة النشر ثم أعد النشر لتفعيل تسجيل مفاتيح المرور.",
-  "passkeys.notConfigured.adminDocs": "راجع دليل التشغيل"
+  "passkeys.notConfigured.adminDocs": "راجع دليل التشغيل",
+  "approval.error.selfApprove": "لا يمكنك الموافقة على مراجعتك الخاصة.",
+  "approval.error.resolved": "تمت معالجة هذه المراجعة بالفعل. حدّث الصفحة لعرض آخر قرار.",
+  "approval.error.conflict": "تعذّر اتخاذ قرار بشأن هذه المراجعة لأن حالتها تغيّرت. حدّث الصفحة وحاول مرة أخرى.",
+  "approval.error.generic": "تعذّر تسجيل قرارك. يرجى المحاولة مرة أخرى."
 }

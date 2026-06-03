@@ -15,8 +15,29 @@
 
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/provider';
 
 type Decision = 'approved' | 'rejected' | 'requested_changes';
+
+/**
+ * #270 — map a `decide` route error to actionable, localized copy. The route
+ * forwards the lib's `HttpError(409, '<code>')` message as the body `error`
+ * field; a 409 means a conflict (self-approval, or the review was already
+ * resolved / its state changed). Anything else is a generic failure.
+ */
+function messageForDecisionError(
+  status: number,
+  code: string | undefined,
+  t: (k: string) => string,
+): string {
+  if (status === 409) {
+    if (code?.includes('self-approval')) return t('approval.error.selfApprove');
+    if (code?.includes('resolved') || code?.includes('already'))
+      return t('approval.error.resolved');
+    return t('approval.error.conflict');
+  }
+  return t('approval.error.generic');
+}
 
 type HistoryItem = {
   id: string;
@@ -39,10 +60,19 @@ export function ApprovalPanel(props: {
   canDecide: boolean;
   inReview: boolean;
 }): React.ReactElement | null {
+  const t = useT();
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // #272 — the decision error never auto-cleared. Dismiss it after 5s (and on
+  // the next submit, which resets `error` to null at the top of `submit`).
+  useEffect(() => {
+    if (!error) return;
+    const id = setTimeout(() => setError(null), 5000);
+    return () => clearTimeout(id);
+  }, [error]);
 
   useEffect(() => {
     let cancelled = false;
@@ -70,7 +100,8 @@ export function ApprovalPanel(props: {
         body: JSON.stringify({ decision, comment: comment || undefined }),
       });
       if (!res.ok) {
-        setError(`Decision failed (${res.status})`);
+        const body = (await res.json().catch(() => ({}))) as { error?: string };
+        setError(messageForDecisionError(res.status, body.error, t));
         return;
       }
       const fresh = await fetch(`/api/pages/${props.pageId}/approval`).then((r) => r.json());

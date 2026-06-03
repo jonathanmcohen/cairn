@@ -72,6 +72,21 @@ async function makePage(workspaceId: string, userId: string, status: schema.Page
   return p;
 }
 
+// #270 — a decider can't approve a page they authored. The positive decide
+// paths therefore use a separate author user (distinct from the approver).
+async function makeAuthor(): Promise<string> {
+  const [author] = await getDb()
+    .insert(schema.users)
+    .values({
+      email: `author-${Date.now()}-${Math.random().toString(36).slice(2, 6)}@x`,
+      passwordHash: 'h',
+      name: 'Author',
+    })
+    .returning({ id: schema.users.id });
+  if (!author) throw new Error('author insert failed');
+  return author.id;
+}
+
 describe('POST /api/pages/[pageId]/approval (request)', () => {
   it('an editor requesting approval → 200 and status flips to review', async () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
@@ -175,7 +190,7 @@ describe('POST /api/pages/[pageId]/approval/decide', () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     cookieVal.ws = u.workspaceId;
     await setUser({ userId: u.userId });
-    const page = await makePage(u.workspaceId, u.userId, 'review');
+    const page = await makePage(u.workspaceId, await makeAuthor(), 'review');
 
     const { POST } = await import('@/app/api/pages/[pageId]/approval/decide/route');
     const res = await POST(
@@ -221,7 +236,7 @@ describe('GET /api/pages/[pageId]/approval (history)', () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     cookieVal.ws = u.workspaceId;
     await setUser({ userId: u.userId });
-    const page = await makePage(u.workspaceId, u.userId, 'review');
+    const page = await makePage(u.workspaceId, await makeAuthor(), 'review');
 
     const { POST: decideRoute } = await import('@/app/api/pages/[pageId]/approval/decide/route');
     await decideRoute(

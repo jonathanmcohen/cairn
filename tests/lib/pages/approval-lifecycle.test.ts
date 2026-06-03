@@ -19,6 +19,7 @@ import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
+import { HttpError } from '@/lib/auth/http-error';
 import { decide, NoVersionSnapshotError, requestApproval } from '@/lib/pages/approval';
 import { verifyApprovalSignature } from '@/lib/pages/approval-signature';
 import { startPostgres, stopPostgres } from '../../helpers/db';
@@ -206,6 +207,26 @@ describe('decide', () => {
         .where(eq(schema.auditLog.workspaceId, workspaceId))
     ).map((a) => a.action);
     expect(actions).toContain('page.changes_requested');
+  });
+
+  it('refuses self-approval with HttpError(409, "self-approval") (#270)', async () => {
+    // The page author (createdBy) cannot approve their own review.
+    const { ownerId, workspaceId, pageId } = await seedPage('review');
+
+    await expect(
+      decide(db, { pageId, approverUserId: ownerId, workspaceId, decision: 'approved' }),
+    ).rejects.toMatchObject({ status: 409, message: 'self-approval' });
+
+    await expect(
+      decide(db, { pageId, approverUserId: ownerId, workspaceId, decision: 'approved' }),
+    ).rejects.toBeInstanceOf(HttpError);
+
+    // No approval row was written for the self-approval attempt.
+    const rows = await db
+      .select({ id: schema.pageApprovals.id })
+      .from(schema.pageApprovals)
+      .where(eq(schema.pageApprovals.pageId, pageId));
+    expect(rows.length).toBe(0);
   });
 
   it('refuses when no version snapshot exists yet', async () => {
