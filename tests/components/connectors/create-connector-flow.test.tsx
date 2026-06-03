@@ -25,16 +25,16 @@ function renderFlow() {
 }
 
 describe('<CreateConnectorFlow>', () => {
-  it('reveals the picker after clicking New connector', () => {
+  it('reveals the picker after clicking New database sync', () => {
     renderFlow();
-    fireEvent.click(screen.getByRole('button', { name: 'New connector' }));
+    fireEvent.click(screen.getByRole('button', { name: 'New database sync' }));
     expect(screen.getByText('External system')).toBeTruthy();
     expect(screen.getByText('Database to sync')).toBeTruthy();
   });
 
   it('POSTs the create request and routes to the config page on success', async () => {
     renderFlow();
-    fireEvent.click(screen.getByRole('button', { name: 'New connector' }));
+    fireEvent.click(screen.getByRole('button', { name: 'New database sync' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create connector' }));
     await waitFor(() => expect(globalThis.fetch).toHaveBeenCalled());
     const call = (globalThis.fetch as unknown as ReturnType<typeof vi.fn>).mock.calls[0];
@@ -53,7 +53,7 @@ describe('<CreateConnectorFlow>', () => {
       async () => new Response(JSON.stringify({ error: 'already connected' }), { status: 409 }),
     ) as unknown as typeof fetch;
     renderFlow();
-    fireEvent.click(screen.getByRole('button', { name: 'New connector' }));
+    fireEvent.click(screen.getByRole('button', { name: 'New database sync' }));
     fireEvent.click(screen.getByRole('button', { name: 'Create connector' }));
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
     expect(push).not.toHaveBeenCalled();

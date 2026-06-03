@@ -33,4 +33,19 @@ describe('connectors page taxonomy (#196 / #17)', () => {
       ).not.toBe(cat['connectors.title']);
     }
   });
+
+  it('uses the unified verb "New" for both section create buttons (#197)', () => {
+    expect((en as Catalogue)['connectorsDb.create']).toBe('New database sync');
+    expect((en as Catalogue)['connectors.add']).toBe('New chat bridge');
+    expect((es as Catalogue)['connectorsDb.create']).toBe('Nueva sincronización de bases de datos');
+    expect((es as Catalogue)['connectors.add']).toBe('Nuevo puente de chat');
+    expect((ar as Catalogue)['connectorsDb.create']).toBe('مزامنة قاعدة بيانات جديدة');
+    expect((ar as Catalogue)['connectors.add']).toBe('جسر دردشة جديد');
+
+    // English buttons share the same leading verb token.
+    for (const key of ['connectorsDb.create', 'connectors.add'] as const) {
+      const [verb] = ((en as Catalogue)[key] ?? '').split(' ');
+      expect(verb).toBe('New');
+    }
+  });
 });
