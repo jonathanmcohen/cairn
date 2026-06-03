@@ -11,8 +11,19 @@ import { meetsAA } from '@/lib/color/contrast';
 import { resolveTitleForeground } from '@/lib/color/title-contrast';
 import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
-import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY } from '@/lib/pages/cover-presets';
+import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY, getCoverPreset } from '@/lib/pages/cover-presets';
 import { UnsplashTab } from './cover-picker-unsplash-tab';
+
+/**
+ * #230 — derive the seed hex for the custom-hex input from the current cover so
+ * editing an existing color (or a preset's representative tone) shows the value
+ * instead of a blank field. Empty covers seed blank.
+ */
+function seedHexFromCover(cover: PageCover): string {
+  if ('kind' in cover && cover.kind === 'color') return cover.value;
+  if ('kind' in cover && cover.kind === 'preset') return getCoverPreset(cover.value)?.solid ?? '';
+  return '';
+}
 
 // The page title overlays/sits-below the cover on the theme `--foreground`
 // token. Finding C: resolve the REAL computed token (light vs dark differ)
@@ -42,7 +53,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
   // #169 — trap Tab + handle Escape while the custom modal is open.
   const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [tab, setTab] = useState<TabKey>('color');
-  const [customHex, setCustomHex] = useState('');
+  const [customHex, setCustomHex] = useState(() => seedHexFromCover(current));
   const [coverUrl, setCoverUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [titleColor, setTitleColor] = useState('#fafafa');
@@ -52,7 +63,10 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
     if (!open || typeof window === 'undefined') return;
     const computed = getComputedStyle(document.documentElement).getPropertyValue('--foreground');
     setTitleColor(resolveTitleForeground(computed));
-  }, [open]);
+    // #230 — re-seed the custom-hex field when the modal (re)opens so an outside
+    // cover change reflects the current value.
+    setCustomHex(seedHexFromCover(current));
+  }, [open, current]);
 
   async function persist(next: PageCover) {
     const res = await fetch(`/api/pages/${pageId}/cover`, {

@@ -142,4 +142,29 @@ describe('<CoverPicker> layout polish (Plan M)', () => {
       COVER_PRESETS.filter((p) => p.type === 'gradient').length,
     );
   });
+
+  it('prefills the custom-hex input with the current color cover (#230)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{ kind: 'color', value: '#3366ff' }} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.change'] }));
+    expect((screen.getByLabelText(enMessages['cover.customHex']) as HTMLInputElement).value).toBe(
+      '#3366ff',
+    );
+  });
+
+  it("prefills the custom-hex input with the current preset's representative tone (#230)", () => {
+    render(wrap(<CoverPicker pageId="p1" current={{ kind: 'preset', value: 'slate-dusk' }} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.change'] }));
+    // slate-dusk.solid === '#1e293b'
+    expect((screen.getByLabelText(enMessages['cover.customHex']) as HTMLInputElement).value).toBe(
+      '#1e293b',
+    );
+  });
+
+  it('leaves the custom-hex input blank when there is no cover (#230)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{}} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.add'] }));
+    expect((screen.getByLabelText(enMessages['cover.customHex']) as HTMLInputElement).value).toBe(
+      '',
+    );
+  });
 });
