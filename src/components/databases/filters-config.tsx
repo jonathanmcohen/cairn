@@ -88,10 +88,10 @@ export function FiltersConfig({ databaseId, meta, view, onChange }: ViewProps) {
   const [localFilters, setLocalFilters] = useState<Condition[]>(
     Array.isArray(config.filters) ? config.filters : [],
   );
-  // biome-ignore lint/correctness/useExhaustiveDependencies: re-seed only when the
-  // persisted config identity changes; localFilters is the optimistic mirror.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — re-seed the optimistic mirror only when the persisted view.config identity changes, not on every config.filters read.
   useEffect(() => {
-    setLocalFilters(Array.isArray(config.filters) ? config.filters : []);
+    const cfg = (view.config ?? {}) as { filters?: Condition[] };
+    setLocalFilters(Array.isArray(cfg.filters) ? cfg.filters : []);
   }, [view.config]);
 
   const filters = localFilters;
