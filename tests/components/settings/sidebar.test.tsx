@@ -142,15 +142,30 @@ describe('<SettingsSidebar>', () => {
     }
   });
 
-  it('links out to the SSO and chat-bridge admin consoles from Admin', () => {
+  it('links the SSO and chat-bridge admin consoles from Admin (inside the hub)', () => {
     pathnameMock.mockReturnValue('/settings/admin');
     renderSidebar({ isAdmin: true });
     expect(screen.getByRole('link', { name: 'SSO & SCIM' }).getAttribute('href')).toBe(
       '/settings/admin/sso',
     );
     expect(screen.getByRole('link', { name: 'Chat bridge' }).getAttribute('href')).toBe(
-      '/admin/chat-bridge',
+      '/settings/admin/chat-bridge',
     );
+  });
+
+  it('links chat bridge once, under Admin, inside the hub (#186)', () => {
+    pathnameMock.mockReturnValue('/settings/admin/audit');
+    renderSidebar({ isAdmin: true });
+    const links = screen.getAllByRole('link', { name: 'Chat bridge' });
+    expect(links).toHaveLength(1);
+    expect(links[0]?.getAttribute('href')).toBe('/settings/admin/chat-bridge');
+  });
+
+  it('drops the duplicate Developer chat-bridge entries (#186)', () => {
+    pathnameMock.mockReturnValue('/settings/developer');
+    renderSidebar({ isAdmin: true });
+    expect(screen.queryByRole('link', { name: 'Slack & Discord install' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Channel links' })).toBeNull();
   });
 
   it('shows the E2E encryption child only when e2eEnabled is true', () => {

@@ -37,14 +37,18 @@ const SETTINGS_ROUTES = [
   '/settings/admin/siem',
   '/settings/admin/upgrade',
   '/settings/admin/federated',
-  '/admin/chat-bridge',
-  '/admin/chat-bridge/channels',
+  // v0.9.9 C5 (#186) — chat-bridge now lives inside the hub.
+  '/settings/admin/chat-bridge',
+  '/settings/admin/chat-bridge/channels',
 ];
 
 // (alias source, expected resolved path)
 const ALIASES: Array<[string, string]> = [
   ['/trash-retention', '/settings/workspace/trash'],
   ['/access-tokens', '/settings/developer/tokens'],
+  // Legacy chat-bridge paths 308-redirect into the hub (v0.9.9 C5 #186).
+  ['/admin/chat-bridge', '/settings/admin/chat-bridge'],
+  ['/admin/chat-bridge/channels', '/settings/admin/chat-bridge/channels'],
 ];
 
 test.describe('settings/admin/developer route reachability (#2/#3/#4)', () => {

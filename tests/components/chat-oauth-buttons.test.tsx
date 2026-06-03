@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ChatOauthButtons } from '@/app/(app)/admin/chat-bridge/chat-oauth-buttons';
+import { ChatOauthButtons } from '@/app/(app)/settings/admin/chat-bridge/chat-oauth-buttons';
 import { I18nProvider } from '@/lib/i18n/provider';
 import en from '../../messages/en.json';
 

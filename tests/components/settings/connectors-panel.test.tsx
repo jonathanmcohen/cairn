@@ -5,7 +5,7 @@ import { ConnectorsPanel } from '@/app/(app)/settings/developer/connectors/conne
 
 // ChatBridgeForm hits the network on submit; stub it to a sentinel so we can
 // assert the picker shows/hides it without exercising fetch.
-vi.mock('@/app/(app)/admin/chat-bridge/chat-bridge-form', () => ({
+vi.mock('@/app/(app)/settings/admin/chat-bridge/chat-bridge-form', () => ({
   ChatBridgeForm: () => <div data-testid="chat-bridge-form" />,
 }));
 // Render the authoritative English copy so the assertions read naturally.

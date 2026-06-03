@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 
 const FILES = [
   'src/app/(app)/admin/siem/forwarder-form.tsx',
-  'src/app/(app)/admin/chat-bridge/channels/channel-link-form.tsx',
+  'src/app/(app)/settings/admin/chat-bridge/channels/channel-link-form.tsx',
 ];
 
 describe('admin forms use themed Select (#38)', () => {

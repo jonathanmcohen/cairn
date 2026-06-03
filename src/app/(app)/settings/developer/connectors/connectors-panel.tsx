@@ -2,7 +2,7 @@
 
 import { Plug } from 'lucide-react';
 import { useState } from 'react';
-import { ChatBridgeForm } from '@/app/(app)/admin/chat-bridge/chat-bridge-form';
+import { ChatBridgeForm } from '@/app/(app)/settings/admin/chat-bridge/chat-bridge-form';
 import { Button } from '@/components/ui/button';
 import { useT } from '@/lib/i18n/provider';
 
