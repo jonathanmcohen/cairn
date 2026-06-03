@@ -19,7 +19,7 @@ import { ViewSwitcher } from './view-switcher';
 export function DatabaseBlock({ node }: NodeViewProps) {
   const databaseId = (node.attrs as { databaseId?: string }).databaseId ?? '';
   const [viewId, setViewId] = useState<string | null>(null);
-  const { meta, rows, loading, refresh } = useDatabaseData(databaseId, viewId);
+  const { meta, rows, loading, refresh, addViewOptimistic } = useDatabaseData(databaseId, viewId);
 
   if (!databaseId || !meta) {
     return (
@@ -55,6 +55,7 @@ export function DatabaseBlock({ node }: NodeViewProps) {
             .map((p) => ({ id: p.id, name: p.name }))}
           onChange={setViewId}
           onViewsChanged={refresh}
+          onAddViewOptimistic={addViewOptimistic}
         />
         <div className="flex items-center gap-2">
           {(activeView.type === 'list' || activeView.type === 'kanban') && (
