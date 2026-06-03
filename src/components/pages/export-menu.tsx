@@ -2,6 +2,7 @@
 
 import { Download, FileCode, FileCode2, FileJson, Files, FileText, FileType } from 'lucide-react';
 import { DropdownMenu } from 'radix-ui';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useT } from '@/lib/i18n/provider';
 
@@ -33,13 +34,31 @@ export function PageExportMenu({
   onOpenChange?: (open: boolean) => void;
 }) {
   const t = useT();
+  // When the action-bar controller owns open-state it passes `onOpenChange`;
+  // standalone (e.g. tests) we self-manage via `selfOpen`. Either way the
+  // `⌘⇧E` shortcut's `cairn:export:open` event opens the menu (#61/#240).
+  const [selfOpen, setSelfOpen] = useState(false);
+  const controlled = onOpenChange != null;
+  const isOpen = controlled ? open : selfOpen;
+  const setIsOpen = (next: boolean) => {
+    if (controlled) onOpenChange?.(next);
+    else setSelfOpen(next);
+  };
+  useEffect(() => {
+    const onExportOpen = () => {
+      if (onOpenChange) onOpenChange(true);
+      else setSelfOpen(true);
+    };
+    window.addEventListener('cairn:export:open', onExportOpen);
+    return () => window.removeEventListener('cairn:export:open', onExportOpen);
+  }, [onOpenChange]);
   const href = (format: string) => `/api/pages/${pageId}/export?format=${format}`;
   const hrefZip = `/api/pages/${pageId}/export?recursive=true`;
   const itemCls =
     'flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground';
   const labelCls = 'px-2 py-1 text-muted-foreground text-xs';
   return (
-    <DropdownMenu.Root open={open} onOpenChange={onOpenChange}>
+    <DropdownMenu.Root open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenu.Trigger asChild>
         <Button variant="outline" size="sm">
           <Download aria-hidden="true" className="mr-1 h-4 w-4" />

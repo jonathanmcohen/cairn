@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { useState } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { PageExportMenu } from '@/components/pages/export-menu';
 import { I18nProvider } from '@/lib/i18n/provider';
@@ -69,5 +70,41 @@ describe('<PageExportMenu>', () => {
     expect(link(enMessages['pageActions.export.zip']).getAttribute('href')).toBe(
       '/api/pages/p1/export?recursive=true',
     );
+  });
+
+  it('opens when cairn:export:open fires (#61/#240)', async () => {
+    function Harness() {
+      const [open, setOpen] = useState(false);
+      // Mirror the action-bar controller: it routes open-state through
+      // onOpenChange. The component's own listener calls onOpenChange(true).
+      return <PageExportMenu pageId="p1" open={open} onOpenChange={setOpen} />;
+    }
+    render(
+      <I18nProvider locale="en" messages={enMessages as Record<string, string>}>
+        <Harness />
+      </I18nProvider>,
+    );
+    expect(
+      screen.queryByRole('menuitem', { name: enMessages['pageActions.export.markdown'] }),
+    ).toBeNull();
+    act(() => {
+      window.dispatchEvent(new CustomEvent('cairn:export:open'));
+    });
+    expect(
+      await screen.findByRole('menuitem', { name: enMessages['pageActions.export.markdown'] }),
+    ).toBeTruthy();
+  });
+
+  it('self-opens standalone (no onOpenChange) when cairn:export:open fires (#61/#240)', async () => {
+    render(wrap(<PageExportMenu pageId="p1" />));
+    expect(
+      screen.queryByRole('menuitem', { name: enMessages['pageActions.export.markdown'] }),
+    ).toBeNull();
+    act(() => {
+      window.dispatchEvent(new CustomEvent('cairn:export:open'));
+    });
+    expect(
+      await screen.findByRole('menuitem', { name: enMessages['pageActions.export.markdown'] }),
+    ).toBeTruthy();
   });
 });

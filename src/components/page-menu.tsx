@@ -4,6 +4,7 @@ import {
   Activity,
   Copy,
   CopyPlus,
+  Download,
   FilePlus2,
   FileUp,
   Globe,
@@ -211,8 +212,21 @@ export function PageMenu({
           </button>
           <div className="my-1 border-t" />
           {/* Export lives in the single action-bar Export menu (PageExportMenu)
-              — the lone export surface (#56/#235). The duplicate MD/ZIP buttons
-              that used to live here were removed; see export-menu.tsx. */}
+              — the lone export surface (#56/#235). This hint row fires the same
+              `cairn:export:open` event the ⌘⇧E shortcut does (#61/#240), opening
+              that menu; it carries no duplicate format buttons of its own. */}
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('cairn:export:open'));
+              setOpen(false);
+            }}
+          >
+            <Download aria-hidden="true" className="h-4 w-4 shrink-0" />
+            <span className="flex-1">{t('pageMenu.exportHint')}</span>
+            <kbd className="ml-auto text-muted-foreground text-xs">⌘⇧E</kbd>
+          </button>
           <button
             type="button"
             className={ITEM_CLASS}
