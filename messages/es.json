@@ -741,5 +741,11 @@
   "profile.save": "Guardar",
   "profile.saving": "Guardando…",
   "profile.saved": "Perfil actualizado",
-  "profile.saveError": "No se pudo actualizar tu perfil"
+  "profile.saveError": "No se pudo actualizar tu perfil",
+  "profile.avatar": "Avatar",
+  "profile.avatarUpload": "Subir avatar",
+  "profile.avatarUploading": "Subiendo…",
+  "profile.avatarRemove": "Quitar avatar",
+  "profile.avatarError": "No se pudo subir esa imagen",
+  "profile.avatarHint": "PNG, JPG, GIF o WebP, hasta el límite de subida del espacio de trabajo."
 }

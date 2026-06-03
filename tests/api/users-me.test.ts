@@ -113,4 +113,16 @@ describe('PATCH /api/users/me (#198/#199 K4/K5)', () => {
     const [row2] = await getDb().select().from(schema.users).where(eq(schema.users.id, u.userId));
     expect(row2?.avatarUrl).toBeNull();
   });
+
+  it('accepts the relative signed-file avatar path returned by storeUpload (#199)', async () => {
+    const u = await asUser();
+    const relative = '/api/files/abc?sig=x&exp=1';
+    const r = await patch({ avatarUrl: relative });
+    expect(r.status).toBe(200);
+    expect((r.body as { avatarUrl: string | null }).avatarUrl).toBe(relative);
+    const { getDb } = await import('@/db/client');
+    const schema = await import('@/db/schema');
+    const [row] = await getDb().select().from(schema.users).where(eq(schema.users.id, u.userId));
+    expect(row?.avatarUrl).toBe(relative);
+  });
 });

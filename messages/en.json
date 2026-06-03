@@ -741,5 +741,11 @@
   "profile.save": "Save",
   "profile.saving": "Saving…",
   "profile.saved": "Profile updated",
-  "profile.saveError": "Could not update your profile"
+  "profile.saveError": "Could not update your profile",
+  "profile.avatar": "Avatar",
+  "profile.avatarUpload": "Upload avatar",
+  "profile.avatarUploading": "Uploading…",
+  "profile.avatarRemove": "Remove avatar",
+  "profile.avatarError": "Could not upload that image",
+  "profile.avatarHint": "PNG, JPG, GIF or WebP, up to the workspace upload limit."
 }

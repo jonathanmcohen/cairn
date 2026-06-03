@@ -745,5 +745,11 @@
   "profile.save": "حفظ",
   "profile.saving": "جارٍ الحفظ…",
   "profile.saved": "تم تحديث الملف الشخصي",
-  "profile.saveError": "تعذّر تحديث ملفك الشخصي"
+  "profile.saveError": "تعذّر تحديث ملفك الشخصي",
+  "profile.avatar": "الصورة الرمزية",
+  "profile.avatarUpload": "رفع صورة رمزية",
+  "profile.avatarUploading": "جارٍ الرفع…",
+  "profile.avatarRemove": "إزالة الصورة الرمزية",
+  "profile.avatarError": "تعذّر رفع تلك الصورة",
+  "profile.avatarHint": "PNG أو JPG أو GIF أو WebP، حتى حد الرفع لمساحة العمل."
 }

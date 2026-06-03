@@ -6,7 +6,16 @@ import { updateUserProfile } from '@/lib/users/profile';
 
 const PatchBody = z.object({
   name: z.string().min(1).max(200).optional(),
-  avatarUrl: z.string().url().nullable().optional(),
+  // Accept either an absolute URL or the relative signed-file path that
+  // storeUpload returns (`/api/files/<id>?sig=&exp=`), or null to clear.
+  avatarUrl: z
+    .string()
+    .max(2048)
+    .refine((v) => v.startsWith('/') || /^https?:\/\//.test(v), {
+      message: 'avatarUrl must be an absolute URL or a leading-slash path',
+    })
+    .nullable()
+    .optional(),
 });
 
 export async function PATCH(req: Request): Promise<Response> {
