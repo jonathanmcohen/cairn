@@ -1,6 +1,8 @@
 'use client';
 
+import { KeyRound } from 'lucide-react';
 import { useId, useState } from 'react';
+import { EmptyState } from '@/components/empty-state/empty-state';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConfirm } from '@/components/ui/confirm-dialog';
@@ -13,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { useT } from '@/lib/i18n/provider';
 
 export type ApiKeyRow = {
   id: string;
@@ -44,6 +47,7 @@ function fmtDate(iso: string | null): string {
 }
 
 export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
+  const t = useT();
   const confirm = useConfirm();
   const nameId = useId();
   const roleId = useId();
@@ -245,7 +249,13 @@ export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
       ) : null}
 
       {keys.length === 0 ? (
-        <p className="text-muted-foreground">No API keys yet.</p>
+        <EmptyState
+          icon={<KeyRound aria-hidden="true" />}
+          headline={t('apiKeys.empty.headline')}
+          guidance={t('apiKeys.empty.guidance')}
+          ctaLabel={t('apiKeys.empty.cta')}
+          ctaHref="/settings/developer/tokens"
+        />
       ) : (
         <div className="overflow-x-auto rounded border">
           <table className="w-full text-sm">
