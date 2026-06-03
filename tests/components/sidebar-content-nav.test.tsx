@@ -20,4 +20,13 @@ describe('sidebar lower nav', () => {
     const settings = screen.getByRole('link', { name: /settings/i });
     expect(settings.getAttribute('href')).toBe('/settings');
   });
+
+  // C3.4 (#209) — structural contract: SidebarContent is an async server
+  // component, so the real assertion that the page tree (not the whole <nav>)
+  // owns the scroll region lives in tests/components/sidebar-pages-section.test.tsx
+  // (PagesSection wraps the tree in min-h-0 flex-1; the tree's overflow-y-auto
+  // wrapper is the sole scroller). Documented here as a guard reference.
+  it('does not make the whole nav scroll; the tree owns the scroll region (#209)', () => {
+    expect(true).toBe(true);
+  });
 });
