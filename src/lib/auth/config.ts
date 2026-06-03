@@ -14,6 +14,7 @@ import { applyOAuthGate } from './oauth-gate';
 import { verifyLoginTicket } from './passkey-ticket';
 import { verifyPassword } from './password';
 import { createSession, touchSession } from './session-store';
+import { resolveSignInIp } from './sign-in-client';
 import { isTwoFactorEnabled, verifySecondFactor } from './two-factor';
 
 const CredentialsSchema = z.object({
@@ -33,7 +34,7 @@ async function readSignInClient(): Promise<{ ua: string | null; ip: string | nul
     const { headers } = await import('next/headers');
     const h = await headers();
     const ua = h.get('user-agent');
-    const ip = h.get('x-forwarded-for')?.split(',')[0]?.trim() ?? h.get('x-real-ip') ?? null;
+    const ip = resolveSignInIp(h, { trustProxy: process.env.TRUST_PROXY === 'true' });
     return { ua, ip };
   } catch {
     return { ua: null, ip: null };
