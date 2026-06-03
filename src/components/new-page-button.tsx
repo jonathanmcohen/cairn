@@ -21,7 +21,7 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const created = (await res.json()) as { id: string };
-      router.push(`/pages/${created.id}` as Route);
+      router.push(`/pages/${created.id}?new=1` as Route);
       router.refresh();
     } catch {
       setBusy(false);

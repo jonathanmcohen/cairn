@@ -726,5 +726,9 @@
   "approval.error.selfApprove": "No puedes aprobar tu propia revisión.",
   "approval.error.resolved": "Esta revisión ya se resolvió. Actualiza para ver la última decisión.",
   "approval.error.conflict": "No se pudo decidir esta revisión porque su estado cambió. Actualiza e inténtalo de nuevo.",
-  "approval.error.generic": "No se pudo registrar tu decisión. Inténtalo de nuevo."
+  "approval.error.generic": "No se pudo registrar tu decisión. Inténtalo de nuevo.",
+  "page.title.placeholder": "Sin título",
+  "page.title.nudge": "Ponle un nombre a tu página para empezar.",
+  "page.title.startBlank": "Empezar en blanco",
+  "page.title.fromTemplate": "Usar una plantilla"
 }

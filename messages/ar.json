@@ -730,5 +730,9 @@
   "approval.error.selfApprove": "لا يمكنك الموافقة على مراجعتك الخاصة.",
   "approval.error.resolved": "تمت معالجة هذه المراجعة بالفعل. حدّث الصفحة لعرض آخر قرار.",
   "approval.error.conflict": "تعذّر اتخاذ قرار بشأن هذه المراجعة لأن حالتها تغيّرت. حدّث الصفحة وحاول مرة أخرى.",
-  "approval.error.generic": "تعذّر تسجيل قرارك. يرجى المحاولة مرة أخرى."
+  "approval.error.generic": "تعذّر تسجيل قرارك. يرجى المحاولة مرة أخرى.",
+  "page.title.placeholder": "بدون عنوان",
+  "page.title.nudge": "أعطِ صفحتك اسمًا للبدء.",
+  "page.title.startBlank": "ابدأ من فارغ",
+  "page.title.fromTemplate": "استخدم قالبًا"
 }

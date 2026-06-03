@@ -726,5 +726,9 @@
   "approval.error.selfApprove": "You can't approve your own review.",
   "approval.error.resolved": "This review was already resolved. Refresh to see the latest decision.",
   "approval.error.conflict": "This review couldn't be decided — its state changed. Refresh and try again.",
-  "approval.error.generic": "Couldn't record your decision. Please try again."
+  "approval.error.generic": "Couldn't record your decision. Please try again.",
+  "page.title.placeholder": "Untitled",
+  "page.title.nudge": "Give your page a name to get started.",
+  "page.title.startBlank": "Start blank",
+  "page.title.fromTemplate": "Use a template"
 }
