@@ -755,5 +755,7 @@
   "theme.toggle.light": "السمة الفاتحة",
   "theme.toggle.system": "سمة النظام",
   "theme.toggle.dark": "السمة الداكنة",
-  "theme.toggle.cycleHint": "تبديل السمة"
+  "theme.toggle.cycleHint": "تبديل السمة",
+  "theme.preview.button": "الزر الأساسي",
+  "theme.preview.label": "معاينة لون التمييز المباشرة"
 }

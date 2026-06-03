@@ -751,5 +751,7 @@
   "theme.toggle.light": "Light theme",
   "theme.toggle.system": "System theme",
   "theme.toggle.dark": "Dark theme",
-  "theme.toggle.cycleHint": "Switch theme"
+  "theme.toggle.cycleHint": "Switch theme",
+  "theme.preview.button": "Primary button",
+  "theme.preview.label": "Live accent preview"
 }

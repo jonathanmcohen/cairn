@@ -751,5 +751,7 @@
   "theme.toggle.light": "Tema claro",
   "theme.toggle.system": "Tema del sistema",
   "theme.toggle.dark": "Tema oscuro",
-  "theme.toggle.cycleHint": "Cambiar tema"
+  "theme.toggle.cycleHint": "Cambiar tema",
+  "theme.preview.button": "Botón principal",
+  "theme.preview.label": "Vista previa del acento en vivo"
 }
