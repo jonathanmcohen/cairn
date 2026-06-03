@@ -1,10 +1,29 @@
 'use client';
 
+import type { Editor } from '@tiptap/core';
 import { Placeholder } from '@tiptap/extensions';
 import { EditorContent, useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import { useEffect } from 'react';
 import { MentionExtension } from '@/components/editor/mention-extension';
+
+/**
+ * v0.9.9 E2 (#73/#253) — serialize the composer document to the storage plain
+ * text, mapping the `mention` atom to its `@[Name](userId)` token via an
+ * EXPLICIT `textSerializers` entry (kept identical to
+ * `mention-extension.ts#renderText`). TipTap 3's bare `getText()` does honor a
+ * node's `renderText`, but pinning the serializer here makes the comment write
+ * path independent of that default so the stored token AND any text typed
+ * after the mention both survive verbatim. Exported so the regression test
+ * exercises the exact serializer the composer uses.
+ */
+export function serializeCommentText(editor: Editor): string {
+  return editor.getText({
+    textSerializers: {
+      mention: ({ node }) => `@[${node.attrs.label ?? node.attrs.id}](${node.attrs.id})`,
+    },
+  });
+}
 
 /**
  * A minimal single-line-ish TipTap input for comments. It supports `@`-mention
@@ -57,7 +76,7 @@ export function CommentComposer({
       },
     },
     onUpdate: ({ editor: ed }) => {
-      onChange(ed.getText());
+      onChange(serializeCommentText(ed));
     },
   });
 
