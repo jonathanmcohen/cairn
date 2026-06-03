@@ -282,6 +282,7 @@
   "share.acl.transferConfirmAction": "Transfer",
   "share.acl.transferConfirmCancel": "Cancel",
   "database.view.add": "Add view",
+  "database.view.needProperty": "Calendar, Timeline and Board need a date or select property — add one from the property menu.",
   "database.view.dateProperty": "{type} date property",
   "database.view.disabled.calendar": "Add a date property to enable",
   "database.view.disabled.timeline": "Add two date properties for Timeline",

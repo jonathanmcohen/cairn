@@ -282,6 +282,7 @@
   "share.acl.transferConfirmAction": "نقل",
   "share.acl.transferConfirmCancel": "إلغاء",
   "database.view.add": "إضافة عرض",
+  "database.view.needProperty": "تحتاج طرق العرض التقويم والجدول الزمني واللوحة إلى خاصية تاريخ أو اختيار — أضف واحدة من قائمة الخصائص.",
   "database.view.dateProperty": "خاصية تاريخ {type}",
   "database.view.disabled.calendar": "أضف خاصية تاريخ للتفعيل",
   "database.view.disabled.timeline": "أضف خاصيتي تاريخ لعرض المخطط الزمني",

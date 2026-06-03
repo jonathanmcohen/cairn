@@ -217,6 +217,13 @@ export function ViewSwitcher({
                   </SelectItem>
                 );
               })}
+              {/* #264 — clarify WHY Calendar/Timeline/Board may be disabled: they
+                  need a date or select property. Shown only when none exists. */}
+              {dateProperties.length === 0 && selectProperties.length === 0 ? (
+                <div className="border-t px-2 py-1.5 text-xs text-muted-foreground">
+                  {t('database.view.needProperty')}
+                </div>
+              ) : null}
             </SelectContent>
           </Select>
         </div>
