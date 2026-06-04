@@ -232,6 +232,21 @@ html.cairn-focus-mode [data-cairn-comments-rail] {
 }
 
 /*
+ * v0.9.9 Plan O #59/#238 — focus mode hides the sidebar, but a left-edge hover
+ * (or the pin toggle) sets `data-reveal-sidebar` on the html root to
+ * temporarily un-hide it without leaving focus mode. The reveal selector is
+ * more specific than the blanket `display:none` above, so it wins.
+ */
+html.cairn-focus-mode[data-reveal-sidebar="true"] [data-cairn-workspace-sidebar] {
+  display: block !important;
+  position: fixed;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: 55;
+  box-shadow: 0 0 1.5rem rgb(0 0 0 / 0.25);
+}
+
+/*
  * v0.9.0 G6 P33 — reader mode bumps the editor surface into typography-prose
  * styling so the read-only view has comfortable line-length + spacing.
  */

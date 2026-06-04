@@ -11,6 +11,7 @@ import {
   useState,
 } from 'react';
 import { ExitFocusControl } from './exit-focus-control';
+import { SidebarHotEdge } from './sidebar-hot-edge';
 
 /**
  * Per-device localStorage key holding `{ focus: boolean; reader: boolean }`.
@@ -222,6 +223,7 @@ export function PageModeShell({ children }: Props) {
           `cairn-focus-mode` hide rule never collapses them: they stay visible
           as the escape hatch while focus mode hides the rest of the chrome. */}
       {mode.focus && <ExitFocusControl onExit={() => setFocus(false)} />}
+      {mode.focus && <SidebarHotEdge />}
     </Ctx.Provider>
   );
 }
