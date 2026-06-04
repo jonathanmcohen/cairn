@@ -55,7 +55,7 @@ export function SuggestionToolbar({
           className={
             active
               ? 'inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 font-medium text-primary-foreground text-xs disabled:opacity-50'
-              : 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium text-muted-foreground text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring disabled:opacity-50'
+              : 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium text-muted-foreground text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
           }
         >
           <PencilLine aria-hidden="true" className="h-3.5 w-3.5" />
