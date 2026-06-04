@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { HttpError, type MemberRole } from '@/lib/auth/require-role';
@@ -38,7 +38,9 @@ export async function editComment(
 
   const [updated] = await db
     .update(schema.comments)
-    .set({ body, updatedAt: new Date() })
+    // Use the DB clock (same source as created_at) so updated_at can never
+    // appear earlier than created_at under host↔container clock skew.
+    .set({ body, updatedAt: sql`now()` })
     .where(
       and(
         eq(schema.comments.id, input.commentId),
