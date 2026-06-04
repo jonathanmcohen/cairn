@@ -114,7 +114,11 @@ export function VirtualizedRowBody({
       </div>
 
       {/* Spacer — total list height so the scrollbar reflects the full row count. */}
-      <div style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}>
+      {/* biome-ignore lint/a11y/useSemanticElements: <tbody> requires a <table> parent; this is the rowgroup of the div-based ARIA grid so role="grid" directly owns rowgroup/row (not a roleless div), satisfying aria-required-children. */}
+      <div
+        role="rowgroup"
+        style={{ height: `${virtualizer.getTotalSize()}px`, position: 'relative' }}
+      >
         {virtualizer.getVirtualItems().map((vRow) => {
           const node = visible[vRow.index];
           if (!node) return null;

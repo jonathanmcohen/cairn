@@ -282,7 +282,7 @@ export function ApiKeysManager({ initialKeys }: { initialKeys: ApiKeyRow[] }) {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="text-destructive hover:text-destructive"
+                      className="min-h-11 min-w-11 text-destructive hover:text-destructive"
                       disabled={revoking === k.id}
                       onClick={() => void onRevoke(k.id)}
                     >
