@@ -45,5 +45,18 @@ export function useDatabaseData(databaseId: string, viewId: string | null) {
     void refresh();
   }, [refresh]);
 
-  return { meta, rows, loading, refresh };
+  // #263 — optimistically append a just-created view to meta.views so its tab
+  // shows immediately, before the create POST + background refetch resolve.
+  // The subsequent onViewsChanged() refetch reconciles the temp view away.
+  const addViewOptimistic = useCallback(
+    (view: { id: string; type: string; name: string; config: unknown }) => {
+      setMeta((m) =>
+        m ? { ...m, views: [...m.views, { ...view, position: m.views.length }] } : m,
+      );
+      return view;
+    },
+    [],
+  );
+
+  return { meta, rows, loading, refresh, addViewOptimistic };
 }

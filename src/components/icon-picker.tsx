@@ -2,6 +2,7 @@
 
 import { FileText, Image as ImageIcon } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { useT } from '@/lib/i18n/provider';
 import { formatIcon, parseIcon } from '@/lib/pages/icon-format';
 import { CustomIconUpload } from './pages/custom-icon-upload';
 import { Button } from './ui/button';
@@ -37,6 +38,7 @@ export type IconPickerProps = {
 };
 
 export function IconPicker({ value, onChange }: IconPickerProps) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [recent, setRecent] = useState<string[]>([]);
   const [tab, setTab] = useState<'emoji' | 'upload'>('emoji');
@@ -99,7 +101,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
         <Button
           variant="ghost"
           size="icon"
-          aria-label="Change icon"
+          aria-label={t('iconPicker.changeAria')}
           className="flex h-10 w-10 items-center justify-center text-3xl"
         >
           {triggerContent}
@@ -111,29 +113,32 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
             type="button"
             variant={tab === 'emoji' ? 'default' : 'outline'}
             size="sm"
+            title={t('iconPicker.emojiTooltip')}
             onClick={() => setTab('emoji')}
           >
-            Emoji
+            {t('iconPicker.emoji')}
           </Button>
           <Button
             type="button"
             variant={tab === 'upload' ? 'default' : 'outline'}
             size="sm"
+            title={t('iconPicker.uploadTooltip')}
             onClick={() => setTab('upload')}
           >
-            Upload
+            {t('iconPicker.upload')}
           </Button>
           <Button
             type="button"
             variant="ghost"
             size="sm"
             className="ml-auto"
+            title={t('iconPicker.removeTooltip')}
             onClick={() => {
               onChange(null);
               setOpen(false);
             }}
           >
-            Remove
+            {t('iconPicker.remove')}
           </Button>
         </div>
 
@@ -141,7 +146,9 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
           <>
             {recent.length > 0 && (
               <div className="mb-2">
-                <div className="mb-1 text-xs text-muted-foreground">Recently used</div>
+                <div className="mb-1 text-xs text-muted-foreground">
+                  {t('iconPicker.recentlyUsed')}
+                </div>
                 <div className="flex flex-wrap gap-1">
                   {recent.slice(0, RECENT_MAX).map((r) => (
                     <button
@@ -155,7 +162,7 @@ export function IconPicker({ value, onChange }: IconPickerProps) {
                         setOpen(false);
                       }}
                       className="rounded p-1 text-xl hover:bg-accent"
-                      aria-label={`Use ${r}`}
+                      aria-label={t('iconPicker.useEmoji', { emoji: r })}
                     >
                       {r}
                     </button>

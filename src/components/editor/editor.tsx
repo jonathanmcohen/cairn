@@ -11,8 +11,10 @@ import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
+import { computeDiffPreview } from '@/lib/suggestions/diff-preview';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BibliographyToggle } from './bibliography-toggle';
+import { BlockContextMenu } from './block-context-menu';
 import { BulkUploader } from './bulk-uploader';
 import { CollabOfflineBanner } from './collab-offline-banner';
 import { DragHandle } from './drag-handle';
@@ -21,6 +23,7 @@ import { EditorDialogs } from './editor-dialogs';
 import { baseExtensions, type CollabUser, collabExtensions } from './extensions';
 import { Bibliography } from './extensions/bibliography';
 import { loadEditorExtension, nodeNamesInDoc } from './extensions-lazy';
+import { HeadingCollapse } from './heading-collapse';
 import { composeGalleryInsert } from './image-extension';
 import { LockBadge } from './lock-badge';
 import { OutlinePanel } from './outline-panel';
@@ -120,6 +123,12 @@ export function Editor({
   const pageMode = usePageModeOptional();
   const readerMode = pageMode?.reader ?? false;
   const effectiveEditable = editable && !readerMode && !locked;
+  // #188 — controls that represent an *edit affordance* stay mounted but
+  // disabled while the page is locked, rather than disappearing (which read as
+  // a broken UI). `mountableEditable` = the user could edit if not locked;
+  // `editLocked` = currently suppressed by a lock only.
+  const mountableEditable = editable && !readerMode;
+  const editLocked = mountableEditable && locked;
 
   // Announce collab connection-status transitions through the shell's polite
   // aria-live region so screen-reader users hear "Reconnecting…" / "Live" /
@@ -132,6 +141,9 @@ export function Editor({
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // #271 — doc position of the block under the last right-click, resolved by the
+  // BlockContextMenu trigger's capture handler.
+  const [contextTargetPos, setContextTargetPos] = useState<number | null>(null);
   // #117 — the EditorLinkShortcut extension (and the ⌘/ sheet registry entry)
   // dispatch a `cairn:editor:open-link` window event when the user presses the
   // insert-link shortcut. Bumping this counter lets <EditorBubbleMenu> open its
@@ -142,6 +154,24 @@ export function Editor({
     window.addEventListener('cairn:editor:open-link', onOpen);
     return () => window.removeEventListener('cairn:editor:open-link', onOpen);
   }, []);
+
+  // #275 — ⌘⇧M (Mod+Shift+M) comments the current selection: dispatch the
+  // `cairn:editor:comment-selection` event the comments rail listens for. Mirror
+  // of the `cairn:editor:open-link` pattern. Only fires with a non-empty
+  // selection and when the surface is editable (locked/reader/viewer no-op).
+  useEffect(() => {
+    if (!effectiveEditable) return;
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.shiftKey && (e.key === 'm' || e.key === 'M')) {
+        const ed = editorRef.current;
+        if (!ed || ed.state.selection.empty) return;
+        e.preventDefault();
+        window.dispatchEvent(new CustomEvent('cairn:editor:comment-selection'));
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [effectiveEditable]);
   // Suggestion mode (editor+ only). `activeSuggestionId` is the open proposal
   // that new insert/delete marks attach to while suggesting; `resolvable` is the
   // suggestionId under the current selection (drives the Accept/Reject buttons).
@@ -426,7 +456,14 @@ export function Editor({
       if (cancelled) return;
       setOpenCount(data.suggestions.length);
       setOpenSuggestions(
-        data.suggestions.map((s) => ({ id: s.id, authorName: s.authorName ?? 'Anonymous' })),
+        data.suggestions.map((s) => {
+          const json = editorRef.current?.getJSON() as Json | undefined;
+          return {
+            id: s.id,
+            authorName: s.authorName ?? 'Anonymous',
+            diff: json ? computeDiffPreview(json, s.id) : undefined,
+          };
+        }),
       );
     })();
     return () => {
@@ -548,16 +585,17 @@ export function Editor({
           outline) and the toggles carry explicit active states (aria-pressed +
           bg-primary fill) so the bar reads as distinct, structured controls
           rather than a row of bare labels — IN EVERY ROLE. The
-          presence+status+outline group always renders (editor AND viewer); only
-          the suggest-edits group is gated on `effectiveEditable`, and its
-          trailing separator lives INSIDE that gate so it never dangles when a
-          viewer omits the group. The status pill rests as a hairline-bordered
+          presence+status+outline group always renders (editor AND viewer); the
+          suggest-edits + bibliography group is gated on `mountableEditable`
+          (#188 — it stays mounted-but-disabled under lock instead of vanishing),
+          and its trailing separator lives INSIDE that gate so it never dangles
+          when a viewer omits the group. The status pill rests as a hairline-bordered
           chip (no `bg-muted` fill, which read as an active/selected state at
           rest). Styling only — handlers/state are unchanged, and the
           interactivity changes for these controls are owned by the -23- plan. */}
       <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
         {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
-        {effectiveEditable && (
+        {mountableEditable && (
           <>
             <SuggestionToolbar
               editor={editor}
@@ -570,6 +608,7 @@ export function Editor({
               onAccept={(id) => void resolve('accept', id)}
               onReject={(id) => void resolve('reject', id)}
               onOpenDrawer={() => setDrawerOpen(true)}
+              disabled={editLocked}
             />
             <SuggestionsDrawer
               open={drawerOpen}
@@ -615,13 +654,42 @@ export function Editor({
       <div className="flex gap-4">
         <div className="relative min-w-0 flex-1">
           {editor && <DragHandle editor={editor} />}
+          {/* #276 — hover chevron to collapse the section under a heading
+              (per-viewer presentation state, no Yjs write). */}
+          {editor && <HeadingCollapse editor={editor} />}
           {/* #116 — inline formatting bubble menu. Only the editable, collab-
               bound editor gets it (viewers / reader-mode never see formatting
               controls). It surfaces on text selection; see shouldShow. */}
           {editor && effectiveEditable && (
             <EditorBubbleMenu editor={editor} openLinkSignal={openLinkSignal} />
           )}
-          <EditorContent editor={editor} />
+          {/* #271 — right-click block context menu. The capture handler resolves
+              the block under the pointer via posAtCoords before radix opens the
+              menu; mutating items are gated on effectiveEditable, read-only
+              viewers still get Comment + Copy-link. */}
+          {editor ? (
+            <BlockContextMenu
+              editor={editor}
+              targetPos={contextTargetPos ?? 0}
+              pageId={pageId}
+              editable={effectiveEditable}
+            >
+              {/* biome-ignore lint/a11y/useKeyWithClickEvents: capture is for the
+                  contextmenu (right-click) target only; keyboard users open the
+                  same actions via the DragHandle menu. */}
+              <div
+                onContextMenuCapture={(e) => {
+                  const pos =
+                    editor.view.posAtCoords({ left: e.clientX, top: e.clientY })?.pos ?? null;
+                  setContextTargetPos(pos);
+                }}
+              >
+                <EditorContent editor={editor} />
+              </div>
+            </BlockContextMenu>
+          ) : (
+            <EditorContent editor={editor} />
+          )}
           {editor && !bibDisabled && <Bibliography doc={editor.getJSON()} style={citationStyle} />}
         </div>
       </div>

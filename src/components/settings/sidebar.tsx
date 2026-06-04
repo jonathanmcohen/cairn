@@ -26,9 +26,11 @@ export function SettingsSidebar({
   const containerRef = useRef<HTMLElement>(null);
 
   // Build the section model from the i18n catalog. The orphaned settings pages
-  // (#161 / G14) are surfaced here as children. SSO + chat-bridge live OUTSIDE
-  // the settings hub (/admin/sso, /admin/chat-bridge) and are LINKED OUT rather
-  // than relocated — see the G14 plan's "SSO/chat-bridge decision".
+  // (#161 / G14) are surfaced here as children. SSO lives inside the hub at
+  // /settings/admin/sso; v0.9.9 C5 (#186) relocated chat-bridge INTO the hub at
+  // /settings/admin/chat-bridge (a single Admin entry — the old duplicate
+  // Developer entries are gone; the Developer connectors panel still cross-links
+  // the chat-bridge form as a rail).
   const sections = useMemo<Section[]>(() => {
     const adminChildren: SubPage[] = [
       {
@@ -75,11 +77,11 @@ export function SettingsSidebar({
       },
       // SSO console now lives inside the settings hub (audit item B).
       { id: 'admin-sso', label: t('settings.nav.admin.sso'), href: '/settings/admin/sso' as Route },
-      // Outbound link to the chat-bridge console that still lives outside the hub.
+      // Chat-bridge console — canonical home inside the hub (v0.9.9 C5 #186).
       {
         id: 'admin-chat-bridge',
         label: t('settings.nav.admin.chatBridge'),
-        href: '/admin/chat-bridge' as Route,
+        href: '/settings/admin/chat-bridge' as Route,
       },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
@@ -159,20 +161,10 @@ export function SettingsSidebar({
             label: t('settings.nav.developer.connectors'),
             href: '/settings/developer/connectors' as Route,
           },
-          // Chat-bridge admin lives outside the hub (/admin/chat-bridge*) but is
-          // surfaced here so admins reach the Slack/Discord install + channel
-          // links from the Developer nav (#165). The Admin section also links the
-          // install console (G14) — both point at the same admin-gated pages.
-          {
-            id: 'developer-chat-bridge',
-            label: t('settings.nav.developer.chatBridge'),
-            href: '/admin/chat-bridge' as Route,
-          },
-          {
-            id: 'developer-chat-bridge-channels',
-            label: t('settings.nav.developer.chatBridgeChannels'),
-            href: '/admin/chat-bridge/channels' as Route,
-          },
+          // v0.9.9 C5 (#186) — the duplicate Developer chat-bridge entries were
+          // removed; chat-bridge now has a single canonical Admin entry inside
+          // the hub. The Developer connectors panel still surfaces the
+          // chat-bridge form as a rail, so the feature is not lost here.
           {
             id: 'developer-automation',
             label: t('settings.nav.developer.automation'),

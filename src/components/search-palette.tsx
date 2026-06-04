@@ -11,6 +11,7 @@ import { openQuickCapture } from '@/components/quick-capture/controller';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { usePrompt } from '@/components/ui/input-dialog';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
+import { emitMutation } from '@/lib/client/mutation-bus';
 import { copy } from '@/lib/copy/messages';
 import { useT } from '@/lib/i18n/provider';
 import { buildPaletteActions, type PaletteAction } from '@/lib/palette/actions';
@@ -144,6 +145,7 @@ export function SearchPalette({
     });
     if (r.ok) {
       void refreshSaved();
+      emitMutation('savedSearches');
       toast(t('palette.saveSearch.saved'));
     }
   }

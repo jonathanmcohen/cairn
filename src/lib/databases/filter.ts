@@ -31,6 +31,14 @@ export function compileFilters(
   for (const c of conditions) {
     const prop = propsById.get(c.propertyId);
     if (!prop) continue;
+    // v0.9.9 F2 #243 — computed (read-only) types live in db_rows columns, not
+    // db_cells, so they filter on the row directly (no EXISTS subquery).
+    const rowExpr = computedRowExpr(prop.type);
+    if (rowExpr) {
+      const pred = rowColumnPredicate(rowExpr, c.op, c.value);
+      if (pred) fragments.push(pred);
+      continue;
+    }
     const inner = predicateFor(prop.type, c.op, c.value);
     if (!inner) continue;
     const keyword = isAbsenceInclusive(prop.type, c.op, c.value)
@@ -52,6 +60,9 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
     case 'text':
     case 'url':
     case 'select':
+    // v0.9.9 F2 #243 — email/phone are plain text cells; reuse the text ops.
+    case 'email':
+    case 'phone':
       switch (op) {
         case 'eq':
           return rawSql`dc.value::text = ${JSON.stringify(value)}::jsonb::text`;
@@ -158,6 +169,51 @@ function predicateFor(type: schema.PropertyType, op: string, value: unknown): SQ
         default:
           return null;
       }
+    default:
+      return null;
   }
-  return null;
+}
+
+/**
+ * v0.9.9 F2 #243 — the db_rows column backing a computed property type, or null
+ * for non-computed types. created/last_edited time map to timestamp columns;
+ * created/last_edited by map to the uuid editor columns.
+ */
+function computedRowExpr(type: schema.PropertyType): SQL | null {
+  switch (type) {
+    case 'created_time':
+      return rawSql`db_rows.created_at`;
+    case 'last_edited_time':
+      return rawSql`db_rows.updated_at`;
+    case 'created_by':
+      return rawSql`db_rows.created_by`;
+    case 'last_edited_by':
+      return rawSql`db_rows.updated_by`;
+    default:
+      return null;
+  }
+}
+
+/** Predicate against a db_rows column for the computed time/by types. */
+function rowColumnPredicate(col: SQL, op: string, value: unknown): SQL | null {
+  switch (op) {
+    case 'eq':
+      return rawSql`${col}::date = ${String(value)}::date`;
+    case 'neq':
+      return rawSql`${col}::date <> ${String(value)}::date`;
+    case 'gt':
+      return rawSql`${col} > ${String(value)}::date`;
+    case 'gte':
+      return rawSql`${col} >= ${String(value)}::date`;
+    case 'lt':
+      return rawSql`${col} < ${String(value)}::date`;
+    case 'lte':
+      return rawSql`${col} <= ${String(value)}::date`;
+    case 'is_empty':
+      return rawSql`${col} IS NULL`;
+    case 'is_not_empty':
+      return rawSql`${col} IS NOT NULL`;
+    default:
+      return null;
+  }
 }

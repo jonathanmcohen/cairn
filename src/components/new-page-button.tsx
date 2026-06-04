@@ -3,6 +3,7 @@ import { Plus } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { resetPageFocusMode } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
 
@@ -21,7 +22,10 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
       });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const created = (await res.json()) as { id: string };
-      router.push(`/pages/${created.id}` as Route);
+      // A brand-new page must open with chrome visible — drop any persisted
+      // focus mode before navigating (#247).
+      resetPageFocusMode();
+      router.push(`/pages/${created.id}?new=1` as Route);
       router.refresh();
     } catch {
       setBusy(false);

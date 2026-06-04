@@ -27,7 +27,8 @@ export function CoverBanner({ cover, alt = '' }: CoverBannerProps) {
     return (
       <div
         aria-hidden="true"
-        className="h-[200px] w-full"
+        data-cairn-cover=""
+        className="cairn-cover h-[200px] w-full"
         style={
           preset.type === 'gradient'
             ? { backgroundImage: preset.css }
@@ -41,7 +42,8 @@ export function CoverBanner({ cover, alt = '' }: CoverBannerProps) {
     return (
       <div
         aria-hidden="true"
-        className="h-[200px] w-full"
+        data-cairn-cover=""
+        className="cairn-cover h-[200px] w-full"
         style={{ backgroundColor: cover.value }}
       />
     );
@@ -49,7 +51,7 @@ export function CoverBanner({ cover, alt = '' }: CoverBannerProps) {
 
   if (cover.kind === 'unsplash') {
     return (
-      <div className="h-[200px] w-full overflow-hidden">
+      <div data-cairn-cover="" className="cairn-cover h-[200px] w-full overflow-hidden">
         {/** biome-ignore lint/performance/noImgElement: external host, no next/image config */}
         <img src={cover.value} alt={alt} className="h-full w-full object-cover" loading="lazy" />
       </div>
@@ -61,7 +63,7 @@ export function CoverBanner({ cover, alt = '' }: CoverBannerProps) {
     const sig = signFileUrl({ fileId: cover.value, expiresAt, secret: env().AUTH_SECRET });
     const src = `/api/files/${cover.value}?sig=${sig}&exp=${expiresAt}`;
     return (
-      <div className="h-[200px] w-full overflow-hidden">
+      <div data-cairn-cover="" className="cairn-cover h-[200px] w-full overflow-hidden">
         {/** biome-ignore lint/performance/noImgElement: signed URL — bypasses next/image loader */}
         <img src={src} alt={alt} className="h-full w-full object-cover" loading="lazy" />
       </div>

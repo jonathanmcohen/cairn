@@ -3,7 +3,9 @@
 import { LogOut, Monitor } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
+import { friendlyUserAgent } from '@/lib/security/user-agent-label';
 
 type ApiSession = {
   id: string;
@@ -81,7 +83,7 @@ export function SessionsCard() {
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <span className="truncate font-medium text-sm">
-                    {s.userAgent ?? t('security.sessions.unknownDevice')}
+                    {friendlyUserAgent(s.userAgent) ?? t('security.sessions.unknownDevice')}
                   </span>
                   {s.current && (
                     <span className="rounded-full bg-primary/10 px-2 py-0.5 text-primary text-xs">
@@ -118,7 +120,9 @@ export function SessionsCard() {
             {t('security.sessions.signOutOthers')}
           </Button>
         )}
-        <form action="/api/auth/signout" method="post">
+        {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST that Auth.js
+            v5 rejected). Same defect as the sidebar footer. */}
+        <form action={signOutAction}>
           <Button variant="default" type="submit" className="min-h-11 gap-2">
             <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
             {t('security.sessions.signOut')}

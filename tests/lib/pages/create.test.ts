@@ -33,10 +33,16 @@ describe('createPage', () => {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
     });
-    expect(page.title).toBe('Untitled');
+    expect(page.title).toBe('');
     expect(page.parentId).toBeNull();
     expect((page.content as { type: string }).type).toBe('doc');
     expect(page.contentText).toBe('');
+  });
+
+  it('stores an empty title when none is provided (no literal Untitled)', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId });
+    expect(page.title).toBe('');
   });
 
   it('creates a nested page under a parent', async () => {

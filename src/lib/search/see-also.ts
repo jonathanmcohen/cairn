@@ -12,6 +12,12 @@ export type RelatedPage = {
   snippet: string;
   /** 1 - cosine_distance; higher = more similar. Always in [0, 1]. */
   score: number;
+  /**
+   * v0.9.9 F6 (#40/#219) — min-max rescaled score across THIS result set, in
+   * [0, 1]. The most-similar neighbor is 1, the least-similar is 0. Surfaces a
+   * visible difference even when absolute cosines cluster in a narrow band.
+   */
+  relativeScore: number;
 };
 
 export type FindRelatedPagesInput = {
@@ -112,7 +118,18 @@ export async function findRelatedPages(
       icon: r.icon,
       snippet: r.snippet ?? '',
       score: Math.max(0, Math.min(1, 1 - Number(r.distance))),
+      relativeScore: 0, // filled below after the full set is known
     });
+  }
+
+  // v0.9.9 F6 (#40/#219) — min-max rescale the absolute scores across the
+  // returned set so the panel differentiates neighbors even when cosines
+  // cluster. A single result (or all-equal) maps to 1.
+  if (out.length > 0) {
+    const scores = out.map((o) => o.score);
+    const lo = Math.min(...scores);
+    const hi = Math.max(...scores);
+    for (const o of out) o.relativeScore = hi === lo ? 1 : (o.score - lo) / (hi - lo);
   }
   return out;
 }

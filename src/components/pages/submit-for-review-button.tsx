@@ -40,7 +40,7 @@ export function SubmitForReviewButton({ pageId }: { pageId: string }) {
 
   return (
     <div className="flex items-center gap-2">
-      <Button size="sm" variant="outline" disabled={busy} onClick={() => void submit()}>
+      <Button size="sm" variant="default" disabled={busy} onClick={() => void submit()}>
         {busy ? t('pages.review.submitting') : t('pages.review.submit')}
       </Button>
       {error && (

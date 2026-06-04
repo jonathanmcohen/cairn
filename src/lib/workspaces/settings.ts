@@ -16,6 +16,38 @@ export class SettingsError extends Error {
 
 type Db = PostgresJsDatabase<typeof schema>;
 
+export type WorkspaceGeneralSettings = {
+  name: string;
+  requireTwofa: boolean;
+  homePageId: string | null;
+  icon: string | null;
+};
+
+/**
+ * #1 (P0) — narrowed read for the workspace General settings page. A bare
+ * `db.select()` pulls ALL 14 workspace columns; if any unrelated column lags
+ * behind a pending migration on a stale deploy, Postgres throws 42703 and the
+ * WHOLE page 500s (the v0.9.4 `workspaces.icon` outage). This projection reads
+ * ONLY the four fields the page renders, so an unrelated lagging column can no
+ * longer take the page down. Returns null when the workspace doesn't exist.
+ */
+export async function loadWorkspaceGeneralSettings(
+  db: Db,
+  workspaceId: string,
+): Promise<WorkspaceGeneralSettings | null> {
+  const [row] = await db
+    .select({
+      name: schema.workspaces.name,
+      requireTwofa: schema.workspaces.requireTwofa,
+      homePageId: schema.workspaces.homePageId,
+      icon: schema.workspaces.icon,
+    })
+    .from(schema.workspaces)
+    .where(eq(schema.workspaces.id, workspaceId))
+    .limit(1);
+  return row ?? null;
+}
+
 export type UpdateWorkspaceSettingsInput = {
   workspaceId: string;
   name?: string;

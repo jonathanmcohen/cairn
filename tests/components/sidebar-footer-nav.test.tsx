@@ -6,6 +6,9 @@ import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 // ReviewDueCounter + ThemeToggle pull in client hooks that error under jsdom.
 vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
+// The Sign out form's `action={signOutAction}` imports @/lib/auth/config, which
+// validates env() at module load and throws under jsdom. Mock the action.
+vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
 vi.mock('@/lib/i18n/provider', async () => {
   const en = (await import('@/../messages/en.json')).default as Record<string, string>;
   return {
@@ -31,6 +34,18 @@ describe('<SidebarFooterNav> version link', () => {
     // ring, so non-hover/keyboard users perceive it as a link.
     expect(link.className).toMatch(/(^|\s)underline(\s|$)/);
     expect(link.className).toMatch(/focus-visible:ring/);
+  });
+
+  it('renders Favorites + Inbox nav entries before My tasks (#202)', () => {
+    render(<SidebarFooterNav version="0.9.9" />);
+    const favorites = screen.getByRole('link', { name: 'Favorites' });
+    const inbox = screen.getByRole('link', { name: 'Inbox' });
+    expect(favorites.getAttribute('href')).toBe('/favorites');
+    expect(inbox.getAttribute('href')).toBe('/inbox');
+    const myTasks = screen.getByRole('link', { name: 'My tasks' });
+    const links = screen.getAllByRole('link');
+    expect(links.indexOf(favorites)).toBeLessThan(links.indexOf(myTasks));
+    expect(links.indexOf(inbox)).toBeLessThan(links.indexOf(myTasks));
   });
 
   it('renders the Sign out control inside a visually separated group', () => {

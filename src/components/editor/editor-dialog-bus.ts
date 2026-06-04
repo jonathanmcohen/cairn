@@ -32,6 +32,7 @@ export type EditorDialogSpec =
   | { kind: 'footnote'; title: string; description?: string }
   | { kind: 'citation'; title: string; description?: string }
   | { kind: 'flashcard'; title: string; description?: string }
+  | { kind: 'equation'; title: string; description?: string }
   | {
       kind: 'citationLookup';
       title: string;
@@ -51,9 +52,16 @@ export type EditorDialogCitationResult = {
   style: CitationStyle;
 };
 
+/** The resolved value of the equation modal (E1a #246/#274). */
+export type EditorDialogEquationResult = { kind: 'equation'; latex: string; display: boolean };
+
 /** Resolved values, keyed by field name (form dialogs), or the structured
- *  citation-lookup result, or null on cancel. */
-export type EditorDialogResult = EditorDialogFormResult | EditorDialogCitationResult | null;
+ *  citation-lookup / equation result, or null on cancel. */
+export type EditorDialogResult =
+  | EditorDialogFormResult
+  | EditorDialogCitationResult
+  | EditorDialogEquationResult
+  | null;
 
 /**
  * Narrow a resolved dialog result to the plain form-field record. Returns the
@@ -64,7 +72,9 @@ export type EditorDialogResult = EditorDialogFormResult | EditorDialogCitationRe
  */
 export function asFormResult(result: EditorDialogResult): EditorDialogFormResult | null {
   if (result === null) return null;
-  if ('kind' in result && result.kind === 'citationLookup') return null;
+  if ('kind' in result && (result.kind === 'citationLookup' || result.kind === 'equation')) {
+    return null;
+  }
   return result as EditorDialogFormResult;
 }
 

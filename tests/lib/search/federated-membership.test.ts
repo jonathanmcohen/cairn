@@ -30,8 +30,8 @@ beforeEach(async () => {
 
 describe('federatedSearch — membership scope', () => {
   it('returns hits across every workspace the user is a member of', async () => {
-    const a = await createTestWorkspaceWithUser(db);
-    const b = await createTestWorkspaceWithUser(db);
+    const a = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    const b = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     // Add user-a as editor on workspace-b.
     await db
       .insert(schema.workspaceMembers)
@@ -60,8 +60,8 @@ describe('federatedSearch — membership scope', () => {
   });
 
   it('does NOT return hits from a workspace the user is not a member of', async () => {
-    const a = await createTestWorkspaceWithUser(db);
-    const b = await createTestWorkspaceWithUser(db);
+    const a = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    const b = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, {
       workspaceId: b.workspaceId,
       createdBy: b.userId,
@@ -80,7 +80,7 @@ describe('federatedSearch — membership scope', () => {
   });
 
   it('skips encrypted pages even when the user is a member', async () => {
-    const a = await createTestWorkspaceWithUser(db);
+    const a = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const enc = await createPage(db, {
       workspaceId: a.workspaceId,
       createdBy: a.userId,

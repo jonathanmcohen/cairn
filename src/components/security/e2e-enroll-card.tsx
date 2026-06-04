@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { EncryptionDisabledNotice } from '@/components/admin/encryption-disabled-notice';
 import { Button } from '@/components/ui/button';
 import { usePrompt } from '@/components/ui/input-dialog';
 import { enrollKeypair, ensureEnrolled } from '@/lib/e2e/enroll-client';
@@ -77,7 +78,7 @@ export function E2EEnrollCard({ enabled = true }: { enabled?: boolean }) {
     return (
       <section className="space-y-2 rounded-lg border p-4">
         <h2 className="font-semibold text-lg">{t('e2e.enroll.title')}</h2>
-        <p className="text-destructive text-sm">{t('e2e.enroll.disabledBuild')}</p>
+        <EncryptionDisabledNotice />
       </section>
     );
   }

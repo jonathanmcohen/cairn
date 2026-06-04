@@ -15,13 +15,22 @@ vi.mock('@tiptap/react/menus', () => ({
 // Mock the i18n provider so labels resolve to keys.
 vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
 
-function makeEditor() {
+function makeEditor(overrides: Record<string, unknown> = {}) {
   const chain = {
     focus: () => chain,
     toggleBold: () => chain,
     toggleItalic: () => chain,
     toggleStrike: () => chain,
     toggleCode: () => chain,
+    toggleHeading: vi.fn(() => chain),
+    setTextAlign: vi.fn(() => chain),
+    toggleSubscript: vi.fn(() => chain),
+    toggleSuperscript: vi.fn(() => chain),
+    setColor: vi.fn(() => chain),
+    unsetColor: vi.fn(() => chain),
+    toggleHighlight: vi.fn(() => chain),
+    unsetHighlight: vi.fn(() => chain),
+    insertContent: vi.fn(() => chain),
     unsetAllMarks: () => chain,
     setLink: () => chain,
     unsetLink: () => chain,
@@ -33,6 +42,8 @@ function makeEditor() {
     isActive: () => false,
     getAttributes: () => ({}),
     state: { selection: { empty: false } },
+    __chain: chain,
+    ...overrides,
   } as never;
 }
 
@@ -53,5 +64,54 @@ describe('<EditorBubbleMenu>', () => {
     render(<EditorBubbleMenu editor={makeEditor()} />);
     fireEvent.click(screen.getByRole('button', { name: 'editor.bubble.link' }));
     expect(screen.getByPlaceholderText('editor.link.placeholder')).toBeTruthy();
+  });
+
+  it('exposes the expanded #275 controls by accessible name', () => {
+    render(<EditorBubbleMenu editor={makeEditor()} />);
+    for (const name of [
+      'editor.bubble.color',
+      'editor.bubble.highlight',
+      'editor.bubble.h1',
+      'editor.bubble.h2',
+      'editor.bubble.h3',
+      'editor.bubble.comment',
+      'editor.bubble.alignLeft',
+      'editor.bubble.alignCenter',
+      'editor.bubble.alignRight',
+      'editor.bubble.subscript',
+      'editor.bubble.superscript',
+      'editor.bubble.inlineMath',
+    ]) {
+      expect(screen.getByRole('button', { name })).toBeTruthy();
+    }
+  });
+
+  it('Heading 1 toggles a level-1 heading', () => {
+    const editor = makeEditor();
+    render(<EditorBubbleMenu editor={editor} />);
+    fireEvent.click(screen.getByRole('button', { name: 'editor.bubble.h1' }));
+    expect(
+      (editor as unknown as { __chain: { toggleHeading: ReturnType<typeof vi.fn> } }).__chain
+        .toggleHeading,
+    ).toHaveBeenCalledWith({ level: 1 });
+  });
+
+  it('Comment dispatches the cairn:editor:comment-selection event', () => {
+    const listener = vi.fn();
+    window.addEventListener('cairn:editor:comment-selection', listener);
+    render(<EditorBubbleMenu editor={makeEditor()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'editor.bubble.comment' }));
+    expect(listener).toHaveBeenCalledTimes(1);
+    window.removeEventListener('cairn:editor:comment-selection', listener);
+  });
+
+  it('Inline math inserts an empty math node', () => {
+    const editor = makeEditor();
+    render(<EditorBubbleMenu editor={editor} />);
+    fireEvent.click(screen.getByRole('button', { name: 'editor.bubble.inlineMath' }));
+    expect(
+      (editor as unknown as { __chain: { insertContent: ReturnType<typeof vi.fn> } }).__chain
+        .insertContent,
+    ).toHaveBeenCalledWith({ type: 'math', attrs: { latex: '', display: false } });
   });
 });

@@ -1,6 +1,7 @@
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
 import { createPage } from '@/lib/pages/create';
@@ -8,6 +9,44 @@ import { getBreadcrumbs, searchPages } from '@/lib/pages/search';
 import { updatePage } from '@/lib/pages/update';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
+
+// Deterministic 384-dim embedding so the kNN ordering/distance is predictable
+// without loading the real MiniLM model. The same vector is returned by the
+// mocked query-embed below, so cosine distance is 0 → rank 1.
+const FAKE_VEC = new Float32Array(384).fill(0).map((_, i) => (i < 8 ? 0.5 : 0.001));
+
+// Mock the embedding provider that searchSemantic() dynamically imports, so the
+// semantic path runs against real pgvector data without the heavy local model.
+vi.mock('@/lib/search/embed', () => ({
+  getEmbeddingProvider: () => ({
+    name: 'fake',
+    dim: 384,
+    embed: async () => FAKE_VEC,
+  }),
+}));
+
+async function seedPageWithEmbedding(
+  db: ReturnType<typeof drizzle<typeof schema>>,
+  input: { workspaceId: string; createdBy: string; title: string; contentText: string },
+): Promise<string> {
+  const page = await createPage(db, {
+    workspaceId: input.workspaceId,
+    createdBy: input.createdBy,
+    title: input.title,
+  });
+  // content_tsv is trigger-maintained off content_text; set the body directly.
+  await db
+    .update(schema.pages)
+    .set({ contentText: input.contentText })
+    .where(eq(schema.pages.id, page.id));
+  await db.insert(schema.pageEmbeddings).values({
+    pageId: page.id,
+    workspaceId: input.workspaceId,
+    embedding: Array.from(FAKE_VEC),
+    contentHash: `h-${page.id}`,
+  });
+  return page.id;
+}
 
 let sql: ReturnType<typeof postgres>;
 let db: ReturnType<typeof drizzle<typeof schema>>;
@@ -25,12 +64,12 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await sql`TRUNCATE pages, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE page_embeddings, pages, workspaces, users, workspace_members RESTART IDENTITY CASCADE`;
 });
 
 describe('searchPages', () => {
   it('finds a page by exact title word', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'Roadmap' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'Untitled' });
     const results = await searchPages(db, { workspaceId: u.workspaceId, query: 'roadmap' });
@@ -39,7 +78,7 @@ describe('searchPages', () => {
   });
 
   it('finds a page by body text', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const p = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -65,7 +104,7 @@ describe('searchPages', () => {
   });
 
   it('typo-tolerant: finds Roadmap with "rodmap"', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: u.workspaceId, createdBy: u.userId, title: 'Roadmap' });
     const results = await searchPages(db, { workspaceId: u.workspaceId, query: 'rodmap' });
     expect(results.length).toBeGreaterThan(0);
@@ -73,7 +112,7 @@ describe('searchPages', () => {
   });
 
   it('excludes soft-deleted pages', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const p = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -85,15 +124,15 @@ describe('searchPages', () => {
   });
 
   it('excludes pages from other workspaces', async () => {
-    const a = await createTestWorkspaceWithUser(db);
-    const b = await createTestWorkspaceWithUser(db);
+    const a = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    const b = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     await createPage(db, { workspaceId: b.workspaceId, createdBy: b.userId, title: 'Secret' });
     const results = await searchPages(db, { workspaceId: a.workspaceId, query: 'secret' });
     expect(results).toEqual([]);
   });
 
   it('returns at most `limit` results', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     for (let i = 0; i < 15; i++) {
       await createPage(db, {
         workspaceId: u.workspaceId,
@@ -110,9 +149,34 @@ describe('searchPages', () => {
   });
 });
 
+describe('searchPages semantic', () => {
+  it('returns a body snippet and a [0,1] rank for semantic hits (parity with fts)', async () => {
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    const pageId = await seedPageWithEmbedding(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'Quarterly planning',
+      contentText:
+        'the quarterly planning session covers OKRs, headcount, and the roadmap for the next twelve weeks.',
+    });
+    const results = await searchPages(db, {
+      workspaceId: u.workspaceId,
+      query: 'planning goals',
+      mode: 'semantic',
+      limit: 5,
+    });
+    const hit = results.find((r) => r.id === pageId);
+    expect(hit).toBeDefined();
+    expect(hit?.snippet).toBeTruthy();
+    expect(hit?.snippet).toContain('quarterly planning');
+    expect(hit?.rank).toBeGreaterThan(0);
+    expect(hit?.rank).toBeLessThanOrEqual(1);
+  });
+});
+
 describe('getBreadcrumbs', () => {
   it('returns the ancestor chain for nested pages', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const root = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,
@@ -139,7 +203,7 @@ describe('getBreadcrumbs', () => {
   });
 
   it('returns an empty chain for a top-level page', async () => {
-    const u = await createTestWorkspaceWithUser(db);
+    const u = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
     const root = await createPage(db, {
       workspaceId: u.workspaceId,
       createdBy: u.userId,

@@ -25,6 +25,17 @@ export const propertyType = pgEnum('property_type', [
   'formula',
   'relation',
   'rollup',
+  // v0.9.9 Plan F2 (#243) — additional Notion-parity property types. The four
+  // *_time/*_by types are computed (read-only): derived from db_rows timestamps
+  // and created_by/updated_by, never user-writable.
+  'person',
+  'file',
+  'email',
+  'phone',
+  'created_time',
+  'last_edited_time',
+  'created_by',
+  'last_edited_by',
 ]);
 export const viewType = pgEnum('view_type', [
   'table',
@@ -86,9 +97,15 @@ export const dbRows = pgTable(
     createdBy: uuid('created_by')
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
+    // v0.9.9 Plan F2 (#243) — the last editor, surfaced by the `last_edited_by`
+    // computed property type. Set on createRow + updateCells.
+    updatedBy: uuid('updated_by').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
+    // v0.9.9 Plan F1 (#241) — per-row rich-text body (TipTap/ProseMirror JSON),
+    // edited from the row-detail drawer. Nullable, no default.
+    body: jsonb('body').$type<unknown>(),
   },
   (t) => ({
     // v0.8.0 P7 audit: `listRows` filters by `database_id` AND

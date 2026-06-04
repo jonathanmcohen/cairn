@@ -22,10 +22,13 @@
  */
 import { desc, eq, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import type { AuditAction } from '@/lib/audit/actions';
 import { recordAudit } from '@/lib/audit/record';
+import { HttpError } from '@/lib/auth/http-error';
 import { env } from '@/lib/env';
+import { notifyApprovalDecision } from '@/lib/notifications/create';
 import { transitionStatus } from '@/lib/pages/status';
 import { type ApprovalDecision, signApproval } from './approval-signature';
 
@@ -107,7 +110,18 @@ export async function decide(
 ): Promise<{ id: string; signatureHmac: string; versionSnapshotId: string }> {
   const hasStatus = await pagesHasStatusColumn(db);
 
-  return db.transaction(async (tx) => {
+  const result = await db.transaction(async (tx) => {
+    // #270 — an author can't approve their own review. We surface a stable,
+    // machine-readable 409 ('self-approval') the UI maps to actionable copy.
+    const [pageRow] = await tx
+      .select({ createdBy: schema.pages.createdBy })
+      .from(schema.pages)
+      .where(eq(schema.pages.id, input.pageId))
+      .limit(1);
+    if (pageRow && pageRow.createdBy === input.approverUserId) {
+      throw new HttpError(409, 'self-approval');
+    }
+
     const [versionRow] = await tx
       .select({ id: schema.pageVersions.id })
       .from(schema.pageVersions)
@@ -183,6 +197,30 @@ export async function decide(
 
     return { id: inserted.id, signatureHmac, versionSnapshotId };
   });
+
+  // v0.9.9 Plan I (#195) — notify the page's collaborators (distinct prior
+  // version authors) of the approval decision. Post-commit, fresh getDb()
+  // connection, rejections swallowed so a notification failure can never roll
+  // back a signed approval.
+  try {
+    const fresh = getDb();
+    const authors = await fresh
+      .selectDistinct({ authorId: schema.pageVersions.authorId })
+      .from(schema.pageVersions)
+      .where(eq(schema.pageVersions.pageId, input.pageId));
+    const recipientIds = authors.map((r) => r.authorId).filter((id): id is string => id != null);
+    await notifyApprovalDecision(fresh, {
+      actorId: input.approverUserId,
+      pageId: input.pageId,
+      workspaceId: input.workspaceId,
+      decision: input.decision,
+      recipientIds,
+    });
+  } catch {
+    // swallow — notification is best-effort.
+  }
+
+  return result;
 }
 
 export type ApprovalHistoryItem = {

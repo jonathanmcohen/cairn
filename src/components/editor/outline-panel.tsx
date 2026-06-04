@@ -1,6 +1,7 @@
 'use client';
 
 import type { Editor } from '@tiptap/react';
+import { X } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { collectHeadings, type HeadingEntry } from '@/lib/editor/headings';
 import { useT } from '@/lib/i18n/provider';
@@ -27,42 +28,48 @@ export function OutlinePanel({ editor, onClose }: { editor: Editor; onClose?: ()
     });
   }
 
+  // #234 — full right-side drawer (matching version-history.tsx) instead of the
+  // tiny w-56 popover. Nested H1/H2/H3 indentation + click-to-scroll.
   return (
-    <aside
-      aria-label={t('outline.title')}
-      className="absolute end-0 top-0 z-20 max-h-screen w-56 overflow-y-auto rounded-md border bg-popover p-3 text-sm shadow-md"
-    >
-      <div className="mb-2 flex items-center justify-between">
-        <span className="text-xs font-medium text-muted-foreground">{t('outline.title')}</span>
-        {onClose && (
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded text-xs text-muted-foreground hover:bg-accent"
-            aria-label={t('outline.hide')}
-          >
-            ✕
-          </button>
-        )}
-      </div>
-      {headings.length === 0 ? (
-        <p className="text-muted-foreground">{t('outline.empty')}</p>
-      ) : (
-        <ul className="space-y-0.5">
-          {headings.map((h, i) => (
-            <li key={h.id} style={{ paddingInlineStart: `${(h.level - 1) * 10}px` }}>
-              <button
-                type="button"
-                onClick={() => scrollToHeading(i)}
-                className="block w-full truncate text-start text-muted-foreground hover:text-foreground"
-                title={h.text}
-              >
-                {h.text || 'Untitled'}
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </aside>
+    <div className="fixed inset-y-0 end-0 z-30 shadow-lg">
+      <aside
+        aria-label={t('outline.title')}
+        className="bg-background flex h-full w-80 flex-col border-s"
+      >
+        <div className="flex items-center justify-between border-b p-3">
+          <h2 className="text-sm font-medium">{t('outline.title')}</h2>
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label={t('outline.hide')}
+              className="flex h-7 w-7 items-center justify-center rounded text-muted-foreground hover:bg-accent"
+            >
+              <X aria-hidden="true" className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        <div className="flex-1 overflow-y-auto p-3 text-sm">
+          {headings.length === 0 ? (
+            <p className="text-muted-foreground">{t('outline.empty')}</p>
+          ) : (
+            <ul className="space-y-0.5">
+              {headings.map((h, i) => (
+                <li key={h.id} style={{ paddingInlineStart: `${(h.level - 1) * 14}px` }}>
+                  <button
+                    type="button"
+                    onClick={() => scrollToHeading(i)}
+                    title={h.text}
+                    className="block w-full truncate text-start text-muted-foreground hover:text-foreground"
+                  >
+                    {h.text || t('outline.untitled')}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </aside>
+    </div>
   );
 }

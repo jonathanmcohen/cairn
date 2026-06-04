@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import { HttpError } from '@/lib/auth/require-role';
+import { pageToDocx } from '@/lib/export/docx';
+import { pageToHtml } from '@/lib/export/html';
 import { pageToPdfHtml } from '@/lib/export/pdf';
 import { pageToPdf } from '@/lib/export/pdf-native';
 import { pageToJson, pageToMarkdown } from '@/lib/export/renderers';
@@ -72,6 +74,26 @@ export async function GET(
         headers: {
           'content-type': 'text/html; charset=utf-8',
           'content-disposition': `inline; filename="${safeName}.html"`,
+        },
+      });
+    }
+
+    if (format === 'html') {
+      return new NextResponse(pageToHtml(page), {
+        headers: {
+          'content-type': 'text/html; charset=utf-8',
+          'content-disposition': `attachment; filename="${safeName}.html"`,
+        },
+      });
+    }
+
+    if (format === 'docx') {
+      const buf = await pageToDocx(page);
+      // @ts-expect-error: Node Buffer → web Response works at runtime in Next 16
+      return new NextResponse(buf, {
+        headers: {
+          'content-type': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'content-disposition': `attachment; filename="${safeName}.docx"`,
         },
       });
     }

@@ -1,20 +1,18 @@
-import { eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
-import * as schema from '@/db/schema';
 import { requireRole } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { searchWorkspacePages } from '@/lib/workspaces/pages';
+import { loadWorkspaceGeneralSettings } from '@/lib/workspaces/settings';
 import { SettingsForm } from './settings-form';
 
 export default async function AdminSettingsPage() {
   const ctx = await requireRole('admin');
   const db = getDb();
-  const [row] = await db
-    .select()
-    .from(schema.workspaces)
-    .where(eq(schema.workspaces.id, ctx.workspaceId));
+  // #1 — narrowed projection: read ONLY the fields this page renders so a
+  // lagging unrelated column on a stale deploy can't 42703 the whole page.
+  const row = await loadWorkspaceGeneralSettings(db, ctx.workspaceId);
   if (!row) {
     throw new Error('workspace missing');
   }

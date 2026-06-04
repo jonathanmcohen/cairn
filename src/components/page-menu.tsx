@@ -6,7 +6,6 @@ import {
   CopyPlus,
   Download,
   FilePlus2,
-  FileStack,
   FileUp,
   Globe,
   Link as LinkIcon,
@@ -32,6 +31,11 @@ import { useT } from '@/lib/i18n/provider';
 
 const ITEM_CLASS =
   'flex min-h-11 w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent disabled:opacity-50';
+
+// Keyboard-shortcut glyph, not translatable copy (the keystroke is identical in
+// every locale). Held as a constant so the i18n audit — which only scans JSX
+// text/attributes — doesn't flag the bare glyph (#61/#240).
+const EXPORT_SHORTCUT_GLYPH = '⌘⇧E';
 
 type PageMenuProps = {
   pageId: string;
@@ -64,6 +68,8 @@ export function PageMenu({
   const [linkCopied, setLinkCopied] = useState(false);
   const [confirmPublishOpen, setConfirmPublishOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewCopied, setPreviewCopied] = useState(false);
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -87,11 +93,20 @@ export function PageMenu({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [open]);
 
-  function download(url: string) {
-    const a = document.createElement('a');
-    a.href = url;
-    a.click();
-  }
+  // When the publish-confirm dialog opens, fetch the non-mutating preview so the
+  // user sees the resolved public URL before committing to Publish (#70/#249).
+  useEffect(() => {
+    if (!confirmPublishOpen) return;
+    let cancelled = false;
+    void fetch(`/api/pages/${pageId}/publish`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((b: { url: string } | null) => {
+        if (!cancelled && b) setPreviewUrl(`${window.location.origin}${b.url}`);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [confirmPublishOpen, pageId]);
 
   async function importMd() {
     const input = document.createElement('input');
@@ -190,54 +205,49 @@ export function PageMenu({
               {t('pageMenu.publish')}
             </button>
           ) : (
-            <>
-              <button
-                type="button"
-                className={ITEM_CLASS}
-                onClick={() => void unpublish()}
-                disabled={!shareAllowed}
-                title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
-              >
-                <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
-                {t('pageMenu.unpublish')}
-              </button>
-              <button
-                type="button"
-                className={ITEM_CLASS}
-                disabled={!shareAllowed}
-                title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
-                onClick={() => {
-                  setShareOpen(true);
-                  setOpen(false);
-                }}
-              >
-                <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
-                {t('share.manage')}
-              </button>
-            </>
+            <button
+              type="button"
+              className={ITEM_CLASS}
+              onClick={() => void unpublish()}
+              disabled={!shareAllowed}
+              title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
+            >
+              <Globe aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {t('pageMenu.unpublish')}
+            </button>
           )}
+          {/* Share & permissions is available for every page (published or not):
+              the dialog mounts the per-page ACL manager, which must be reachable
+              for private pages too (#259). */}
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            disabled={!shareAllowed}
+            title={shareAllowed ? undefined : t('pageMenu.unavailableOffline')}
+            onClick={() => {
+              setShareOpen(true);
+              setOpen(false);
+            }}
+          >
+            <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('share.menuLabel')}
+          </button>
           <div className="my-1 border-t" />
+          {/* Export lives in the single action-bar Export menu (PageExportMenu)
+              — the lone export surface (#56/#235). This hint row fires the same
+              `cairn:export:open` event the ⌘⇧E shortcut does (#61/#240), opening
+              that menu; it carries no duplicate format buttons of its own. */}
           <button
             type="button"
             className={ITEM_CLASS}
             onClick={() => {
-              download(`/api/pages/${pageId}/export`);
+              window.dispatchEvent(new CustomEvent('cairn:export:open'));
               setOpen(false);
             }}
           >
             <Download aria-hidden="true" className="h-4 w-4 shrink-0" />
-            {t('pageMenu.exportMd')}
-          </button>
-          <button
-            type="button"
-            className={ITEM_CLASS}
-            onClick={() => {
-              download(`/api/pages/${pageId}/export?recursive=true`);
-              setOpen(false);
-            }}
-          >
-            <FileStack aria-hidden="true" className="h-4 w-4 shrink-0" />
-            {t('pageMenu.exportZip')}
+            <span className="flex-1">{t('pageMenu.exportHint')}</span>
+            <kbd className="ml-auto text-muted-foreground text-xs">{EXPORT_SHORTCUT_GLYPH}</kbd>
           </button>
           <button
             type="button"
@@ -325,12 +335,39 @@ export function PageMenu({
           setTimeout(() => setSavedAsTemplate(false), 2000);
         }}
       />
-      <Dialog open={confirmPublishOpen} onOpenChange={setConfirmPublishOpen}>
+      <Dialog
+        open={confirmPublishOpen}
+        onOpenChange={(next) => {
+          setConfirmPublishOpen(next);
+          if (!next) setPreviewUrl(null);
+        }}
+      >
         <DialogContent closeLabel={t('common.close')}>
           <DialogHeader>
             <DialogTitle>{t('publishConfirm.title')}</DialogTitle>
             <DialogDescription>{t('publishConfirm.body')}</DialogDescription>
           </DialogHeader>
+          {previewUrl && (
+            <div className="rounded-md border bg-muted/40 p-2">
+              <div className="text-muted-foreground text-xs">{t('publishConfirm.urlLabel')}</div>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 truncate text-sm">{previewUrl}</code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    void navigator.clipboard.writeText(previewUrl).then(() => {
+                      setPreviewCopied(true);
+                      setTimeout(() => setPreviewCopied(false), 1500);
+                    });
+                  }}
+                >
+                  {previewCopied ? t('publishConfirm.urlCopied') : t('publishConfirm.copyUrl')}
+                </Button>
+              </div>
+            </div>
+          )}
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => setConfirmPublishOpen(false)}>
               {t('common.cancel')}

@@ -32,7 +32,7 @@ function renderList(connectors = rows) {
 describe('<DatabaseConnectorsList>', () => {
   it('renders the heading + database name and kind label', () => {
     renderList();
-    expect(screen.getByText('Database connectors')).toBeTruthy();
+    expect(screen.getByText('Database sync')).toBeTruthy();
     expect(screen.getByText('Projects')).toBeTruthy();
     expect(screen.getByText('Airtable')).toBeTruthy();
   });
@@ -51,7 +51,7 @@ describe('<DatabaseConnectorsList>', () => {
 
   it('shows the heading and empty state when there are no connectors', () => {
     renderList([]);
-    expect(screen.getByText('Database connectors')).toBeTruthy();
+    expect(screen.getByText('Database sync')).toBeTruthy();
     expect(screen.getByText(/No database connectors yet/)).toBeTruthy();
   });
 });

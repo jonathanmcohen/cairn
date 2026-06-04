@@ -9,6 +9,11 @@ export type OpenSuggestion = {
   id: string;
   /** Resolved author display name; falls back to a generic label upstream. */
   authorName: string;
+  /**
+   * #232 — inline diff halves for this suggestion, derived from the live doc by
+   * computeDiffPreview(). Optional: a brand-new (empty) suggestion has neither half.
+   */
+  diff?: { deleted: string; inserted: string };
 };
 
 export function SuggestionsDrawer({
@@ -59,6 +64,37 @@ export function SuggestionsDrawer({
                     <p className="text-muted-foreground text-xs">
                       {t('pageActions.suggest.byAuthor', { author: s.authorName })}
                     </p>
+                    {s.diff && (s.diff.deleted || s.diff.inserted) ? (
+                      <p className="mt-2 break-words text-sm leading-relaxed">
+                        {s.diff.deleted ? (
+                          <>
+                            <span className="sr-only">
+                              {t('pageActions.suggest.diffDeletedLabel')}:{' '}
+                            </span>
+                            <del
+                              title={t('pageActions.suggest.diffDeletedLabel')}
+                              className="rounded-sm bg-red-500/10 px-0.5 text-red-700 line-through decoration-red-500/70 dark:text-red-300"
+                            >
+                              {s.diff.deleted}
+                            </del>
+                          </>
+                        ) : null}
+                        {s.diff.deleted && s.diff.inserted ? ' ' : null}
+                        {s.diff.inserted ? (
+                          <>
+                            <span className="sr-only">
+                              {t('pageActions.suggest.diffInsertedLabel')}:{' '}
+                            </span>
+                            <ins
+                              title={t('pageActions.suggest.diffInsertedLabel')}
+                              className="rounded-sm bg-green-500/10 px-0.5 text-green-700 no-underline dark:text-green-300"
+                            >
+                              {s.diff.inserted}
+                            </ins>
+                          </>
+                        ) : null}
+                      </p>
+                    ) : null}
                     <div className="mt-2 flex flex-wrap items-center gap-2">
                       <button
                         type="button"

@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, Loader2, X } from 'lucide-react';
+import { BellOff, Check, Loader2, X } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -180,7 +180,13 @@ export function NotificationDrawer({
           {isLoading && !data ? (
             <p className="py-12 text-center text-muted-foreground">Loading…</p>
           ) : items.length === 0 ? (
-            <p className="py-12 text-center text-muted-foreground">You're all caught up.</p>
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <BellOff aria-hidden="true" className="h-8 w-8 text-muted-foreground" />
+              <p className="font-medium text-sm">You&rsquo;re all caught up</p>
+              <p className="text-muted-foreground text-xs">
+                New mentions, replies, and approvals will show up here.
+              </p>
+            </div>
           ) : (
             (['today', 'week', 'older'] as const).map((key) => {
               const group = groups[key];

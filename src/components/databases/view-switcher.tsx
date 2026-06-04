@@ -45,6 +45,7 @@ export function ViewSwitcher({
   selectProperties = [],
   onChange,
   onViewsChanged,
+  onAddViewOptimistic,
 }: {
   databaseId: string;
   views: ViewTab[];
@@ -53,6 +54,8 @@ export function ViewSwitcher({
   selectProperties?: DateProp[];
   onChange: (id: string) => void;
   onViewsChanged: () => void;
+  /** #263 — optimistically append a temp view tab before the POST resolves. */
+  onAddViewOptimistic?: (view: { id: string; type: string; name: string; config: unknown }) => void;
 }) {
   const t = useT();
   const [adding, setAdding] = useState(false);
@@ -65,19 +68,21 @@ export function ViewSwitcher({
 
   async function addSimpleView(type: 'table' | 'gallery' | 'list') {
     setAdding(true);
+    // #263 — optimistic: append a temp tab + switch to it BEFORE the POST so the
+    // new view is visible immediately even on a slow create / refetch.
+    const name = t(`database.view.type.${type}`);
+    const tempId = `tmp-${crypto.randomUUID()}`;
+    onAddViewOptimistic?.({ id: tempId, type, name, config: {} });
+    onChange(tempId);
     try {
       const res = await fetch(`/api/databases/${databaseId}/views`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          type,
-          name: t(`database.view.type.${type}`),
-          config: {},
-        }),
+        body: JSON.stringify({ type, name, config: {} }),
       });
       if (!res.ok) return; // leave error UX to a later pass; do not silently "succeed"
       const view = (await res.json()) as { id: string };
-      onViewsChanged();
+      onViewsChanged(); // background refetch reconciles the temp tab away
       onChange(view.id);
     } finally {
       setAdding(false);
@@ -87,20 +92,21 @@ export function ViewSwitcher({
   async function addDateView() {
     if (!pendingType || !pickedDateProp) return;
     setAdding(true);
+    const name = t(`database.view.type.${pendingType}`);
+    const config = { dateProperty: pickedDateProp };
+    const tempId = `tmp-${crypto.randomUUID()}`;
+    onAddViewOptimistic?.({ id: tempId, type: pendingType, name, config });
+    onChange(tempId);
+    setPendingType(null);
+    setPickedDateProp('');
     try {
       const res = await fetch(`/api/databases/${databaseId}/views`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          type: pendingType,
-          name: t(`database.view.type.${pendingType}`),
-          config: { dateProperty: pickedDateProp },
-        }),
+        body: JSON.stringify({ type: pendingType, name, config }),
       });
       if (!res.ok) return;
       const view = (await res.json()) as { id: string };
-      setPendingType(null);
-      setPickedDateProp('');
       onViewsChanged();
       onChange(view.id);
     } finally {
@@ -121,20 +127,21 @@ export function ViewSwitcher({
   async function addKanbanView() {
     if (!pendingKanbanProp) return;
     setAdding(true);
+    const name = t('database.view.type.kanban');
+    const config = { groupBy: pendingKanbanProp };
+    const tempId = `tmp-${crypto.randomUUID()}`;
+    onAddViewOptimistic?.({ id: tempId, type: 'kanban', name, config });
+    onChange(tempId);
+    setKanbanPending(false);
+    setPendingKanbanProp('');
     try {
       const res = await fetch(`/api/databases/${databaseId}/views`, {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          type: 'kanban',
-          name: t('database.view.type.kanban'),
-          config: { groupBy: pendingKanbanProp },
-        }),
+        body: JSON.stringify({ type: 'kanban', name, config }),
       });
       if (!res.ok) return;
       const view = (await res.json()) as { id: string };
-      setKanbanPending(false);
-      setPendingKanbanProp('');
       onViewsChanged();
       onChange(view.id);
     } finally {
@@ -210,6 +217,13 @@ export function ViewSwitcher({
                   </SelectItem>
                 );
               })}
+              {/* #264 — clarify WHY Calendar/Timeline/Board may be disabled: they
+                  need a date or select property. Shown only when none exists. */}
+              {dateProperties.length === 0 && selectProperties.length === 0 ? (
+                <div className="border-t px-2 py-1.5 text-xs text-muted-foreground">
+                  {t('database.view.needProperty')}
+                </div>
+              ) : null}
             </SelectContent>
           </Select>
         </div>

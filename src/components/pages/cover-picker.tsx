@@ -11,8 +11,19 @@ import { meetsAA } from '@/lib/color/contrast';
 import { resolveTitleForeground } from '@/lib/color/title-contrast';
 import { useT } from '@/lib/i18n/provider';
 import type { PageCover } from '@/lib/pages/cover';
-import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY } from '@/lib/pages/cover-presets';
+import { COVER_PRESETS, DEFAULT_COVER_PRESET_KEY, getCoverPreset } from '@/lib/pages/cover-presets';
 import { UnsplashTab } from './cover-picker-unsplash-tab';
+
+/**
+ * #230 — derive the seed hex for the custom-hex input from the current cover so
+ * editing an existing color (or a preset's representative tone) shows the value
+ * instead of a blank field. Empty covers seed blank.
+ */
+function seedHexFromCover(cover: PageCover): string {
+  if ('kind' in cover && cover.kind === 'color') return cover.value;
+  if ('kind' in cover && cover.kind === 'preset') return getCoverPreset(cover.value)?.solid ?? '';
+  return '';
+}
 
 // The page title overlays/sits-below the cover on the theme `--foreground`
 // token. Finding C: resolve the REAL computed token (light vs dark differ)
@@ -33,16 +44,34 @@ export type CoverPickerProps = {
    * Components with optimistic local state need to pass a function.
    */
   onChange?: (cover: PageCover) => void;
+  /** #239 — controlled open state. When provided, the picker is driven externally. */
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  /** #239 — hide the built-in "Add/Change cover" trigger button (controlled mode). */
+  hideTrigger?: boolean;
 };
 
-export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPickerProps) {
+export function CoverPicker({
+  pageId,
+  current,
+  unsplashKey,
+  onChange,
+  open: openProp,
+  onOpenChange,
+  hideTrigger,
+}: CoverPickerProps) {
   const t = useT();
   const router = useRouter();
-  const [open, setOpen] = useState(false);
+  const [openState, setOpenState] = useState(false);
+  const open = openProp ?? openState;
+  const setOpen = (next: boolean) => {
+    if (onOpenChange) onOpenChange(next);
+    else setOpenState(next);
+  };
   // #169 — trap Tab + handle Escape while the custom modal is open.
   const trapRef = useFocusTrap<HTMLDivElement>(open);
   const [tab, setTab] = useState<TabKey>('color');
-  const [customHex, setCustomHex] = useState('');
+  const [customHex, setCustomHex] = useState(() => seedHexFromCover(current));
   const [coverUrl, setCoverUrl] = useState('');
   const [saving, setSaving] = useState(false);
   const [titleColor, setTitleColor] = useState('#fafafa');
@@ -52,7 +81,10 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
     if (!open || typeof window === 'undefined') return;
     const computed = getComputedStyle(document.documentElement).getPropertyValue('--foreground');
     setTitleColor(resolveTitleForeground(computed));
-  }, [open]);
+    // #230 — re-seed the custom-hex field when the modal (re)opens so an outside
+    // cover change reflects the current value.
+    setCustomHex(seedHexFromCover(current));
+  }, [open, current]);
 
   async function persist(next: PageCover) {
     const res = await fetch(`/api/pages/${pageId}/cover`, {
@@ -110,21 +142,23 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
 
   return (
     <>
-      <Button
-        variant="ghost"
-        size="sm"
-        className="min-h-11"
-        disabled={saving}
-        onClick={() => setOpen(true)}
-      >
-        {saving ? (
-          <Loader2
-            aria-hidden="true"
-            className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
-          />
-        ) : null}
-        {'kind' in current ? t('cover.change') : t('cover.add')}
-      </Button>
+      {!hideTrigger && (
+        <Button
+          variant="ghost"
+          size="sm"
+          className="min-h-11"
+          disabled={saving}
+          onClick={() => setOpen(true)}
+        >
+          {saving ? (
+            <Loader2
+              aria-hidden="true"
+              className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+            />
+          ) : null}
+          {'kind' in current ? t('cover.change') : t('cover.add')}
+        </Button>
+      )}
       {open && (
         <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-[15vh]">
           <button
@@ -161,19 +195,11 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
             <div className="space-y-3 p-4">
               {tab === 'color' && (
                 <div className="space-y-4">
-                  <Button
-                    type="button"
-                    className="w-full"
-                    disabled={saving}
-                    onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
-                  >
-                    {t('cover.useDefault')}
-                  </Button>
                   <div className="space-y-2">
                     <p className="text-xs font-medium text-muted-foreground">
                       {t('cover.section.gradients')}
                     </p>
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-4 gap-2">
                       {COVER_PRESETS.filter((p) => p.type === 'gradient').map((p) => (
                         <button
                           key={p.key}
@@ -191,7 +217,7 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                     <p className="text-xs font-medium text-muted-foreground">
                       {t('cover.section.neutrals')}
                     </p>
-                    <div className="grid grid-cols-7 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {COVER_PRESETS.filter((p) => p.type === 'neutral').map((p) => (
                         <button
                           key={p.key}
@@ -236,11 +262,30 @@ export function CoverPicker({ pageId, current, unsplashKey, onChange }: CoverPic
                         </p>
                       )}
                   </div>
-                  {'kind' in current && (
-                    <Button variant="outline" disabled={saving} onClick={() => void save({})}>
-                      {t('cover.remove')}
+                  <div className="flex items-center gap-4 border-t pt-3">
+                    <Button
+                      type="button"
+                      variant="link"
+                      size="sm"
+                      className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                      disabled={saving}
+                      onClick={() => void save({ kind: 'preset', value: DEFAULT_COVER_PRESET_KEY })}
+                    >
+                      {t('cover.useDefault')}
                     </Button>
-                  )}
+                    {'kind' in current && (
+                      <Button
+                        type="button"
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-muted-foreground hover:text-foreground"
+                        disabled={saving}
+                        onClick={() => void save({})}
+                      >
+                        {t('cover.remove')}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               )}
               {tab === 'unsplash' && unsplashKey && (

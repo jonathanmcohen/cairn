@@ -14,12 +14,31 @@ import {
 
 export type SlashCategory = 'basic' | 'media' | 'database' | 'advanced';
 
+/** A trigger range `{from, to}` spanning the `/query` text (incl. the `/`). */
+export type SlashRange = { from: number; to: number };
+
 export type SlashItem = {
   title: string;
   description: string;
   category: SlashCategory;
-  command: (editor: Editor) => void;
+  /**
+   * #38 — invoked with the editor and the corrected trigger range. Synchronous
+   * (immediate-insert) items ignore `range`: the dispatcher (`runSlashItem`)
+   * deletes the `/query` trigger for them before invoking. DEFERRED items
+   * (those marked `deferred: true` — dialogs, file pickers, lazy/async inserts
+   * that the user can cancel) receive the range and MUST delete it themselves
+   * only once they actually commit an insert, leaving the text intact on
+   * cancel/early-return (restore-on-cancel).
+   */
+  command: (editor: Editor, range?: SlashRange) => void;
   icon?: LucideIcon;
+  /**
+   * #76/#77/#111/#112 — true when `command` may defer or cancel (dialog/picker/
+   * lazy load/async fetch). The dispatcher then does NOT pre-delete the trigger
+   * range; the command deletes it itself on a successful insert. Default falsy
+   * = synchronous immediate insert.
+   */
+  deferred?: boolean;
   /**
    * #148 — synonym aliases. The slash search matches the query against the
    * title OR any keyword (case-insensitive substring), so `/math` finds
@@ -110,6 +129,12 @@ export const SlashMenu = forwardRef<
         return true;
       }
       if (event.key === 'Enter') {
+        // #38 — stop the Enter from leaking to the editor keymap (which would
+        // split the block / insert a newline alongside the slash command). The
+        // suggestion render layer also returns `true`, but preventing default
+        // here guarantees the keystroke is consumed even if the host forwards
+        // the raw event.
+        event.preventDefault();
         const chosen = ordered[index];
         if (chosen) command(chosen);
         return true;

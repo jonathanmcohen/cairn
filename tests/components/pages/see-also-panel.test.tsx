@@ -52,6 +52,22 @@ describe('<SeeAlsoPanel>', () => {
     expect(screen.getByText('🖼️')).toBeTruthy();
   });
 
+  it('renders a relative match-strength meter per related page (#219)', async () => {
+    const mod = await import('@/lib/search/see-also');
+    const spy = mod.findRelatedPages as unknown as ReturnType<typeof vi.fn>;
+    spy.mockResolvedValueOnce([
+      { id: 'a', title: 'Alpha', icon: null, snippet: '', score: 0.95, relativeScore: 1 },
+      { id: 'b', title: 'Beta', icon: null, snippet: '', score: 0.82, relativeScore: 0 },
+    ]);
+    const { SeeAlsoPanel } = await import('@/components/pages/see-also-panel');
+    const ui = await SeeAlsoPanel({ pageId: 'src', viewerUserId: 'u1' });
+    render(<>{ui}</>);
+    const meters = screen.getAllByRole('meter');
+    expect(meters).toHaveLength(2);
+    expect(meters[0]?.getAttribute('aria-valuenow')).toBe('100');
+    expect(meters[1]?.getAttribute('aria-valuenow')).toBe('0');
+  });
+
   it('renders an accessible heading and a nav landmark', async () => {
     const { SeeAlsoPanel } = await import('@/components/pages/see-also-panel');
     const ui = await SeeAlsoPanel({ pageId: 'src', viewerUserId: 'u1' });

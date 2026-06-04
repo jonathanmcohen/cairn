@@ -67,7 +67,9 @@ describe('<VirtualizedRowBody> disclosure icons', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const toggle = container.querySelector('[aria-label="Collapse row"]') as HTMLElement;

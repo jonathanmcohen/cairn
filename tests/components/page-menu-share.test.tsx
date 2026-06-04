@@ -16,7 +16,7 @@ describe('PageMenu share launcher (#120)', () => {
       </I18nProvider>,
     );
     fireEvent.click(screen.getByRole('button', { name: en['pageMenu.trigger'] }));
-    fireEvent.click(screen.getByRole('button', { name: en['share.manage'] }));
+    fireEvent.click(screen.getByRole('button', { name: en['share.menuLabel'] }));
     expect(screen.getByRole('dialog', { name: en['share.title'] })).toBeTruthy();
   });
 });

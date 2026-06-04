@@ -100,7 +100,9 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     // The sticky header still renders even when there are zero rows.
@@ -122,7 +124,9 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const rendered = container.querySelectorAll('[data-virtual-row]');
@@ -142,7 +146,9 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const header = container.querySelector('[data-virtual-header]') as HTMLElement;
@@ -168,7 +174,9 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const btn = container.querySelector('[aria-label*="ollapse"]') as HTMLButtonElement;
@@ -191,7 +199,9 @@ describe('<VirtualizedRowBody>', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     expect(performance.now() - start).toBeLessThan(200);
@@ -214,7 +224,9 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const header = container.querySelector('[data-virtual-header]') as HTMLElement;
@@ -241,7 +253,9 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const firstHeader = container.querySelector('[data-virtual-header]');
@@ -256,7 +270,9 @@ describe('<VirtualizedRowBody> — sticky-header regressions', () => {
         onChange={() => {}}
         onAddChild={() => {}}
         adding={false}
-        onPeek={() => {}}
+        onDeleteRow={() => {}}
+        onDuplicateRow={() => {}}
+        onOpenDetail={() => {}}
       />,
     );
     const secondHeader = container.querySelector('[data-virtual-header]');

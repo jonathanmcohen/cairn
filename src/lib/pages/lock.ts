@@ -13,9 +13,41 @@
  */
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
 import { HttpError } from '@/lib/auth/http-error';
+import { notifyPageLock } from '@/lib/notifications/create';
+
+/**
+ * v0.9.9 Plan I (#195) — resolve a page's collaborators (distinct prior version
+ * authors) for lock/unlock notifications. Best-effort, post-commit; never
+ * throws (callers swallow). Uses a fresh getDb() connection, not the caller tx.
+ */
+async function notifyLockState(input: {
+  pageId: string;
+  workspaceId: string;
+  byUserId: string;
+  locked: boolean;
+}): Promise<void> {
+  try {
+    const fresh = getDb();
+    const authors = await fresh
+      .selectDistinct({ authorId: schema.pageVersions.authorId })
+      .from(schema.pageVersions)
+      .where(eq(schema.pageVersions.pageId, input.pageId));
+    const recipientIds = authors.map((r) => r.authorId).filter((id): id is string => id != null);
+    await notifyPageLock(fresh, {
+      actorId: input.byUserId,
+      pageId: input.pageId,
+      workspaceId: input.workspaceId,
+      locked: input.locked,
+      recipientIds,
+    });
+  } catch {
+    // swallow — notification is best-effort.
+  }
+}
 
 export type LockState =
   | { locked: false; lockedBy: null; lockedAt: null; lockedUntil: null }
@@ -119,6 +151,13 @@ export async function lockPage(
       },
     });
   });
+  // v0.9.9 Plan I (#195) — notify collaborators of the lock, post-commit.
+  await notifyLockState({
+    pageId: input.pageId,
+    workspaceId: input.workspaceId,
+    byUserId: input.byUserId,
+    locked: true,
+  });
 }
 
 export type UnlockPageInput = {
@@ -164,5 +203,12 @@ export async function unlockPage(
         lockedAt: state.lockedAt.toISOString(),
       },
     });
+  });
+  // v0.9.9 Plan I (#195) — notify collaborators of the unlock, post-commit.
+  await notifyLockState({
+    pageId: input.pageId,
+    workspaceId: input.workspaceId,
+    byUserId: input.byUserId,
+    locked: false,
   });
 }

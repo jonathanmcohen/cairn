@@ -1,8 +1,10 @@
 /**
  * v0.9.8 G4 (H) — Orphan-empty-Untitled page sweep.
  *
- * Selects pages that are simultaneously the default title ('Untitled'), have
- * empty extracted text (content_text = ''), are not already trashed
+ * Selects pages that are simultaneously title-less (the K1 #215/#206 empty-
+ * title sentinel `''`, or the legacy `'Untitled'` for pages created before
+ * v0.9.9), have empty extracted text (content_text = ''), are not already
+ * trashed
  * (deleted_at IS NULL), are childless (no row points at them via parent_id),
  * and are older than `olderThanDays`. `dryRun` lists candidates without
  * mutating; otherwise each candidate is soft-deleted by setting deleted_at.
@@ -43,7 +45,7 @@ export async function runOrphanPurge(
     const candidates = (await tx.execute(sql`
       SELECT id AS page_id, workspace_id
         FROM pages
-       WHERE title = 'Untitled'
+       WHERE title IN ('', 'Untitled')
          AND content_text = ''
          AND deleted_at IS NULL
          AND id NOT IN (SELECT parent_id FROM pages WHERE parent_id IS NOT NULL)
@@ -60,7 +62,7 @@ export async function runOrphanPurge(
     await tx.execute(sql`
       UPDATE pages
          SET deleted_at = now()
-       WHERE title = 'Untitled'
+       WHERE title IN ('', 'Untitled')
          AND content_text = ''
          AND deleted_at IS NULL
          AND id NOT IN (SELECT parent_id FROM pages WHERE parent_id IS NOT NULL)

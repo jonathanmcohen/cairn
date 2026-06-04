@@ -31,7 +31,10 @@ export const workspaces = pgTable('workspaces', {
   trashRetentionDays: integer('trash_retention_days').notNull().default(30),
   // v0.9.0 G2 P13 — forward-declared for P26 (page lifecycle). Default for
   // newly-created pages when the editor does not pass an explicit status.
-  defaultPageStatus: text('default_page_status').notNull().default('published'),
+  // v0.9.9 K2 #216 — flipped to 'draft' (security-adjacent: new pages must not
+  // be auto-published before review). Migration 0066 changes the column
+  // default; existing workspaces keep whatever default an admin already chose.
+  defaultPageStatus: text('default_page_status').notNull().default('draft'),
   // v0.9.0 G2 P13 — forward-declared for P30 (federated search). When true,
   // this workspace participates in peer-instance search routing.
   enableFederatedSearch: boolean('enable_federated_search').notNull().default(false),

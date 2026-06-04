@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { EmptyTrash } from '@/components/empty-state/variants';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 
@@ -45,7 +46,7 @@ export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
   }
 
   if (items.length === 0) {
-    return <p className="text-muted-foreground">Trash is empty.</p>;
+    return <EmptyTrash />;
   }
 
   return (

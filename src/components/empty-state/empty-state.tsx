@@ -36,12 +36,16 @@ export function EmptyState({
       <h2 className="text-lg font-semibold">{headline}</h2>
       <p className="text-sm text-muted-foreground">{guidance}</p>
       {showLink && ctaLabel ? (
-        <Link href={ctaHref as Route} className="mt-1">
-          <Button type="button">{ctaLabel}</Button>
+        // inline-flex + min-h-11 so both the <a> and the inner <button> meet the
+        // 44×44 touch-target floor (WCAG 2.5.5 / mobile a11y gate).
+        <Link href={ctaHref as Route} className="mt-1 inline-flex min-h-11">
+          <Button type="button" className="min-h-11">
+            {ctaLabel}
+          </Button>
         </Link>
       ) : null}
       {showButton && ctaLabel ? (
-        <Button type="button" onClick={onCta} className="mt-1">
+        <Button type="button" onClick={onCta} className="mt-1 min-h-11">
           {ctaLabel}
         </Button>
       ) : null}

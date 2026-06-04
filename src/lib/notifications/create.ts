@@ -16,11 +16,18 @@ type Db = PostgresJsDatabase<typeof schema>;
 function scheduleEmails(rows: schema.Notification[]): void {
   for (const n of rows) {
     setImmediate(() => {
-      void sendNotificationEmail(getDb(), n)
-        .then((sent) => {
-          if (sent) incNotificationsSent({ channel: 'email' });
-        })
-        .catch(() => {});
+      // getDb() can throw synchronously (e.g. unconfigured env in tests or a
+      // pool that's been torn down) — keep the whole callback in a try so a
+      // best-effort email never surfaces as an unhandled exception.
+      try {
+        void sendNotificationEmail(getDb(), n)
+          .then((sent) => {
+            if (sent) incNotificationsSent({ channel: 'email' });
+          })
+          .catch(() => {});
+      } catch {
+        // swallow — email is best-effort.
+      }
     });
   }
 }
@@ -80,4 +87,100 @@ export async function notifyCommentReply(
   for (const _row of inserted) incNotificationsSent({ channel: 'in_app' });
   scheduleEmails(inserted);
   return inserted;
+}
+
+/**
+ * v0.9.9 Plan I (#195) — approval-decision notification. Recipients are the
+ * page collaborators (resolved by the caller, post-commit) minus the actor.
+ * Mirrors `notifyMentions`: dedupe, exclude actor, in-app metric per row, then
+ * fire-and-forget per-event email via `scheduleEmails`.
+ */
+export async function notifyApprovalDecision(
+  db: Db,
+  input: {
+    actorId: string;
+    pageId: string;
+    workspaceId: string;
+    decision: 'approved' | 'rejected' | 'requested_changes';
+    recipientIds: string[];
+  },
+): Promise<schema.Notification[]> {
+  const targets = [...new Set(input.recipientIds)].filter((id) => id !== input.actorId);
+  if (targets.length === 0) return [];
+  const rows = await db
+    .insert(schema.notifications)
+    .values(
+      targets.map((userId) => ({
+        userId,
+        workspaceId: input.workspaceId,
+        type: 'page_approval' as const,
+        payload: { pageId: input.pageId, actorId: input.actorId, decision: input.decision },
+      })),
+    )
+    .returning();
+  for (const _row of rows) incNotificationsSent({ channel: 'in_app' });
+  scheduleEmails(rows);
+  return rows;
+}
+
+/**
+ * v0.9.9 Plan I (#195) — page lifecycle status-change notification.
+ */
+export async function notifyStatusChange(
+  db: Db,
+  input: {
+    actorId: string;
+    pageId: string;
+    workspaceId: string;
+    status: string;
+    recipientIds: string[];
+  },
+): Promise<schema.Notification[]> {
+  const targets = [...new Set(input.recipientIds)].filter((id) => id !== input.actorId);
+  if (targets.length === 0) return [];
+  const rows = await db
+    .insert(schema.notifications)
+    .values(
+      targets.map((userId) => ({
+        userId,
+        workspaceId: input.workspaceId,
+        type: 'page_status' as const,
+        payload: { pageId: input.pageId, actorId: input.actorId, status: input.status },
+      })),
+    )
+    .returning();
+  for (const _row of rows) incNotificationsSent({ channel: 'in_app' });
+  scheduleEmails(rows);
+  return rows;
+}
+
+/**
+ * v0.9.9 Plan I (#195) — page lock/unlock notification.
+ */
+export async function notifyPageLock(
+  db: Db,
+  input: {
+    actorId: string;
+    pageId: string;
+    workspaceId: string;
+    locked: boolean;
+    recipientIds: string[];
+  },
+): Promise<schema.Notification[]> {
+  const targets = [...new Set(input.recipientIds)].filter((id) => id !== input.actorId);
+  if (targets.length === 0) return [];
+  const rows = await db
+    .insert(schema.notifications)
+    .values(
+      targets.map((userId) => ({
+        userId,
+        workspaceId: input.workspaceId,
+        type: 'page_lock' as const,
+        payload: { pageId: input.pageId, actorId: input.actorId, locked: input.locked },
+      })),
+    )
+    .returning();
+  for (const _row of rows) incNotificationsSent({ channel: 'in_app' });
+  scheduleEmails(rows);
+  return rows;
 }

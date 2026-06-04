@@ -8,7 +8,7 @@ import { requireSpaceAccess } from '@/lib/spaces/access';
 
 const CreateInput = z.object({
   parentId: z.uuid().optional(),
-  title: z.string().min(1).max(200).optional(),
+  title: z.string().max(200).optional(),
   icon: z.string().max(8).optional(),
   // v0.9.0 G2 P11 — optional space to file the new page under.
   spaceId: z.uuid().nullable().optional(),

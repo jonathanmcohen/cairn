@@ -7,6 +7,7 @@ export type ShortcutHandlers = {
   switchWorkspace: () => void;
   openFavorites: () => void;
   openSheet: () => void;
+  export: () => void;
 };
 
 let handlers: ShortcutHandlers | null = null;
@@ -14,6 +15,12 @@ let registered = false;
 
 export function setShortcutHandlers(h: ShortcutHandlers): void {
   handlers = h;
+}
+
+/** Test-only: clear the memoization flag so `ensureAppShortcuts` re-registers
+ *  after `resetRegistry()` in a fresh test. */
+export function __resetRegistered(): void {
+  registered = false;
 }
 
 export function ensureAppShortcuts(): void {
@@ -64,6 +71,21 @@ export function ensureAppShortcuts(): void {
     },
   });
 
+  // v0.9.9 Plan N #61/#240 — global export shortcut. Mod+Shift+E was unused in
+  // the 'global' scope (existing: Mod+N, Mod+Shift+L/O/F/N, Mod+/). The `run`
+  // delegates to the dispatcher handler, which fires a `cairn:export:open`
+  // window event the action-bar Export menu listens for.
+  registerShortcut({
+    id: 'export.page',
+    keys: 'Mod+Shift+E',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcut.export',
+    run: () => {
+      handlers?.export();
+    },
+  });
+
   registerShortcut({
     id: 'shortcuts.sheet',
     keys: 'Mod+/',
@@ -100,6 +122,37 @@ export function ensureAppShortcuts(): void {
     run: () => {
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('cairn:editor:open-link'));
+      }
+    },
+  });
+
+  // v0.9.9 Plan O #57/#236 — page focus/reader toggle shortcuts. The toggle
+  // buttons live in the page header (outside the dispatcher tree and, in focus
+  // mode, hidden by CSS), so each `run` dispatches a window CustomEvent the
+  // <PageModeShell> listens for (same pattern as editor.insertLink). Mod+Shift+.
+  // and Mod+Shift+R are unused in the 'global' scope.
+  registerShortcut({
+    id: 'page.focus',
+    keys: 'Mod+Shift+.',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcut.focusMode',
+    run: () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cairn:page-mode:toggle-focus'));
+      }
+    },
+  });
+
+  registerShortcut({
+    id: 'page.reader',
+    keys: 'Mod+Shift+R',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcut.readerMode',
+    run: () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cairn:page-mode:toggle-reader'));
       }
     },
   });

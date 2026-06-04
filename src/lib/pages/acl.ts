@@ -34,7 +34,7 @@ export function permissionAtLeast(
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-type AclRow = { permission: 'view' | 'comment' | 'edit' | null; depth: number };
+type AclRow = { permission: 'view' | 'comment' | 'edit' | 'owner' | null; depth: number };
 type RoleRow = { role: schema.MemberRole };
 
 /**
@@ -95,7 +95,12 @@ export async function resolveEffectivePermission(
   `)) as unknown as AclRow[];
 
   const hit = aclRows[0];
-  if (hit?.permission === 'view' || hit?.permission === 'comment' || hit?.permission === 'edit') {
+  if (
+    hit?.permission === 'view' ||
+    hit?.permission === 'comment' ||
+    hit?.permission === 'edit' ||
+    hit?.permission === 'owner'
+  ) {
     return hit.permission;
   }
 
@@ -169,14 +174,14 @@ export type SetPageAclInput = {
   workspaceId: string;
   pageId: string;
   userId: string;
-  permission: 'view' | 'comment' | 'edit';
+  permission: 'view' | 'comment' | 'edit' | 'owner';
   actorUserId: string;
 };
 
 /**
  * Upsert a page ACL row + record an audit event in one transaction. The audit
- * action is `page_acl.created` for new rows, `page_acl.changed` for updates
- * (existing row found before the upsert).
+ * action is `page.permission_granted` for new rows, `page.permission_changed`
+ * for updates (existing row found before the upsert).
  *
  * The metadata records `{userId, permission}` — both are safe (no secret
  * substrings; userId is opaque, permission is a closed enum).
@@ -210,7 +215,7 @@ export async function setPageAcl(
     await recordAudit(tx, {
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
-      action: existing ? 'page_acl.changed' : 'page_acl.created',
+      action: existing ? 'page.permission_changed' : 'page.permission_granted',
       targetType: 'page_acl',
       targetId: input.pageId,
       metadata: {
@@ -230,7 +235,7 @@ export type RemovePageAclInput = {
 };
 
 /**
- * Delete a page ACL row + record a `page_acl.removed` audit event in one tx.
+ * Delete a page ACL row + record a `page.permission_revoked` audit event in one tx.
  * Idempotent: returns silently if no ACL exists for the (pageId, userId) pair.
  */
 export async function removePageAcl(
@@ -250,10 +255,56 @@ export async function removePageAcl(
     await recordAudit(tx, {
       workspaceId: input.workspaceId,
       actorUserId: input.actorUserId,
-      action: 'page_acl.removed',
+      action: 'page.permission_revoked',
       targetType: 'page_acl',
       targetId: input.pageId,
       metadata: { userId: input.userId, permission: row?.permission ?? null },
+    });
+  });
+}
+
+export type TransferPageOwnershipInput = {
+  workspaceId: string;
+  pageId: string;
+  fromUserId: string;
+  toUserId: string;
+  actorUserId: string;
+};
+
+/**
+ * Transfer page-level ownership: grant the new owner a stored 'owner' ACL row
+ * and demote the prior owner to 'edit'. Both writes + the audit row happen in a
+ * single transaction. Records `page.ownership_transferred` with metadata
+ * `{fromUserId, toUserId}`. Idempotent on the demotion (no-op if the prior
+ * owner had no ACL row).
+ */
+export async function transferPageOwnership(
+  db: PostgresJsDatabase<typeof schema>,
+  input: TransferPageOwnershipInput,
+): Promise<void> {
+  await db.transaction(async (tx) => {
+    // Grant the new owner.
+    await tx
+      .insert(schema.pageAcls)
+      .values({ pageId: input.pageId, userId: input.toUserId, permission: 'owner' })
+      .onConflictDoUpdate({
+        target: [schema.pageAcls.pageId, schema.pageAcls.userId],
+        set: { permission: 'owner', updatedAt: new Date() },
+      });
+    // Demote the prior owner to edit (idempotent; no-op if they had no row).
+    await tx
+      .update(schema.pageAcls)
+      .set({ permission: 'edit', updatedAt: new Date() })
+      .where(
+        and(eq(schema.pageAcls.pageId, input.pageId), eq(schema.pageAcls.userId, input.fromUserId)),
+      );
+    await recordAudit(tx, {
+      workspaceId: input.workspaceId,
+      actorUserId: input.actorUserId,
+      action: 'page.ownership_transferred',
+      targetType: 'page_acl',
+      targetId: input.pageId,
+      metadata: { fromUserId: input.fromUserId, toUserId: input.toUserId },
     });
   });
 }

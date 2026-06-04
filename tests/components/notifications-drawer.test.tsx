@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NotificationDrawer } from '@/components/notifications/drawer';
 
@@ -34,5 +34,17 @@ describe('notification drawer', () => {
     render(<NotificationDrawer open onOpenChange={() => {}} onMarked={() => {}} />);
     const seeAll = screen.getByRole('link', { name: /see all/i });
     expect(seeAll.getAttribute('href')).toBe('/notifications');
+  });
+
+  it('renders an iconed empty state when the feed is empty (#221)', async () => {
+    const { container } = render(
+      <NotificationDrawer open onOpenChange={() => {}} onMarked={() => {}} />,
+    );
+    // Wait for SWR to resolve the empty feed and swap out the "Loading…" branch.
+    await waitFor(() => {
+      expect(screen.getByText(/You’re all caught up/)).toBeTruthy();
+    });
+    // The empty state mirrors the /notifications page-list: a BellOff icon.
+    expect(container.querySelector('svg')).toBeTruthy();
   });
 });

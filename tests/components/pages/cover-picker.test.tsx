@@ -3,6 +3,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CoverPicker } from '@/components/pages/cover-picker';
 import { I18nProvider } from '@/lib/i18n/provider';
+import { COVER_PRESETS } from '@/lib/pages/cover-presets';
 import enMessages from '../../../messages/en.json';
 
 vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
@@ -101,5 +102,81 @@ describe('<CoverPicker> presets + contrast (findings U + Y)', () => {
     await waitFor(() =>
       expect(onChange).toHaveBeenCalledWith({ kind: 'preset', value: 'slate-dusk' }),
     );
+  });
+});
+
+describe('<CoverPicker> layout polish (Plan M)', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn(
+      async () => new Response(null, { status: 200 }),
+    ) as unknown as typeof fetch;
+  });
+
+  it('renders "Use default" as a secondary text-link, not a full-width primary CTA (#228)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{}} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.add'] }));
+    const useDefault = screen.getByRole('button', { name: enMessages['cover.useDefault'] });
+    // Demoted: link variant, not the primary/full-width CTA it used to be.
+    expect(useDefault.className).not.toContain('w-full');
+    expect(useDefault.className).toContain('text-muted-foreground');
+    // It now lives at the bottom of the tab, after the gradient swatches.
+    const firstGradient = screen.getByRole('button', {
+      name: enMessages['cover.usePreset'].replace('{name}', enMessages['cover.preset.slateDusk']),
+    });
+    expect(
+      firstGradient.compareDocumentPosition(useDefault) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('lays gradient swatches out in a 4-wide grid (#229)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{}} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.add'] }));
+    const firstGradient = screen.getByRole('button', {
+      name: enMessages['cover.usePreset'].replace('{name}', enMessages['cover.preset.slateDusk']),
+    });
+    const grid = firstGradient.parentElement as HTMLElement;
+    expect(grid.className).toContain('grid-cols-4');
+    expect(grid.className).not.toContain('grid-cols-7');
+    // All curated gradients are present (palette currently has 9).
+    expect(grid.querySelectorAll('button')).toHaveLength(
+      COVER_PRESETS.filter((p) => p.type === 'gradient').length,
+    );
+  });
+
+  it('prefills the custom-hex input with the current color cover (#230)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{ kind: 'color', value: '#3366ff' }} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.change'] }));
+    expect((screen.getByLabelText(enMessages['cover.customHex']) as HTMLInputElement).value).toBe(
+      '#3366ff',
+    );
+  });
+
+  it("prefills the custom-hex input with the current preset's representative tone (#230)", () => {
+    render(wrap(<CoverPicker pageId="p1" current={{ kind: 'preset', value: 'slate-dusk' }} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.change'] }));
+    // slate-dusk.solid === '#1e293b'
+    expect((screen.getByLabelText(enMessages['cover.customHex']) as HTMLInputElement).value).toBe(
+      '#1e293b',
+    );
+  });
+
+  it('leaves the custom-hex input blank when there is no cover (#230)', () => {
+    render(wrap(<CoverPicker pageId="p1" current={{}} />));
+    fireEvent.click(screen.getByRole('button', { name: enMessages['cover.add'] }));
+    expect((screen.getByLabelText(enMessages['cover.customHex']) as HTMLInputElement).value).toBe(
+      '',
+    );
+  });
+
+  it('honors a controlled `open` prop and suppresses the trigger (#239)', () => {
+    const onOpenChange = vi.fn();
+    render(
+      wrap(<CoverPicker pageId="p1" current={{}} open onOpenChange={onOpenChange} hideTrigger />),
+    );
+    // Dialog is shown without clicking the trigger…
+    expect(screen.getByRole('dialog', { name: enMessages['cover.dialogTitle'] })).toBeTruthy();
+    // …and the built-in trigger button is suppressed (hideTrigger).
+    expect(screen.queryByRole('button', { name: enMessages['cover.add'] })).toBeNull();
+    expect(screen.queryByRole('button', { name: enMessages['cover.change'] })).toBeNull();
   });
 });

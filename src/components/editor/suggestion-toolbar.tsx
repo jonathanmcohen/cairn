@@ -1,7 +1,7 @@
 'use client';
 
 import type { Editor as TiptapEditor } from '@tiptap/react';
-import { Minus, Plus } from 'lucide-react';
+import { Minus, PencilLine, Plus } from 'lucide-react';
 import { Tooltip } from 'radix-ui';
 import { useT } from '@/lib/i18n/provider';
 
@@ -16,6 +16,7 @@ export function SuggestionToolbar({
   onAccept,
   onReject,
   onOpenDrawer,
+  disabled = false,
 }: {
   editor: TiptapEditor | null;
   active: boolean;
@@ -28,23 +29,39 @@ export function SuggestionToolbar({
   onReject: (suggestionId: string) => void;
   /** #85/#145 — open the suggestions drawer listing open suggestions. */
   onOpenDrawer: () => void;
+  /**
+   * #188 — when the page is locked the toggle stays mounted (so the bar's
+   * structure doesn't change), but is disabled with a hint, rather than
+   * disappearing (which reads as a broken UI).
+   */
+  disabled?: boolean;
 }) {
   const t = useT();
-  const markDisabled = !editor || editor.state.selection.empty;
+  const markDisabled = disabled || !editor || editor.state.selection.empty;
   return (
     <Tooltip.Provider delayDuration={300}>
       <div className="flex items-center gap-2">
         <button
           type="button"
+          data-testid="suggest-toggle-chip"
           aria-pressed={active}
+          disabled={disabled}
+          aria-disabled={disabled || undefined}
+          title={disabled ? t('editor.suggest.lockedHint') : undefined}
+          aria-label={t(
+            active ? 'pageActions.suggest.toggleSuggesting' : 'pageActions.suggest.toggleSuggest',
+          )}
           onClick={onToggle}
           className={
             active
-              ? 'rounded bg-primary px-2 py-1 text-primary-foreground'
-              : 'rounded px-2 py-1 text-muted-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              ? 'inline-flex items-center gap-1.5 rounded-full bg-primary px-2.5 py-1 font-medium text-primary-foreground text-xs disabled:opacity-50'
+              : 'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 font-medium text-muted-foreground text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50'
           }
         >
-          {active ? 'Suggesting' : 'Suggest edits'}
+          <PencilLine aria-hidden="true" className="h-3.5 w-3.5" />
+          {active
+            ? t('pageActions.suggest.toggleSuggesting')
+            : t('pageActions.suggest.toggleSuggest')}
         </button>
         {active && (
           <>

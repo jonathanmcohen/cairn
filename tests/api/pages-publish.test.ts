@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getDb } from '@/db/client';
@@ -92,6 +93,25 @@ describe('POST /api/pages/[pageId]/publish', () => {
     const page = await makePage(u.workspaceId, u.userId);
     const r = await publish(page.id);
     expect(r.status).toBe(403);
+  });
+});
+
+describe('GET /api/pages/[pageId]/publish (preview)', () => {
+  it('GET preview returns predicted url without publishing (#70/#249)', async () => {
+    const u = await asUser('editor');
+    const page = await makePage(u.workspaceId, u.userId);
+    const { GET } = await import('@/app/api/pages/[pageId]/publish/route');
+    const res = await GET(new Request('http://t/'), {
+      params: Promise.resolve({ pageId: page.id }),
+    });
+    expect(res.status).toBe(200);
+    const body = (await res.json()) as { slug: string; url: string; minted: boolean };
+    expect(body.url).toBe(`/p/${body.slug}`);
+    expect(body.slug).toBe('roadmap');
+    expect(body.minted).toBe(false);
+    const [row] = await getDb().select().from(schema.pages).where(eq(schema.pages.id, page.id));
+    expect(row?.published).toBe(false);
+    expect(row?.publicSlug).toBeNull();
   });
 });
 

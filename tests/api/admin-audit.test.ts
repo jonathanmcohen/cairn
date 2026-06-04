@@ -68,7 +68,14 @@ async function addMember(workspaceId: string, userId: string, role: schema.Membe
   await getDb().insert(schema.workspaceMembers).values({ workspaceId, userId, role });
 }
 
-type Json = { entries: (typeof schema.auditLog.$inferSelect)[]; nextCursor: string | null };
+type Json = {
+  entries: (typeof schema.auditLog.$inferSelect & {
+    actorName: string | null;
+    targetTitle: string | null;
+    targetHref: string | null;
+  })[];
+  nextCursor: string | null;
+};
 async function get(query = ''): Promise<{ status: number; json: Json }> {
   const { GET } = await import('@/app/api/admin/audit/route');
   const res = await GET(
@@ -109,6 +116,8 @@ describe('GET /api/admin/audit', () => {
     expect(r.status).toBe(200);
     expect(r.json.entries).toHaveLength(1);
     expect(r.json.entries[0]?.workspaceId).toBe(w1);
+    // #91 — actor user_id is resolved to its display name in the payload.
+    expect(r.json.entries[0]?.actorName).toBe('admin');
     expect(r.json.nextCursor).toBeNull();
   });
 

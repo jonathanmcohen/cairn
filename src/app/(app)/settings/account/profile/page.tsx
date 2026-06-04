@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm';
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
+import { AvatarUploader } from '@/components/account/avatar-uploader';
+import { ProfileForm } from '@/components/account/profile-form';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { CopyButton } from '@/components/settings/copy-button';
 import { getDb } from '@/db/client';
@@ -15,7 +17,11 @@ export default async function AccountProfilePage() {
   // callback copies `token.id` only), so email + display name are read from the
   // users record rather than the session/auth context.
   const [user] = await getDb()
-    .select({ email: schema.users.email, name: schema.users.name })
+    .select({
+      email: schema.users.email,
+      name: schema.users.name,
+      avatarUrl: schema.users.avatarUrl,
+    })
     .from(schema.users)
     .where(eq(schema.users.id, ctx.userId))
     .limit(1);
@@ -28,6 +34,12 @@ export default async function AccountProfilePage() {
       />
       <h1 className="mb-2 text-2xl font-semibold">Profile</h1>
       <p className="text-sm text-muted-foreground">Your account profile.</p>
+      <div className="mt-6">
+        <AvatarUploader
+          initialAvatarUrl={user?.avatarUrl ?? null}
+          fallbackName={user?.name ?? user?.email ?? 'User'}
+        />
+      </div>
       <dl className="mt-6 space-y-3 text-sm">
         <div>
           <dt className="text-muted-foreground">Email</dt>
@@ -35,7 +47,9 @@ export default async function AccountProfilePage() {
         </div>
         <div>
           <dt className="text-muted-foreground">Display name</dt>
-          <dd>{user?.name ?? '—'}</dd>
+          <dd>
+            <ProfileForm initialName={user?.name ?? ''} />
+          </dd>
         </div>
         <div>
           <dt className="text-muted-foreground">User ID</dt>

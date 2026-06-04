@@ -27,7 +27,16 @@ beforeEach(async () => {
 
 describe('NOTIFICATION_TYPES (#72: emailable subset)', () => {
   it('is exactly the per-type-emailable subset, excluding reminder/flashcards_due/upgrade_available', () => {
-    expect([...NOTIFICATION_TYPES].sort()).toEqual(['comment_reply', 'mention']);
+    // v0.9.9 Plan I (#195) added page_approval / page_status / page_lock — they
+    // route through scheduleEmails → sendNotificationEmail → getEmailPref, so
+    // they ARE emailable and belong in this tuple.
+    expect([...NOTIFICATION_TYPES].sort()).toEqual([
+      'comment_reply',
+      'mention',
+      'page_approval',
+      'page_lock',
+      'page_status',
+    ]);
     const list = NOTIFICATION_TYPES as readonly string[];
     expect(list).not.toContain('reminder');
     expect(list).not.toContain('flashcards_due');

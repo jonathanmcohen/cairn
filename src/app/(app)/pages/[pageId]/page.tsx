@@ -8,6 +8,7 @@ import { ApprovalPanel } from '@/components/pages/approval-panel';
 import { BacklinksToggle } from '@/components/pages/backlinks-toggle';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { CoverPicker } from '@/components/pages/cover-picker';
+import { EditableCover } from '@/components/pages/editable-cover';
 import { EncryptPageAction } from '@/components/pages/encrypt-page-action';
 import { LockBanner } from '@/components/pages/lock-banner';
 import { PageActionPanels } from '@/components/pages/page-action-panels';
@@ -75,17 +76,29 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   return (
     <PageDetailShell>
-      <PageModeShell>
-        <CoverBanner cover={cover} alt={page.title} />
+      <PageModeShell pageId={page.id}>
         {/* #121 — the in-flow CoverPicker is the single canonical "Add cover" /
             "Change cover" affordance. It writes the live `pages.cover` jsonb via
             /api/pages/[pageId]/cover and refreshes so CoverBanner re-renders.
-            (Round-1 #16 had left the legacy CoverImage button here, which wrote
-            the orphaned `cover_url` column the banner no longer reads.) */}
-        {canEdit && (
-          <div className="mb-2 flex justify-start">
-            <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
-          </div>
+            #239 — for editors with a cover, the rendered banner is itself
+            clickable (EditableCover wraps it + drives the picker). For editors
+            without a cover, the standalone "Add cover" button shows below. Public
+            / viewer renders the bare banner. */}
+        {canEdit ? (
+          'kind' in cover ? (
+            <EditableCover
+              pageId={page.id}
+              cover={cover}
+              alt={page.title}
+              unsplashKey={unsplashKey}
+            />
+          ) : (
+            <div className="mb-2 flex justify-start">
+              <CoverPicker pageId={page.id} current={cover} unsplashKey={unsplashKey} />
+            </div>
+          )
+        ) : (
+          <CoverBanner cover={cover} alt={page.title} />
         )}
         <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
           <PageIconPicker pageId={page.id} initial={page.icon} />

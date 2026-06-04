@@ -9,8 +9,10 @@
  */
 import { eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
+import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { notifyStatusChange } from '@/lib/notifications/create';
 import { canTransition } from './status-rules';
 
 export class IllegalStatusTransition extends Error {
@@ -43,7 +45,7 @@ export async function transitionStatus(
   db: PostgresJsDatabase<typeof schema>,
   input: { pageId: string; to: schema.PageStatus; byUserId: string },
 ): Promise<{ status: schema.PageStatus }> {
-  return db.transaction(async (tx) => {
+  const committed = await db.transaction(async (tx) => {
     const [row] = await tx
       .select({
         id: schema.pages.id,
@@ -74,6 +76,28 @@ export async function transitionStatus(
       metadata: { from, to: input.to },
     });
 
-    return { status: input.to };
+    return { status: input.to, workspaceId: row.workspaceId };
   });
+
+  // v0.9.9 Plan I (#195) — notify page collaborators (distinct prior version
+  // authors) of the status change. Post-commit, fresh getDb(), best-effort.
+  try {
+    const fresh = getDb();
+    const authors = await fresh
+      .selectDistinct({ authorId: schema.pageVersions.authorId })
+      .from(schema.pageVersions)
+      .where(eq(schema.pageVersions.pageId, input.pageId));
+    const recipientIds = authors.map((r) => r.authorId).filter((id): id is string => id != null);
+    await notifyStatusChange(fresh, {
+      actorId: input.byUserId,
+      pageId: input.pageId,
+      workspaceId: committed.workspaceId,
+      status: input.to,
+      recipientIds,
+    });
+  } catch {
+    // swallow — notification is best-effort.
+  }
+
+  return { status: committed.status };
 }

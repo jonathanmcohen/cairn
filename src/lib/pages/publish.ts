@@ -13,6 +13,17 @@ export function slugify(title: string): string {
   return slug.length > 0 ? slug : 'page';
 }
 
+/**
+ * Non-mutating preview of the public slug a page would receive. Reuses the
+ * already-minted slug if present; otherwise returns the deterministic
+ * `slugify(title)` base WITHOUT the random suffix — enough to show the user
+ * the path shape in the publish-confirm dialog (#70/#249). The real random
+ * suffix is appended only on the actual POST publish.
+ */
+export function previewPublicSlug(page: { title: string; publicSlug: string | null }): string {
+  return page.publicSlug ?? slugify(page.title);
+}
+
 type Scope = { pageId: string; workspaceId: string };
 type AuditedScope = Scope & { actorUserId: string };
 

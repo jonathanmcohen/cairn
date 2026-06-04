@@ -156,6 +156,70 @@ describe('/api/comments/[commentId]', () => {
     expect(r.status).toBe(204);
   });
 
+  describe('PATCH body edit', () => {
+    it('lets the author edit their comment body', async () => {
+      const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+      const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
+      const { comment: c } = await createComment(getDb(), {
+        workspaceId: u.workspaceId,
+        target: { type: 'page', id: p.id },
+        authorId: u.userId,
+        body: 'taht',
+      });
+      await setActor(u.userId);
+      const r = await call('PATCH', c.id, { body: 'fixed' });
+      expect(r.status).toBe(200);
+      expect((r.body as { body: string }).body).toBe('fixed');
+    });
+
+    it('PATCH body 403 for a non-author editor', async () => {
+      const author = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+      const p = await createPage(getDb(), {
+        workspaceId: author.workspaceId,
+        createdBy: author.userId,
+      });
+      const { comment: c } = await createComment(getDb(), {
+        workspaceId: author.workspaceId,
+        target: { type: 'page', id: p.id },
+        authorId: author.userId,
+        body: 'x',
+      });
+      const otherEditor = await addMember(author.workspaceId, 'e3@x.com', 'editor');
+      await setActor(otherEditor);
+      const r = await call('PATCH', c.id, { body: 'hijack' });
+      expect(r.status).toBe(403);
+    });
+
+    it('PATCH body 400 for an empty body', async () => {
+      const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+      const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
+      const { comment: c } = await createComment(getDb(), {
+        workspaceId: u.workspaceId,
+        target: { type: 'page', id: p.id },
+        authorId: u.userId,
+        body: 'x',
+      });
+      await setActor(u.userId);
+      const r = await call('PATCH', c.id, { body: '' });
+      expect(r.status).toBe(400);
+    });
+
+    it('PATCH resolved still works (regression)', async () => {
+      const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+      const p = await createPage(getDb(), { workspaceId: u.workspaceId, createdBy: u.userId });
+      const { comment: c } = await createComment(getDb(), {
+        workspaceId: u.workspaceId,
+        target: { type: 'page', id: p.id },
+        authorId: u.userId,
+        body: 'x',
+      });
+      await setActor(u.userId);
+      const r = await call('PATCH', c.id, { resolved: true });
+      expect(r.status).toBe(200);
+      expect((r.body as { resolvedAt: string | null }).resolvedAt).not.toBeNull();
+    });
+  });
+
   it('DELETE 404 for a comment in another workspace', async () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     const other = await createTestWorkspaceWithUser(getDb());

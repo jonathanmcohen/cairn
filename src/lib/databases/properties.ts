@@ -27,6 +27,16 @@ const ConfigByType: Record<schema.PropertyType, z.ZodTypeAny> = {
   formula: FormulaConfig,
   relation: RelationConfig,
   rollup: RollupConfig,
+  // v0.9.9 Plan F2 (#243) — new property types take no extra config. The four
+  // computed types (created/last_edited time/by) are read-only.
+  person: NoConfig,
+  file: NoConfig,
+  email: NoConfig,
+  phone: NoConfig,
+  created_time: NoConfig,
+  last_edited_time: NoConfig,
+  created_by: NoConfig,
+  last_edited_by: NoConfig,
 };
 
 async function validateRollupConfig(

@@ -34,7 +34,10 @@ beforeEach(async () => {
 
 describe('runOrphanPurgeCli', () => {
   it('soft-deletes an aged orphan via its own connection', async () => {
-    const ws = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const ws = await createTestWorkspaceWithUser(db, {
+      role: 'owner',
+      defaultPageStatus: 'published',
+    });
     const orphan = await createPage(db, { workspaceId: ws.workspaceId, createdBy: ws.userId });
     await db.execute(drizzleSql`
       UPDATE pages SET created_at = now() - interval '60 days' WHERE id = ${orphan.id}
@@ -50,7 +53,10 @@ describe('runOrphanPurgeCli', () => {
   });
 
   it('dry-run lists without deleting', async () => {
-    const ws = await createTestWorkspaceWithUser(db, { role: 'owner' });
+    const ws = await createTestWorkspaceWithUser(db, {
+      role: 'owner',
+      defaultPageStatus: 'published',
+    });
     const orphan = await createPage(db, { workspaceId: ws.workspaceId, createdBy: ws.userId });
     await db.execute(drizzleSql`
       UPDATE pages SET created_at = now() - interval '60 days' WHERE id = ${orphan.id}

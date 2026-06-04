@@ -3,6 +3,7 @@
 import { Star } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
+import { EmptyFavorites } from '@/components/empty-state/variants';
 import { useT } from '@/lib/i18n/provider';
 
 export type FavoriteItem = { pageId: string; title: string; icon: string | null };
@@ -12,9 +13,8 @@ export type FavoriteItem = { pageId: string; title: string; icon: string | null 
  * `nav.favorites` command and the Mod+Shift+F shortcut both target.
  */
 export function FavoritesList({ items }: { items: FavoriteItem[] }): React.JSX.Element {
-  const t = useT();
   if (items.length === 0) {
-    return <p className="text-muted-foreground text-sm">{t('favorites.page.empty')}</p>;
+    return <EmptyFavorites />;
   }
   return (
     <ul className="space-y-1">

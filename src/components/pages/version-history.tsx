@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useState, useTransition } from 'react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { emitMutation, subscribeMutation } from '@/lib/client/mutation-bus';
 import { useT } from '@/lib/i18n/provider';
 import type { VersionListItem } from '@/lib/pages/versions';
 
@@ -114,6 +115,22 @@ export function VersionHistory({
     if (open) void refetch();
   }, [open, refetch]);
 
+  // Re-fetch while the drawer is open whenever a snapshot mutation fires
+  // anywhere (manual save below, or a future autosave emit) and whenever the
+  // tab regains focus — so a left-open drawer reflects server-side autosaves.
+  useEffect(() => {
+    if (!open) return;
+    const onFocus = () => void refetch();
+    const offBus = subscribeMutation('pageVersions', onFocus);
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      offBus();
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [open, refetch]);
+
   function pick(slot: 'A' | 'B', id: string) {
     if (slot === 'A') setSlotA((cur) => (cur === id ? null : id));
     else setSlotB((cur) => (cur === id ? null : id));
@@ -128,6 +145,7 @@ export function VersionHistory({
       }
       toast.success('Restored as a new version');
       await refetch();
+      emitMutation('pageVersions');
     });
   }
 
@@ -144,6 +162,7 @@ export function VersionHistory({
     }
     toast.success(t('pageActions.versions.saved'));
     await refetch();
+    emitMutation('pageVersions');
   }
 
   const a = versions.find((v) => v.id === slotA) ?? null;

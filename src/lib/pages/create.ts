@@ -36,22 +36,25 @@ export async function createPage(
       }
     }
     // v0.9.0 G4 P26 — honor the workspace's `default_page_status` so admins
-    // who set the default to 'draft' get drafts on new pages. The column
-    // default is 'published' (matches column default), so this branch is a
-    // no-op for fresh installs.
+    // who set the default to 'published' get published pages on create.
+    // v0.9.9 K2 #216 — the workspace default is now 'draft' (security-adjacent:
+    // new pages are not auto-published before review); admins can still set the
+    // default to 'published'. The fallback below matches the new column default.
     const [ws] = await tx
       .select({ defaultPageStatus: schema.workspaces.defaultPageStatus })
       .from(schema.workspaces)
       .where(eq(schema.workspaces.id, input.workspaceId))
       .limit(1);
-    const defaultStatus = (ws?.defaultPageStatus ?? 'published') as schema.PageStatus;
+    const defaultStatus = (ws?.defaultPageStatus ?? 'draft') as schema.PageStatus;
     const [page] = await tx
       .insert(schema.pages)
       .values({
         workspaceId: input.workspaceId,
         parentId: input.parentId ?? null,
         spaceId: input.spaceId ?? null,
-        title: input.title ?? 'Untitled',
+        // v0.9.9 K1 #215/#206 — a brand-new page is born title-less; the editor
+        // shows the localized placeholder, never a literal 'Untitled'.
+        title: input.title ?? '',
         icon: input.icon ?? formatIcon({ kind: 'emoji', value: DEFAULT_PAGE_ICON }),
         content: emptyDocument(),
         status: defaultStatus,

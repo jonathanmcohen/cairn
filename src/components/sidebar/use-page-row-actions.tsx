@@ -5,6 +5,7 @@ import { Copy, CopyPlus, FilePlus2, FolderInput, Pencil, Trash2 } from 'lucide-r
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { resetPageFocusMode } from '@/components/pages/page-mode-shell';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import { useT } from '@/lib/i18n/provider';
 import type { FlatPageNode } from '@/lib/pages/tree';
@@ -68,6 +69,8 @@ export function usePageRowActions(node: FlatPageNode): PageRowActionsApi {
       });
       if (!res.ok) return;
       const { id } = (await res.json()) as { id: string };
+      // A freshly created child page must open with chrome visible (#247).
+      resetPageFocusMode();
       router.push(`/pages/${id}` as Route);
       // G10 finding S — the sidebar tree is server-rendered initial props; navigating
       // alone leaves the still-mounted tree stale. Refresh re-runs the server component

@@ -43,12 +43,19 @@ import { FootnoteMark } from './blocks/footnote-mark';
 import {
   asFormResult,
   type EditorDialogCitationResult,
+  type EditorDialogEquationResult,
   openEditorDialog,
 } from './editor-dialog-bus';
 import { type LazyEditorNodeName, loadEditorExtension } from './extensions-lazy';
 import { type PageItem, PageLinkList, type PageLinkListRef } from './page-link-list';
 import { fetchPages } from './page-link-suggestion';
-import { type SlashCategory, type SlashItem, SlashMenu, type SlashMenuRef } from './slash-menu';
+import {
+  type SlashCategory,
+  type SlashItem,
+  SlashMenu,
+  type SlashMenuRef,
+  type SlashRange,
+} from './slash-menu';
 
 /**
  * Ensure a lazy editor extension (math/syncedBlock/embed) is registered on
@@ -142,7 +149,9 @@ export type CitationSlashEntry = {
   command: `/${string}`;
   title: string;
   description: string;
-  run: (editor: Editor) => void;
+  // #38 — accepts the slash trigger range so it can delete the `/query` text
+  // ONLY once the dialog resolves to a real insert (restore-on-cancel).
+  run: (editor: Editor, range?: SlashRange) => void;
   icon?: SlashItem['icon'];
   keywords?: string[];
 };
@@ -153,12 +162,13 @@ export const footnoteMenuItem: CitationSlashEntry = {
   description: 'Add an inline footnote',
   icon: Asterisk,
   keywords: ['note', 'fn'],
-  run: (editor: Editor): void => {
+  run: (editor: Editor, range?: SlashRange): void => {
     void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((raw) => {
       const result = asFormResult(raw);
       const content = result?.text;
       if (!content) return;
       if (editor.isDestroyed) return;
+      consumeSlashRange(editor, range);
       if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
         editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
       }
@@ -174,7 +184,7 @@ export const citationMenuItem: CitationSlashEntry = {
   description: 'Insert a bibliographic reference',
   icon: Quote,
   keywords: ['cite', 'ref', 'reference', 'bibliography'],
-  run: (editor: Editor): void => {
+  run: (editor: Editor, range?: SlashRange): void => {
     void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((raw) => {
       const result = asFormResult(raw);
       if (!result) return;
@@ -190,6 +200,7 @@ export const citationMenuItem: CitationSlashEntry = {
         import('./extensions/citation').then((m) => m.CitationExtension),
       ]).then(([fmt, CitationExt]) => {
         if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
           editor.setOptions({ extensions: [...editor.extensionManager.extensions, CitationExt] });
         }
@@ -232,7 +243,7 @@ export const citationLookupMenuItem: CitationSlashEntry = {
   description: 'Look up a reference by DOI or PubMed ID',
   icon: BookMarked,
   keywords: ['cite', 'doi', 'pubmed', 'lookup', 'reference', 'crossref'],
-  run: (editor: Editor): void => {
+  run: (editor: Editor, range?: SlashRange): void => {
     void openEditorDialog({
       kind: 'citationLookup',
       title: 'Citation (DOI/PubMed lookup)',
@@ -244,6 +255,7 @@ export const citationLookupMenuItem: CitationSlashEntry = {
         import('./extensions/citation').then((m) => m.CitationExtension),
       ]).then(([fmt, CitationExt]) => {
         if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         if (!editor.extensionManager.extensions.some((e) => e.name === CitationExt.name)) {
           editor.setOptions({
             extensions: [...editor.extensionManager.extensions, CitationExt],
@@ -281,6 +293,10 @@ function toSlashItem(entry: CitationSlashEntry, category: SlashCategory): SlashI
     category,
     command: entry.run,
     icon: entry.icon,
+    // #38 — every CitationSlashEntry opens a dialog/lookup that can be
+    // cancelled, so they are all deferred: the trigger range is deleted inside
+    // `run` only after a successful insert.
+    deferred: true,
     keywords: entry.keywords ?? [],
   };
 }
@@ -297,9 +313,10 @@ export const datetimeMenuItem: CitationSlashEntry = {
   description: 'Insert a date/time with timezone',
   icon: CalendarClock,
   keywords: ['date', 'time', 'now', 'timestamp'],
-  run: (editor: Editor): void => {
+  run: (editor: Editor, range?: SlashRange): void => {
     void ensureLazyExtension(editor, 'datetime').then(async () => {
       if (editor.isDestroyed) return;
+      consumeSlashRange(editor, range);
       const { parseInput, DEFAULT_DISPLAY_FORMAT } = await import('@/lib/datetime/format');
       const now = new Date();
       const tz =
@@ -336,7 +353,10 @@ export const pdfSlashItem: SlashItem = {
   category: 'media',
   icon: FileText,
   keywords: ['pdf', 'document', 'attachment'],
-  command: (editor) => {
+  // #38 — deferred: opens a (cancelable) file picker + async upload; the
+  // trigger range is consumed only once the upload succeeds and we insert.
+  deferred: true,
+  command: (editor, range) => {
     void (async () => {
       await ensureLazyExtension(editor, 'pdf');
       if (editor.isDestroyed) return;
@@ -351,6 +371,7 @@ export const pdfSlashItem: SlashItem = {
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
         if (!res.ok) return;
         const { file: meta } = (await res.json()) as { file: { id: string; name: string } };
+        consumeSlashRange(editor, range);
         editor.chain().focus().setPdf({ fileId: meta.id, defaultPage: 1 }).run();
       };
       input.click();
@@ -469,7 +490,8 @@ const items: SlashItem[] = [
     description: 'Upload and embed an image',
     category: 'media',
     icon: Image,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -484,6 +506,7 @@ const items: SlashItem[] = [
           signedUrl: string;
           file: { id: string; name: string };
         };
+        consumeSlashRange(editor, range);
         editor
           .chain()
           .focus()
@@ -499,7 +522,8 @@ const items: SlashItem[] = [
     description: 'Attach a file as a downloadable link',
     category: 'media',
     icon: Paperclip,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       const input = document.createElement('input');
       input.type = 'file';
       input.onchange = async () => {
@@ -513,6 +537,7 @@ const items: SlashItem[] = [
           signedUrl: string;
           file: { id: string; name: string; mimeType: string; size: number };
         };
+        consumeSlashRange(editor, range);
         editor
           .chain()
           .focus()
@@ -534,8 +559,11 @@ const items: SlashItem[] = [
     description: 'Embed a YouTube/Vimeo/Loom/Figma/gist/CodeSandbox/Codepen/Spotify/Excalidraw URL',
     category: 'media',
     icon: Code2,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void ensureLazyExtension(editor, 'embed').then(() => {
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor
           .chain()
           .focus()
@@ -574,7 +602,8 @@ const items: SlashItem[] = [
     description: 'Upload and embed an audio file (mp3/wav/ogg/flac/aac)',
     category: 'media',
     icon: Music,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       // v0.9.0 G3 P22: load the React node-view first so the inserted node
       // renders with the signed-URL `<audio>` element instead of the bare
       // schema div. Pattern mirrors the embed/math slash entries.
@@ -593,6 +622,7 @@ const items: SlashItem[] = [
             signedUrl: string;
             file: { id: string; name: string; mimeType: string };
           };
+          consumeSlashRange(editor, range);
           editor
             .chain()
             .focus()
@@ -609,9 +639,21 @@ const items: SlashItem[] = [
     description: 'Block math rendered with KaTeX',
     category: 'advanced',
     icon: Sigma,
-    command: (editor) => {
-      void ensureLazyExtension(editor, 'math').then(() => {
-        editor.chain().focus().setMath({ latex: '', display: true }).run();
+    deferred: true,
+    // v0.9.9 E1a (#246/#274) — modal-first: collect LaTeX (+ display toggle)
+    // with a live KaTeX preview, then lazy-load `math` and insert a POPULATED
+    // node. No more empty-node-then-click. The trigger range is consumed only
+    // once the dialog resolves to a real insert (restore-on-cancel via #38).
+    command: (editor, range) => {
+      void openEditorDialog({ kind: 'equation', title: 'Insert equation' }).then((raw) => {
+        if (!raw || !('kind' in raw) || raw.kind !== 'equation') return;
+        const { latex, display } = raw as EditorDialogEquationResult;
+        if (!latex.trim()) return;
+        void ensureLazyExtension(editor, 'math').then(() => {
+          if (editor.isDestroyed) return;
+          consumeSlashRange(editor, range);
+          editor.chain().focus().setMath({ latex, display }).run();
+        });
       });
     },
     keywords: ['math', 'latex', 'katex', 'formula'],
@@ -621,8 +663,11 @@ const items: SlashItem[] = [
     description: 'Reusable block mirrored elsewhere on this page',
     category: 'advanced',
     icon: RefreshCw,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void ensureLazyExtension(editor, 'syncedBlock').then(() => {
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor.chain().focus().setSyncedBlock().run();
       });
     },
@@ -633,8 +678,11 @@ const items: SlashItem[] = [
     description: 'Render a Mermaid diagram (flowchart, sequence, ER) as SVG',
     category: 'advanced',
     icon: Workflow,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void ensureLazyExtension(editor, 'mermaid').then(() => {
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor.chain().focus().setMermaid().run();
       });
     },
@@ -645,8 +693,11 @@ const items: SlashItem[] = [
     description: 'Render PlantUML (sequence, use-case, class) via public or self-hosted server',
     category: 'advanced',
     icon: Network,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void ensureLazyExtension(editor, 'plantuml').then(() => {
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor.chain().focus().setPlantUml().run();
       });
     },
@@ -657,8 +708,11 @@ const items: SlashItem[] = [
     description: 'Embed a viewer-only diagrams.net diagram (XML or public URL)',
     category: 'advanced',
     icon: PenTool,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void ensureLazyExtension(editor, 'drawio').then(() => {
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor.chain().focus().setDrawio().run();
       });
     },
@@ -669,8 +723,11 @@ const items: SlashItem[] = [
     description: 'Drop multiple images into a responsive grid with click-to-zoom',
     category: 'media',
     icon: Images,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void ensureLazyExtension(editor, 'gallery').then(() => {
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor.chain().focus().setGallery().run();
       });
     },
@@ -686,7 +743,8 @@ const items: SlashItem[] = [
     description: 'Spaced-repetition flashcard (front / back / deck tag)',
     category: 'advanced',
     icon: Layers,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((raw) => {
         const result = asFormResult(raw);
         if (!result) return;
@@ -694,6 +752,7 @@ const items: SlashItem[] = [
         if (!front || !back) return;
         void ensureLazyExtension(editor, 'flashcard').then(() => {
           if (editor.isDestroyed) return;
+          consumeSlashRange(editor, range);
           editor
             .chain()
             .focus()
@@ -717,7 +776,8 @@ const items: SlashItem[] = [
     description: 'Inline database with table/kanban/gallery',
     category: 'database',
     icon: Database,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       void (async () => {
         const pageId = (editor.storage as { cairn?: { pageId?: string } }).cairn?.pageId;
         if (!pageId) return;
@@ -728,6 +788,8 @@ const items: SlashItem[] = [
         });
         if (!res.ok) return;
         const { id } = (await res.json()) as { id: string };
+        if (editor.isDestroyed) return;
+        consumeSlashRange(editor, range);
         editor
           .chain()
           .focus()
@@ -742,8 +804,10 @@ const items: SlashItem[] = [
     description: 'Embed a link to another page as a preview card',
     category: 'database',
     icon: FileSymlink,
-    command: (editor) => {
+    deferred: true,
+    command: (editor, range) => {
       openPagePicker(editor, (item) => {
+        consumeSlashRange(editor, range);
         editor
           .chain()
           .focus()
@@ -774,6 +838,58 @@ export function matchesSlashQuery(item: SlashItem, query: string): boolean {
 /** The full, ordered slash-command catalog. Exported for tests + reuse. */
 export const SLASH_ITEMS: SlashItem[] = items;
 
+/**
+ * #38 — correct the suggestion-provided range so it ALWAYS spans the leading
+ * `/` trigger. In non-paragraph blocks (headings, list items, blockquotes) the
+ * @tiptap/suggestion match range sometimes starts one position AFTER the `/`,
+ * so the old unconditional `deleteRange(range)` left a stray `/` and merged the
+ * query text into the new block. We re-scan the character immediately before
+ * `range.from`: if it's the `/` trigger, widen the range to include it.
+ */
+export function slashTriggerRange(editor: Editor, range: SlashRange): SlashRange {
+  const { from } = range;
+  if (from <= 1) return range;
+  const charBefore = editor.state.doc.textBetween(from - 1, from, undefined, '￼');
+  if (charBefore === '/') {
+    return { from: from - 1, to: range.to };
+  }
+  return range;
+}
+
+/**
+ * #38/#76/#77/#111/#112 — single dispatch for a chosen slash item. This is the
+ * correctness core extracted for unit testing.
+ *
+ * - SYNCHRONOUS items (immediate insert): delete the corrected trigger range
+ *   FIRST, then run the command — the insert happens synchronously so the
+ *   trigger is consumed and nothing is left behind.
+ * - DEFERRED items (`deferred: true` — dialogs, file pickers, lazy/async
+ *   inserts): do NOT pre-delete. We hand the corrected range to the command,
+ *   which deletes it itself ONLY when it actually commits an insert. On
+ *   cancel/early-return the `/query` text is left intact (no lone `/`).
+ */
+export function runSlashItem(args: { editor: Editor; range: SlashRange; item: SlashItem }): void {
+  const { editor, item } = args;
+  const range = slashTriggerRange(editor, args.range);
+  if (item.deferred) {
+    item.command(editor, range);
+    return;
+  }
+  editor.chain().focus().deleteRange(range).run();
+  item.command(editor);
+}
+
+/**
+ * Delete the slash `/query` trigger range from inside a DEFERRED command, at the
+ * point it is about to insert. Safe no-op if `range` is undefined (e.g. the
+ * command was invoked outside the slash menu). Use as the first link of the
+ * insertion chain so the trigger text is consumed atomically with the insert.
+ */
+export function consumeSlashRange(editor: Editor, range: SlashRange | undefined): void {
+  if (!range) return;
+  editor.chain().focus().deleteRange(range).run();
+}
+
 export const SlashCommand = Extension.create({
   name: 'slashCommand',
 
@@ -782,9 +898,12 @@ export const SlashCommand = Extension.create({
       suggestion: {
         char: '/',
         startOfLine: false,
+        // #38/#76/#77/#111/#112 — delegate to the shared dispatch: correct the
+        // range to include the `/` trigger, and only delete it for synchronous
+        // inserts. Deferred items (dialogs/pickers/lazy) delete the range
+        // themselves on success, so a cancel leaves the typed text intact.
         command: ({ editor, range, props }) => {
-          editor.chain().focus().deleteRange(range).run();
-          props.command(editor);
+          runSlashItem({ editor, range, item: props });
         },
         // #122 — return the full filtered catalog (no slice cap). The grouped,
         // scrollable SlashMenu bounds its own height, so every block is now

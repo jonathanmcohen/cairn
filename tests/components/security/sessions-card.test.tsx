@@ -6,6 +6,10 @@ import { SessionsCard } from '@/components/security/sessions-card';
 import { getMessages } from '@/lib/i18n/messages';
 import { I18nProvider } from '@/lib/i18n/provider';
 
+// The sign-out form imports @/lib/auth/config (env() validation) via the action;
+// mock it so the env-validating graph isn't loaded under jsdom.
+vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
+
 function wrap(node: ReactNode) {
   return (
     <I18nProvider locale="en" messages={getMessages('en')}>
@@ -56,6 +60,25 @@ describe('SessionsCard (#70)', () => {
     expect(await screen.findByText('Chrome on macOS')).toBeTruthy();
     expect(screen.getByText('Safari on iPhone')).toBeTruthy();
     expect(screen.getByText('This device')).toBeTruthy();
+  });
+
+  it('renders a friendly device label, not the raw UA (#192)', async () => {
+    fetchMock.mockResolvedValueOnce(
+      sessionsResponse([
+        {
+          id: 's1',
+          userAgent:
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          ip: '203.0.113.9',
+          createdAt: new Date().toISOString(),
+          lastSeenAt: new Date().toISOString(),
+          current: true,
+        },
+      ]),
+    );
+    render(wrap(<SessionsCard />));
+    expect(await screen.findByText('Chrome on macOS')).toBeTruthy();
+    expect(screen.queryByText(/Mozilla\/5\.0/)).toBeNull();
   });
 
   it('clicking "Sign out everywhere else" POSTs revoke-all then refetches', async () => {

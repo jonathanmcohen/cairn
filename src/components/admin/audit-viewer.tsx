@@ -1,5 +1,7 @@
 'use client';
 
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DateField } from '@/components/ui/date-field';
@@ -12,14 +14,18 @@ import {
 } from '@/components/ui/select';
 import { StatusBanner } from '@/components/ui/status-banner';
 import { AUDIT_ACTIONS, type AuditAction, type AuditTargetType } from '@/lib/audit/actions';
+import { useT } from '@/lib/i18n/provider';
 
 type AuditEntry = {
   id: string;
   workspaceId: string;
   actorUserId: string | null;
+  actorName: string | null;
   action: string;
   targetType: string | null;
   targetId: string | null;
+  targetTitle: string | null;
+  targetHref: string | null;
   metadata: Record<string, unknown>;
   ip: string | null;
   createdAt: string;
@@ -85,6 +91,13 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'page_acl.created': 'Page ACL granted',
   'page_acl.changed': 'Page ACL permission changed',
   'page_acl.removed': 'Page ACL removed',
+  // v0.9.9 Plan B (#259, #265) — documented per-page permission vocabulary.
+  'page.permission_granted': 'Page permission granted',
+  'page.permission_changed': 'Page permission changed',
+  'page.permission_revoked': 'Page permission revoked',
+  'page.permission_invited': 'Page invite sent',
+  'page.permission_invite_revoked': 'Page invite revoked',
+  'page.ownership_transferred': 'Page ownership transferred',
   // v0.8.0 G3 P8 — quick-capture inbox events.
   'inbox.captured': 'Inbox capture saved',
   'inbox.triaged': 'Inbox item triaged',
@@ -169,7 +182,7 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'federation.peer_deleted': 'Federated peer removed',
 };
 
-function actionLabel(action: string): string {
+export function actionLabel(action: string): string {
   return (ACTION_LABEL as Record<string, string>)[action] ?? action;
 }
 
@@ -208,6 +221,7 @@ function buildQuery(f: Filters, cursor: string | null): string {
 }
 
 export function AuditViewer() {
+  const t = useT();
   const [filters, setFilters] = useState<Filters>({
     action: '',
     targetType: '',
@@ -220,24 +234,27 @@ export function AuditViewer() {
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
 
-  const fetchFirst = useCallback(async (f: Filters) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await fetch(`/api/admin/audit${buildQuery(f, null)}`);
-      if (!res.ok) {
-        setError(`Failed to load audit log (${res.status})`);
-        setEntries([]);
-        setNextCursor(null);
-        return;
+  const fetchFirst = useCallback(
+    async (f: Filters) => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`/api/admin/audit${buildQuery(f, null)}`);
+        if (!res.ok) {
+          setError(t('auditLog.error.load', { status: res.status }));
+          setEntries([]);
+          setNextCursor(null);
+          return;
+        }
+        const body = (await res.json()) as AuditResponse;
+        setEntries(body.entries);
+        setNextCursor(body.nextCursor);
+      } finally {
+        setLoading(false);
       }
-      const body = (await res.json()) as AuditResponse;
-      setEntries(body.entries);
-      setNextCursor(body.nextCursor);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+    },
+    [t],
+  );
 
   async function loadMore() {
     if (!nextCursor) return;
@@ -246,7 +263,7 @@ export function AuditViewer() {
     try {
       const res = await fetch(`/api/admin/audit${buildQuery(filters, nextCursor)}`);
       if (!res.ok) {
-        setError(`Failed to load more (${res.status})`);
+        setError(t('auditLog.error.loadMore', { status: res.status }));
         return;
       }
       const body = (await res.json()) as AuditResponse;
@@ -266,18 +283,18 @@ export function AuditViewer() {
     <div className="space-y-4">
       <div className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col text-xs">
-          <span className="text-muted-foreground mb-1">Action</span>
+          <span className="text-muted-foreground mb-1">{t('auditLog.filter.actionLabel')}</span>
           <Select
             value={filters.action || '__all'}
             onValueChange={(next) =>
               setFilters((f) => ({ ...f, action: next === '__all' ? '' : next }))
             }
           >
-            <SelectTrigger aria-label="Filter by action" className="text-sm">
-              <SelectValue placeholder="All actions" />
+            <SelectTrigger aria-label={t('auditLog.filter.actionLabel')} className="text-sm">
+              <SelectValue placeholder={t('auditLog.filter.actionPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All actions</SelectItem>
+              <SelectItem value="__all">{t('auditLog.filter.allActions')}</SelectItem>
               {AUDIT_ACTIONS.map((a) => (
                 <SelectItem key={a} value={a}>
                   {actionLabel(a)}
@@ -287,33 +304,33 @@ export function AuditViewer() {
           </Select>
         </div>
         <div className="flex flex-col text-xs">
-          <span className="text-muted-foreground mb-1">Target type</span>
+          <span className="text-muted-foreground mb-1">{t('auditLog.filter.targetLabel')}</span>
           <Select
             value={filters.targetType || '__all'}
             onValueChange={(next) =>
               setFilters((f) => ({ ...f, targetType: next === '__all' ? '' : next }))
             }
           >
-            <SelectTrigger aria-label="Filter by target type" className="text-sm">
-              <SelectValue placeholder="All targets" />
+            <SelectTrigger aria-label={t('auditLog.filter.targetLabel')} className="text-sm">
+              <SelectValue placeholder={t('auditLog.filter.targetPlaceholder')} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="__all">All targets</SelectItem>
-              {TARGET_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
+              <SelectItem value="__all">{t('auditLog.filter.allTargets')}</SelectItem>
+              {TARGET_TYPES.map((tt) => (
+                <SelectItem key={tt} value={tt}>
+                  {tt}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </div>
         <DateField
-          label="From"
+          label={t('auditLog.filter.from')}
           value={filters.from}
           onChange={(iso) => setFilters((f) => ({ ...f, from: iso }))}
         />
         <DateField
-          label="To"
+          label={t('auditLog.filter.to')}
           value={filters.to}
           onChange={(iso) => setFilters((f) => ({ ...f, to: iso }))}
         />
@@ -325,49 +342,73 @@ export function AuditViewer() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b text-left">
-              <th className="py-2">Action</th>
-              <th className="py-2">Actor</th>
-              <th className="py-2">Target</th>
-              <th className="py-2">When</th>
-              <th className="py-2">Metadata</th>
+              <th className="py-2">{t('auditLog.column.action')}</th>
+              <th className="py-2">{t('auditLog.column.actor')}</th>
+              <th className="py-2">{t('auditLog.column.target')}</th>
+              <th className="py-2">{t('auditLog.column.when')}</th>
+              <th className="py-2">{t('auditLog.column.metadata')}</th>
             </tr>
           </thead>
           <tbody>
             {entries.length === 0 && !loading ? (
               <tr>
                 <td colSpan={5} className="text-muted-foreground py-4 text-center">
-                  No audit entries match these filters.
+                  {t('auditLog.empty')}
                 </td>
               </tr>
             ) : null}
             {entries.map((entry) => {
               const isOpen = !!expanded[entry.id];
-              const actor = entry.actorUserId ? entry.actorUserId.slice(0, 8) : '—';
-              const target = entry.targetType
+              const actor =
+                entry.actorName ?? (entry.actorUserId ? entry.actorUserId.slice(0, 8) : '—');
+              const shortTarget = entry.targetType
                 ? `${entry.targetType}${entry.targetId ? `:${entry.targetId.slice(0, 8)}` : ''}`
                 : '—';
               return (
                 <tr key={entry.id} className="border-b align-top">
                   <td className="py-2 pr-3">{actionLabel(entry.action)}</td>
-                  <td className="text-muted-foreground py-2 pr-3 font-mono text-xs">{actor}</td>
-                  <td className="text-muted-foreground py-2 pr-3 font-mono text-xs">{target}</td>
+                  <td className="py-2 pr-3" title={entry.actorUserId ?? undefined}>
+                    {actor}
+                  </td>
+                  <td className="py-2 pr-3 text-sm">
+                    {entry.targetHref && entry.targetTitle ? (
+                      <Link
+                        href={entry.targetHref as Route}
+                        className="text-primary underline hover:no-underline"
+                      >
+                        {entry.targetTitle}
+                      </Link>
+                    ) : entry.targetTitle ? (
+                      <span title={entry.targetId ?? undefined}>{entry.targetTitle}</span>
+                    ) : (
+                      <span className="text-muted-foreground font-mono text-xs">{shortTarget}</span>
+                    )}
+                  </td>
                   <td className="text-muted-foreground py-2 pr-3" title={entry.createdAt}>
                     {relativeTime(entry.createdAt)}
                   </td>
                   <td className="py-2">
-                    <button
-                      type="button"
-                      className="text-xs underline hover:no-underline"
-                      aria-expanded={isOpen}
-                      onClick={() => setExpanded((m) => ({ ...m, [entry.id]: !m[entry.id] }))}
-                    >
-                      {isOpen ? 'Hide' : 'Show'}
-                    </button>
-                    {isOpen ? (
-                      <pre className="mt-2 overflow-x-auto rounded-md border bg-muted/30 p-2 font-mono text-[11px] leading-relaxed">
-                        {JSON.stringify(entry.metadata, null, 2)}
-                      </pre>
-                    ) : null}
+                    {Object.keys(entry.metadata).length === 0 ? (
+                      <span className="text-muted-foreground text-xs">
+                        {t('auditLog.metadata.none')}
+                      </span>
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="text-xs underline hover:no-underline"
+                          aria-expanded={isOpen}
+                          onClick={() => setExpanded((m) => ({ ...m, [entry.id]: !m[entry.id] }))}
+                        >
+                          {isOpen ? t('auditLog.metadata.hide') : t('auditLog.metadata.show')}
+                        </button>
+                        {isOpen ? (
+                          <pre className="mt-2 overflow-x-auto rounded-md border bg-muted/30 p-2 font-mono text-[11px] leading-relaxed">
+                            {JSON.stringify(entry.metadata, null, 2)}
+                          </pre>
+                        ) : null}
+                      </>
+                    )}
                   </td>
                 </tr>
               );
@@ -384,7 +425,7 @@ export function AuditViewer() {
             disabled={loading}
             onClick={() => void loadMore()}
           >
-            {loading ? 'Loading…' : 'Load more'}
+            {loading ? t('auditLog.loading') : t('auditLog.loadMore')}
           </Button>
         </div>
       ) : null}

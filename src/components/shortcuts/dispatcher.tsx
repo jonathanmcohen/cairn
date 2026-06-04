@@ -66,6 +66,12 @@ export function ShortcutDispatcher({ children }: { children: ReactNode }) {
     setOpen(true);
   }, []);
 
+  const openExport = useCallback(() => {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('cairn:export:open'));
+    }
+  }, []);
+
   useEffect(() => {
     ensureAppShortcuts();
     setShortcutHandlers({
@@ -74,8 +80,9 @@ export function ShortcutDispatcher({ children }: { children: ReactNode }) {
       switchWorkspace,
       openFavorites,
       openSheet,
+      export: openExport,
     });
-  }, [newPage, toggleTheme, switchWorkspace, openFavorites, openSheet]);
+  }, [newPage, toggleTheme, switchWorkspace, openFavorites, openSheet, openExport]);
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {

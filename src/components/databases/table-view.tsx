@@ -1,6 +1,6 @@
 'use client';
 
-import { MessageSquare, Plus } from 'lucide-react';
+import { Maximize2, MessageSquare, Plus } from 'lucide-react';
 import { type ReactNode, useRef, useState } from 'react';
 import { useLongPress } from '@/components/mobile/long-press';
 import { useActionAllowed } from '@/components/pwa/offline-context';
@@ -20,6 +20,7 @@ import { useT } from '@/lib/i18n/provider';
 import { CalcFooterRow } from './calc-footer-row';
 import { CellEditor } from './cell-editor';
 import { columnLayout } from './column-ergonomics';
+import { RowDetailPanel } from './row-detail-panel';
 import { RowPeekPanel } from './row-peek-panel';
 import { buildRowForest, flattenVisible } from './row-tree';
 import type { DatabaseMeta, RowData } from './use-database-data';
@@ -39,47 +40,23 @@ export type ViewProps = {
  * row via `position: absolute` and dismisses on outside click.
  */
 function LongPressRow({
-  databaseId,
   rowId,
-  onChange,
+  onDelete,
+  onDuplicate,
   className,
   children,
 }: {
-  databaseId: string;
   rowId: string;
-  onChange: () => void;
+  // v0.9.9 F3 #245 — handlers lifted into TableView (shared with the gutter
+  // menu). They take the rowId so the same body works for any row.
+  onDelete: (rowId: string) => void;
+  onDuplicate: (rowId: string) => void;
   className?: string;
   children: ReactNode;
 }) {
   const rowRef = useRef<HTMLTableRowElement>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const confirm = useConfirm();
   useLongPress(rowRef, { onLongPress: () => setMenuOpen(true) });
-
-  async function onDelete() {
-    setMenuOpen(false);
-    const ok = await confirm({
-      title: 'Delete this row?',
-      confirmLabel: 'Delete',
-      variant: 'danger',
-    });
-    if (!ok) return;
-    await fetch(`/api/databases/${databaseId}/rows/${rowId}`, { method: 'DELETE' });
-    onChange();
-  }
-
-  async function onDuplicate() {
-    setMenuOpen(false);
-    // Reuse the bulk-create endpoint shape: POST /rows with no body creates a
-    // blank row. A true "duplicate" would copy cells; defer to a future plan
-    // (the API doesn't expose a single-row clone today).
-    await fetch(`/api/databases/${databaseId}/rows`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({}),
-    });
-    onChange();
-  }
 
   return (
     <tr ref={rowRef} className={className} style={{ position: 'relative' }}>
@@ -98,14 +75,20 @@ function LongPressRow({
             <button
               type="button"
               className="block w-full px-3 py-1.5 text-left text-sm hover:bg-accent"
-              onClick={() => void onDuplicate()}
+              onClick={() => {
+                setMenuOpen(false);
+                onDuplicate(rowId);
+              }}
             >
               Duplicate row
             </button>
             <button
               type="button"
               className="block w-full px-3 py-1.5 text-left text-sm text-destructive hover:bg-accent"
-              onClick={() => void onDelete()}
+              onClick={() => {
+                setMenuOpen(false);
+                onDelete(rowId);
+              }}
             >
               Delete row
             </button>
@@ -118,11 +101,14 @@ function LongPressRow({
 
 export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps) {
   const t = useT();
+  const confirm = useConfirm();
   const [adding, setAdding] = useState(false);
   const rowMutateAllowed = useActionAllowed('db-row-mutate');
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set());
   // G16 #163 — the row currently open in the peek/comments panel (null = closed).
   const [peekRowId, setPeekRowId] = useState<string | null>(null);
+  // v0.9.9 F1 #241 — the row currently open in the full row-detail drawer.
+  const [detailRowId, setDetailRowId] = useState<string | null>(null);
   const toggle = (id: string) =>
     setCollapsed((prev) => {
       const next = new Set(prev);
@@ -177,14 +163,40 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
     onChange();
   }
 
+  // v0.9.9 F3 #245 — row delete/duplicate lifted here so both the left-gutter
+  // ⋮⋮ menu (VirtualizedRowBody / grouped rowTr) and the mobile long-press sheet
+  // share one implementation.
+  async function deleteRow(rowId: string) {
+    const ok = await confirm({
+      title: t('db.row.delete'),
+      confirmLabel: t('db.row.delete'),
+      variant: 'danger',
+    });
+    if (!ok) return;
+    await fetch(`/api/databases/${databaseId}/rows/${rowId}`, { method: 'DELETE' });
+    onChange();
+  }
+
+  async function duplicateRow(_rowId: string) {
+    // The API has no single-row clone yet; POST with no body creates a blank
+    // row (mirrors the prior long-press behavior). A true cell-copy duplicate
+    // is deferred to a follow-up.
+    await fetch(`/api/databases/${databaseId}/rows`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({}),
+    });
+    onChange();
+  }
+
   function rowTr(r: RowData) {
     return (
       <LongPressRow
         key={r.row.id}
-        databaseId={databaseId}
         rowId={r.row.id}
-        onChange={onChange}
-        className="border-b hover:bg-accent/40"
+        onDelete={(id) => void deleteRow(id)}
+        onDuplicate={(id) => void duplicateRow(id)}
+        className="group border-b hover:bg-accent/40"
       >
         {columns.map((c, i) => {
           const stickyStyle =
@@ -203,15 +215,26 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
             >
               <span className="inline-flex items-center gap-1">
                 {i === 0 && (
-                  // G16 #163 — open the row peek panel (comments thread).
-                  <button
-                    type="button"
-                    aria-label={t('databases.row.peek')}
-                    onClick={() => setPeekRowId(r.row.id)}
-                    className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
-                  >
-                    <MessageSquare className="size-4" aria-hidden />
-                  </button>
+                  <>
+                    {/* v0.9.9 F1 #241 — open the full row-detail drawer. */}
+                    <button
+                      type="button"
+                      aria-label={t('databases.rowDetail.open')}
+                      onClick={() => setDetailRowId(r.row.id)}
+                      className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                    >
+                      <Maximize2 className="size-3.5" aria-hidden />
+                    </button>
+                    {/* G16 #163 — open the row peek panel (comments thread). */}
+                    <button
+                      type="button"
+                      aria-label={t('databases.row.peek')}
+                      onClick={() => setPeekRowId(r.row.id)}
+                      className="shrink-0 text-muted-foreground opacity-0 hover:text-foreground focus:opacity-100 group-hover:opacity-100"
+                    >
+                      <MessageSquare className="size-4" aria-hidden />
+                    </button>
+                  </>
                 )}
                 <CellEditor
                   databaseId={databaseId}
@@ -268,7 +291,9 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
         onChange={onChange}
         onAddChild={(parentId) => void addRow(parentId)}
         adding={adding}
-        onPeek={(rowId) => setPeekRowId(rowId)}
+        onOpenDetail={(rowId) => setDetailRowId(rowId)}
+        onDeleteRow={(rowId) => void deleteRow(rowId)}
+        onDuplicateRow={(rowId) => void duplicateRow(rowId)}
       />
     );
   }
@@ -393,7 +418,9 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
               </div>
             </div>
           ) : (
-            <div className="h-[600px] min-h-0">{body}</div>
+            // #39/#218 — size to content up to a max height instead of always
+            // reserving 600px (which left dead vertical space for short tables).
+            <div className="max-h-[600px] min-h-0">{body}</div>
           )}
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] border-collapse text-sm">
@@ -420,10 +447,12 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           type="button"
           onClick={() => void addRow()}
           disabled={adding || !rowMutateAllowed}
+          aria-label={t('database.addRow')}
           title={rowMutateAllowed ? undefined : 'Unavailable offline'}
-          className="flex-1 px-3 py-2 text-left text-sm text-muted-foreground hover:bg-accent"
+          className="flex flex-1 items-center gap-1.5 px-3 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent"
         >
-          + New row
+          <Plus className="h-4 w-4" aria-hidden="true" />
+          {t('database.newRow')}
         </button>
         {templates.length > 0 && (
           <Select
@@ -463,6 +492,25 @@ export function TableView({ databaseId, meta, rows, view, onChange }: ViewProps)
           onOpenChange={(o) => {
             if (!o) setPeekRowId(null);
           }}
+          canComment
+          currentUserId=""
+          currentRole="editor"
+        />
+      )}
+      {/* v0.9.9 F1 #241 — full row-detail drawer (properties + body + comments).
+          Like RowPeekPanel, TableView has no viewer-context props; the row routes
+          re-check requireRole server-side, so a conservative editor role + empty
+          userId is passed here. */}
+      {detailRowId && (
+        <RowDetailPanel
+          databaseId={databaseId}
+          rowId={detailRowId}
+          meta={meta}
+          open={detailRowId !== null}
+          onOpenChange={(o) => {
+            if (!o) setDetailRowId(null);
+          }}
+          refresh={onChange}
           canComment
           currentUserId=""
           currentRole="editor"

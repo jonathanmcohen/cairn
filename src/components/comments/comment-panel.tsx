@@ -1,6 +1,6 @@
 'use client';
 
-import { Check, MessageSquarePlus, RotateCcw, Trash2, X } from 'lucide-react';
+import { Check, MessageSquarePlus, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -8,6 +8,7 @@ import type { Comment } from '@/db/schema';
 import type { MemberRole } from '@/lib/auth/require-role';
 import type { CommentAnchor } from '@/lib/comments/anchor';
 import { useT } from '@/lib/i18n/provider';
+import { renderCommentBody } from '@/lib/mentions/render';
 import { CommentComposer } from './comment-composer';
 
 const ROLE_RANK: Record<MemberRole, number> = { viewer: 1, editor: 2, admin: 3, owner: 4 };
@@ -71,6 +72,11 @@ export function CommentPanel({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showResolved, setShowResolved] = useState(false);
+  // v0.9.9 Plan T (#74/#255) — per-row inline edit state. Only one comment is
+  // edited at a time; `editingId` is the comment currently in edit mode.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
+  const [editSaving, setEditSaving] = useState(false);
 
   const canResolve = hasMinRole(currentRole, 'editor');
 
@@ -125,6 +131,29 @@ export function CommentPanel({
     setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
   }
 
+  async function saveEdit(comment: Comment) {
+    const body = editDraft.trim();
+    if (!body || body === comment.body) {
+      setEditingId(null);
+      return;
+    }
+    setEditSaving(true);
+    setError(null);
+    const res = await fetch(`/api/comments/${comment.id}`, {
+      method: 'PATCH',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ body }),
+    });
+    setEditSaving(false);
+    if (!res.ok) {
+      setError(t('pageActions.comments.editError'));
+      return;
+    }
+    const updated = (await res.json()) as Comment;
+    setComments((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+    setEditingId(null);
+  }
+
   async function removeComment(comment: Comment) {
     const res = await fetch(`/api/comments/${comment.id}`, { method: 'DELETE' });
     if (res.status === 204) {
@@ -141,6 +170,9 @@ export function CommentPanel({
 
   function renderRow(comment: Comment) {
     const canDelete = comment.authorId === currentUserId || hasMinRole(currentRole, 'admin');
+    // Edit is author-only (admins may delete but not rewrite another's words).
+    const canEdit = comment.authorId === currentUserId;
+    const isEdited = new Date(comment.updatedAt).getTime() > new Date(comment.createdAt).getTime();
     const anchor = comment.anchor;
     return (
       <li key={comment.id} className="rounded-md border p-3 text-sm">
@@ -173,6 +205,20 @@ export function CommentPanel({
                   <RotateCcw className="h-3.5 w-3.5" />
                 </Button>
               ))}
+            {canEdit && editingId !== comment.id && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6"
+                title={t('pageActions.comments.edit')}
+                onClick={() => {
+                  setEditingId(comment.id);
+                  setEditDraft(comment.body);
+                }}
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
             {canDelete && (
               <Button
                 variant="ghost"
@@ -186,7 +232,48 @@ export function CommentPanel({
             )}
           </div>
         </div>
-        <p className="whitespace-pre-wrap break-words">{comment.body}</p>
+        {/* #72 — render `@[Name](uuid)` mention tokens as pills instead of raw
+            markdown. `whitespace-pre-wrap` keeps newlines; renderCommentBody
+            interleaves text runs with <MentionPill>s. */}
+        {/* v0.9.9 Plan T (#74/#255) — inline edit for the author. A controlled
+            textarea is used (not CommentComposer) so the existing body
+            pre-fills; the read view still renders mention pills via
+            renderCommentBody and shows an (edited) marker. */}
+        {editingId === comment.id ? (
+          <div className="space-y-2">
+            <textarea
+              value={editDraft}
+              onChange={(e) => setEditDraft(e.target.value)}
+              rows={3}
+              className="border-border bg-background focus-within:border-ring focus-within:ring-ring/40 w-full rounded-md border px-2 py-1.5 text-sm transition-colors focus-within:ring-2 focus:outline-hidden"
+              placeholder={t('pageActions.comments.placeholder')}
+            />
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                size="sm"
+                disabled={editSaving || editDraft.trim().length === 0}
+                onClick={() => void saveEdit(comment)}
+              >
+                {editSaving
+                  ? t('pageActions.comments.editSaving')
+                  : t('pageActions.comments.editSave')}
+              </Button>
+              <Button type="button" size="sm" variant="ghost" onClick={() => setEditingId(null)}>
+                {t('pageActions.comments.editCancel')}
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="whitespace-pre-wrap break-words">
+            {renderCommentBody(comment.body)}
+            {isEdited && (
+              <span className="text-muted-foreground ml-1 text-xs">
+                ({t('pageActions.comments.edited')})
+              </span>
+            )}
+          </p>
+        )}
         {anchor != null &&
           (isBlockAnchor(anchor) ? (
             <button

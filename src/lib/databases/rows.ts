@@ -16,6 +16,15 @@ export type { SortSpec } from './sort';
 
 export type RowWithCells = { row: schema.DbRow; cells: Record<string, unknown> };
 
+// v0.9.9 Plan F1 (#241) — single-row detail shape consumed by the row-detail
+// drawer. `cells` carry the same relation/rollup/formula resolution as
+// `listRows`; `body` is the per-row rich-text document (jsonb, nullable).
+export type RowDetail = {
+  row: schema.DbRow;
+  cells: Record<string, unknown>;
+  body: unknown;
+};
+
 export async function createRow(
   db: PostgresJsDatabase<typeof schema>,
   input: {
@@ -37,7 +46,13 @@ export async function createRow(
     }
     const [row] = await tx
       .insert(schema.dbRows)
-      .values({ databaseId: input.databaseId, createdBy: input.createdBy })
+      // v0.9.9 F2 #243 — seed updatedBy with the creator so the last_edited_by
+      // computed type has a value before the first edit.
+      .values({
+        databaseId: input.databaseId,
+        createdBy: input.createdBy,
+        updatedBy: input.createdBy,
+      })
       .returning();
     if (!row) throw new Error('insert row failed');
 
@@ -97,6 +112,8 @@ export async function updateCells(
     workspaceId: string;
     cells: Record<string, unknown>;
     parentRowId?: string | null;
+    /** v0.9.9 F2 #243 — the editing user, recorded as db_rows.updated_by. */
+    editorUserId?: string;
   },
 ): Promise<void> {
   await db.transaction(async (tx) => {
@@ -166,7 +183,10 @@ export async function updateCells(
     }
     await tx
       .update(schema.dbRows)
-      .set({ updatedAt: new Date() })
+      .set({
+        updatedAt: new Date(),
+        ...(input.editorUserId ? { updatedBy: input.editorUserId } : {}),
+      })
       .where(eq(schema.dbRows.id, input.rowId));
   });
   // G16 #163 — reminders are materialized off committed cell values. Run
@@ -218,6 +238,35 @@ export function coerce(type: schema.PropertyType, value: unknown): unknown {
     case 'text':
     case 'url':
       return typeof value === 'string' ? value : String(value);
+    // v0.9.9 Plan F2 (#243) — new property types.
+    case 'email': {
+      if (typeof value !== 'string') return null;
+      const v = value.trim().toLowerCase();
+      return /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v) ? v : null;
+    }
+    case 'phone':
+      return typeof value === 'string' ? value.trim() : null;
+    case 'person': {
+      if (!Array.isArray(value)) return [];
+      const seen = new Set<string>();
+      const ids: string[] = [];
+      for (const v of value) {
+        if (typeof v !== 'string') continue;
+        const t = v.trim();
+        if (!t || seen.has(t)) continue;
+        seen.add(t);
+        ids.push(t);
+      }
+      return ids;
+    }
+    case 'file':
+      return Array.isArray(value) ? value.filter((f) => f && typeof f === 'object') : [];
+    // Computed at read time from db_rows columns; never persisted as a cell.
+    case 'created_time':
+    case 'last_edited_time':
+    case 'created_by':
+    case 'last_edited_by':
+      return null;
   }
 }
 
@@ -355,6 +404,108 @@ async function listRowsInner(
         cells[fp.id] = computeFormula(expression, ctx);
       }
     }
+    // v0.9.9 F2 #243 — populate computed (read-only) cells from row columns.
+    for (const p of props) {
+      if (p.type === 'created_time') cells[p.id] = r.createdAt;
+      else if (p.type === 'last_edited_time') cells[p.id] = r.updatedAt;
+      else if (p.type === 'created_by') cells[p.id] = r.createdBy;
+      else if (p.type === 'last_edited_by') cells[p.id] = r.updatedBy;
+    }
     return { row: r, cells };
   });
+}
+
+/**
+ * v0.9.9 Plan F1 (#241) — fetch ONE row with fully-resolved cells + its body.
+ * Workspace ownership is checked via the `databases` join exactly like
+ * `updateCells`. Reuses the same relation/rollup/formula resolution as
+ * `listRows` so the row-detail drawer renders identical cell values.
+ */
+export async function getRowDetail(
+  db: PostgresJsDatabase<typeof schema>,
+  input: { rowId: string; databaseId: string; workspaceId: string },
+): Promise<RowDetail> {
+  const [row] = await db
+    .select({
+      row: schema.dbRows,
+      workspaceId: schema.databases.workspaceId,
+    })
+    .from(schema.dbRows)
+    .innerJoin(schema.databases, eq(schema.dbRows.databaseId, schema.databases.id))
+    .where(eq(schema.dbRows.id, input.rowId))
+    .limit(1);
+  if (!row || row.workspaceId !== input.workspaceId || row.row.databaseId !== input.databaseId) {
+    throw new Error('row not found in database');
+  }
+
+  const props = await db
+    .select()
+    .from(schema.dbProperties)
+    .where(eq(schema.dbProperties.databaseId, input.databaseId));
+
+  const rawCells = await db
+    .select()
+    .from(schema.dbCells)
+    .where(eq(schema.dbCells.rowId, input.rowId));
+  const cellsByRow = new Map<string, Record<string, unknown>>();
+  const cells: Record<string, unknown> = {};
+  for (const c of rawCells) cells[c.propertyId] = c.value;
+  cellsByRow.set(input.rowId, cells);
+
+  const relationProps = props.filter((p) => p.type === 'relation');
+  await resolveRelationCells(db, relationProps, cellsByRow);
+  const rollupProps = props.filter((p) => p.type === 'rollup');
+  await resolveRollupCells(db, rollupProps, cellsByRow);
+
+  const nameToId = new Map<string, string>(props.map((p) => [p.name, p.id]));
+  const formulaProps = props.filter((p) => p.type === 'formula');
+  for (const fp of formulaProps) {
+    const expression =
+      typeof fp.config === 'object' && fp.config !== null
+        ? (fp.config as { expression?: unknown }).expression
+        : undefined;
+    if (typeof expression !== 'string' || expression.trim() === '') {
+      cells[fp.id] = { __error: 'no formula expression' };
+      continue;
+    }
+    const ctx: FormulaContext = { nameToId, cells };
+    cells[fp.id] = computeFormula(expression, ctx);
+  }
+
+  // v0.9.9 F2 #243 — computed (read-only) cells from row columns.
+  for (const p of props) {
+    if (p.type === 'created_time') cells[p.id] = row.row.createdAt;
+    else if (p.type === 'last_edited_time') cells[p.id] = row.row.updatedAt;
+    else if (p.type === 'created_by') cells[p.id] = row.row.createdBy;
+    else if (p.type === 'last_edited_by') cells[p.id] = row.row.updatedBy;
+  }
+
+  return { row: row.row, cells, body: row.row.body };
+}
+
+/**
+ * v0.9.9 Plan F1 (#241) — persist a row's rich-text body. Validates workspace
+ * ownership (same join as `updateCells`) then writes the jsonb document and
+ * bumps `updated_at`.
+ */
+export async function updateRowBody(
+  db: PostgresJsDatabase<typeof schema>,
+  input: { rowId: string; databaseId: string; workspaceId: string; body: unknown },
+): Promise<void> {
+  const [row] = await db
+    .select({
+      databaseId: schema.dbRows.databaseId,
+      workspaceId: schema.databases.workspaceId,
+    })
+    .from(schema.dbRows)
+    .innerJoin(schema.databases, eq(schema.dbRows.databaseId, schema.databases.id))
+    .where(eq(schema.dbRows.id, input.rowId))
+    .limit(1);
+  if (!row || row.workspaceId !== input.workspaceId || row.databaseId !== input.databaseId) {
+    throw new Error('row not found in database');
+  }
+  await db
+    .update(schema.dbRows)
+    .set({ body: input.body, updatedAt: new Date() })
+    .where(eq(schema.dbRows.id, input.rowId));
 }

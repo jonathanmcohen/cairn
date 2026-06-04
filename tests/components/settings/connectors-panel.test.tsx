@@ -5,7 +5,7 @@ import { ConnectorsPanel } from '@/app/(app)/settings/developer/connectors/conne
 
 // ChatBridgeForm hits the network on submit; stub it to a sentinel so we can
 // assert the picker shows/hides it without exercising fetch.
-vi.mock('@/app/(app)/admin/chat-bridge/chat-bridge-form', () => ({
+vi.mock('@/app/(app)/settings/admin/chat-bridge/chat-bridge-form', () => ({
   ChatBridgeForm: () => <div data-testid="chat-bridge-form" />,
 }));
 // Render the authoritative English copy so the assertions read naturally.
@@ -33,16 +33,16 @@ describe('<ConnectorsPanel>', () => {
     expect(screen.getByRole('link', { name: /documentation/i })).toBeTruthy();
   });
 
-  it('reveals the Slack/Discord type picker after clicking Add connector', () => {
+  it('reveals the Slack/Discord type picker after clicking New chat bridge', () => {
     render(<ConnectorsPanel {...noneInstalled} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Add connector' }));
+    fireEvent.click(screen.getByRole('button', { name: 'New chat bridge' }));
     expect(screen.getByRole('button', { name: 'Slack' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Discord' })).toBeTruthy();
   });
 
   it('shows the chat-bridge form once a connector type is chosen', () => {
     render(<ConnectorsPanel {...noneInstalled} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Add connector' }));
+    fireEvent.click(screen.getByRole('button', { name: 'New chat bridge' }));
     fireEvent.click(screen.getByRole('button', { name: 'Slack' }));
     expect(screen.getByTestId('chat-bridge-form')).toBeTruthy();
   });

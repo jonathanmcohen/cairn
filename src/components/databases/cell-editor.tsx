@@ -123,6 +123,77 @@ export function CellEditor({
         </Select>
       );
     }
+    // v0.9.9 F2 #243 — new property types.
+    case 'email':
+      return (
+        <input
+          type="email"
+          aria-label={property.name}
+          className="w-full bg-transparent rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          defaultValue={typeof local === 'string' ? local : ''}
+          onBlur={(e) => void save(e.target.value === '' ? null : e.target.value)}
+        />
+      );
+    case 'phone':
+      return (
+        <input
+          type="tel"
+          aria-label={property.name}
+          className="w-full bg-transparent rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          defaultValue={typeof local === 'string' ? local : ''}
+          onBlur={(e) => void save(e.target.value === '' ? null : e.target.value)}
+        />
+      );
+    case 'person':
+      // Comma-separated user ids/names; coerced server-side into a deduped array.
+      return (
+        <input
+          type="text"
+          aria-label={property.name}
+          className="w-full bg-transparent rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+          defaultValue={Array.isArray(local) ? local.join(', ') : ''}
+          onBlur={(e) =>
+            void save(
+              e.target.value
+                .split(',')
+                .map((s) => s.trim())
+                .filter(Boolean),
+            )
+          }
+        />
+      );
+    case 'file': {
+      // Read-only chips for now; upload affordance deferred to a follow-up.
+      const files = Array.isArray(local)
+        ? (local as Array<{ name?: string }>).map((f) => f?.name).filter(Boolean)
+        : [];
+      return (
+        <span className="text-sm text-muted-foreground" title={property.name}>
+          {files.length > 0 ? files.join(', ') : '—'}
+        </span>
+      );
+    }
+    case 'created_time':
+    case 'last_edited_time': {
+      const display =
+        typeof local === 'string'
+          ? local.slice(0, 10)
+          : local instanceof Date
+            ? local.toISOString().slice(0, 10)
+            : '';
+      return (
+        <span className="text-sm text-muted-foreground" title={property.name}>
+          {display || '—'}
+        </span>
+      );
+    }
+    case 'created_by':
+    case 'last_edited_by':
+      return (
+        <span className="text-sm text-muted-foreground" title={property.name}>
+          {typeof local === 'string' && local ? local : '—'}
+        </span>
+      );
     default:
       // text, url, multi_select(simplified as comma string)
       return (

@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { AUDIT_ACTIONS } from '@/lib/audit/actions';
+import { enrichAuditEntries } from '@/lib/audit/enrich';
 import { listAuditLog } from '@/lib/audit/query';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
@@ -34,7 +35,8 @@ export async function GET(req: NextRequest): Promise<Response> {
       limit: parsed.limit,
       cursor: parsed.cursor,
     });
-    return NextResponse.json(result);
+    const enriched = await enrichAuditEntries(getDb(), result.entries);
+    return NextResponse.json({ entries: enriched, nextCursor: result.nextCursor });
   } catch (err) {
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status });

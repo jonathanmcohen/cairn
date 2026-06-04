@@ -249,7 +249,7 @@ describe('requirePageAcl - gate behavior', () => {
 });
 
 describe('setPageAcl', () => {
-  it('creates a new ACL row + records page_acl.created audit in one tx', async () => {
+  it('creates a new ACL row + records page.permission_granted audit in one tx', async () => {
     const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
     const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
     const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
@@ -276,11 +276,11 @@ describe('setPageAcl', () => {
       .from(schema.auditLog)
       .where(eq(schema.auditLog.targetType, 'page_acl'))
       .limit(1);
-    expect(audit?.action).toBe('page_acl.created');
+    expect(audit?.action).toBe('page.permission_granted');
     expect(audit?.actorUserId).toBe(owner.userId);
   });
 
-  it('updating an existing ACL records page_acl.changed', async () => {
+  it('updating an existing ACL records page.permission_changed', async () => {
     const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
     const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
     const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
@@ -307,13 +307,13 @@ describe('setPageAcl', () => {
       .where(eq(schema.auditLog.targetType, 'page_acl'))
       .orderBy(schema.auditLog.createdAt);
     const actions = audits.map((a) => a.action);
-    expect(actions).toContain('page_acl.created');
-    expect(actions).toContain('page_acl.changed');
+    expect(actions).toContain('page.permission_granted');
+    expect(actions).toContain('page.permission_changed');
   });
 });
 
 describe('removePageAcl', () => {
-  it('deletes the ACL + records page_acl.removed in one tx', async () => {
+  it('deletes the ACL + records page.permission_revoked in one tx', async () => {
     const owner = await createTestWorkspaceWithUser(db, { role: 'owner' });
     const editor = await addMember(owner.workspaceId, 'e@x.com', 'editor');
     const { grandId } = await makePageChain(owner.workspaceId, owner.userId);
@@ -341,7 +341,7 @@ describe('removePageAcl', () => {
       .from(schema.auditLog)
       .where(eq(schema.auditLog.targetType, 'page_acl'))
       .orderBy(schema.auditLog.createdAt);
-    expect(audits.map((a) => a.action)).toContain('page_acl.removed');
+    expect(audits.map((a) => a.action)).toContain('page.permission_revoked');
   });
 
   it('returns silently for a non-existent ACL (idempotent)', async () => {

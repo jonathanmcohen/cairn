@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   Select,
   SelectContent,
@@ -41,6 +41,31 @@ const OPS_BY_TYPE: Record<string, string[]> = {
   checkbox: ['is_true', 'is_false'],
   date: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty'],
   multi_select: ['contains', 'not_contains', 'is_empty'],
+  // v0.9.9 F2 #243 — email/phone share the text op list; created/last_edited
+  // time filter like dates against the row column. person/file/*_by are
+  // intentionally omitted (non-filterable in this version).
+  email: [
+    'contains',
+    'not_contains',
+    'eq',
+    'neq',
+    'starts_with',
+    'ends_with',
+    'is_empty',
+    'is_not_empty',
+  ],
+  phone: [
+    'contains',
+    'not_contains',
+    'eq',
+    'neq',
+    'starts_with',
+    'ends_with',
+    'is_empty',
+    'is_not_empty',
+  ],
+  created_time: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty'],
+  last_edited_time: ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'is_empty'],
 };
 // Ops that take no value input.
 const NO_VALUE_OPS = new Set(['is_empty', 'is_not_empty', 'is_true', 'is_false']);
@@ -55,16 +80,33 @@ export function FiltersConfig({ databaseId, meta, view, onChange }: ViewProps) {
   const t = useT();
   const config = (view.config ?? {}) as { filters?: Condition[] };
   const [open, setOpen] = useState(false);
-  const filters: Condition[] = Array.isArray(config.filters) ? config.filters : [];
   const props = filterableProps(meta);
+  // #244 — hold the filter list locally so add/remove/edit render synchronously
+  // on the first interaction, BEFORE the persist PATCH + onChange refetch round
+  // trip. Re-seed from view.config whenever the view's persisted config changes
+  // (e.g. after the background refetch reconciles, or on view switch).
+  const [localFilters, setLocalFilters] = useState<Condition[]>(
+    Array.isArray(config.filters) ? config.filters : [],
+  );
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — re-seed the optimistic mirror only when the persisted view.config identity changes, not on every config.filters read.
+  useEffect(() => {
+    const cfg = (view.config ?? {}) as { filters?: Condition[] };
+    setLocalFilters(Array.isArray(cfg.filters) ? cfg.filters : []);
+  }, [view.config]);
 
-  async function save(next: Condition[]) {
-    await fetch(`/api/databases/${databaseId}/views/${view.id}`, {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ config: { ...(view.config ?? {}), filters: next } }),
-    });
-    onChange();
+  const filters = localFilters;
+
+  function save(next: Condition[]) {
+    // Optimistic: reflect locally first, then persist + background refetch.
+    setLocalFilters(next);
+    void (async () => {
+      await fetch(`/api/databases/${databaseId}/views/${view.id}`, {
+        method: 'PATCH',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ config: { ...(view.config ?? {}), filters: next } }),
+      });
+      onChange();
+    })();
   }
 
   function opsFor(propertyId: string): string[] {
@@ -76,13 +118,13 @@ export function FiltersConfig({ databaseId, meta, view, onChange }: ViewProps) {
     const first = props[0];
     if (!first) return;
     const op = (OPS_BY_TYPE[first.type] ?? [])[0] ?? 'contains';
-    void save([...filters, { propertyId: first.id, op, value: NO_VALUE_OPS.has(op) ? null : '' }]);
+    save([...filters, { propertyId: first.id, op, value: NO_VALUE_OPS.has(op) ? null : '' }]);
   }
   function removeFilter(i: number) {
-    void save(filters.filter((_, idx) => idx !== i));
+    save(filters.filter((_, idx) => idx !== i));
   }
   function setFilter(i: number, patch: Partial<Condition>) {
-    void save(
+    save(
       filters.map((c, idx) => {
         if (idx !== i) return c;
         const merged = { ...c, ...patch };

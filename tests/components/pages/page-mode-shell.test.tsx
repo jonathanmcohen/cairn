@@ -89,10 +89,12 @@ describe('<PageModeShell>', () => {
     );
     expect(document.documentElement.classList.contains('cairn-focus-mode')).toBe(true);
     expect(document.querySelector('[data-page-mode-shell][data-reader="true"]')).not.toBeNull();
-    expect(screen.getByRole('button', { name: /focus mode/i }).getAttribute('aria-pressed')).toBe(
+    // exact name: focus mode is on, so the fixed "Exit focus mode" button is
+    // also mounted and would otherwise also match /focus mode/i (Plan O #58).
+    expect(screen.getByRole('button', { name: 'Focus mode' }).getAttribute('aria-pressed')).toBe(
       'true',
     );
-    expect(screen.getByRole('button', { name: /reader mode/i }).getAttribute('aria-pressed')).toBe(
+    expect(screen.getByRole('button', { name: 'Reader mode' }).getAttribute('aria-pressed')).toBe(
       'true',
     );
   });
@@ -122,6 +124,57 @@ describe('<PageModeShell>', () => {
     );
     expect(screen.queryByRole('button', { name: /focus mode/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /reader mode/i })).toBeNull();
+  });
+
+  // v0.9.9 Plan O #63/#247 — navigation to a different page starts fresh.
+  it('resets focus + reader when pageId changes', () => {
+    const { rerender } = rtlRender(
+      <I18nProvider locale="en" messages={enMessages as never}>
+        <PageModeShell pageId="a">
+          <PageModeToggles />
+        </PageModeShell>
+      </I18nProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reader mode' }));
+    expect(document.documentElement.classList.contains('cairn-focus-mode')).toBe(true);
+    expect(document.querySelector('[data-page-mode-shell][data-reader="true"]')).not.toBeNull();
+
+    rerender(
+      <I18nProvider locale="en" messages={enMessages as never}>
+        <PageModeShell pageId="b">
+          <PageModeToggles />
+        </PageModeShell>
+      </I18nProvider>,
+    );
+    expect(document.documentElement.classList.contains('cairn-focus-mode')).toBe(false);
+    expect(document.querySelector('[data-page-mode-shell][data-reader="true"]')).toBeNull();
+    expect(screen.getByRole('button', { name: 'Focus mode' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+    expect(screen.getByRole('button', { name: 'Reader mode' }).getAttribute('aria-pressed')).toBe(
+      'false',
+    );
+  });
+
+  it('does NOT reset when re-rendered with the same pageId', () => {
+    const { rerender } = rtlRender(
+      <I18nProvider locale="en" messages={enMessages as never}>
+        <PageModeShell pageId="a">
+          <PageModeToggles />
+        </PageModeShell>
+      </I18nProvider>,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Focus mode' }));
+    expect(document.documentElement.classList.contains('cairn-focus-mode')).toBe(true);
+    rerender(
+      <I18nProvider locale="en" messages={enMessages as never}>
+        <PageModeShell pageId="a">
+          <PageModeToggles />
+        </PageModeShell>
+      </I18nProvider>,
+    );
+    expect(document.documentElement.classList.contains('cairn-focus-mode')).toBe(true);
   });
 
   it('removes the focus-mode class on unmount', () => {

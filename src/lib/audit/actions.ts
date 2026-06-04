@@ -30,6 +30,17 @@ export const AUDIT_ACTIONS = [
   'page_acl.created',
   'page_acl.changed',
   'page_acl.removed',
+  // v0.9.9 Plan B (#259) — page-level ownership transfer (stored 'owner' tier).
+  'page.ownership_transferred',
+  // v0.9.9 Plan B (#259, #265) — documented per-page permission vocabulary. The
+  // legacy page_acl.* events above stay emitted-and-recognized for SIEM
+  // back-compat; these are the human-facing names the audit UI labels and the
+  // ACL grant/invite/transfer code emits.
+  'page.permission_invited',
+  'page.permission_invite_revoked',
+  'page.permission_granted',
+  'page.permission_changed',
+  'page.permission_revoked',
   // v0.8.0 G3 P8 — quick-capture inbox events (spec §5.5).
   'inbox.captured',
   'inbox.triaged',
@@ -172,6 +183,8 @@ export type AuditTargetType =
   // v0.7.0 G1 P5 — new target types for PATs + ACL rows.
   | 'personal_access_token'
   | 'page_acl'
+  // v0.9.9 Plan B (#259) — page email-invite rows.
+  | 'page_acl_invite'
   // v0.9.0 G1 P8 — passkey credential rows + workspace MFA policy rows.
   | 'webauthn_credential'
   | 'mfa_policy'

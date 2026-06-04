@@ -435,6 +435,55 @@
       "when": 1780674197491,
       "tag": "0061_automation_run_retention",
       "breakpoints": true
+    },
+    {
+      "idx": 62,
+      "version": "7",
+      "when": 1780760597491,
+      "tag": "0062_page_acl_invites_and_owner",
+      "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1780484957827,
+      "tag": "0063_db_row_body",
+      "breakpoints": true
+    },
+    {
+      "idx": 64,
+      "version": "7",
+      "when": 1780484957828,
+      "tag": "0064_property_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1780490300000,
+      "tag": "0065_semantic_snippet_index",
+      "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1780580000000,
+      "tag": "0066_default_page_status_draft",
+      "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1780670000000,
+      "tag": "0067_notification_event_matrix",
+      "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1780760000000,
+      "tag": "0068_backfill_legacy_orange_covers",
+      "breakpoints": true
     }
   ]
 }

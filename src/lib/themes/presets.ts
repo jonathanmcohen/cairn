@@ -12,14 +12,14 @@ import { z } from 'zod';
  * `[data-accent="<name>"]` CSS block in globals.css; the custom case sets
  * `--cairn-accent` directly to the hex value the user picked. */
 export const ACCENT_PRESETS = [
-  { id: 'default', label: 'Default', hex: '#0f172a' },
-  { id: 'blue', label: 'Blue', hex: '#2563eb' },
-  { id: 'indigo', label: 'Indigo', hex: '#4f46e5' },
-  { id: 'violet', label: 'Violet', hex: '#7c3aed' },
-  { id: 'rose', label: 'Rose', hex: '#e11d48' },
-  { id: 'amber', label: 'Amber', hex: '#d97706' },
-  { id: 'emerald', label: 'Emerald', hex: '#059669' },
-  { id: 'slate', label: 'Slate', hex: '#475569' },
+  { id: 'default', label: 'Default', hex: '#0f172a', primaryHsl: '222 47% 11%' },
+  { id: 'blue', label: 'Blue', hex: '#2563eb', primaryHsl: '217 91% 60%' },
+  { id: 'indigo', label: 'Indigo', hex: '#4f46e5', primaryHsl: '239 84% 67%' },
+  { id: 'violet', label: 'Violet', hex: '#7c3aed', primaryHsl: '262 83% 58%' },
+  { id: 'rose', label: 'Rose', hex: '#e11d48', primaryHsl: '347 77% 50%' },
+  { id: 'amber', label: 'Amber', hex: '#d97706', primaryHsl: '32 95% 44%' },
+  { id: 'emerald', label: 'Emerald', hex: '#059669', primaryHsl: '160 84% 39%' },
+  { id: 'slate', label: 'Slate', hex: '#475569', primaryHsl: '215 19% 35%' },
 ] as const;
 
 export type AccentPreset = (typeof ACCENT_PRESETS)[number]['id'];
