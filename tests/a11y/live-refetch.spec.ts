@@ -15,17 +15,19 @@ test.describe('live sidebar refetch', () => {
     const newPageButton = page.getByRole('button', { name: 'New page', exact: true });
     await expect(newPageButton).toBeVisible();
 
-    // Baseline count of "Untitled" rows in the sidebar before creating one.
-    const untitledRows = page.getByText('Untitled', { exact: true });
-    const before = await untitledRows.count();
+    // Baseline count of page rows in the sidebar tree before creating one.
+    // v0.9.9 K1 makes new pages title-less (no literal "Untitled"), so count
+    // tree rows by their stable data attribute, not the old placeholder text.
+    const pageRows = page.locator('[data-row-kind="page"]');
+    const before = await pageRows.count();
 
     const start = Date.now();
     await newPageButton.click();
 
     // The new page navigates to /pages/<id> and the sidebar re-renders via
-    // router.refresh(). Assert one more "Untitled" row appears within 1s.
+    // router.refresh(). Assert one more page row appears within 1s.
     await expect
-      .poll(() => untitledRows.count(), { timeout: 1000, intervals: [50, 100, 200] })
+      .poll(() => pageRows.count(), { timeout: 1000, intervals: [50, 100, 200] })
       .toBeGreaterThan(before);
     expect(Date.now() - start).toBeLessThan(1000);
   });
