@@ -109,6 +109,15 @@ export function resetPageFocusMode(): void {
 
 type Props = {
   children: ReactNode;
+  /**
+   * v0.9.9 Plan O #63/#247 — the App Router reuses this client subtree across
+   * `/pages/[pageId]` navigations, so without page scoping the focus/reader
+   * flags bleed from one document into the next. When `pageId` changes the shell
+   * resets to defaults; the initial mount is skipped so the localStorage hydrate
+   * still applies for same-page reloads. Complements Plan P's
+   * `resetPageFocusMode()` (which only clears focus on new-page / template-use).
+   */
+  pageId?: string;
 };
 
 /**
@@ -131,12 +140,26 @@ type Props = {
  * class); `<PageModeToggles>` reads it via `usePageMode()` from anywhere under
  * this provider.
  */
-export function PageModeShell({ children }: Props) {
+export function PageModeShell({ children, pageId }: Props) {
   const [mode, setMode] = useState<PageMode>(DEFAULTS);
   // Keep a live ref to `mode` so the shortcut-event listeners (registered once)
   // can read the current flags without re-subscribing on every toggle.
   const modeRef = useRef(mode);
   modeRef.current = mode;
+
+  // v0.9.9 Plan O #63/#247 — per-page reset. The App Router reuses this client
+  // subtree across `/pages/[pageId]` navigations, so a focus/reader view on one
+  // page would otherwise bleed into the next. Reset to defaults only when
+  // `pageId` actually changes; the initial mount is skipped (prevRef seeded with
+  // the first pageId) so the localStorage hydrate still applies for same-page
+  // reloads.
+  const prevPageIdRef = useRef<string | undefined>(pageId);
+  useEffect(() => {
+    if (prevPageIdRef.current === pageId) return;
+    prevPageIdRef.current = pageId;
+    setMode(DEFAULTS);
+    writePrefs(DEFAULTS);
+  }, [pageId]);
 
   // Hydrate from localStorage on mount. Effect-scoped so SSR + the initial
   // client render agree (no hydration mismatch); the brief flash on

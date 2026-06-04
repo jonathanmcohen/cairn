@@ -76,7 +76,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
 
   return (
     <PageDetailShell>
-      <PageModeShell>
+      <PageModeShell pageId={page.id}>
         {/* #121 — the in-flow CoverPicker is the single canonical "Add cover" /
             "Change cover" affordance. It writes the live `pages.cover` jsonb via
             /api/pages/[pageId]/cover and refreshes so CoverBanner re-renders.
