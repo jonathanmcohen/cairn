@@ -4,6 +4,7 @@ import { Database, FileText } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { resetPageFocusMode } from '@/components/pages/page-mode-shell';
 import { TemplatePreviewDialog } from '@/components/templates/template-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,6 +56,8 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
         throw new Error(body?.error ?? `Request failed (${res.status})`);
       }
       const data = (await res.json()) as InstantiateResponse;
+      // An instantiated template page must open with chrome visible (#247).
+      resetPageFocusMode();
       // "Use template" instantiates into the current workspace; navigate to the
       // freshly minted root page (database-kind templates land on their host page).
       if (data.rootPageId) {
