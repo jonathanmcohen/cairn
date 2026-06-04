@@ -5,6 +5,84 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.9] - 2026-06-04
+
+Remediation release closing 112 findings from the v0.9.8 live browser audit
+(GH #185–#277), grouped into 20 themed plans (A–T). 13 findings were tagged
+`regression` — features marked done in prior releases that had silently broken;
+each is restored with a test that pins the behavior. Migrations **0062–0068**.
+**Operators should redeploy from `ghcr.io/jonathanmcohen/cairn:v0.9.9`** and let
+the entrypoint migrator apply 0062–0068 at boot (a new fail-loud check aborts
+startup on a half-migrated DB rather than serving it).
+
+### P0 regressions restored (A)
+- **Sign-out (#80, broken since v0.1.0, security)** — replaced the CSRF-less
+  `<form action="/api/auth/signout">` with an Auth.js v5 server action; added a
+  `/logout` GET convenience route.
+- **Slash-command parser (#38/76/77/111/112, since v0.9.6)** — range now includes
+  the `/` trigger across all block types; deferred commands delete-on-insert only
+  and restore text on cancel; Enter captured in the menu.
+- **Comment @mentions (#72, since v0.3.0)** — comment bodies render `@[Name](id)`
+  as mention pills instead of raw tokens.
+- **Workspace-general 500 (#1)** — narrowed the over-broad select + added an RSC
+  error boundary so a lagging column degrades gracefully.
+
+### Per-page ACL UI (B, #94/#259 — v0.7.0 backend finally wired)
+- "Share & permissions" on every page's ⋯ menu; invite-by-email, owner role,
+  pending invites, transfer-ownership; audit `page.permission_*` events.
+  Migration **0062**.
+
+### Editor polish, a11y, slash, suggestions (D, E, S)
+- Toolbar tooltips/ARIA; markdown `**`/`~~` input rules; scoped blockquote quotes;
+  selection bubble (color/highlight/turn-into/comment/align/sub-sup/inline-math);
+  heading-collapse; block right-click context menu; outline drawer; lock mode keeps
+  Suggest-edits + Bibliography visible-disabled (#9).
+- Unified slash ergonomics; `/equation` live-preview modal; `/citation` DOI
+  auto-fetch; comment-mention trailing text preserved (#73).
+- Suggestions drawer renders per-suggestion inline diff; whole suggest chip is one
+  target (#53/#54).
+
+### Nav, search, database (C, F, G)
+- Sticky compact sidebar; flex-grown PAGES tree (thin scrollbar, contained
+  overscroll, sticky header, expand/collapse-all); chat-bridge relocated under
+  `/settings/admin`; unified workspace "Export" label.
+- Database row-detail drawer (migration **0063** `db_rows.body`); human-readable
+  property-type labels + 8 new property types (migration **0064**); optimistic
+  add-filter / add-view (popover-race fixed); See-also relative match-strength.
+- Version-history + saved-search live-refetch via a client mutation bus; semantic
+  search snippets + normalized scores (migration **0065**).
+
+### Security UX (H)
+- Consistent SSO buttons; friendly device labels + trusted-proxy-gated IPs in
+  active sessions; E2EE-disabled card reframed as informational; passkey operator
+  env-var names admin-gated; operations docs linked; approval 409 → friendly,
+  self-clearing message.
+
+### Onboarding, theme, empty states (K, J, I)
+- Empty-title new pages with autofocus + naming nudge; new pages default **Draft**
+  (migration **0066**); invite-member modal + copy-link; editable display name;
+  avatar upload. 3-state theme toggle; light-mode contrast fixes; 44px theme
+  swatches with live preview + hex prefill. Iconed empty states + CTAs across
+  favorites/trash/flashcards/bell; Favorites + Inbox sidebar entries; SMTP-off
+  banner CTA; notification matrix gains approval/status/lock types (migration
+  **0067**); fuller webhook event catalog; API-key "Mint a token →" empty state.
+
+### Polish (L, M, N, O, P, Q, R, T)
+- Connector taxonomy disambiguated (Database sync vs Chat bridge); cover picker
+  regrid + de-emphasized default + hex prefill + clickable cover + legacy-orange
+  backfill (migration **0068**); icon-picker tooltips. Consolidated Export menu +
+  HTML/DOCX export + ⌘⇧E shortcut + publish URL preview. Focus/read-mode tooltips,
+  exit affordance, hot-edge sidebar reveal, per-page reset. Template preview drawer
+  + simplified cards. Audit log resolves actor/target names + hides empty-metadata
+  toggle. PAT scope tooltips. Comment edit affordance.
+
+### Process
+- New **e2e UI-acceptance gate**: route-reachability Playwright smoke on the
+  deployed image — the structural fix for the 13 silent regressions (prior scope
+  was checklist-completed without UI acceptance on a real container).
+- Every per-plan gate ran the **full** `vitest run` (not touched-files-only),
+  catching 5 cross-file test breaks before merge.
+
 ## [0.9.8] - 2026-06-01
 
 Hotfix release reconciling the v0.9.7 production browser audit (items A–L).
