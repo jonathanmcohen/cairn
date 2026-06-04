@@ -126,6 +126,37 @@ export function ensureAppShortcuts(): void {
     },
   });
 
+  // v0.9.9 Plan O #57/#236 — page focus/reader toggle shortcuts. The toggle
+  // buttons live in the page header (outside the dispatcher tree and, in focus
+  // mode, hidden by CSS), so each `run` dispatches a window CustomEvent the
+  // <PageModeShell> listens for (same pattern as editor.insertLink). Mod+Shift+.
+  // and Mod+Shift+R are unused in the 'global' scope.
+  registerShortcut({
+    id: 'page.focus',
+    keys: 'Mod+Shift+.',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcut.focusMode',
+    run: () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cairn:page-mode:toggle-focus'));
+      }
+    },
+  });
+
+  registerShortcut({
+    id: 'page.reader',
+    keys: 'Mod+Shift+R',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcut.readerMode',
+    run: () => {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('cairn:page-mode:toggle-reader'));
+      }
+    },
+  });
+
   // v0.9.4 P26 #108 — document the two editor suggestion triggers in the ⌘/
   // shortcuts sheet so the `@` (people) vs `[[`/`@@` (pages) split is
   // discoverable. These are typed-character triggers, not keystroke handlers,

@@ -24,6 +24,8 @@
   "shortcut.insertLink": "Insert link",
   "shortcut.mentionPerson": "Mention a person",
   "shortcut.linkPage": "Link a page",
+  "shortcut.focusMode": "Toggle focus mode",
+  "shortcut.readerMode": "Toggle reader mode",
   "editor.bubble.bold": "Bold",
   "editor.bubble.italic": "Italic",
   "editor.bubble.strike": "Strikethrough",

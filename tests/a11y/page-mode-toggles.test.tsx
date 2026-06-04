@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PageModeShell } from '@/components/pages/page-mode-shell';
 import { PageModeToggles } from '@/components/pages/page-mode-toggles';
+import { __resetRegistered, ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { I18nProvider } from '@/lib/i18n/provider';
+import { resetRegistry } from '@/lib/shortcuts/registry';
 import enMessages from '../../messages/en.json';
 
 /**
@@ -18,8 +20,18 @@ import enMessages from '../../messages/en.json';
  * native title tooltip parity and the stronger pressed-state ring utility.
  */
 
+beforeEach(() => {
+  // v0.9.9 Plan O #57/#236 — populate the shortcut registry so shortcutFor()
+  // resolves the focus/reader key glyphs the toggle tooltips append.
+  resetRegistry();
+  __resetRegistered();
+  ensureAppShortcuts();
+});
+
 afterEach(() => {
   cleanup();
+  resetRegistry();
+  __resetRegistered();
 });
 
 function renderToggles() {
@@ -66,6 +78,15 @@ describe('a11y: page-mode toggles (JSDOM smoke)', () => {
     expect(reader.getAttribute('title')).toBeTruthy();
     // aria-pressed reflects state and starts off
     expect(reader.getAttribute('aria-pressed')).toBe('false');
+  });
+
+  it('both toggle tooltips advertise their keyboard shortcut glyph (#57/#236)', () => {
+    renderToggles();
+    const focus = screen.getByRole('button', { name: /focus mode/i });
+    const reader = screen.getByRole('button', { name: /reader mode/i });
+    // mac glyphs (⌘⇧.) OR non-mac text (Ctrl+Shift+.) depending on platform.
+    expect(focus.getAttribute('title')).toMatch(/⌘⇧\.|Ctrl\+Shift\+\./);
+    expect(reader.getAttribute('title')).toMatch(/⌘⇧R|Ctrl\+Shift\+R/);
   });
 
   it('reader toggle carries an explicit pressed-state ring utility', () => {

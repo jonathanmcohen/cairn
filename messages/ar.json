@@ -24,6 +24,8 @@
   "shortcut.insertLink": "إدراج رابط",
   "shortcut.mentionPerson": "الإشارة إلى شخص",
   "shortcut.linkPage": "ربط صفحة",
+  "shortcut.focusMode": "تبديل وضع التركيز",
+  "shortcut.readerMode": "تبديل وضع القراءة",
   "editor.bubble.bold": "غامق",
   "editor.bubble.italic": "مائل",
   "editor.bubble.strike": "يتوسطه خط",

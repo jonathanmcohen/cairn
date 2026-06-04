@@ -7,6 +7,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react';
 
@@ -130,6 +131,10 @@ type Props = {
  */
 export function PageModeShell({ children }: Props) {
   const [mode, setMode] = useState<PageMode>(DEFAULTS);
+  // Keep a live ref to `mode` so the shortcut-event listeners (registered once)
+  // can read the current flags without re-subscribing on every toggle.
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   // Hydrate from localStorage on mount. Effect-scoped so SSR + the initial
   // client render agree (no hydration mismatch); the brief flash on
@@ -183,6 +188,23 @@ export function PageModeShell({ children }: Props) {
       return next;
     });
   }, []);
+
+  // v0.9.9 Plan O #57/#236 — keyboard-shortcut toggles. The `page.focus` /
+  // `page.reader` registry entries dispatch these window CustomEvents because
+  // the toggle buttons live outside the dispatcher tree (and are CSS-hidden in
+  // focus mode). Functional setters keep the listener fresh without
+  // re-subscribing on every toggle.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const onToggleFocus = () => setFocus(!modeRef.current.focus);
+    const onToggleReader = () => setReader(!modeRef.current.reader);
+    window.addEventListener('cairn:page-mode:toggle-focus', onToggleFocus);
+    window.addEventListener('cairn:page-mode:toggle-reader', onToggleReader);
+    return () => {
+      window.removeEventListener('cairn:page-mode:toggle-focus', onToggleFocus);
+      window.removeEventListener('cairn:page-mode:toggle-reader', onToggleReader);
+    };
+  }, [setFocus, setReader]);
 
   const value = useMemo<ModeCtx>(
     () => ({ focus: mode.focus, reader: mode.reader, setFocus, setReader }),

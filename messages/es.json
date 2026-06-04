@@ -24,6 +24,8 @@
   "shortcut.insertLink": "Insertar enlace",
   "shortcut.mentionPerson": "Mencionar a una persona",
   "shortcut.linkPage": "Enlazar una página",
+  "shortcut.focusMode": "Alternar modo concentración",
+  "shortcut.readerMode": "Alternar modo lectura",
   "editor.bubble.bold": "Negrita",
   "editor.bubble.italic": "Cursiva",
   "editor.bubble.strike": "Tachado",
