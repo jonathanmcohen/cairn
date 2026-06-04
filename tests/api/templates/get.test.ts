@@ -54,7 +54,9 @@ const PAGE_PAYLOAD = {
       icon: null,
       content: {
         type: 'doc',
-        content: [{ type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Agenda' }] }],
+        content: [
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Agenda' }] },
+        ],
       },
     },
   ],
@@ -94,7 +96,12 @@ async function call(id: string): Promise<{ status: number; body: unknown }> {
 describe('GET /api/templates/[id]', () => {
   it('200 + preview for a built-in template, for any member', async () => {
     const u = await createTestWorkspaceWithUser(getDb(), { role: 'viewer' });
-    const id = await seedTemplate({ name: 'Welcome', workspaceId: null, builtIn: true, visibility: 'public' });
+    const id = await seedTemplate({
+      name: 'Welcome',
+      workspaceId: null,
+      builtIn: true,
+      visibility: 'public',
+    });
     await setUser(u.userId);
     const r = await call(id);
     expect(r.status).toBe(200);
@@ -108,7 +115,11 @@ describe('GET /api/templates/[id]', () => {
 
   it('404 for a workspace template in another workspace', async () => {
     const owner = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
-    const id = await seedTemplate({ name: 'Theirs', workspaceId: owner.workspaceId, visibility: 'workspace' });
+    const id = await seedTemplate({
+      name: 'Theirs',
+      workspaceId: owner.workspaceId,
+      visibility: 'workspace',
+    });
     const other = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
     await setUser(other.userId);
     const r = await call(id);
