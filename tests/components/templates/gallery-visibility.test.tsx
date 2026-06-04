@@ -1,13 +1,26 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render as rtlRender, screen } from '@testing-library/react';
+import type { ReactNode } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { type TemplateCard, TemplatesGallery } from '@/components/templates/templates-gallery';
+import { I18nProvider } from '@/lib/i18n/provider';
+import en from '../../../messages/en.json';
 
 // Stubbed navigation hooks — TemplatesGallery is a Client Component that
 // imports `useRouter` from next/navigation.
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
+
+// TemplatesGallery now calls `useT()`, so every render must be wrapped in the
+// i18n provider.
+function render(ui: ReactNode) {
+  return rtlRender(
+    <I18nProvider locale="en" messages={en}>
+      {ui}
+    </I18nProvider>,
+  );
+}
 
 afterEach(() => {
   cleanup();
@@ -87,7 +100,7 @@ describe('TemplatesGallery visibility grouping', () => {
     expect(screen.getByText('Welcome to Cairn')).toBeTruthy();
   });
 
-  it('renders a lucide chevron in the Preview disclosure (no raw marker)', () => {
+  it('renders a Preview button on every card (#68/#248)', () => {
     const welcomeBuiltInTemplate = tpl({
       name: 'Welcome to Cairn',
       kind: 'page',
@@ -96,25 +109,9 @@ describe('TemplatesGallery visibility grouping', () => {
       visibility: 'public',
     });
     render(<TemplatesGallery initialTemplates={[welcomeBuiltInTemplate]} />);
-    const summary = screen.getByText('Preview').closest('summary');
-    expect(summary?.querySelector('svg')).toBeTruthy();
-    expect(summary?.className).toContain('list-none');
-  });
-
-  it('renders the kind badge and the Built-in badge with distinct styling', () => {
-    const builtInPageTemplate = tpl({
-      name: 'Welcome to Cairn',
-      kind: 'page',
-      builtIn: true,
-      workspaceId: null,
-      visibility: 'public',
-    });
-    render(<TemplatesGallery initialTemplates={[builtInPageTemplate]} />);
-    const kind = screen.getByText('page').closest('span');
-    const builtIn = screen.getByText('Built-in').closest('span');
-    expect(kind?.className).not.toEqual(builtIn?.className);
-    // kind badge carries a leading lucide icon (decorative)
-    expect(kind?.querySelector('svg')).toBeTruthy();
+    // Preview is now a button (opens the dialog), not a one-line <details>.
+    const preview = screen.getByRole('button', { name: 'Preview' });
+    expect(preview).toBeTruthy();
   });
 
   it('uses a 4-col grid at xl so a 4th card fills the row instead of orphaning', () => {

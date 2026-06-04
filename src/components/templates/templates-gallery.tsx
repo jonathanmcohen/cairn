@@ -1,13 +1,15 @@
 'use client';
 
-import { ChevronRight, Database, FileText } from 'lucide-react';
+import { Database, FileText } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { TemplatePreviewDialog } from '@/components/templates/template-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import type { TemplateVisibility } from '@/db/schema';
+import { useT } from '@/lib/i18n/provider';
 
 export type TemplateCard = {
   id: string;
@@ -21,12 +23,6 @@ export type TemplateCard = {
 };
 
 type InstantiateResponse = { rootPageId: string | null; rootDatabaseId: string | null };
-
-const BUILT_IN_DESCRIPTIONS: Record<string, string> = {
-  'Welcome to Cairn': 'A small starter set: a home page, a tasks page, and a notes scratchpad.',
-  'Meeting notes': 'A blank meeting page with attendees, agenda, and action-items sections.',
-  'Weekly planner': 'A week-at-a-glance page with this-week, goals, and follow-ups headers.',
-};
 
 // v0.9 G4 P25 — gallery groups by visibility tier. Render order:
 //   workspace (most relevant)
@@ -43,9 +39,11 @@ export type TemplatesGalleryProps = {
 export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: TemplatesGalleryProps) {
   const router = useRouter();
   const confirm = useConfirm();
+  const t = useT();
   const [templates, setTemplates] = useState<TemplateCard[]>(initialTemplates);
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [previewId, setPreviewId] = useState<string | null>(null);
 
   async function onUse(id: string) {
     setBusy(id);
@@ -131,25 +129,25 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
               {v}
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
-              {rows.map((t) => (
-                <Card key={t.id} className="flex flex-col">
+              {rows.map((tpl) => (
+                <Card key={tpl.id} className="flex flex-col">
                   <CardHeader>
-                    <CardTitle className="text-base">{t.name}</CardTitle>
+                    <CardTitle className="text-base">{tpl.name}</CardTitle>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                       <span className="inline-flex items-center gap-1 rounded border border-transparent bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                        {t.kind === 'database' ? (
+                        {tpl.kind === 'database' ? (
                           <Database aria-hidden className="size-3" />
                         ) : (
                           <FileText aria-hidden className="size-3" />
                         )}
-                        {t.kind}
+                        {tpl.kind}
                       </span>
-                      {t.builtIn ? (
+                      {tpl.builtIn ? (
                         <span className="rounded border border-transparent bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
                           Built-in
                         </span>
                       ) : null}
-                      {activeWorkspaceId && t.workspaceId === activeWorkspaceId ? (
+                      {activeWorkspaceId && tpl.workspaceId === activeWorkspaceId ? (
                         <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
                           In this workspace
                         </span>
@@ -157,35 +155,32 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                     </div>
                   </CardHeader>
                   <CardContent className="mt-auto flex flex-col gap-2">
-                    {t.builtIn && BUILT_IN_DESCRIPTIONS[t.name] ? (
-                      <details className="group text-xs text-muted-foreground">
-                        <summary className="flex cursor-pointer list-none select-none items-center gap-1 [&::-webkit-details-marker]:hidden">
-                          <ChevronRight
-                            aria-hidden
-                            className="size-3.5 shrink-0 transition-transform group-open:rotate-90"
-                          />
-                          Preview
-                        </summary>
-                        <p className="mt-1">{BUILT_IN_DESCRIPTIONS[t.name]}</p>
-                      </details>
-                    ) : null}
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="self-start px-1 text-muted-foreground"
+                      onClick={() => setPreviewId(tpl.id)}
+                    >
+                      {t('templates.preview.open')}
+                    </Button>
                     <div className="flex gap-2">
                       <Button
                         type="button"
                         size="sm"
-                        disabled={busy === t.id}
-                        onClick={() => void onUse(t.id)}
+                        disabled={busy === tpl.id}
+                        onClick={() => void onUse(tpl.id)}
                       >
-                        {busy === t.id ? 'Working…' : 'Use template'}
+                        {busy === tpl.id ? 'Working…' : 'Use template'}
                       </Button>
-                      {t.builtIn ? null : (
+                      {tpl.builtIn ? null : (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           className="text-destructive hover:text-destructive"
-                          disabled={busy === t.id}
-                          onClick={() => void onDelete(t.id)}
+                          disabled={busy === tpl.id}
+                          onClick={() => void onDelete(tpl.id)}
                         >
                           Delete
                         </Button>
@@ -198,6 +193,17 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
           </section>
         );
       })}
+
+      {previewId ? (
+        <TemplatePreviewDialog
+          templateId={previewId}
+          name={templates.find((x) => x.id === previewId)?.name ?? ''}
+          open
+          onOpenChange={(o) => {
+            if (!o) setPreviewId(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }
