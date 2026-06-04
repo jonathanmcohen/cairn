@@ -133,23 +133,28 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                 <Card key={tpl.id} className="flex flex-col">
                   <CardHeader>
                     <CardTitle className="text-base">{tpl.name}</CardTitle>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                      <span className="inline-flex items-center gap-1 rounded border border-transparent bg-secondary px-1.5 py-0.5 text-xs font-medium text-secondary-foreground">
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                      <span
+                        data-testid={
+                          tpl.kind === 'database' ? 'tpl-kind-database' : 'tpl-kind-page'
+                        }
+                        className="inline-flex items-center gap-1 font-medium text-foreground"
+                      >
                         {tpl.kind === 'database' ? (
-                          <Database aria-hidden className="size-3" />
+                          <Database aria-hidden className="size-3.5" />
                         ) : (
-                          <FileText aria-hidden className="size-3" />
+                          <FileText aria-hidden className="size-3.5" />
                         )}
-                        {tpl.kind}
+                        {tpl.kind === 'database'
+                          ? t('templates.kind.database')
+                          : t('templates.kind.page')}
                       </span>
                       {tpl.builtIn ? (
-                        <span className="rounded border border-transparent bg-primary px-1.5 py-0.5 text-xs font-medium text-primary-foreground">
-                          Built-in
-                        </span>
+                        <span className="text-muted-foreground">{t('templates.builtIn')}</span>
                       ) : null}
                       {activeWorkspaceId && tpl.workspaceId === activeWorkspaceId ? (
-                        <span className="rounded border bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-                          In this workspace
+                        <span className="text-muted-foreground">
+                          {t('templates.inThisWorkspace')}
                         </span>
                       ) : null}
                     </div>
