@@ -836,5 +836,21 @@
   "auditLog.loadMore": "Cargar más",
   "auditLog.loading": "Cargando…",
   "auditLog.error.load": "No se pudo cargar el registro de auditoría ({status})",
-  "auditLog.error.loadMore": "No se pudieron cargar más entradas ({status})"
+  "auditLog.error.loadMore": "No se pudieron cargar más entradas ({status})",
+  "devTokens.scope.pages:read.tip": "pages:read — Leer páginas y su contenido (títulos, cuerpo, bloques). Sin cambios.",
+  "devTokens.scope.pages:write.tip": "pages:write — Crear y editar páginas y su contenido. No puede eliminar.",
+  "devTokens.scope.pages:destructive.tip": "pages:destructive — Eliminar páginas y sus subpáginas (irreversible).",
+  "devTokens.scope.databases:read.tip": "databases:read — Leer bases de datos, vistas, propiedades y filas. Sin cambios.",
+  "devTokens.scope.databases:write.tip": "databases:write — Crear y editar bases de datos, propiedades, vistas y filas. No puede eliminar.",
+  "devTokens.scope.databases:destructive.tip": "databases:destructive — Eliminar bases de datos, propiedades y filas (irreversible).",
+  "devTokens.scope.comments:read.tip": "comments:read — Leer comentarios e hilos de discusión. Sin cambios.",
+  "devTokens.scope.comments:write.tip": "comments:write — Publicar y editar comentarios y respuestas. No puede eliminar.",
+  "devTokens.scope.comments:destructive.tip": "comments:destructive — Eliminar comentarios y resolver hilos (irreversible).",
+  "devTokens.scope.files:read.tip": "files:read — Descargar archivos y leer metadatos de adjuntos. Sin cambios.",
+  "devTokens.scope.files:write.tip": "files:write — Subir archivos y adjuntarlos a páginas. No puede eliminar.",
+  "devTokens.scope.files:destructive.tip": "files:destructive — Eliminar permanentemente archivos subidos (irreversible).",
+  "devTokens.scope.mcp:read.tip": "mcp:read — Permitir que clientes MCP usen herramientas de solo lectura (buscar, obtener). Sin cambios.",
+  "devTokens.scope.mcp:write.tip": "mcp:write — Permitir que clientes MCP usen herramientas que crean o editan contenido. No puede eliminar.",
+  "devTokens.scope.mcp:destructive.tip": "mcp:destructive — Permitir que clientes MCP usen herramientas destructivas que eliminan contenido (irreversible).",
+  "devTokens.scope.admin.tip": "admin — Administración completa del espacio de trabajo: miembros, ajustes, facturación y todos los datos. Conceder con extremo cuidado."
 }

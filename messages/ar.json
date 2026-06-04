@@ -840,5 +840,21 @@
   "auditLog.loadMore": "تحميل المزيد",
   "auditLog.loading": "جارٍ التحميل…",
   "auditLog.error.load": "تعذّر تحميل سجل التدقيق ({status})",
-  "auditLog.error.loadMore": "تعذّر تحميل المزيد من الإدخالات ({status})"
+  "auditLog.error.loadMore": "تعذّر تحميل المزيد من الإدخالات ({status})",
+  "devTokens.scope.pages:read.tip": "pages:read — قراءة الصفحات ومحتواها (العناوين والنص والكتل). دون أي تغييرات.",
+  "devTokens.scope.pages:write.tip": "pages:write — إنشاء الصفحات ومحتواها وتعديلها. لا يمكن الحذف.",
+  "devTokens.scope.pages:destructive.tip": "pages:destructive — حذف الصفحات وصفحاتها الفرعية (لا يمكن التراجع).",
+  "devTokens.scope.databases:read.tip": "databases:read — قراءة قواعد البيانات والعروض والخصائص والصفوف. دون أي تغييرات.",
+  "devTokens.scope.databases:write.tip": "databases:write — إنشاء قواعد البيانات والخصائص والعروض والصفوف وتعديلها. لا يمكن الحذف.",
+  "devTokens.scope.databases:destructive.tip": "databases:destructive — حذف قواعد البيانات والخصائص والصفوف (لا يمكن التراجع).",
+  "devTokens.scope.comments:read.tip": "comments:read — قراءة التعليقات وسلاسل النقاش. دون أي تغييرات.",
+  "devTokens.scope.comments:write.tip": "comments:write — نشر التعليقات والردود وتعديلها. لا يمكن الحذف.",
+  "devTokens.scope.comments:destructive.tip": "comments:destructive — حذف التعليقات وإغلاق السلاسل (لا يمكن التراجع).",
+  "devTokens.scope.files:read.tip": "files:read — تنزيل الملفات وقراءة بيانات المرفقات. دون أي تغييرات.",
+  "devTokens.scope.files:write.tip": "files:write — رفع الملفات وإرفاقها بالصفحات. لا يمكن الحذف.",
+  "devTokens.scope.files:destructive.tip": "files:destructive — حذف الملفات المرفوعة نهائيًا (لا يمكن التراجع).",
+  "devTokens.scope.mcp:read.tip": "mcp:read — السماح لعملاء MCP باستخدام أدوات القراءة فقط (بحث، جلب). دون أي تغييرات.",
+  "devTokens.scope.mcp:write.tip": "mcp:write — السماح لعملاء MCP باستخدام أدوات تنشئ المحتوى أو تعدله. لا يمكن الحذف.",
+  "devTokens.scope.mcp:destructive.tip": "mcp:destructive — السماح لعملاء MCP باستخدام أدوات مدمرة تحذف المحتوى (لا يمكن التراجع).",
+  "devTokens.scope.admin.tip": "admin — إدارة كاملة لمساحة العمل: الأعضاء والإعدادات والفوترة وجميع البيانات. امنحه بحذر شديد."
 }

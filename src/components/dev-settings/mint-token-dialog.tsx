@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { MCP_TOOL_IDS } from '@/lib/auth/mcp-tool-ids';
+import { useT } from '@/lib/i18n/provider';
 
 export type MintResult = {
   token: string;
@@ -101,6 +102,7 @@ export function MintTokenDialog({
   // previously-focused element (the "Mint new token" trigger) on close. The
   // hook also focuses the first focusable child on mount.
   const dialogRef = useFocusTrap<HTMLDivElement>(true);
+  const t = useT();
   const [name, setName] = useState('');
   const [scopes, setScopes] = useState<string[]>(PRESETS['Read-only'] as string[]);
   const [mcpTools, setMcpTools] = useState<string[]>([]);
@@ -201,7 +203,11 @@ export function MintTokenDialog({
           <summary className="cursor-pointer text-sm">Custom scopes ({scopes.length})</summary>
           <div className="mt-2 grid grid-cols-2 gap-1 text-xs">
             {ALL_SCOPES.map((s) => (
-              <label key={s} className="flex items-center gap-1">
+              <label
+                key={s}
+                className="flex items-center gap-1"
+                title={t(`devTokens.scope.${s}.tip`)}
+              >
                 <input
                   type="checkbox"
                   checked={scopes.includes(s)}

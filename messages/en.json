@@ -836,5 +836,21 @@
   "auditLog.loadMore": "Load more",
   "auditLog.loading": "Loading…",
   "auditLog.error.load": "Failed to load audit log ({status})",
-  "auditLog.error.loadMore": "Failed to load more ({status})"
+  "auditLog.error.loadMore": "Failed to load more ({status})",
+  "devTokens.scope.pages:read.tip": "pages:read — Read pages and their content (titles, body, blocks). No changes.",
+  "devTokens.scope.pages:write.tip": "pages:write — Create and edit pages and their content. Cannot delete.",
+  "devTokens.scope.pages:destructive.tip": "pages:destructive — Delete pages and their children (irreversible).",
+  "devTokens.scope.databases:read.tip": "databases:read — Read databases, views, properties, and rows. No changes.",
+  "devTokens.scope.databases:write.tip": "databases:write — Create and edit databases, properties, views, and rows. Cannot delete.",
+  "devTokens.scope.databases:destructive.tip": "databases:destructive — Delete databases, properties, and rows (irreversible).",
+  "devTokens.scope.comments:read.tip": "comments:read — Read comments and discussion threads. No changes.",
+  "devTokens.scope.comments:write.tip": "comments:write — Post and edit comments and replies. Cannot delete.",
+  "devTokens.scope.comments:destructive.tip": "comments:destructive — Delete comments and resolve threads (irreversible).",
+  "devTokens.scope.files:read.tip": "files:read — Download files and read attachment metadata. No changes.",
+  "devTokens.scope.files:write.tip": "files:write — Upload files and attach them to pages. Cannot delete.",
+  "devTokens.scope.files:destructive.tip": "files:destructive — Permanently delete uploaded files (irreversible).",
+  "devTokens.scope.mcp:read.tip": "mcp:read — Let MCP clients call read-only tools (search, fetch). No changes.",
+  "devTokens.scope.mcp:write.tip": "mcp:write — Let MCP clients call tools that create or edit content. Cannot delete.",
+  "devTokens.scope.mcp:destructive.tip": "mcp:destructive — Let MCP clients call destructive tools that delete content (irreversible).",
+  "devTokens.scope.admin.tip": "admin — Full workspace administration: members, settings, billing, and all data. Grant with extreme care."
 }
