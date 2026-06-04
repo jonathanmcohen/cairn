@@ -3,17 +3,31 @@ import { z } from 'zod';
 import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { deleteComment } from '@/lib/comments/delete';
+import { editComment } from '@/lib/comments/edit';
 import { reopenComment, resolveComment } from '@/lib/comments/resolve';
 
 type RouteCtx = { params: Promise<{ commentId: string }> };
 
-const PatchInput = z.object({ resolved: z.boolean() });
+const PatchInput = z.union([
+  z.object({ resolved: z.boolean() }),
+  z.object({ body: z.string().min(1).max(10_000) }),
+]);
 
 export async function PATCH(req: Request, { params }: RouteCtx): Promise<Response> {
   try {
     const { commentId } = await params;
     const ctx = await requireRole('editor');
     const parsed = PatchInput.parse(await req.json());
+    if ('body' in parsed) {
+      const updated = await editComment(getDb(), {
+        commentId,
+        workspaceId: ctx.workspaceId,
+        actorId: ctx.userId,
+        actorRole: ctx.role,
+        body: parsed.body,
+      });
+      return NextResponse.json(updated);
+    }
     const scope = { commentId, workspaceId: ctx.workspaceId };
     const updated = parsed.resolved
       ? await resolveComment(getDb(), scope)
