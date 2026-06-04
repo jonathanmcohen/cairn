@@ -10,6 +10,7 @@ import {
   useRef,
   useState,
 } from 'react';
+import { ExitFocusControl } from './exit-focus-control';
 
 /**
  * Per-device localStorage key holding `{ focus: boolean; reader: boolean }`.
@@ -216,6 +217,11 @@ export function PageModeShell({ children }: Props) {
       <div data-page-mode-shell="" data-focus={mode.focus} data-reader={mode.reader}>
         {children}
       </div>
+      {/* v0.9.9 Plan O #58/#237 — these fixed controls live OUTSIDE the shell
+          body and carry none of the data-cairn-* attributes, so the
+          `cairn-focus-mode` hide rule never collapses them: they stay visible
+          as the escape hatch while focus mode hides the rest of the chrome. */}
+      {mode.focus && <ExitFocusControl onExit={() => setFocus(false)} />}
     </Ctx.Provider>
   );
 }
