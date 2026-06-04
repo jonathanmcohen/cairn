@@ -144,8 +144,10 @@ export function VirtualizedRowBody({
             >
               {/* v0.9.9 F3 #245 — left gutter: insert (+) + actions (⋮⋮) handles,
                   shown on row hover. Replaces the inline trailing affordances. */}
+              {/* biome-ignore lint/a11y/useSemanticElements: <td> needs a <table> parent; this is the row's action gridcell in the div-based ARIA grid, so role="row" owns only cells (satisfies aria-required-children). */}
               <div
                 data-row-gutter
+                role="cell"
                 className="flex shrink-0 items-center justify-center gap-0.5 opacity-0 focus-within:opacity-100 group-hover:opacity-100"
                 style={{ width: 32, minWidth: 32 }}
               >
