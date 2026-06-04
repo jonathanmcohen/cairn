@@ -83,6 +83,27 @@ function writePrefs(next: PageMode): void {
   }
 }
 
+/** Same-tab signal that focus mode must drop (e.g. a new page was just created). */
+export const PAGE_FOCUS_RESET_EVENT = 'cairn:page-focus-reset';
+
+/**
+ * Clears the persisted focus flag (reader is intentionally preserved) and
+ * notifies any mounted <PageModeShell> in this tab. Call from every new-page
+ * creation path so a freshly created page never opens with chrome hidden
+ * (#247). Safe to call from anywhere; no-ops on the server.
+ */
+export function resetPageFocusMode(): void {
+  if (typeof window === 'undefined') return;
+  try {
+    const prev = readPrefs();
+    const next: PageMode = { focus: false, reader: prev.reader };
+    writePrefs(next);
+    window.dispatchEvent(new CustomEvent(PAGE_FOCUS_RESET_EVENT));
+  } catch {
+    // ignore — best effort
+  }
+}
+
 type Props = {
   children: ReactNode;
 };
@@ -128,6 +149,24 @@ export function PageModeShell({ children }: Props) {
       document.documentElement.classList.remove('cairn-focus-mode');
     };
   }, [mode.focus]);
+
+  // Listen for focus-reset signals: the same-tab CustomEvent dispatched by
+  // resetPageFocusMode() (a new page was just created) AND the cross-tab
+  // `storage` event so a reset in another tab also lands here (#247).
+  useEffect(() => {
+    function onReset() {
+      setMode((prev) => ({ ...prev, focus: false }));
+    }
+    function onStorage(e: StorageEvent) {
+      if (e.key === PAGE_MODE_STORAGE_KEY) setMode(readPrefs());
+    }
+    window.addEventListener(PAGE_FOCUS_RESET_EVENT, onReset);
+    window.addEventListener('storage', onStorage);
+    return () => {
+      window.removeEventListener(PAGE_FOCUS_RESET_EVENT, onReset);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
 
   const setFocus = useCallback((v: boolean) => {
     setMode((prev) => {
