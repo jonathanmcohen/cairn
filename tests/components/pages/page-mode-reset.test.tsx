@@ -7,6 +7,8 @@ import {
   resetPageFocusMode,
   usePageMode,
 } from '@/components/pages/page-mode-shell';
+import { I18nProvider } from '@/lib/i18n/provider';
+import enMessages from '../../../messages/en.json';
 
 function Probe() {
   const { focus, reader } = usePageMode();
@@ -33,10 +35,15 @@ describe('resetPageFocusMode', () => {
       JSON.stringify({ focus: true, reader: true }),
     );
 
+    // v0.9.9 Plan O #58 — focus mode now mounts the i18n-using ExitFocusControl
+    // + SidebarHotEdge, so the shell must sit under an <I18nProvider> when focus
+    // hydrates true.
     render(
-      <PageModeShell>
-        <Probe />
-      </PageModeShell>,
+      <I18nProvider locale="en" messages={enMessages as never}>
+        <PageModeShell>
+          <Probe />
+        </PageModeShell>
+      </I18nProvider>,
     );
 
     // Hydrated on mount.
