@@ -1,5 +1,13 @@
 {
   "app.title": "Cairn",
+  "templates.preview.open": "Preview",
+  "templates.preview.title": "{name}",
+  "templates.preview.loading": "Loading preview…",
+  "templates.preview.error": "Could not load this preview.",
+  "templates.preview.empty": "This template has no content to preview.",
+  "templates.preview.close": "Close",
+  "templates.preview.kindPage": "Page template",
+  "templates.preview.kindDatabase": "Database template",
   "shortcuts.title": "Keyboard shortcuts",
   "shortcuts.close": "Close shortcuts",
   "shortcuts.group.global": "Global",

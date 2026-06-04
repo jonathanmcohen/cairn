@@ -1,5 +1,13 @@
 {
   "app.title": "كَيرن",
+  "templates.preview.open": "معاينة",
+  "templates.preview.title": "{name}",
+  "templates.preview.loading": "جارٍ تحميل المعاينة…",
+  "templates.preview.error": "تعذّر تحميل هذه المعاينة.",
+  "templates.preview.empty": "لا يحتوي هذا القالب على محتوى للمعاينة.",
+  "templates.preview.close": "إغلاق",
+  "templates.preview.kindPage": "قالب صفحة",
+  "templates.preview.kindDatabase": "قالب قاعدة بيانات",
   "shortcuts.title": "اختصارات لوحة المفاتيح",
   "shortcuts.close": "إغلاق الاختصارات",
   "shortcuts.group.global": "عام",

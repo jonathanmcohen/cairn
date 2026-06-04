@@ -1,5 +1,13 @@
 {
   "app.title": "Cairn",
+  "templates.preview.open": "Vista previa",
+  "templates.preview.title": "{name}",
+  "templates.preview.loading": "Cargando vista previa…",
+  "templates.preview.error": "No se pudo cargar esta vista previa.",
+  "templates.preview.empty": "Esta plantilla no tiene contenido para previsualizar.",
+  "templates.preview.close": "Cerrar",
+  "templates.preview.kindPage": "Plantilla de página",
+  "templates.preview.kindDatabase": "Plantilla de base de datos",
   "shortcuts.title": "Atajos de teclado",
   "shortcuts.close": "Cerrar atajos",
   "shortcuts.group.global": "Globales",
