@@ -1,6 +1,6 @@
 {
   "name": "cairn",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "private": true,
   "description": "Self-hosted, Notion-style block-based notes",
   "license": "MIT",
