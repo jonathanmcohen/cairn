@@ -5,6 +5,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.10] - 2026-06-04
+
+Hotfix for a v0.9.9 upgrade outage.
+
+### Fixed
+- **Migrations 0063–0068 skipped on upgrade (boot crash-loop).** Their journal
+  `when` timestamps were stamped *earlier* than 0062's. drizzle's migrator runs
+  an entry only when `max(applied.created_at) < entry.when`, so on any database
+  that already had 0062 applied it silently skipped 0063–0068; the boot-time
+  `assertNoPendingMigrations` guard then refused to serve (`FATAL: 6 pending
+  migration(s) … first pending: 0063_db_row_body`). Re-stamped 0063–0068 with
+  strictly-increasing `when` values above 0062. No SQL/schema change — the
+  migrations themselves were correct, only their ordering metadata was wrong.
+  Fresh installs were unaffected (the Testcontainers harness applies `*.sql` in
+  filename order, which is why CI never caught it).
+- Added `tests/lib/upgrade/journal-monotonic.test.ts` to enforce the drizzle
+  upgrade invariant (newest migration holds the max `when`; idx ≥ 62 strictly
+  increasing) so a non-monotonic journal can never ship again.
+
+**Operators on v0.9.9:** redeploy from `ghcr.io/jonathanmcohen/cairn:v0.9.10`.
+The entrypoint migrator will apply 0063–0068 on boot. No manual DB steps.
+
 ## [0.9.9] - 2026-06-04
 
 Remediation release closing 112 findings from the v0.9.8 live browser audit
