@@ -290,7 +290,7 @@ export function SearchPalette({
             </Command.Group>
           )}
           {loading && (
-            <div role="status" className="space-y-2 px-4 py-2" aria-label="Searching">
+            <div role="status" className="space-y-2 px-4 py-2" aria-label={t('search.searching')}>
               {[0, 1, 2].map((i) => (
                 <Skeleton key={i} className="h-4 w-full" />
               ))}

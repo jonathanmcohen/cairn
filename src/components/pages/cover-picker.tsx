@@ -324,7 +324,7 @@ export function CoverPicker({
               {tab === 'upload' && (
                 <div className="space-y-3">
                   {saving ? (
-                    <div role="status" aria-label="Uploading cover">
+                    <div role="status" aria-label={t('cover.uploading')}>
                       <Skeleton className="h-[200px] w-full" />
                     </div>
                   ) : (
