@@ -9,7 +9,7 @@ import useSWR from 'swr';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
-import { useT } from '@/lib/i18n/provider';
+import { copy } from '@/lib/copy/messages';
 
 type FeedNotification = {
   id: string;
@@ -87,7 +87,6 @@ export function NotificationDrawer({
   onOpenChange: (next: boolean) => void;
   onMarked?: () => void;
 }) {
-  const t = useT();
   const titleId = useId();
   const router = useRouter();
   const trapRef = useFocusTrap<HTMLDivElement>(open);
@@ -181,7 +180,11 @@ export function NotificationDrawer({
 
         <div className="flex-1 overflow-y-auto p-4 text-sm">
           {isLoading && !data ? (
-            <div role="status" className="space-y-3 py-2" aria-label={t('notifications.loading')}>
+            <div
+              role="status"
+              className="space-y-3 py-2"
+              aria-label={copy('notifications.loading')}
+            >
               {[0, 1, 2, 3].map((i) => (
                 <div key={i} className="flex items-start gap-3">
                   <Skeleton className="h-8 w-8 rounded-full" />

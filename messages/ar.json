@@ -215,7 +215,6 @@
   "notifications.type.pageStatus": "تغييرات حالة الصفحة",
   "notifications.type.pageLock": "أقفال الصفحة",
   "notifications.smtp.disabledBanner": "إشعارات البريد الإلكتروني معطّلة — لم يتم تكوين خادم SMTP. لا تزال إشعارات التطبيق تعمل.",
-  "notifications.loading": "جارٍ تحميل الإشعارات",
   "notifications.smtp.disabledReason": "يتطلب البريد الإلكتروني خادم SMTP مُكوَّنًا، وهو غير متوفر في نسخة كَيرن هذه.",
   "notifications.smtp.docsLink": "إعداد تسليم البريد الإلكتروني",
   "sidebar.nav.favorites": "المفضلة",

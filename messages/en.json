@@ -215,7 +215,6 @@
   "notifications.type.pageStatus": "Page status changes",
   "notifications.type.pageLock": "Page locks",
   "notifications.smtp.disabledBanner": "Email notifications are disabled — no SMTP server is configured. In-app notifications still work.",
-  "notifications.loading": "Loading notifications",
   "notifications.smtp.disabledReason": "Email requires a configured SMTP server, which this Cairn instance does not have.",
   "notifications.smtp.docsLink": "Configure email delivery",
   "sidebar.nav.favorites": "Favorites",
