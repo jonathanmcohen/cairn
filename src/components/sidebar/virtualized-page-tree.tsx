@@ -259,7 +259,7 @@ function PageTreeRow({
     <li key={rowKey} data-virtual-row="" data-row-kind="page" data-depth={node.depth} style={style}>
       <PageRowContextMenu node={node} api={api}>
         <div
-          className="group relative flex items-center gap-1.5 rounded pr-1 text-sm hover:bg-accent focus-within:bg-accent"
+          className="group relative flex items-center gap-1.5 rounded pr-1 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] hover:bg-accent focus-within:bg-accent"
           style={{ paddingLeft: `${node.depth * DEPTH_INDENT_PX + 8}px` }}
         >
           {api.renaming ? (
@@ -273,7 +273,7 @@ function PageTreeRow({
                 autoFocus
                 aria-label={t('pageRow.rename')}
                 defaultValue={node.title}
-                className="min-w-0 flex-1 rounded border bg-background px-1 py-0.5 text-sm outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+                className="min-w-0 flex-1 rounded border bg-background px-1 py-0.5 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
