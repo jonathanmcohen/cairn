@@ -1,14 +1,26 @@
 name: Publish postgres-pgvector image
 
 # Builds + pushes ghcr.io/jonathanmcohen/postgres-pgvector. Triggers:
-# - on workflow_dispatch (manual)
-# - on push to main when the Dockerfile or this workflow changes
+# - workflow_dispatch (manual; force a rebuild)
+# - push to main when the Dockerfile or this workflow changes
+# - schedule (daily): rebuild ONLY when the upstream `postgres:18-alpine`
+#   base image has a new digest since our last publish.
+#
+# Auto-rebuild-on-upstream-update mechanism (GitHub has no native "watch
+# Docker Hub" trigger): each publish also pushes a marker tag
+# `base-<first16 of upstream index digest>`. The scheduled run resolves the
+# current upstream digest and skips the build when that marker tag already
+# exists. So a scheduled run is a no-op until Docker Hub ships a new
+# postgres:18-alpine, at which point it rebuilds + republishes automatically.
 #
 # Multi-arch (amd64 + arm64) so the Cairn CI runners (amd64) and Apple
 # Silicon dev machines (arm64) share one ref.
 
 on:
   workflow_dispatch:
+  schedule:
+    # Daily at 06:17 UTC (off-the-hour to dodge cron congestion).
+    - cron: '17 6 * * *'
   push:
     branches: [main]
     paths:
@@ -21,6 +33,7 @@ permissions:
 
 env:
   IMAGE: ghcr.io/jonathanmcohen/postgres-pgvector
+  BASE: postgres:18-alpine
 
 jobs:
   publish:
@@ -39,15 +52,61 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Resolve upstream base digest
+        id: base
+        run: |
+          set -euo pipefail
+          digest="$(docker buildx imagetools inspect "$BASE" --format '{{.Manifest.Digest}}')"
+          short="${digest#sha256:}"; short="${short:0:16}"
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+          echo "marker=base-$short" >> "$GITHUB_OUTPUT"
+          echo "upstream $BASE = $digest (marker base-$short)"
+
+      - name: Decide whether to build
+        id: decide
+        run: |
+          set -euo pipefail
+          # Always build on manual dispatch or a code/Dockerfile push.
+          if [ "${{ github.event_name }}" != "schedule" ]; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            echo "reason: ${{ github.event_name }} event — forced build"
+            exit 0
+          fi
+          # Scheduled run: build only if this upstream digest has not already
+          # been published (marker tag absent).
+          if docker buildx imagetools inspect "$IMAGE:${{ steps.base.outputs.marker }}" >/dev/null 2>&1; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+            echo "reason: marker ${{ steps.base.outputs.marker }} already published — base unchanged, skipping"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+            echo "reason: new upstream base digest — rebuilding"
+          fi
+
       - name: Build + push
+        if: steps.decide.outputs.build == 'true'
         uses: docker/build-push-action@v7
         with:
           context: docker/postgres-pgvector
           file: docker/postgres-pgvector/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
+          # Re-pull the base so a freshly-updated `postgres:18-alpine` tag is
+          # fetched rather than a stale cached layer.
+          pull: true
           tags: |
             ${{ env.IMAGE }}:18-alpine
             ${{ env.IMAGE }}:latest
+            ${{ env.IMAGE }}:${{ steps.base.outputs.marker }}
+          labels: |
+            org.opencontainers.image.base.name=${{ env.BASE }}
+            org.opencontainers.image.base.digest=${{ steps.base.outputs.digest }}
           cache-from: type=registry,ref=${{ env.IMAGE }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE }}:buildcache,mode=max
+
+      - name: Summary
+        run: |
+          {
+            echo "event=${{ github.event_name }} build=${{ steps.decide.outputs.build }}"
+            echo "upstream ${BASE} digest=${{ steps.base.outputs.digest }}"
+            echo "marker tag=${{ steps.base.outputs.marker }}"
+          } >> "$GITHUB_STEP_SUMMARY"
