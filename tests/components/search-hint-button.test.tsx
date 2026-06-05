@@ -48,4 +48,12 @@ describe('<SearchHintButton>', () => {
     render(<SearchHintButton />);
     expect(screen.getByText('⌘K')).toBeTruthy();
   });
+
+  it('trims internal padding to py-1.5 while keeping the 44px touch floor (#132)', () => {
+    render(<SearchHintButton />);
+    const btn = screen.getByRole('button');
+    expect(btn.className).toContain('py-1.5');
+    expect(btn.className).not.toMatch(/(^|\s)py-2(\s|$)/);
+    expect(btn.className).toContain('min-h-11'); // a11y floor intact
+  });
 });
