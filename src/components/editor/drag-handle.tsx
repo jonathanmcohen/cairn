@@ -98,7 +98,7 @@ export function DragHandle({ editor }: { editor: Editor }) {
         aria-label={t('editor.insertBelow')}
         title={t('editor.insertBelow')}
         onClick={insertBelow}
-        className="text-muted-foreground hover:bg-accent flex h-6 w-6 items-center justify-center rounded"
+        className="text-muted-foreground hover:bg-accent flex h-6 w-6 items-center justify-center rounded transition-colors duration-150"
       >
         <Plus className="h-4 w-4" />
       </button>
@@ -108,7 +108,7 @@ export function DragHandle({ editor }: { editor: Editor }) {
         aria-label={t('editor.blockActions')}
         title={t('editor.blockActions')}
         {...getReferenceProps()}
-        className="text-muted-foreground hover:bg-accent flex h-6 w-6 items-center justify-center rounded"
+        className="text-muted-foreground hover:bg-accent flex h-6 w-6 items-center justify-center rounded transition-colors duration-150"
       >
         <GripVertical className="h-4 w-4" />
       </button>
