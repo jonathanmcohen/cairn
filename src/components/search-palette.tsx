@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import { openQuickCapture } from '@/components/quick-capture/controller';
 import { ensureAppShortcuts } from '@/components/shortcuts/app-shortcuts';
 import { usePrompt } from '@/components/ui/input-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { emitMutation } from '@/lib/client/mutation-bus';
 import { copy } from '@/lib/copy/messages';
@@ -288,7 +289,13 @@ export function SearchPalette({
               ))}
             </Command.Group>
           )}
-          {loading && <div className="px-4 py-2 text-sm text-muted-foreground">Searching…</div>}
+          {loading && (
+            <div role="status" className="space-y-2 px-4 py-2" aria-label={t('search.searching')}>
+              {[0, 1, 2].map((i) => (
+                <Skeleton key={i} className="h-4 w-full" />
+              ))}
+            </div>
+          )}
           {!loading && query && results.length === 0 && (
             <div className="px-4 py-3 text-sm text-muted-foreground">
               <div className="font-medium text-foreground">{copy('empty.search.headline')}</div>

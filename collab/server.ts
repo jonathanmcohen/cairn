@@ -4,6 +4,7 @@ import postgres from 'postgres';
 import * as Y from 'yjs';
 import { authorizeCollab } from '../src/lib/collab/authorize.js';
 import { yjsStateToProseDoc } from '../src/lib/collab/materialize.js';
+import { reconcileFlashcardsRaw } from '../src/lib/flashcards/reconcile-raw.js';
 import { incCollabDocUpdate, setCollabConnections } from '../src/lib/observability/metrics.js';
 import { createMaterializeScheduler } from './materialize-scheduler.js';
 
@@ -45,6 +46,13 @@ async function materialize(pageId: string) {
     SET content = ${sql.json(prose as postgres.JSONValue)}, updated_at = now()
     WHERE id = ${pageId}::uuid
   `;
+  // v0.9.11 #114/#115 — the collab autosave path previously stopped here, so
+  // editor-authored flashcards never reached flashcard_cards (the SRS upsert
+  // only ran on the REST PATCH path). Reconcile here too, with the SAME
+  // (page_id, block_id) contract as src/lib/pages/update.ts → reconcileFlashcards,
+  // so the two write paths never drift. Driver-agnostic raw-SQL variant because
+  // this process uses the postgres driver, not Drizzle.
+  await reconcileFlashcardsRaw(sql, { pageId, content: prose });
 }
 
 // Design (a) per the plan: Hocuspocus already debounces onStoreDocument, so we

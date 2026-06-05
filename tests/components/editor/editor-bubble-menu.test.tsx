@@ -14,6 +14,15 @@ vi.mock('@tiptap/react/menus', () => ({
 }));
 // Mock the i18n provider so labels resolve to keys.
 vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
+// The color popover is unit-tested separately; here assert it's mounted via its
+// trigger's accessible name.
+vi.mock('@/components/editor/editor-color-popover', () => ({
+  EditorColorPopover: () => (
+    <button type="button" aria-label="editor.bubble.color">
+      color-popover
+    </button>
+  ),
+}));
 
 function makeEditor(overrides: Record<string, unknown> = {}) {
   const chain = {
@@ -70,7 +79,6 @@ describe('<EditorBubbleMenu>', () => {
     render(<EditorBubbleMenu editor={makeEditor()} />);
     for (const name of [
       'editor.bubble.color',
-      'editor.bubble.highlight',
       'editor.bubble.h1',
       'editor.bubble.h2',
       'editor.bubble.h3',
@@ -84,6 +92,16 @@ describe('<EditorBubbleMenu>', () => {
     ]) {
       expect(screen.getByRole('button', { name })).toBeTruthy();
     }
+  });
+
+  it('uses the swatch popover for color and drops the single-color highlight toggle', () => {
+    render(<EditorBubbleMenu editor={makeEditor()} />);
+    // The color popover trigger is present (mocked).
+    expect(screen.getByRole('button', { name: 'editor.bubble.color' })).toBeTruthy();
+    // The old standalone highlight button no longer renders in the menu body.
+    expect(screen.queryByRole('button', { name: 'editor.bubble.highlight' })).toBeNull();
+    // The eraser "clear color" affordance is retained.
+    expect(screen.getByRole('button', { name: 'editor.bubble.clearColor' })).toBeTruthy();
   });
 
   it('Heading 1 toggles a level-1 heading', () => {

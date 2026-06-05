@@ -41,14 +41,26 @@ describe('FlashcardNode', () => {
     expect(node?.attrs?.blockId).toBe('b1');
   });
 
-  it('setFlashcard command inserts a flashcard node', () => {
+  it('setFlashcard command inserts a flashcard node with a non-empty blockId', () => {
     const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
     editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
     editor.commands.setFlashcard({ front: 'F', back: 'B', deckTag: null });
-    const found = (editor.getJSON().content ?? []).some(
+    const node = (editor.getJSON().content ?? []).find(
       (n) => (n as { type?: string }).type === 'flashcard',
-    );
-    expect(found).toBe(true);
+    ) as { attrs?: { blockId?: unknown } } | undefined;
+    expect(node).toBeDefined();
+    expect(typeof node?.attrs?.blockId).toBe('string');
+    expect((node?.attrs?.blockId as string).length).toBeGreaterThan(0);
+  });
+
+  it('serializes a non-empty data-block-id for a freshly inserted card', () => {
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
+    editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
+    editor.commands.setFlashcard({ front: 'F', back: 'B', deckTag: null });
+    const html = editor.getHTML();
+    // data-block-id must NOT be empty (the #115 bug: data-block-id="").
+    expect(html).toContain('data-block-id="');
+    expect(html).not.toContain('data-block-id=""');
   });
 
   it('renders to HTML with data-* attributes for serialization', () => {

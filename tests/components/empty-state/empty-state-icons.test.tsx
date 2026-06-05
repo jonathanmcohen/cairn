@@ -18,11 +18,12 @@ describe('empty-state variant icons + CTAs', () => {
     expect(screen.getByText('Trash is empty')).toBeTruthy();
   });
 
-  it('EmptyFlashcardsDue renders an icon + headline + CTA link to /', () => {
+  it('EmptyFlashcardsDue renders an icon + headline + CTA link to /search', () => {
     const { container } = render(<EmptyFlashcardsDue />);
     expect(container.querySelector('svg')).toBeTruthy();
     expect(screen.getByText('No cards due')).toBeTruthy();
     const cta = screen.getByRole('link', { name: 'Browse pages' });
-    expect(cta.getAttribute('href')).toBe('/');
+    // v0.9.11 #116 — CTA moved from "/" (home redirect, no filter) to /search.
+    expect(cta.getAttribute('href')).toBe('/search');
   });
 });

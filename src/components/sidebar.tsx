@@ -19,11 +19,13 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
   return (
     // P19 #42 — width is driven by the `--cairn-sidebar-w` CSS var (set by
     // SidebarResizeHandle from localStorage on the client), falling back to
-    // 16rem (= the old w-64) before hydration. `relative` anchors the handle.
+    // 14rem (= 224px, #131; was 16rem/256) before hydration. Users who dragged
+    // a width keep their persisted value; only the pre-hydration / never-resized
+    // default changes. `relative` anchors the handle.
     <aside
       data-cairn-workspace-sidebar=""
       aria-label="Workspace sidebar"
-      style={{ width: 'var(--cairn-sidebar-w, 16rem)' }}
+      style={{ width: 'var(--cairn-sidebar-w, 14rem)' }}
       className={SIDEBAR_ASIDE_CLASS}
     >
       <SidebarContent workspaceId={workspaceId} workspaces={workspaces} />

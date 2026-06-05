@@ -1,3 +1,4 @@
+import { Inter } from 'next/font/google';
 import { cookies, headers } from 'next/headers';
 import type { ReactNode } from 'react';
 import { AuthSessionProvider } from '@/components/session-provider';
@@ -12,6 +13,12 @@ import { resolveLocale } from '@/lib/i18n/resolve';
 import { cspNonce } from '@/lib/security/headers';
 import 'tippy.js/dist/tippy.css';
 import './globals.css';
+
+// v0.9.11 #1 — ship Inter as the branded sans. next/font self-hosts the font
+// at build (bundled into the standalone output, no runtime CDN fetch → CSP-safe)
+// and `display: 'swap'` shows the system fallback until Inter loads (no FOIT).
+// Exposed as --font-inter; globals.css prepends it to --cairn-font-family.
+const inter = Inter({ subsets: ['latin'], display: 'swap', variable: '--font-inter' });
 
 export const metadata = {
   title: 'Cairn',
@@ -35,7 +42,7 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   );
   const messages = getMessages(locale);
   return (
-    <html lang={locale} dir={dir(locale)} suppressHydrationWarning>
+    <html lang={locale} dir={dir(locale)} className={inter.variable} suppressHydrationWarning>
       <body className="bg-background text-foreground min-h-screen antialiased">
         <I18nProvider locale={locale} messages={messages}>
           <AuthSessionProvider>

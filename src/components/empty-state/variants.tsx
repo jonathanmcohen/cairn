@@ -1,4 +1,4 @@
-import { BellOff, GraduationCap, Star, Trash2 } from 'lucide-react';
+import { BellOff, Clock, GraduationCap, Inbox, Link2, Search, Star, Trash2 } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state/empty-state';
 import { copy } from '@/lib/copy/messages';
 
@@ -15,7 +15,11 @@ export function EmptyPageTree() {
 
 export function EmptySearch() {
   return (
-    <EmptyState headline={copy('empty.search.headline')} guidance={copy('empty.search.guidance')} />
+    <EmptyState
+      icon={<Search aria-hidden="true" />}
+      headline={copy('empty.search.headline')}
+      guidance={copy('empty.search.guidance')}
+    />
   );
 }
 
@@ -69,20 +73,28 @@ export function EmptyFlashcardsDue() {
       headline={copy('empty.flashcardsDue.headline')}
       guidance={copy('empty.flashcardsDue.guidance')}
       ctaLabel={copy('empty.flashcardsDue.cta')}
-      ctaHref="/"
+      // v0.9.11 #116 — was "/", which the home route redirects away from and
+      // does not filter. /search is a real query-param route where the user can
+      // find pages that contain flashcards and add/review more cards.
+      ctaHref="/search"
     />
   );
 }
 
 export function EmptyInbox() {
   return (
-    <EmptyState headline={copy('empty.inbox.headline')} guidance={copy('empty.inbox.guidance')} />
+    <EmptyState
+      icon={<Inbox aria-hidden="true" />}
+      headline={copy('empty.inbox.headline')}
+      guidance={copy('empty.inbox.guidance')}
+    />
   );
 }
 
 export function EmptyBacklinks() {
   return (
     <EmptyState
+      icon={<Link2 aria-hidden="true" />}
       headline={copy('empty.backlinks.headline')}
       guidance={copy('empty.backlinks.guidance')}
     />
@@ -92,6 +104,7 @@ export function EmptyBacklinks() {
 export function EmptyRecents() {
   return (
     <EmptyState
+      icon={<Clock aria-hidden="true" />}
       headline={copy('empty.recents.headline')}
       guidance={copy('empty.recents.guidance')}
     />

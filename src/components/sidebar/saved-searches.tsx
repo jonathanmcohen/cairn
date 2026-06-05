@@ -93,7 +93,7 @@ export function SavedSearches() {
         {items.map((s) => (
           <li
             key={s.id}
-            className="flex items-center gap-1 rounded px-2 py-1 text-sm hover:bg-accent"
+            className="flex items-center gap-1 rounded px-2 py-1 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] hover:bg-accent"
           >
             {editingId === s.id ? (
               <>
@@ -112,7 +112,7 @@ export function SavedSearches() {
                       cancelRename();
                     }
                   }}
-                  className="min-h-11 flex-1 rounded border bg-background px-2 text-sm"
+                  className="min-h-11 flex-1 rounded border bg-background px-2 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px]"
                 />
                 <button
                   type="button"

@@ -5,6 +5,41 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.11] - 2026-06-05
+
+Hotfix release — flashcard SRS ingest + account/editor/sidebar/polish fixes. No
+migration (latest stays 0068).
+
+### Fixed
+- **Editor-authored flashcards never reached the SRS (#114/#115).** The live
+  editor autosaves through the collab path (`collab/server.ts` → `materialize()`,
+  raw `postgres` driver), which wrote `pages.content` but never reconciled
+  flashcards — only the REST PATCH path did — so `/flashcards/study` always
+  showed "No cards due". Added a driver-agnostic `reconcileFlashcardsRaw(sql,…)`
+  called from `materialize()` with the same `(page_id, block_id)` contract as the
+  REST path; block ids are now minted client-side (`crypto.randomUUID()`) at node
+  insert so `data-block-id` is non-empty before the first save.
+- **Flashcard study empty-state CTA pointed at `/` (#116)** — repointed to
+  `/search`.
+- **Duplicate "Display name" label on the profile page (#126)** — dropped the
+  redundant page `<dt>` (kept the form's `htmlFor`-bound label).
+- **Bubble-menu color control applied one hardcoded red (#127)** — replaced with
+  an `EditorColorPopover` (6-swatch text + highlight palette + remove actions);
+  new i18n keys en/es/ar; every swatch keeps the 44px touch floor.
+
+### Changed
+- **Sidebar density (#130/#131/#132), a11y-safe.** Body text 14→13px / leading
+  20→18 / +0.1px tracking via `@theme` tokens; default width 256→224 (user-resized
+  widths preserved); palette trigger padding trimmed. Every interactive element
+  keeps `min-h-11` (44px), so the touch-target a11y gate stays green.
+- **Notion-polish pass.** Inter shipped via `next/font` (self-hosted, CSP-safe);
+  tokenized prose heading scale; raw status colors swapped for semantic
+  `warning`/`success`/`destructive` tokens; block-handle hover transition;
+  page-cover hairline; button press-scale (`active:scale-[0.98]`,
+  reduced-motion-safe) + pinned sheet timings; empty-state icons for
+  search/inbox/backlinks/recents; new `Skeleton` primitive on
+  drawer/search/cover load surfaces.
+
 ## [0.9.10] - 2026-06-04
 
 Hotfix for a v0.9.9 upgrade outage.

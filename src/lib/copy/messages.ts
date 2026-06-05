@@ -32,6 +32,8 @@ export const MESSAGES = {
   'empty.dbTable.guidance': 'Add a row to start tracking entries. Properties become columns.',
   'empty.dbTable.cta': 'Add a row',
 
+  'notifications.loading': 'Loading notifications',
+
   'empty.notifications.headline': 'You are all caught up',
   'empty.notifications.guidance':
     'New mentions, comment replies, and workspace activity will show up here as they happen.',

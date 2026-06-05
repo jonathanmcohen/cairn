@@ -120,14 +120,14 @@ export function SuggestionToolbar({
             <button
               type="button"
               onClick={() => onAccept(resolvable)}
-              className="rounded px-2 py-1 text-green-700 text-xs hover:bg-accent dark:text-green-400"
+              className="rounded px-2 py-1 text-success text-xs hover:bg-accent"
             >
               Accept
             </button>
             <button
               type="button"
               onClick={() => onReject(resolvable)}
-              className="rounded px-2 py-1 text-red-700 text-xs hover:bg-accent dark:text-red-400"
+              className="rounded px-2 py-1 text-destructive text-xs hover:bg-accent"
             >
               Reject
             </button>

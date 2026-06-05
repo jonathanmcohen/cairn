@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useFocusTrap } from '@/lib/a11y/focus-trap';
 import { meetsAA } from '@/lib/color/contrast';
 import { resolveTitleForeground } from '@/lib/color/title-contrast';
@@ -322,15 +323,21 @@ export function CoverPicker({
               )}
               {tab === 'upload' && (
                 <div className="space-y-3">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    disabled={saving}
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) void upload(file);
-                    }}
-                  />
+                  {saving ? (
+                    <div role="status" aria-label={t('cover.uploading')}>
+                      <Skeleton className="h-[200px] w-full" />
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      accept="image/*"
+                      disabled={saving}
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) void upload(file);
+                      }}
+                    />
+                  )}
                   <p className="text-xs text-muted-foreground">{t('cover.uploadHint')}</p>
                 </div>
               )}
