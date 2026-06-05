@@ -87,6 +87,15 @@
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
+  /* v0.9.11 #130 — sidebar density. Body links/titles drop from text-sm
+     (14px/20px) to 13px/18px with 0.1px tracking for legibility at the smaller
+     size. Tokenized here so the size lives in one place. Section labels stay at
+     12px (text-xs) and the kbd/badge at 10px — only BODY text shrinks. These
+     change font only; interactive rows keep min-h-11 (44px touch floor), so the
+     a11y touch-target gate is unaffected. */
+  --cairn-sidebar-text: 13px;
+  --cairn-sidebar-leading: 18px;
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
