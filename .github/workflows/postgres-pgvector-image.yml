@@ -19,8 +19,11 @@ name: Publish postgres-pgvector image
 on:
   workflow_dispatch:
   schedule:
-    # Daily at 06:17 UTC (off-the-hour to dodge cron congestion).
-    - cron: '17 6 * * *'
+    # Hourly at :17 — catch an upstream postgres:18-alpine bump within ~1h.
+    # Each run is just a manifest-inspect; an actual rebuild fires only when the
+    # base digest changed (marker-tag check below), so the tighter cadence is
+    # near-free.
+    - cron: '17 * * * *'
   push:
     branches: [main]
     paths:
