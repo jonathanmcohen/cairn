@@ -96,6 +96,13 @@
   --cairn-sidebar-text: 13px;
   --cairn-sidebar-leading: 18px;
 
+  /* v0.9.11 #1 — editor base measure. The prose body reads at 16px/1.6 (Notion
+     range). Tokenized here so the measure lives in one place; the .ProseMirror
+     heading scale below pins the H-sizes. Font-only — no box-height change, so
+     the a11y touch-target gate is unaffected. */
+  --cairn-prose-base: 16px;
+  --cairn-prose-leading: 1.6;
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -157,6 +164,31 @@
 
 .comment-anchor-flash {
   animation: comment-anchor-flash 1.5s ease-out;
+}
+
+/* v0.9.11 #1 — tightened editor heading scale. Overrides Tailwind-typography
+   defaults on the editing surface only (.ProseMirror), leaving --tw-prose-*
+   and read-only public rendering alone. H1 1.875/600, H2 1.5/600, H3 1.25/600,
+   all with -0.01em tracking for a denser, Notion-ish rhythm. Base body measure
+   is the 16px/1.6 token above. */
+.ProseMirror {
+  font-size: var(--cairn-prose-base);
+  line-height: var(--cairn-prose-leading);
+}
+.ProseMirror h1 {
+  font-size: 1.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ProseMirror h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.ProseMirror h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 /* v0.8.0 — per-user theme: page-width + font + accent custom properties.
