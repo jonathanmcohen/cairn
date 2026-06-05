@@ -46,7 +46,8 @@ export default async function AccountProfilePage() {
           <dd>{user?.email ?? '—'}</dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Display name</dt>
+          {/* #126 — the label lives inside <ProfileForm> (htmlFor-bound to the
+              input). A page-level <dt> duplicated it visually; dropped. */}
           <dd>
             <ProfileForm initialName={user?.name ?? ''} />
           </dd>
