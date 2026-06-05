@@ -69,7 +69,10 @@ export function EmptyFlashcardsDue() {
       headline={copy('empty.flashcardsDue.headline')}
       guidance={copy('empty.flashcardsDue.guidance')}
       ctaLabel={copy('empty.flashcardsDue.cta')}
-      ctaHref="/"
+      // v0.9.11 #116 — was "/", which the home route redirects away from and
+      // does not filter. /search is a real query-param route where the user can
+      // find pages that contain flashcards and add/review more cards.
+      ctaHref="/search"
     />
   );
 }
