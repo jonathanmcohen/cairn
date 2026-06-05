@@ -71,7 +71,9 @@ export const FlashcardNode = Node.create({
               front: attrs.front,
               back: attrs.back,
               deckTag: attrs.deckTag ?? null,
-              blockId: null,
+              // v0.9.11 #115 — mint here so the inserted node has a non-empty
+              // data-block-id immediately, before any collab/REST save.
+              blockId: crypto.randomUUID(),
             },
           }),
     };
