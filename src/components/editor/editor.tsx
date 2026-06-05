@@ -84,9 +84,9 @@ const STATUS_LABEL = {
 // a30 #39 — status-pill dot color per collab connection state. Tailwind class
 // strings (not dynamic) so the JIT compiler keeps them.
 const STATUS_DOT = {
-  connecting: 'bg-amber-500',
-  connected: 'bg-emerald-500',
-  disconnected: 'bg-amber-500',
+  connecting: 'bg-warning',
+  connected: 'bg-success',
+  disconnected: 'bg-warning',
   error: 'bg-destructive',
 } as const;
 
