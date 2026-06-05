@@ -416,7 +416,6 @@
   "cover.use": "Usar",
   "cover.remove": "Quitar portada",
   "cover.uploadHint": "Las imágenes se almacenan localmente y se sirven mediante URL firmadas.",
-  "cover.uploading": "Subiendo portada",
   "cover.useColor": "Usar {hex}",
   "cover.useDefault": "Usar portada predeterminada",
   "cover.editAria": "Editar portada",

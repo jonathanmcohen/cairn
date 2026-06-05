@@ -416,7 +416,6 @@
   "cover.use": "Use",
   "cover.remove": "Remove cover",
   "cover.uploadHint": "Images are stored locally and served through signed URLs.",
-  "cover.uploading": "Uploading cover",
   "cover.useColor": "Use {hex}",
   "cover.useDefault": "Use default cover",
   "cover.editAria": "Edit cover",

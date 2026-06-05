@@ -416,7 +416,6 @@
   "cover.use": "استخدام",
   "cover.remove": "إزالة الغلاف",
   "cover.uploadHint": "تُخزَّن الصور محليًا وتُقدَّم عبر روابط موقَّعة.",
-  "cover.uploading": "جارٍ رفع الغلاف",
   "cover.useColor": "استخدام {hex}",
   "cover.useDefault": "استخدام الغلاف الافتراضي",
   "cover.editAria": "تحرير الغلاف",
