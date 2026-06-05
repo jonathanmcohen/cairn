@@ -60,8 +60,10 @@ describe('<EditorColorPopover>', () => {
     const editor = makeEditor();
     render(<EditorColorPopover editor={editor} />);
     fireEvent.click(screen.getByRole('button', { name: 'editor.bubble.color' }));
-    const [textRed] = screen.getAllByRole('button', { name: 'editor.color.swatch.red' });
-    fireEvent.click(textRed);
+    const [textRed] = screen.getAllByRole('button', {
+      name: 'editor.color.swatch.red',
+    }) as HTMLElement[];
+    fireEvent.click(textRed!);
     expect(chainOf(editor).setColor).toHaveBeenCalledWith('#dc2626');
     expect(chainOf(editor).run).toHaveBeenCalled();
   });
@@ -70,8 +72,10 @@ describe('<EditorColorPopover>', () => {
     const editor = makeEditor();
     render(<EditorColorPopover editor={editor} />);
     fireEvent.click(screen.getByRole('button', { name: 'editor.bubble.color' }));
-    const reds = screen.getAllByRole('button', { name: 'editor.color.swatch.red' });
-    fireEvent.click(reds[1]); // second section = highlight
+    const reds = screen.getAllByRole('button', {
+      name: 'editor.color.swatch.red',
+    }) as HTMLElement[];
+    fireEvent.click(reds[1]!); // second section = highlight
     expect(chainOf(editor).setHighlight).toHaveBeenCalledWith({ color: '#fecaca' });
   });
 

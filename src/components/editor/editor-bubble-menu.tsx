@@ -12,11 +12,9 @@ import {
   Heading1,
   Heading2,
   Heading3,
-  Highlighter,
   Italic,
   Link2,
   MessageSquarePlus,
-  Palette,
   RemoveFormatting,
   Sigma,
   Strikethrough,
@@ -26,17 +24,13 @@ import {
 import { useEffect, useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
 import { cn } from '@/lib/utils';
+import { EditorColorPopover } from './editor-color-popover';
 import { EditorLinkPopover } from './editor-link-popover';
 
 const BTN =
   'inline-flex min-h-11 min-w-11 items-center justify-center rounded-md text-sm transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring data-[active=true]:bg-accent data-[active=true]:text-accent-foreground';
 
 const SEP = <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />;
-
-// #275 — minimal swatch palette. Accent + a couple of common highlight hues keep
-// the toolbar compact; "clear" removes the mark.
-const TEXT_COLOR = '#dc2626';
-const HIGHLIGHT_COLOR = '#fde68a';
 
 export function EditorBubbleMenu({
   editor,
@@ -157,37 +151,9 @@ export function EditorBubbleMenu({
             <Code className="size-4" aria-hidden />
           </button>
           {SEP}
-          {/* Text color + highlight (#275). A single accent swatch toggles; a
-              long-press palette is out of scope — clear lives in the menu's
-              RemoveFormatting + the dedicated highlight toggle. */}
-          <button
-            type="button"
-            aria-label={t('editor.bubble.color')}
-            title={t('editor.bubble.color')}
-            data-active={editor.isActive('textStyle', { color: TEXT_COLOR })}
-            onClick={() =>
-              editor.isActive('textStyle', { color: TEXT_COLOR })
-                ? editor.chain().focus().unsetColor().run()
-                : editor.chain().focus().setColor(TEXT_COLOR).run()
-            }
-            className={cn(BTN)}
-          >
-            <Palette className="size-4" aria-hidden />
-          </button>
-          <button
-            type="button"
-            aria-label={t('editor.bubble.highlight')}
-            title={t('editor.bubble.highlight')}
-            data-active={editor.isActive('highlight')}
-            onClick={() =>
-              editor.isActive('highlight')
-                ? editor.chain().focus().unsetHighlight().run()
-                : editor.chain().focus().toggleHighlight({ color: HIGHLIGHT_COLOR }).run()
-            }
-            className={cn(BTN)}
-          >
-            <Highlighter className="size-4" aria-hidden />
-          </button>
+          {/* #127 — text color + highlight via a swatch popover (replaces the
+              former single-hardcoded-color toggles). */}
+          <EditorColorPopover editor={editor} />
           {SEP}
           {/* Turn-into headings (#275). */}
           <button

@@ -25,7 +25,7 @@ describe('#127 swatch popover i18n keys', () => {
       for (const key of NEW_KEYS) {
         const value = (messages as Record<string, string>)[key];
         expect(value, `${name} missing ${key}`).toBeTruthy();
-        expect(value.trim().length).toBeGreaterThan(0);
+        expect(value!.trim().length).toBeGreaterThan(0);
       }
     });
   }
