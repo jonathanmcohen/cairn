@@ -90,7 +90,7 @@ None expected (0068 stays latest). Flag if #114 needs a backfill for already-orp
 
 ## Plan U — Notion polish pass
 
-Code/token design audit (full detail: `docs/superpowers/v0.9.11-polish-audit.md`). 20 dimensions: **6 SHIP · 9 PATCH · 3 REFACTOR · 2 VERIFY-LIVE**. **Migration = none.** No live screenshot possible (LAN-only + stale deploy); 2 items wait on v0.9.10 redeploy.
+Code/token design audit (full detail: [`polish-audit.md`](polish-audit.md)). 20 dimensions: **6 SHIP · 9 PATCH · 3 REFACTOR · 2 VERIFY-LIVE**. **Migration = none.** No live screenshot possible (LAN-only + stale deploy); 2 items wait on v0.9.10 redeploy.
 
 ### PATCH — ship in v0.9.11 (token/class only, a11y floor untouched)
 
