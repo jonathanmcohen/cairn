@@ -1,4 +1,4 @@
-import { BellOff, GraduationCap, Star, Trash2 } from 'lucide-react';
+import { BellOff, Clock, GraduationCap, Inbox, Link2, Search, Star, Trash2 } from 'lucide-react';
 import { EmptyState } from '@/components/empty-state/empty-state';
 import { copy } from '@/lib/copy/messages';
 
@@ -15,7 +15,11 @@ export function EmptyPageTree() {
 
 export function EmptySearch() {
   return (
-    <EmptyState headline={copy('empty.search.headline')} guidance={copy('empty.search.guidance')} />
+    <EmptyState
+      icon={<Search aria-hidden="true" />}
+      headline={copy('empty.search.headline')}
+      guidance={copy('empty.search.guidance')}
+    />
   );
 }
 
@@ -79,13 +83,18 @@ export function EmptyFlashcardsDue() {
 
 export function EmptyInbox() {
   return (
-    <EmptyState headline={copy('empty.inbox.headline')} guidance={copy('empty.inbox.guidance')} />
+    <EmptyState
+      icon={<Inbox aria-hidden="true" />}
+      headline={copy('empty.inbox.headline')}
+      guidance={copy('empty.inbox.guidance')}
+    />
   );
 }
 
 export function EmptyBacklinks() {
   return (
     <EmptyState
+      icon={<Link2 aria-hidden="true" />}
       headline={copy('empty.backlinks.headline')}
       guidance={copy('empty.backlinks.guidance')}
     />
@@ -95,6 +104,7 @@ export function EmptyBacklinks() {
 export function EmptyRecents() {
   return (
     <EmptyState
+      icon={<Clock aria-hidden="true" />}
       headline={copy('empty.recents.headline')}
       guidance={copy('empty.recents.guidance')}
     />
