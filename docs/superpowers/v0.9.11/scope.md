@@ -11,6 +11,19 @@ Only **5 items are genuine code bugs** present on `main`. Those are the actual v
 
 ---
 
+## Plans index (TDD docs)
+
+| Plan | File | Covers | Migration |
+|------|------|--------|-----------|
+| **A** | [plan-a-flashcards-srs.md](plan-a-flashcards-srs.md) | #114 collab-save SRS reconcile · #115 block-id mint · #116 study CTA→/search | none |
+| **B** | [plan-b-account-editor-fixes.md](plan-b-account-editor-fixes.md) | #126 dup display-name label · #127 color/highlight swatch popover | none |
+| **C** | [plan-c-sidebar-density.md](plan-c-sidebar-density.md) | #130-revised text 13/18 (a11y-safe) · #131 width 224 · #132 palette pad | none |
+| **U** | [plan-u-notion-polish.md](plan-u-notion-polish.md) | polish-audit PATCH set: typography+Inter, status-color tokens, handle transition, cover hairline, button press-scale, empty-state icons, skeleton | none |
+
+**Build order:** A (only P0) → B → C → U (B/C/U independent). Single PR onto `patches/v0.9.11`, version 0.9.10 → 0.9.11. **No migration** (0068 stays latest). REFACTOR items deferred; 12 stale-deploy items verify-live after v0.9.10 redeploy.
+
+---
+
 ## GENUINE v0.9.11 bugs (5) — real fixes
 
 | # | P | Theme | Bug | Root cause (file:line) |
