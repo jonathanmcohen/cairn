@@ -102,4 +102,49 @@ describe('<SuggestionsDrawer> (#85/#145)', () => {
     );
     expect(screen.queryByText(enMessages['pageActions.suggest.diffDeletedLabel'])).toBeNull();
   });
+
+  it('#119 clicking the card content region fires onView with the row id', () => {
+    const onView = vi.fn();
+    render(
+      wrap(
+        <SuggestionsDrawer
+          open
+          onOpenChange={() => {}}
+          suggestions={rows}
+          onAccept={() => {}}
+          onReject={() => {}}
+          onView={onView}
+        />,
+      ),
+    );
+    // The content region is a <button> labelled by the author line ("by Ada");
+    // it is a sibling of (not wrapping) the action buttons.
+    const contentBtn = screen.getByRole('button', { name: /by Ada/ });
+    fireEvent.click(contentBtn);
+    expect(onView).toHaveBeenCalledWith('s1');
+    expect(onView).toHaveBeenCalledTimes(1);
+  });
+
+  it('#119 clicking Accept fires onAccept and NOT onView (sibling buttons)', () => {
+    const onView = vi.fn();
+    const onAccept = vi.fn();
+    render(
+      wrap(
+        <SuggestionsDrawer
+          open
+          onOpenChange={() => {}}
+          suggestions={[{ id: 's1', authorName: 'Ada' }]}
+          onAccept={onAccept}
+          onReject={() => {}}
+          onView={onView}
+        />,
+      ),
+    );
+    const acceptBtn = screen.getByRole('button', {
+      name: enMessages['pageActions.suggest.accept'],
+    });
+    fireEvent.click(acceptBtn);
+    expect(onAccept).toHaveBeenCalledWith('s1');
+    expect(onView).not.toHaveBeenCalled();
+  });
 });
