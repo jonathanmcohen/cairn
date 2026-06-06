@@ -23,3 +23,12 @@ describe('sidebar tree row height (C-v3 optional)', () => {
     expect(treeSrc).toMatch(/ROW_HEIGHT_PX\s*=\s*26/);
   });
 });
+
+describe('sidebar padding tokens (C-v3 optional)', () => {
+  it('defines --cairn-sidebar-px token', () => {
+    expect(css).toMatch(/--cairn-sidebar-px:\s*6px/);
+  });
+  it('defines --cairn-sidebar-section-gap token', () => {
+    expect(css).toMatch(/--cairn-sidebar-section-gap:\s*6px/);
+  });
+});

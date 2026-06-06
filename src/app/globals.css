@@ -95,6 +95,10 @@
      a11y touch-target gate is unaffected. */
   --cairn-sidebar-text: 13px;
   --cairn-sidebar-leading: 18px;
+  /* v0.9.13 C-v3 — sidebar padding/gap tokens. nav px = p-1.5 (6px);
+     section gap = mb-1.5 (6px). Tokenized to mirror the text/leading pattern. */
+  --cairn-sidebar-px: 6px;
+  --cairn-sidebar-section-gap: 6px;
 
   /* v0.9.11 #1 — editor base measure. The prose body reads at 16px/1.6 (Notion
      range). Tokenized here so the measure lives in one place; the .ProseMirror
