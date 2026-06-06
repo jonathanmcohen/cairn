@@ -54,6 +54,19 @@ Single PR onto `patches/v0.9.13`, version `0.9.12 → 0.9.13`:
 6. **VERIFY-LIVE #117/#118/#58:** confirm live; only act if genuinely broken (likely tooltip/affordance polish at most).
 7. Gate: lint 0 · typecheck · i18n en/es/ar for any new strings (lock "Minutes", reader "Exit" tooltip) · full `pnpm vitest run` · build · a11y e2e.
 
+## Plans (v0.9.13)
+
+| Plan | File | Covers | Migration |
+|------|------|--------|-----------|
+| **A** | [plan-a-editor-slash-suggestion.md](plan-a-editor-slash-suggestion.md) | #76+#136 citation/footnote slash popup destroy + range cleanup on cancel · #119 clickable suggestion card | none |
+| **B** | [plan-b-template-preview.md](plan-b-template-preview.md) | #134 template preview fails — built-in seed omits `visibility` (repro-first) | none |
+| **C** | [plan-c-sidebar-density.md](plan-c-sidebar-density.md) | #130-v2 rows (pointer-gated 28/44) + C-v3 padding/tokens + StudyLink text-sm outlier | none |
+| **D** | [plan-d-lock-and-unfurl.md](plan-d-lock-and-unfurl.md) | #137 lock duration Minutes · #135 bookmark OG unfurl (parser test + fallback; likely env) | none |
+
+**Build order:** A → B → C → D (disjoint files). Single PR onto `patches/v0.9.13`, version 0.9.12 → 0.9.13. **No migration.** VERIFY-LIVE #117/#118/#58 = no code expected (present in code; re-check live).
+
+---
+
 ## Plan C-v2 — sidebar utility density (#130-v2)
 
 **Live measure (v0.9.12):** the bottom utility cluster (Study flashcards · Favorites · Inbox · My-tasks · Templates · Settings · Trash) = **7 rows × 44px = 308px**. Font already 13px ✅ but rows stuck at 44px. Height driver confirmed in code: `NAV_ITEM_CLASS` (`sidebar-footer-nav.tsx:20-21`) and `StudyLink` (`study-link.tsx:18`) and the Sign-out `<Button>` all carry **`min-h-11`** (the 44px WCAG 2.5.5 touch floor). Icons already 16px (`h-4`/`size-4`); padding is minor (`py-1.5`/`py-1`). **`min-h-11` is the sole 44px driver.** StudyLink also has a font outlier: `text-sm` (14px) instead of the 13px density token.
