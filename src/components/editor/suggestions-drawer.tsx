@@ -16,6 +16,91 @@ export type OpenSuggestion = {
   diff?: { deleted: string; inserted: string };
 };
 
+/**
+ * #119 — The card's content region (author line + diff preview) is a single
+ * <button> whose click invokes onView, so clicking the card body scrolls to
+ * the suggestion. The Accept/Reject/View action buttons are siblings of that
+ * content button (not descendants), so they fire independently with no nested
+ * interactive elements and no need for stopPropagation. The <li> stays a plain,
+ * non-interactive list item.
+ */
+function SuggestionCard({
+  s,
+  onView,
+  onAccept,
+  onReject,
+}: {
+  s: OpenSuggestion;
+  onView: (id: string) => void;
+  onAccept: (id: string) => void;
+  onReject: (id: string) => void;
+}) {
+  const t = useT();
+  return (
+    <li key={s.id} className="rounded-md border p-3">
+      <button
+        type="button"
+        onClick={() => onView(s.id)}
+        className="block w-full cursor-pointer rounded-sm text-left hover:bg-accent/50 focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+      >
+        <p className="text-muted-foreground text-xs">
+          {t('pageActions.suggest.byAuthor', { author: s.authorName })}
+        </p>
+        {s.diff && (s.diff.deleted || s.diff.inserted) ? (
+          <p className="mt-2 break-words text-sm leading-relaxed">
+            {s.diff.deleted ? (
+              <>
+                <span className="sr-only">{t('pageActions.suggest.diffDeletedLabel')}: </span>
+                <del
+                  title={t('pageActions.suggest.diffDeletedLabel')}
+                  className="rounded-sm bg-red-500/10 px-0.5 text-red-700 line-through decoration-red-500/70 dark:text-red-300"
+                >
+                  {s.diff.deleted}
+                </del>
+              </>
+            ) : null}
+            {s.diff.deleted && s.diff.inserted ? ' ' : null}
+            {s.diff.inserted ? (
+              <>
+                <span className="sr-only">{t('pageActions.suggest.diffInsertedLabel')}: </span>
+                <ins
+                  title={t('pageActions.suggest.diffInsertedLabel')}
+                  className="rounded-sm bg-green-500/10 px-0.5 text-green-700 no-underline dark:text-green-300"
+                >
+                  {s.diff.inserted}
+                </ins>
+              </>
+            ) : null}
+          </p>
+        ) : null}
+      </button>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onView(s.id)}
+          className="rounded px-2 py-1 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
+        >
+          {t('pageActions.suggest.viewInDoc')}
+        </button>
+        <button
+          type="button"
+          onClick={() => onAccept(s.id)}
+          className="rounded px-2 py-1 text-green-700 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring dark:text-green-400"
+        >
+          {t('pageActions.suggest.accept')}
+        </button>
+        <button
+          type="button"
+          onClick={() => onReject(s.id)}
+          className="rounded px-2 py-1 text-red-700 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring dark:text-red-400"
+        >
+          {t('pageActions.suggest.reject')}
+        </button>
+      </div>
+    </li>
+  );
+}
+
 export function SuggestionsDrawer({
   open,
   onOpenChange,
@@ -60,65 +145,13 @@ export function SuggestionsDrawer({
             ) : (
               <ul className="space-y-2">
                 {suggestions.map((s) => (
-                  <li key={s.id} className="rounded-md border p-3">
-                    <p className="text-muted-foreground text-xs">
-                      {t('pageActions.suggest.byAuthor', { author: s.authorName })}
-                    </p>
-                    {s.diff && (s.diff.deleted || s.diff.inserted) ? (
-                      <p className="mt-2 break-words text-sm leading-relaxed">
-                        {s.diff.deleted ? (
-                          <>
-                            <span className="sr-only">
-                              {t('pageActions.suggest.diffDeletedLabel')}:{' '}
-                            </span>
-                            <del
-                              title={t('pageActions.suggest.diffDeletedLabel')}
-                              className="rounded-sm bg-red-500/10 px-0.5 text-red-700 line-through decoration-red-500/70 dark:text-red-300"
-                            >
-                              {s.diff.deleted}
-                            </del>
-                          </>
-                        ) : null}
-                        {s.diff.deleted && s.diff.inserted ? ' ' : null}
-                        {s.diff.inserted ? (
-                          <>
-                            <span className="sr-only">
-                              {t('pageActions.suggest.diffInsertedLabel')}:{' '}
-                            </span>
-                            <ins
-                              title={t('pageActions.suggest.diffInsertedLabel')}
-                              className="rounded-sm bg-green-500/10 px-0.5 text-green-700 no-underline dark:text-green-300"
-                            >
-                              {s.diff.inserted}
-                            </ins>
-                          </>
-                        ) : null}
-                      </p>
-                    ) : null}
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => onView(s.id)}
-                        className="rounded px-2 py-1 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
-                      >
-                        {t('pageActions.suggest.viewInDoc')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onAccept(s.id)}
-                        className="rounded px-2 py-1 text-green-700 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring dark:text-green-400"
-                      >
-                        {t('pageActions.suggest.accept')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => onReject(s.id)}
-                        className="rounded px-2 py-1 text-red-700 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring dark:text-red-400"
-                      >
-                        {t('pageActions.suggest.reject')}
-                      </button>
-                    </div>
-                  </li>
+                  <SuggestionCard
+                    key={s.id}
+                    s={s}
+                    onView={onView}
+                    onAccept={onAccept}
+                    onReject={onReject}
+                  />
                 ))}
               </ul>
             )}

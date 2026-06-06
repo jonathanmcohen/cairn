@@ -163,12 +163,12 @@ export const footnoteMenuItem: CitationSlashEntry = {
   icon: Asterisk,
   keywords: ['note', 'fn'],
   run: (editor: Editor, range?: SlashRange): void => {
+    consumeSlashRange(editor, range);
     void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((raw) => {
       const result = asFormResult(raw);
       const content = result?.text;
       if (!content) return;
       if (editor.isDestroyed) return;
-      consumeSlashRange(editor, range);
       if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
         editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
       }
@@ -185,6 +185,7 @@ export const citationMenuItem: CitationSlashEntry = {
   icon: Quote,
   keywords: ['cite', 'ref', 'reference', 'bibliography'],
   run: (editor: Editor, range?: SlashRange): void => {
+    consumeSlashRange(editor, range);
     void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((raw) => {
       const result = asFormResult(raw);
       if (!result) return;

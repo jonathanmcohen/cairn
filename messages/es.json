@@ -260,6 +260,8 @@
   "pageActions.lock.oneDay": "Bloquear durante 24 horas",
   "pageActions.lock.custom": "Personalizado…",
   "pageActions.lock.customAmount": "Duración",
+  "pageActions.lock.unitMinutes": "Minutos",
+  "pageActions.lock.unitLabel": "Unidad de duración",
   "pageActions.lock.unitHours": "Horas",
   "pageActions.lock.unitDays": "Días",
   "pageActions.lock.confirm": "Bloquear",

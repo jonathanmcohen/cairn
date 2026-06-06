@@ -260,6 +260,8 @@
   "pageActions.lock.oneDay": "القفل لمدة 24 ساعة",
   "pageActions.lock.custom": "مخصّص…",
   "pageActions.lock.customAmount": "المدة",
+  "pageActions.lock.unitMinutes": "دقائق",
+  "pageActions.lock.unitLabel": "وحدة المدة",
   "pageActions.lock.unitHours": "ساعات",
   "pageActions.lock.unitDays": "أيام",
   "pageActions.lock.confirm": "قفل",

@@ -204,7 +204,7 @@ export async function seedBuiltinTemplates(db: Db): Promise<void> {
     if (existing) {
       await db
         .update(schema.templates)
-        .set({ kind: b.kind, payload: b.payload })
+        .set({ kind: b.kind, payload: b.payload, visibility: 'public' })
         .where(eq(schema.templates.id, existing.id));
     } else {
       await db.insert(schema.templates).values({
@@ -213,6 +213,7 @@ export async function seedBuiltinTemplates(db: Db): Promise<void> {
         kind: b.kind,
         payload: b.payload,
         builtIn: true,
+        visibility: 'public',
       });
     }
   }

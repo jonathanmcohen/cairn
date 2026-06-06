@@ -78,7 +78,7 @@ export function LockToggle({ pageId, open: controlledOpen, onOpenChange }: LockT
   // Custom-duration inline sub-form state.
   const [customMode, setCustomMode] = useState(false);
   const [amount, setAmount] = useState('1');
-  const [unit, setUnit] = useState<'hours' | 'days'>('hours');
+  const [unit, setUnit] = useState<'minutes' | 'hours' | 'days'>('hours');
 
   // Reset the sub-form whenever the menu closes.
   useEffect(() => {
@@ -118,7 +118,9 @@ export function LockToggle({ pageId, open: controlledOpen, onOpenChange }: LockT
   function confirmCustom() {
     const n = Number.parseFloat(amount);
     if (!Number.isFinite(n) || n <= 0) return;
-    lockFor(unit === 'days' ? n * 24 : n);
+    // Internal unit is fractional hours throughout.
+    const hours = unit === 'minutes' ? n / 60 : unit === 'days' ? n * 24 : n;
+    lockFor(hours);
   }
 
   const itemCls =
@@ -202,11 +204,15 @@ export function LockToggle({ pageId, open: controlledOpen, onOpenChange }: LockT
                   onChange={(e) => setAmount(e.target.value)}
                 />
               </div>
-              <Select value={unit} onValueChange={(v) => setUnit(v as 'hours' | 'days')}>
-                <SelectTrigger className="h-9 w-24" aria-label={t('pageActions.lock.unitHours')}>
+              <Select
+                value={unit}
+                onValueChange={(v) => setUnit(v as 'minutes' | 'hours' | 'days')}
+              >
+                <SelectTrigger className="h-9 w-24" aria-label={t('pageActions.lock.unitLabel')}>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="minutes">{t('pageActions.lock.unitMinutes')}</SelectItem>
                   <SelectItem value="hours">{t('pageActions.lock.unitHours')}</SelectItem>
                   <SelectItem value="days">{t('pageActions.lock.unitDays')}</SelectItem>
                 </SelectContent>

@@ -260,6 +260,8 @@
   "pageActions.lock.oneDay": "Lock for 24 hours",
   "pageActions.lock.custom": "Custom…",
   "pageActions.lock.customAmount": "Duration",
+  "pageActions.lock.unitMinutes": "Minutes",
+  "pageActions.lock.unitLabel": "Duration unit",
   "pageActions.lock.unitHours": "Hours",
   "pageActions.lock.unitDays": "Days",
   "pageActions.lock.confirm": "Lock",

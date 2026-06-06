@@ -18,7 +18,7 @@ import { Button } from './ui/button';
  * as the primary "PAGES" tree items so the hierarchy reads as first-class.
  */
 const NAV_ITEM_CLASS =
-  'flex min-h-11 items-center gap-2 rounded px-2 py-1.5 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
+  'flex min-h-[28px] items-center gap-2 rounded px-2 py-1 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:min-h-11 pointer-coarse:py-1.5';
 
 export function SidebarFooterNav({ version }: { version: string }) {
   const t = useT();
@@ -62,7 +62,7 @@ export function SidebarFooterNav({ version }: { version: string }) {
           <Button
             variant="ghost"
             size="sm"
-            className="min-h-11 w-full justify-start gap-2 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-muted-foreground"
+            className="min-h-[28px] w-full justify-start gap-2 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-muted-foreground pointer-coarse:min-h-11"
             type="submit"
           >
             <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
