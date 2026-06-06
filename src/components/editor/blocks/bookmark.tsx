@@ -20,12 +20,32 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
   const favicon = node.attrs.favicon as string | null;
   const [draft, setDraft] = useState('');
   const [loading, setLoading] = useState(false);
+  const [unfurlError, setUnfurlError] = useState(false);
 
   async function unfurl(target: string) {
     setLoading(true);
+    setUnfurlError(false);
     try {
       const res = await fetch(`/api/unfurl?url=${encodeURIComponent(target)}`);
-      const meta = (res.ok ? await res.json() : {}) as Unfurl;
+      if (!res.ok) {
+        // Non-OK (422 = could not fetch, 400 = SSRF refusal, etc.)
+        // Fall back to URL-only card, and surface the error affordance so
+        // the user knows the preview failed (not just "empty OG").
+        // Note: if this fires on your homelab deploy, the cause is almost
+        // certainly server-side egress — not a bug in this codebase. See the
+        // environment note in docs/superpowers/v0.9.13/plan-d-lock-and-unfurl.md.
+        setUnfurlError(true);
+        updateAttributes({
+          url: target,
+          title: target,
+          description: null,
+          image: null,
+          imageData: null,
+          favicon: null,
+        });
+        return;
+      }
+      const meta = (await res.json()) as Unfurl;
       updateAttributes({
         url: target,
         title: meta.title ?? target,
@@ -33,6 +53,16 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
         image: meta.image ?? null,
         imageData: meta.imageData ?? null,
         favicon: meta.favicon ?? null,
+      });
+    } catch {
+      setUnfurlError(true);
+      updateAttributes({
+        url: target,
+        title: target,
+        description: null,
+        image: null,
+        imageData: null,
+        favicon: null,
       });
     } finally {
       setLoading(false);
@@ -67,6 +97,11 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
             />
           )}
         </a>
+        {unfurlError && (
+          <p className="mt-1 px-3 pb-2 text-[11px] text-destructive/70">
+            Couldn&apos;t load preview
+          </p>
+        )}
       </NodeViewWrapper>
     );
   }
