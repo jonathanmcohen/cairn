@@ -5,6 +5,42 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.13] - 2026-06-06
+
+Patch release — post-v0.9.12 browser-sweep fixes. No migration.
+
+### Fixed
+- **Slash-menu leak + ghost popup on modal cancel (#76/#136).** The citation and
+  footnote slash items opened a dialog without consuming the typed `/…` range or
+  destroying the slash popup, so the menu lingered behind the modal and the text
+  leaked into the prior block on cancel. `consumeSlashRange` now runs before the
+  dialog opens (erases the range → TipTap `onExit` destroys the popup).
+- **Template preview "Could not load this preview" (#134).** `seedBuiltinTemplates`
+  inserted built-in rows without `visibility`, so they defaulted to `'workspace'`
+  and `canReadTemplate` 404'd every built-in preview. Built-ins now seed
+  `visibility: 'public'` (heals existing rows on next startup).
+
+### Changed
+- **Sidebar density (#130-v2 / C-v3).** Utility rows, Sign-out, and the Study
+  link drop to ~28px on fine-pointer desktop while keeping 44px on touch
+  (`pointer-coarse:min-h-11`) — WCAG 2.5.5 preserved. StudyLink's `text-sm`
+  replaced with the 13px density token. Container padding tightened (nav, workspace
+  switcher, section gaps); PAGES tree row 30→26px; new `--cairn-sidebar-px` /
+  `--cairn-sidebar-section-gap` tokens. ~140px reclaimed at typical depth.
+- **Suggestion card whole-body clickable (#119)** — the card content is a single
+  button that jumps to the suggestion; Accept/Reject/View remain independent
+  sibling buttons (no nested-interactive; no a11y-lint downgrade).
+- **Custom page-lock duration adds a Minutes option (#137).**
+
+### Notes
+- **Bookmark unfurl (#135):** the OG parser is verified correct via fixture; a
+  minimal card on a live deploy indicates a server-side egress/site issue, not a
+  code bug. Added a visible "couldn't load preview" affordance when the unfurl
+  fetch fails.
+- VERIFY-LIVE (already present in code, no change): heading-collapse chevron
+  (#117, hover-only), suggestion inline diff (#118, renders when a text diff
+  exists), reader-mode Eye toggle (#58).
+
 ## [0.9.12] - 2026-06-06
 
 Hotfix for a v0.9.11 collab-service crash-loop.
