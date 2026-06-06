@@ -54,4 +54,25 @@ describe('parseOgTags', () => {
       favicon: 'https://example.com/favicon.ico',
     });
   });
+
+  it('extracts title, description, image, and favicon from a combined real-world fixture', () => {
+    const BASE2 = 'https://example.com/blog/post-1';
+    const html = `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Plain fallback title</title>
+  <meta property="og:title" content="Rich OG Title" />
+  <meta property="og:description" content="A short description of the page for link previews." />
+  <meta property="og:image" content="https://example.com/images/og-cover.jpg" />
+  <link rel="icon" href="/assets/favicon.png" />
+</head>
+<body><p>Content</p></body>
+</html>`;
+    const result = parseOgTags(html, BASE2);
+    expect(result.title).toBe('Rich OG Title');
+    expect(result.description).toBe('A short description of the page for link previews.');
+    expect(result.image).toBe('https://example.com/images/og-cover.jpg');
+    expect(result.favicon).toBe('https://example.com/assets/favicon.png');
+  });
 });
