@@ -72,6 +72,29 @@ Single PR onto `patches/v0.9.13`, version `0.9.12 → 0.9.13`:
 
 **Files:** `src/components/sidebar-footer-nav.tsx`, `src/components/sidebar/study-link.tsx`. Single-area CSS/className change, low effort.
 
+## Plan C-v3 — sidebar padding/density token pass (with #130-v2)
+
+**Audit corrections (code-checked, not browser-trusted):**
+- **Width already 224px.** `sidebar.tsx:28` is `var(--cairn-sidebar-w, 14rem)` (v0.9.11 #131). A live 256px = the user's **persisted drag** in `localStorage[cairn:sidebar-width]` (set by `SidebarResizeHandle`), which always wins over the fallback. Default is already tighter than Notion (240) / between Linear (220) and Notion. **No width change needed** unless we retune the default to 15rem/240 (optional; persisted widths still override).
+- **PAGES tree rows are already a fixed 30px** via the virtualizer: `virtualized-page-tree.tsx:28` `ROW_HEIGHT_PX = 30`, used by `estimateSize` (`:162`). Row-internal padding does NOT change the row — the only lever is `ROW_HEIGHT_PX` (e.g. 30→26 for denser tree). The audit's "tree row 6px→2-3px, save 4px×N" does not apply.
+- **Padding cuts on `min-h-11` rows are no-ops alone.** Utility rows (`NAV_ITEM_CLASS`), the workspace-switcher trigger (`workspace-switcher.tsx:52`), and Sign-out all carry `min-h-11`; `min-height` wins over reduced padding. Their padding only becomes visible **coupled with #130-v2** (which pointer-gates the min-h). So C-v3 ships **with** C-v2, not standalone.
+
+**Real immediate wins (containers, not min-h rows):**
+| Element | File:line | Now | → |
+|---|---|---|---|
+| `<nav>` wrapper | `sidebar-content.tsx:48` | `p-3` (12px) | `p-1.5` (6px) — **~12px** |
+| Workspace-switcher container | `sidebar-content.tsx:38` | `border-b p-2` (8px) | `p-1` (4px) — **~8px** |
+| Section gaps (saved-searches↔pages↔utilities) | `sidebar-content.tsx` (verify `space-y-*`/`mb-*`) | ~12px | 6px — **~6px ×2** |
+| PAGES tree row (optional denser) | `virtualized-page-tree.tsx:28` | `ROW_HEIGHT_PX = 30` | 26 — **4px × N rows** |
+
+**Token centralization (DRY, optional but tidy):** introduce `@theme` vars in `globals.css` — `--cairn-sidebar-px`, `--cairn-sidebar-py-row`, `--cairn-sidebar-section-gap` — and reference them across `sidebar-content.tsx` + the row classes, so future tuning is one edit. (Mirrors the v0.9.11 `--cairn-sidebar-text/-leading` token pattern.)
+
+**Net (with C-v2):** container padding ~26px + utility rows 7×16 (once C-v2 lands) ~112px + optional tree 30→26 (~4px×N) → **~140px+ reclaimed** at typical depth. Width already optimal at 224.
+
+**a11y:** container/section padding is non-interactive → no touch-floor impact. The only interactive-height change is C-v2's pointer-gated rows (44px on touch retained). Tree `ROW_HEIGHT_PX` change does not affect touch targets inside the 30px virtualized rows (already shipped at 30 since v0.9.9).
+
+**Files:** `src/components/sidebar-content.tsx`, `src/app/globals.css` (tokens), `src/components/sidebar/virtualized-page-tree.tsx` (optional ROW_HEIGHT_PX). Pairs with C-v2's `sidebar-footer-nav.tsx` + `study-link.tsx`. One CSS/token PR.
+
 ## Migrations
 None expected.
 
