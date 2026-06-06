@@ -52,8 +52,8 @@ const node = (id: string, title: string) => ({
 });
 
 describe('compact sidebar rows (#208)', () => {
-  it('estimates rows at 30px', () => {
-    expect(ROW_HEIGHT_PX).toBe(30);
+  it('estimates rows at 26px (v0.9.13 #130 density)', () => {
+    expect(ROW_HEIGHT_PX).toBe(26);
   });
   it('renders 16px (h-4 w-4) page-row icons', () => {
     render(
