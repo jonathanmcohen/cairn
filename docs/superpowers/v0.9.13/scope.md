@@ -54,6 +54,24 @@ Single PR onto `patches/v0.9.13`, version `0.9.12 → 0.9.13`:
 6. **VERIFY-LIVE #117/#118/#58:** confirm live; only act if genuinely broken (likely tooltip/affordance polish at most).
 7. Gate: lint 0 · typecheck · i18n en/es/ar for any new strings (lock "Minutes", reader "Exit" tooltip) · full `pnpm vitest run` · build · a11y e2e.
 
+## Plan C-v2 — sidebar utility density (#130-v2)
+
+**Live measure (v0.9.12):** the bottom utility cluster (Study flashcards · Favorites · Inbox · My-tasks · Templates · Settings · Trash) = **7 rows × 44px = 308px**. Font already 13px ✅ but rows stuck at 44px. Height driver confirmed in code: `NAV_ITEM_CLASS` (`sidebar-footer-nav.tsx:20-21`) and `StudyLink` (`study-link.tsx:18`) and the Sign-out `<Button>` all carry **`min-h-11`** (the 44px WCAG 2.5.5 touch floor). Icons already 16px (`h-4`/`size-4`); padding is minor (`py-1.5`/`py-1`). **`min-h-11` is the sole 44px driver.** StudyLink also has a font outlier: `text-sm` (14px) instead of the 13px density token.
+
+**Reference check (Notion web):** Notion's sidebar utility rows are **compact labeled rows ~28px** (14px font, 16px icon, ~4px vpad) — Settings/Templates/Trash are visible labeled rows, NOT an icon-rail and NOT hidden in a "More" menu. Notion web does **not** enforce a 44px touch target on desktop; its 44px touch experience is the separate **native mobile app**. So Notion ≈ "keep labels, ~28px rows, ignore touch on web."
+
+**Decision — Option C (Notion-desktop density, touch-safe):** match Notion's ~28px labeled rows on desktop, but keep 44px on touch via pointer-gating (Cairn ships a responsive PWA + has an a11y gate, so it should beat Notion-web on touch rather than copy its desktop-only assumption). **Rejected:** A (icon-only rail) and B (demote to More-menu) — both diverge from Notion's labeled-row pattern and lose discoverability; flat-28px-everywhere — passes CI (sidebar isn't in `mobile-touch-targets.spec.ts`, and `shell.spec.ts` axe doesn't check 2.5.5) but is a real uncaught sub-44 touch regression.
+
+**Fix (on GO):**
+- In `NAV_ITEM_CLASS` (`sidebar-footer-nav.tsx`): replace `min-h-11 ... py-1.5` with `min-h-[28px] py-1 pointer-coarse:min-h-11 pointer-coarse:py-1.5`. Desktop mouse → ~28px; touch/tablet → 44px. (Tailwind v4 ships the `pointer-coarse` variant.)
+- Apply the same `min-h-[28px] py-1 pointer-coarse:min-h-11 pointer-coarse:py-1.5` to the **Sign-out** `<Button>` (shares the cluster) and to **StudyLink** (`study-link.tsx`) — and swap StudyLink's `text-sm` for the density triplet `text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px]` to kill the 14px outlier.
+- Icons stay 16px. No `min-height` left on the `<a>`/`<button>` for fine pointers.
+- **Impact:** desktop ~7×28 = 196px (was 308) → **~112px reclaimed, ~3–4 more items above the fold**; touch unchanged at 44px.
+
+**a11y note (load-bearing):** `tests/a11y/mobile-touch-targets.spec.ts` only covers `/settings/developer/*` + webhooks (no sidebar), and `shell.spec.ts` axe doesn't assert 2.5.5 — so the gate won't *catch* a regression here either way. The `pointer-coarse:min-h-11` is therefore a **discipline choice, not a gate-forced one**: it preserves real touch-device usability. If desired, add a coarse-pointer touch-target e2e over the workspace shell to lock it in.
+
+**Files:** `src/components/sidebar-footer-nav.tsx`, `src/components/sidebar/study-link.tsx`. Single-area CSS/className change, low effort.
+
 ## Migrations
 None expected.
 
