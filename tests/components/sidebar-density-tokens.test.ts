@@ -12,3 +12,14 @@ describe('sidebar density tokens (#130)', () => {
     expect(css).toMatch(/--cairn-sidebar-leading:\s*18px/);
   });
 });
+
+const treeSrc = readFileSync(
+  join(process.cwd(), 'src/components/sidebar/virtualized-page-tree.tsx'),
+  'utf8',
+);
+
+describe('sidebar tree row height (C-v3 optional)', () => {
+  it('ROW_HEIGHT_PX is 26 (denser tree)', () => {
+    expect(treeSrc).toMatch(/ROW_HEIGHT_PX\s*=\s*26/);
+  });
+});

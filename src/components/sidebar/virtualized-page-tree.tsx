@@ -25,7 +25,7 @@ function renderNodeIcon(stored: string | null): React.ReactNode {
   return <ImageIcon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
 }
 
-export const ROW_HEIGHT_PX = 30; // Compact dense row (#208).
+export const ROW_HEIGHT_PX = 26; // Compact dense row (#208).
 const DEPTH_INDENT_PX = 16; // 16px per level; matches the v0.7 visual.
 const OVERSCAN = 8; // Extra rows above/below the viewport for smooth scroll.
 
