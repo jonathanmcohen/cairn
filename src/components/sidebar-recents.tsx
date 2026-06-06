@@ -12,7 +12,7 @@ import type { PrefEntry } from '@/lib/prefs/user-page-prefs';
 export function SidebarRecents({ recents }: { recents: PrefEntry[] }) {
   if (recents.length === 0) return null;
   return (
-    <section aria-label="Recent pages" className="mb-3">
+    <section aria-label="Recent pages" className="mb-1.5">
       <div className="mb-1 flex items-center gap-2 px-2">
         <Clock aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
         <p className="text-xs uppercase tracking-wide text-muted-foreground">Recents</p>

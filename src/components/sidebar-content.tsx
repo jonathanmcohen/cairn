@@ -35,7 +35,7 @@ export async function SidebarContent({
   const tree = await flattenedPageTree(getDb(), workspaceId, ctx?.userId);
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <div className="border-b p-2">
+      <div className="border-b p-1">
         <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
       </div>
       {/*
@@ -45,7 +45,7 @@ export async function SidebarContent({
         (the tree's overflow-y-auto wrapper). Previously the whole <nav> was
         the scroll container, so everything scrolled together.
       */}
-      <nav aria-labelledby="sidebar-pages-heading" className="flex min-h-0 flex-1 flex-col p-3">
+      <nav aria-labelledby="sidebar-pages-heading" className="flex min-h-0 flex-1 flex-col p-1.5">
         <SearchHintButton />
         <PinnedSection />
         <SidebarFavorites favorites={favorites} />
