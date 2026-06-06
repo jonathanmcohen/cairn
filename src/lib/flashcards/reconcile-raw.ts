@@ -1,5 +1,5 @@
 import type { Sql } from 'postgres';
-import { extractFlashcardBlocks } from './reconcile';
+import { extractFlashcardBlocks } from './extract';
 
 /**
  * Driver-agnostic flashcard reconcile for the standalone collab process

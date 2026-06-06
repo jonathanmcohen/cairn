@@ -24,6 +24,13 @@ COPY src/lib/auth ./src/lib/auth
 # pulls @/lib/auth/require-role only as `import type`, which tsx erases — but
 # observability/metrics is a value import and must be present at runtime.
 COPY src/lib/observability ./src/lib/observability
+# v0.9.12 hotfix: collab/server.ts → materialize() imports
+# @/lib/flashcards/reconcile-raw, which imports the dependency-free
+# @/lib/flashcards/extract. Both must be present at runtime. They are
+# deliberately Drizzle-/@db-schema-free so the collab image stays a thin curated
+# subset of src — do NOT add the Drizzle-laden reconcile.ts here (it pulls
+# @/db/schema, which is intentionally not copied into this image).
+COPY src/lib/flashcards/extract.ts src/lib/flashcards/reconcile-raw.ts ./src/lib/flashcards/
 
 RUN addgroup -g 1001 -S cairn && adduser -u 1001 -S cairn -G cairn
 USER cairn

@@ -5,6 +5,25 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.12] - 2026-06-06
+
+Hotfix for a v0.9.11 collab-service crash-loop.
+
+### Fixed
+- **`cairn-collab` crash-looped on startup (`ERR_MODULE_NOT_FOUND`).** v0.9.11
+  added `import '@/lib/flashcards/reconcile-raw'` to `collab/server.ts`, but
+  `Dockerfile.collab` ships only a curated subset of `src/` and never copied the
+  new file, so the standalone Hocuspocus container couldn't boot (editor
+  autosave + collaborative editing down). The block extractor is now a
+  dependency-free `src/lib/flashcards/extract.ts` (only `node:crypto`), imported
+  by both `reconcile-raw.ts` (collab path) and re-exported from `reconcile.ts`
+  (REST path); `Dockerfile.collab` copies `extract.ts` + `reconcile-raw.ts`.
+  Keeping the collab path free of Drizzle / `@/db/schema` avoids dragging the
+  curated-out schema graph into the thin collab image.
+- Added `tests/collab/dockerfile-copies-imports.test.ts` — asserts every
+  `../src/lib` value import in `collab/server.ts` is COPYed by `Dockerfile.collab`,
+  so a missing-file collab regression fails CI instead of production.
+
 ## [0.9.11] - 2026-06-05
 
 Hotfix release — flashcard SRS ingest + account/editor/sidebar/polish fixes. No

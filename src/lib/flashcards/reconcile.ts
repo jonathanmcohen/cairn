@@ -1,54 +1,15 @@
-import { randomUUID } from 'node:crypto';
 import { and, eq, notInArray } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { extractFlashcardBlocks, type FlashcardBlock } from './extract';
 import { upsertCard } from './upsert-card';
 
 type Tx = Pick<PostgresJsDatabase<typeof schema>, 'select' | 'delete' | 'insert' | 'update'>;
 
-export type FlashcardBlock = {
-  blockId: string;
-  front: string;
-  back: string;
-  deckTag: string | null;
-};
-
-/**
- * Walk a TipTap JSON doc and return every `flashcard` block found. Blocks
- * missing a `blockId` get one minted in-place (mutating the input is fine —
- * `updatePage` calls this with the freshly-parsed content jsonb that's about
- * to be persisted, and we want the minted id to land in the saved JSON so the
- * next save matches the same row).
- */
-export function extractFlashcardBlocks(content: unknown): FlashcardBlock[] {
-  const out: FlashcardBlock[] = [];
-  const walk = (node: unknown): void => {
-    if (!node || typeof node !== 'object') return;
-    const n = node as {
-      type?: string;
-      attrs?: Record<string, unknown>;
-      content?: unknown[];
-    };
-    if (n.type === 'flashcard') {
-      const attrs = n.attrs ?? {};
-      let blockId = attrs.blockId;
-      if (typeof blockId !== 'string' || blockId.length === 0) {
-        blockId = randomUUID();
-        attrs.blockId = blockId;
-        n.attrs = attrs;
-      }
-      out.push({
-        blockId: blockId as string,
-        front: String(attrs.front ?? ''),
-        back: String(attrs.back ?? ''),
-        deckTag: typeof attrs.deckTag === 'string' ? (attrs.deckTag as string) : null,
-      });
-    }
-    if (Array.isArray(n.content)) for (const child of n.content) walk(child);
-  };
-  walk(content);
-  return out;
-}
+// Re-export the dependency-free block extractor (moved to ./extract so the
+// collab process can import it without the Drizzle/@-db-schema graph) so the
+// existing REST-path importers of `@/lib/flashcards/reconcile` keep working.
+export { extractFlashcardBlocks, type FlashcardBlock };
 
 /**
  * Sync `flashcard_cards` rows with the flashcard blocks present in the saved
