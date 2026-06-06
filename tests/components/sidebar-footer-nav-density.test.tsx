@@ -15,20 +15,28 @@ vi.mock('@/lib/i18n/provider', async () => {
 afterEach(cleanup);
 
 describe('footer-nav density (#130)', () => {
-  it('renders utility links at 13px density token while keeping the 44px touch floor', () => {
-    render(<SidebarFooterNav version="0.9.11" />);
+  it('renders utility links at 13px density token with pointer-gated height', () => {
+    render(<SidebarFooterNav version="0.9.13" />);
     const favorites = screen.getByRole('link', { name: 'Favorites' });
+    // Density token present
     expect(favorites.className).toContain('text-[length:var(--cairn-sidebar-text)]');
     expect(favorites.className).toContain('leading-[var(--cairn-sidebar-leading)]');
     expect(favorites.className).toContain('tracking-[0.1px]');
-    expect(favorites.className).toContain('min-h-11'); // a11y floor intact
+    // Pointer-gated height: desktop ~28px, touch 44px
+    expect(favorites.className).toContain('min-h-[28px]');
+    expect(favorites.className).toContain('pointer-coarse:min-h-11');
+    // MUST NOT carry a bare min-h-11 (that defeats the pointer gate)
+    expect(favorites.className).not.toMatch(/(^|\s)min-h-11(\s|$)/);
+    // No text-sm outlier
     expect(favorites.className).not.toMatch(/(^|\s)text-sm(\s|$)/);
   });
 
-  it('renders Sign out at the density token while keeping min-h-11', () => {
-    render(<SidebarFooterNav version="0.9.11" />);
+  it('renders Sign out button with pointer-gated height', () => {
+    render(<SidebarFooterNav version="0.9.13" />);
     const signOut = screen.getByRole('button', { name: /sign out/i });
     expect(signOut.className).toContain('text-[length:var(--cairn-sidebar-text)]');
-    expect(signOut.className).toContain('min-h-11'); // a11y floor intact
+    expect(signOut.className).toContain('min-h-[28px]');
+    expect(signOut.className).toContain('pointer-coarse:min-h-11');
+    expect(signOut.className).not.toMatch(/(^|\s)min-h-11(\s|$)/);
   });
 });
