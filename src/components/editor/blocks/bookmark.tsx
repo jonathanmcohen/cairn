@@ -1,6 +1,7 @@
 import type { NodeViewProps } from '@tiptap/react';
 import { NodeViewWrapper, ReactNodeViewRenderer } from '@tiptap/react';
 import { useState } from 'react';
+import { copy } from '@/lib/copy/messages';
 import { BookmarkNode } from './bookmark-node';
 
 type Unfurl = {
@@ -99,7 +100,7 @@ function BookmarkView({ node, editor, updateAttributes }: NodeViewProps) {
         </a>
         {unfurlError && (
           <p className="mt-1 px-3 pb-2 text-[11px] text-destructive/70">
-            Couldn&apos;t load preview
+            {copy('editor.bookmark.unfurlError')}
           </p>
         )}
       </NodeViewWrapper>

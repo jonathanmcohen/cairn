@@ -100,6 +100,9 @@ export const MESSAGES = {
   'button.createPage': 'Create page',
   'button.cancel': 'Cancel',
   'button.delete': 'Delete',
+
+  // v0.9.13 #135 — bookmark unfurl failure affordance.
+  'editor.bookmark.unfurlError': "Couldn't load preview",
 } as const;
 
 export type CopyKey = keyof typeof MESSAGES;
