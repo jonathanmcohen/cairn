@@ -8,7 +8,7 @@ Apply the remaining open items from the 20-point Notion polish audit. v0.9.11 Pl
 
 Cross-references:
 - Plan C: cover/spacing/density — complete; do NOT duplicate.
-- `docs/superpowers/v0.9.14/polish-audit.md` — authoritative 20-row verdict table (written alongside this plan).
+- `docs/superpowers/plans/v0.9.14/polish-audit.md` — authoritative 20-row verdict table (written alongside this plan).
 
 ## Architecture
 
@@ -45,7 +45,7 @@ These three items from the original audit require structural component work that
 
 ## 20-dimension status table
 
-See `docs/superpowers/v0.9.14/polish-audit.md` for the full evidence table. Summary by verdict:
+See `docs/superpowers/plans/v0.9.14/polish-audit.md` for the full evidence table. Summary by verdict:
 
 | Verdict | Items |
 |---|---|
@@ -212,4 +212,4 @@ See `docs/superpowers/v0.9.14/polish-audit.md` for the full evidence table. Summ
 
 - [ ] **U-GATE-T3 — No push**
 
-  Do **not** push to remote. The controller/human merges all v0.9.14 plan branches into a single PR at the end of the release cycle per `docs/superpowers/v0.9.14/scope.md` standing convention.
+  Do **not** push to remote. The controller/human merges all v0.9.14 plan branches into a single PR at the end of the release cycle per `docs/superpowers/plans/v0.9.14/scope.md` standing convention.

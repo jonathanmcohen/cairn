@@ -394,5 +394,5 @@ are still empty when this lands.)
 - [ ] Commit:
 
   ```sh
-  source ~/.zshenv && git add docs/superpowers/v0.9.14/plan-V-test-infrastructure.md && git commit -m "docs: capture full test reorg as deferred (plan V)"
+  source ~/.zshenv && git add docs/superpowers/plans/v0.9.14/plan-V-test-infrastructure.md && git commit -m "docs: capture full test reorg as deferred (plan V)"
   ```
