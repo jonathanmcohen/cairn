@@ -107,6 +107,10 @@
   --cairn-prose-base: 16px;
   --cairn-prose-leading: 1.6;
 
+  /* v0.9.14 C3 #141 — editor block-gap token. Controls the default sibling
+     spacing in .ProseMirror. Heading-specific margins below override it. */
+  --cairn-block-gap: 6px;
+
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
@@ -193,6 +197,56 @@
   font-size: 1.25rem;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+/* v0.9.14 C3 #141 — editor block spacing. Scoped to
+   .ProseMirror[contenteditable="true"] — the EDITABLE surface only.
+   IMPORTANT: `.ProseMirror` is a class ProseMirror applies at RUNTIME to
+   BOTH the editable editor AND the read-only public reader (/p/[slug] uses
+   ReadOnlyView, which also mounts a TipTap editor → also gets .ProseMirror).
+   TipTap sets contenteditable="true" only when editable:true, so the
+   [contenteditable="true"] attribute selector hits the editor and NOT the
+   public reader (ReadOnlyView is editable:false → contenteditable="false").
+   This keeps the public /p/* rhythm (governed by @tailwindcss/typography)
+   untouched. Headings override the sibling gap via specificity + source order. */
+
+/* Default sibling gap for any block element inside the editor. */
+.ProseMirror[contenteditable="true"] > * + * {
+  margin-top: var(--cairn-block-gap, 6px);
+}
+
+/* Heading-specific overrides. */
+.ProseMirror[contenteditable="true"] h1 {
+  margin-bottom: 8px;
+}
+.ProseMirror[contenteditable="true"] h2 {
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+.ProseMirror[contenteditable="true"] h3 {
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
+
+/* Paragraphs carry no extra margin; the sibling gap handles spacing. */
+.ProseMirror[contenteditable="true"] p {
+  margin: 0;
+}
+
+/* Lists: no vertical margin; indent via padding-left only. */
+.ProseMirror[contenteditable="true"] ul,
+.ProseMirror[contenteditable="true"] ol {
+  margin: 0;
+  padding-left: 24px;
+}
+.ProseMirror[contenteditable="true"] li {
+  margin: 2px 0;
+}
+
+/* Blockquotes and code blocks get a uniform 8px vertical rhythm. */
+.ProseMirror[contenteditable="true"] blockquote,
+.ProseMirror[contenteditable="true"] pre {
+  margin: 8px 0;
 }
 
 /* v0.8.0 — per-user theme: page-width + font + accent custom properties.
