@@ -60,7 +60,7 @@ No schema migration needed — `visibility` column already exists with a CHECK c
 ## File structure
 
 ```
-docs/superpowers/v0.9.13/
+docs/superpowers/plans/v0.9.13/
   plan-b-template-preview.md          # this plan
 
 src/lib/templates/

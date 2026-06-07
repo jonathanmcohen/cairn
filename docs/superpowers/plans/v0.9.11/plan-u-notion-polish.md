@@ -2,7 +2,7 @@
 
 For agentic workers: REQUIRED SUB-SKILL: superpowers:subagent-driven-development
 
-**Goal:** Ship the **PATCH-verdict** items from `docs/superpowers/v0.9.11/polish-audit.md` on `patches/v0.9.11` — the a11y-safe, token/class-level Notion-polish wins that need no structural component rewrite. Seven slices, all CSS / className / tiny-component work:
+**Goal:** Ship the **PATCH-verdict** items from `docs/superpowers/plans/v0.9.11/polish-audit.md` on `patches/v0.9.11` — the a11y-safe, token/class-level Notion-polish wins that need no structural component rewrite. Seven slices, all CSS / className / tiny-component work:
 
 - **#1 Typography (audit row 1):** add a tokenized prose heading scale (H1 1.875rem/600, H2 1.5rem/600, H3 1.25rem/600, all `tracking-[-0.01em]`) + a base measure (`--cairn-prose-base: 16px`, `--cairn-prose-leading: 1.6`) to the `@theme`/scoped CSS in `globals.css`; tighten the editor heading rendering; **ship Inter as the sans via `next/font/google` with `display: 'swap'`** wired into `--cairn-font-family`.
 - **#3 Status-color token swaps (audit row 3):** replace raw `bg-amber-500`/`bg-emerald-500` (`editor.tsx`) and `text-green-700`/`text-red-700` (`suggestion-toolbar.tsx`) with the existing semantic `warning`/`success`/`destructive` tokens (single-accent discipline).

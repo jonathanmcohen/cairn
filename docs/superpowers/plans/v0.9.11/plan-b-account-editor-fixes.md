@@ -52,7 +52,7 @@ Fix the two genuine P1 UI bugs scoped to v0.9.11 Plan B:
 ## File structure
 
 ```
-docs/superpowers/v0.9.11/
+docs/superpowers/plans/v0.9.11/
   plan-b-account-editor-fixes.md          # this plan
 
 src/
