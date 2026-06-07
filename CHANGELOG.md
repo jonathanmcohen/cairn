@@ -5,6 +5,30 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.14] - 2026-06-07
+
+Consolidated patch release — P0 export hotfix, editor/density fixes, test-infra split, polish. No migration (latest stays 0068). Single PR across 7 plans (V/A/B/D/E/C/U).
+
+### Fixed
+- **Export 500 for ALL formats (#140, P0).** The page-export route statically imported `@playwright/test` via `pdf-native.ts`; `next build` standalone omits Playwright's runtime data files, so the route module crashed on load → generic 500 for every format (incl. md/json that need no browser). `@playwright/test` is now lazily `await import()`-ed inside `pageToPdf()` (env-gated by `CAIRN_NATIVE_PDF`); a build-graph guard test prevents recurrence. Verified against the built `.next/standalone` artifact (zero `@playwright/test` references in the traced graph).
+- **Task/checkbox list layout (#138).** `<li data-type="taskItem">` stacked the checkbox above its text — `blocks.css` had no task-list rule. Added `ul[data-type="taskList"] li { display:flex; align-items:baseline }` (label `flex:none`, content `flex:1`, nested indent) so the checkbox sits inline-left of the text.
+- **Encryption-off heading copy (#193).** When E2EE is disabled, the enrollment card showed "Set up your encryption key" (`e2e.enroll.title`). It now shows "End-to-end encryption is turned off in this build" (`e2ee.disabledTitle`); the duplicate title in the standalone admin notice is suppressed via a `hideTitle` prop.
+
+### Changed
+- **Slash item "Task list" → "Checkbox list" (#139).** Renamed for clarity vs the My-tasks @-mention aggregation; added a `task` keyword alias so `/task` still surfaces it.
+- **Editor block spacing (#141).** Added a `--cairn-block-gap` token + heading/paragraph/list/blockquote margins, scoped to `.ProseMirror[contenteditable="true"]` so the public `/p/*` read-only reader (which also carries the runtime `.ProseMirror` class) is unaffected.
+- **Sidebar default width → 240px** (`15rem` fallback; Notion parity). Persisted drag width unchanged.
+- **Semantic color tokens** for suggestion diff/accept-reject, version-history diff pills, and profile-form status/alert text (raw `red/green-*` → `success`/`destructive`; orphaned `dark:` overrides removed).
+- **⌘K search palette** now animates in (`animate-in fade-in-0 zoom-in-95`, reduced-motion-safe).
+- **Yjs ↔ REST content-write precedence documented** (Option C): editor/Yjs state wins while a doc is open; API `pages.content` writes apply when no active doc. Comment + regression test added; Hocuspocus-publish-on-write deferred to v0.10.x.
+
+### Infrastructure
+- **Test split into a per-suite CI matrix (Plan V).** `ci.yml` `test` job replaced by a 21-entry matrix over every Vitest dir (one job per layer; `src/server` folded into `server`); `security`/`a11y`/`e2e` stay in their own jobs. `vitest.config` now discovers `*.spec.{ts,tsx}` and excludes `tests/a11y`/`tests/e2e` (Playwright) from collection. New by-feature dirs `tests/{blocks,workflow,settings,ui}` + `tests/README.md`. Full 978-file reorg deferred.
+- **Regression coverage** backfilled for already-shipped items verified during planning: heading collapse (#117), slash-modal popup-destroy (#76/#128/#136), suggestion inline diff + clickable chip (#118/#119), notification event matrix (#16), passkeys admin/user copy (#89), admin→audit redirect (#5), new-page default Draft, sidebar text density.
+
+### Notes
+- `/settings/workspace/general` 500 (#1) did not reproduce against real Postgres in the loader harness — diagnosed as an environment/stale-deploy issue (clears on redeploy of v0.9.13+); a regression harness now guards the loader.
+
 ## [0.9.13] - 2026-06-06
 
 Patch release — post-v0.9.12 browser-sweep fixes. No migration.
