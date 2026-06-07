@@ -19,10 +19,7 @@ import { describe, expect, it } from 'vitest';
 
 const root = process.cwd();
 
-const pdfNativeSrc = readFileSync(
-  join(root, 'src/lib/export/pdf-native.ts'),
-  'utf8',
-);
+const pdfNativeSrc = readFileSync(join(root, 'src/lib/export/pdf-native.ts'), 'utf8');
 const exportRouteSrc = readFileSync(
   join(root, 'src/app/api/pages/[pageId]/export/route.ts'),
   'utf8',

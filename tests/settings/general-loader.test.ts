@@ -122,10 +122,7 @@ describe('/settings/workspace/general — loader functions (#1)', () => {
   });
 
   it('loadWorkspaceGeneralSettings returns null for a non-existent workspace (does not throw)', async () => {
-    const row = await loadWorkspaceGeneralSettings(
-      getDb(),
-      '00000000-0000-0000-0000-000000000000',
-    );
+    const row = await loadWorkspaceGeneralSettings(getDb(), '00000000-0000-0000-0000-000000000000');
     expect(row).toBeNull();
   });
 
@@ -136,10 +133,7 @@ describe('/settings/workspace/general — loader functions (#1)', () => {
     // That throw is caught by src/app/(app)/settings/error.tsx, which renders a
     // friendly recoverable card. This test pins the loader's null contract that
     // feeds that boundary so the documented behavior can't regress silently.
-    const row = await loadWorkspaceGeneralSettings(
-      getDb(),
-      '00000000-0000-0000-0000-000000000000',
-    );
+    const row = await loadWorkspaceGeneralSettings(getDb(), '00000000-0000-0000-0000-000000000000');
     // Mirror the page's guard: null => the page throws, which error.tsx handles.
     const pageGuard = () => {
       if (!row) throw new Error('workspace missing');
