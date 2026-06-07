@@ -4,7 +4,7 @@
 
 ## Goal
 
-Apply the remaining open items from the 20-point Notion polish audit. v0.9.11 Plan U shipped the PATCH set (typography rhythm, sidebar density tokens, status-color tokens, block-handle transition, button press-scale, empty-state icons, skeletons). v0.9.13 Plan C shipped sidebar density visuals (sticky shell, compact rows, scrollable tree). This plan covers only what is **still open** after reading the live code: 4 PATCH-NOW items (color token replacements, cover hairline, palette fade-in, remaining raw color callsites) and documents 3 REFACTOR-DEFER items as explicitly out of scope.
+Apply the remaining open items from the 20-point Notion polish audit. v0.9.11 Plan U shipped the PATCH set (typography rhythm, sidebar density tokens, status-color tokens, block-handle transition, button press-scale, empty-state icons, skeletons). v0.9.13 Plan C shipped sidebar density visuals (sticky shell, compact rows, scrollable tree). This plan covers only what is **still open** after reading the live code: PATCH-NOW = color token replacements (U1, 3 files) + search-palette fade-in (U3). The cover hairline (#8) was found ALREADY shipped at `globals.css:383` and is dropped. 3 REFACTOR-DEFER items documented as explicitly out of scope.
 
 Cross-references:
 - Plan C: cover/spacing/density — complete; do NOT duplicate.
@@ -18,7 +18,7 @@ All PATCH-NOW changes are **CSS class or token substitutions only** — no new c
 - `src/components/editor/suggestions-drawer.tsx` — swap 4 raw color classes.
 - `src/components/pages/version-history.tsx` — swap 2 raw diff-pill color classes.
 - `src/components/account/profile-form.tsx` — swap 2 raw inline-feedback color classes.
-- `src/components/pages/cover-banner.tsx` — add `border-b border-border` to 4 cover variant `div`/wrapper elements.
+- (cover hairline DROPPED — already shipped at `globals.css:383` via `.cairn-cover { border-bottom }`.)
 - `src/components/search-palette.tsx` — add `animate-in fade-in-0 zoom-in-95 duration-150` to `<Command>` container.
 
 No interactive height changes anywhere. All changes are pointer-gated or purely decorative.
@@ -50,7 +50,7 @@ See `docs/superpowers/plans/v0.9.14/polish-audit.md` for the full evidence table
 | Verdict | Items |
 |---|---|
 | SHIP-ALREADY | #1, #2, #4, #7, #9, #10, #11, #12, #13, #14, #16, #17 (10 of 17 now SHIP) |
-| PATCH-NOW | #3 color tokens, #8 cover hairline, #15 palette fade-in (4 total tasks below) |
+| PATCH-NOW | #3 color tokens (U1), #15 palette fade-in (U3). NOTE: #8 cover hairline reclassified SHIP-ALREADY (already at globals.css:383). |
 | REFACTOR-DEFER | #6 Badge, #18 rail animations, #19 settings sidebar |
 | VERIFY-LIVE | #5 toolbar rows, #20 mobile collapse |
 
@@ -70,9 +70,9 @@ See `docs/superpowers/plans/v0.9.14/polish-audit.md` for the full evidence table
 
   Open `src/components/editor/suggestions-drawer.tsx`.
 
-  Find line 56 (`bg-red-500/10 px-0.5 text-red-700 line-through`): replace `bg-red-500/10` with `bg-destructive/10` and `text-red-700` with `text-destructive`.
+  Find the `<del>` line (~56) — full current classes include `bg-red-500/10 … text-red-700 … decoration-red-500/70 … dark:text-red-300`. Replace ALL red tokens with theme-aware ones AND remove the now-orphaned `dark:` override: `bg-red-500/10`→`bg-destructive/10`, `text-red-700`→`text-destructive`, `decoration-red-500/70`→`decoration-destructive/70`, and DELETE `dark:text-red-300` (the `destructive` token is already dark-mode-aware; leaving a `dark:` override orphans it — the U-GATE checks for this).
 
-  Find line 68 (`bg-green-500/10 px-0.5 text-green-700 no-underline`): replace `bg-green-500/10` with `bg-success/10` and `text-green-700` with `text-success`.
+  Find the `<ins>` line (~68) — current classes include `bg-green-500/10 … text-green-700 … dark:text-green-300`. Replace `bg-green-500/10`→`bg-success/10`, `text-green-700`→`text-success`, and DELETE `dark:text-green-300`.
 
   Find line 88 (accept button `text-green-700 … dark:text-green-400`): replace with `text-success`.
 
@@ -117,34 +117,9 @@ See `docs/superpowers/plans/v0.9.14/polish-audit.md` for the full evidence table
 
 ---
 
-### U2 — Cover-banner bottom hairline
+### U2 — Cover-banner bottom hairline — **DROPPED (already shipped)**
 
-**File:** `src/components/pages/cover-banner.tsx`
-
-**Why:** All four cover variants (`preset`, `color`, `unsplash`, `upload`) render a `cairn-cover h-[200px] w-full` element that butts flush against the white page body. When a light-colored preset or solid-color cover is used in light mode, there is no visual separation — the cover and the page merge into one undifferentiated rectangle. A 1px `border-b border-border` resolves this without affecting the title (which is in normal block flow below, confirmed by Plan C C5 no-op finding).
-
-**A11y note:** `border-b` is purely decorative; `aria-hidden="true"` is already set on all decorative cover variants. No change needed to ARIA.
-
-- [ ] **U2-T1 — Add `border-b border-border` to all four CoverBanner variants**
-
-  Open `src/components/pages/cover-banner.tsx`.
-
-  For the **preset** variant (line ~32): change `className="cairn-cover h-[200px] w-full"` to `className="cairn-cover h-[200px] w-full border-b border-border"`.
-
-  For the **color** variant (line ~44): same substitution.
-
-  For the **unsplash** variant (line ~54): the outer `<div data-cairn-cover="" className="cairn-cover h-[200px] w-full overflow-hidden">` — add `border-b border-border` to that `className`.
-
-  For the **upload** variant (line ~66): same as unsplash.
-
-  ```bash
-  source ~/.zshenv && pnpm lint
-  source ~/.zshenv && pnpm typecheck
-  ```
-
-  Confirm: `EditableCover` wraps `CoverBanner` — no second border is added because `EditableCover` does not add its own `border-b`. Check `src/components/pages/editable-cover.tsx` to verify no double border.
-
-  Commit: `fix(ui): add bottom hairline to cover banner to separate it from page body`
+**Status: NO-OP. Do not implement.** Review found the hairline already exists, implemented in CSS not in the className: `src/app/globals.css:383` — `.cairn-cover { … border-bottom: 1px solid hsl(var(--border)); }` (added v0.9.11 #8). All four cover variants in `cover-banner.tsx` carry the `cairn-cover` class, so all four already render the token-driven hairline (light/dark aware). Adding `border-b border-border` in the className would create a **duplicate** border. Audit row #8 is reclassified SHIP-ALREADY (see polish-audit.md). No task, no commit.
 
 ---
 
@@ -208,7 +183,7 @@ See `docs/superpowers/plans/v0.9.14/polish-audit.md` for the full evidence table
   - No interactive element has had its height or padding reduced.
   - No `aria-*` or `role=` attribute has been removed or altered.
   - No `dark:` dark-mode class has been left orphaned.
-  - Cover `border-b border-border` appears on all four variants and is not duplicated in `EditableCover`.
+  - (cover hairline check removed — already shipped at globals.css:383; no className change made.)
 
 - [ ] **U-GATE-T3 — No push**
 

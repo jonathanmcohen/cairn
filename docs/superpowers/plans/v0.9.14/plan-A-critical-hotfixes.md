@@ -882,7 +882,7 @@ source ~/.zshenv && pnpm vitest run tests/api/pages-content-patch.spec.ts
 #### A3-T2 — Add code comment at the PATCH site and update collab/server.ts
 
 - [ ] Read `src/lib/pages/update.ts` lines 37–100 (the `updatePage` function body, already reviewed).
-- [ ] Add a precedence comment at the content-write site in `src/lib/pages/update.ts`. Locate the `patch` object construction block (around line 99 in the current file) and add the following comment immediately above the `content` assignment inside the patch:
+- [ ] Add a precedence comment at the content-write site in `src/lib/pages/update.ts`. Locate the actual `content` write — it is the `values.content = …` assignment (around line 77 in the current file, inside the values construction; NOT line 99, which is the `.where()` clause of the UPDATE). Add the following comment immediately above that `values.content` assignment:
 
 The comment to add (find the block that builds the SET patch and add before content is applied):
 

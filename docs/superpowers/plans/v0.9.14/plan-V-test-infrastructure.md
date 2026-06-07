@@ -34,6 +34,7 @@ tests/
 
 vitest.config.ts
   include: ['tests/**/*.test.{ts,tsx}', 'tests/**/*.spec.{ts,tsx}', 'src/server/**/*.test.ts']
+  exclude: ['**/node_modules/**', '**/.git/**', 'tests/a11y/**', 'tests/e2e/**']  # keep Playwright specs out of Vitest
   (everything else unchanged — pool forks, maxWorkers 1, isolate true)
 
 tests/README.md   ← new, documents both conventions + local run commands
@@ -45,7 +46,7 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
 
 ### CI matrix vs 2 runners
 
-10 matrix entries, 2 runners → at most 2 jobs run at once. The `test-matrix` job replaces the old `test` job (which was 2 shards). Net change: 10 serial-within-job runs instead of 2 sharded ones. Wall-clock for the heaviest suite is similar to one shard; total CI time improves when suites are uneven (the old shard 2 had ~half the files but some are slow Testcontainers suites — matrix lets them drain in parallel).
+21 matrix entries, 2 runners → at most 2 jobs run at once, draining as runners free up. The matrix `test` job replaces the old `test` job (which was 2 shards). Net change: 21 serial-within-job runs (one per Vitest dir) instead of 2 sharded ones. Wall-clock for the heaviest suite is similar to one shard; total CI time is dominated by the slowest single suite (likely `integration`/`db` Testcontainers). Trade-off accepted for per-suite log locality + the coverage invariant (no dir silently dropped). Most suites are tiny and drain fast.
 
 ## Tech Stack
 
@@ -78,12 +79,25 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
     'tests/**/*.spec.{ts,tsx}',
     'src/server/**/*.test.ts',
   ],
+  // CRITICAL: tests/a11y and tests/e2e are Playwright specs (*.spec.ts) that
+  // import @playwright/test — they MUST NOT be collected by Vitest or the whole
+  // suite fails at collection. Vitest's defaultExclude is only node_modules/.git,
+  // so we re-include those defaults AND add the Playwright dirs. tests/e2e-flag
+  // is a real Vitest *.test.ts (encryption-roundtrip) — do NOT exclude it.
+  exclude: [
+    '**/node_modules/**',
+    '**/.git/**',
+    'tests/a11y/**',
+    'tests/e2e/**',
+  ],
   ```
 
-- [ ] Smoke-run to confirm no existing test breaks and the empty `blocks/` dir produces 0 new failures:
+- [ ] Smoke-run a FULL collection to prove the Playwright specs are excluded and nothing breaks (the previous `tests/unit`-only smoke would pass even with the bug present — it must exercise full discovery):
 
   ```sh
-  source ~/.zshenv && pnpm vitest run tests/unit --reporter=dot
+  source ~/.zshenv && pnpm vitest run --reporter=dot
+  # then sanity-check the Playwright dirs collect ZERO under vitest:
+  source ~/.zshenv && pnpm vitest run tests/a11y tests/e2e --reporter=dot 2>&1 | grep -qiE "no test files found" && echo "a11y/e2e correctly excluded"
   ```
 
 - [ ] Commit:
@@ -96,7 +110,7 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
 
 ### T2 — Replace the `test` shard job with a per-suite matrix in `.github/workflows/ci.yml`
 
-**Context:** the current `test` job (lines 141–181 of `ci.yml`) runs `pnpm test --shard=${{ matrix.shard }}/${{ matrix.total }}` with `shard: [1, 2]` / `total: [2]`. Replace it entirely with a matrix over the 10 logical suite directories. The `security` job already runs `pnpm test tests/security` explicitly — keep it; remove `security` from the new `test` matrix to avoid double-running. The `a11y` and `e2e` jobs remain as-is.
+**Context:** the current `test` job (lines 141–181 of `ci.yml`) runs `pnpm test --shard=${{ matrix.shard }}/${{ matrix.total }}` with `shard: [1, 2]` / `total: [2]`. Replace it entirely with a matrix over EVERY Vitest test directory (21 entries; `{name, path}` objects so `server` can fold in `src/server`). The `security` job already runs `pnpm test tests/security` explicitly — keep it; `security` stays OUT of the matrix to avoid double-running. The `a11y` and `e2e` jobs remain as-is (Playwright). COVERAGE INVARIANT: the old shard job ran the whole Vitest set, so the matrix must list every dir or those tests silently stop.
 
 - [ ] Open `/Users/jon/projects/cairn/.github/workflows/ci.yml` and locate the `test:` job (line 141).
 
@@ -105,14 +119,18 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
   ```yaml
   # Vitest suite, one job per top-level test directory.
   # Each job is serial within itself (Testcontainers maxWorkers 1) but the
-  # 10 jobs interleave across the 2 self-hosted Linux x64 runners — improving
+  # jobs interleave across the 2 self-hosted Linux x64 runners — improving
   # log locality and triage speed vs the old 2-shard approach.
   #
-  # Suites excluded here: `security` (already run by the dedicated `security`
-  # job above), `a11y`/`e2e` (run by the `a11y` job and pnpm test:a11y).
-  # Dirs without .test files today (blocks, workflow, settings, ui)
-  # are included so new .spec.ts files added by Plans A–U are automatically
-  # exercised without further ci.yml edits.
+  # COVERAGE INVARIANT: this matrix must run EVERY Vitest dir the old
+  # `pnpm test --shard` covered, or those tests silently stop running.
+  # Excluded ON PURPOSE (run elsewhere): `security` (dedicated `security` job),
+  # `a11y` + `e2e` (Playwright, run by the `a11y` job / pnpm test:a11y),
+  # `helpers` (shared helpers, no test files).
+  # `server` folds in BOTH tests/server AND src/server (the vitest include
+  # also matches src/server/**/*.test.ts — it must land in a job).
+  # New-but-empty dirs (blocks/workflow/settings/ui) are listed so .spec.ts
+  # files added by Plans A–U run automatically; vitest exits 0 on no files.
   test:
     runs-on: [self-hosted, linux, x64]
     permissions:
@@ -122,16 +140,27 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
       fail-fast: false
       matrix:
         suite:
-          - api
-          - components
-          - lib
-          - collab
-          - db
-          - integration
-          - suggestions
-          - siem
-          - unit
-          - blocks
+          - { name: api,         path: tests/api }
+          - { name: app,         path: tests/app }
+          - { name: blocks,      path: tests/blocks }
+          - { name: collab,      path: tests/collab }
+          - { name: components,  path: tests/components }
+          - { name: db,          path: tests/db }
+          - { name: e2e-flag,    path: tests/e2e-flag }
+          - { name: i18n,        path: tests/i18n }
+          - { name: integration, path: tests/integration }
+          - { name: lib,         path: tests/lib }
+          - { name: openapi,     path: tests/openapi }
+          - { name: pwa,         path: tests/pwa }
+          - { name: scripts,     path: tests/scripts }
+          - { name: server,      path: "tests/server src/server" }
+          - { name: settings,    path: tests/settings }
+          - { name: siem,        path: tests/siem }
+          - { name: styles,      path: tests/styles }
+          - { name: suggestions, path: tests/suggestions }
+          - { name: ui,          path: tests/ui }
+          - { name: unit,        path: tests/unit }
+          - { name: workflow,    path: tests/workflow }
     env:
       DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
       AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
@@ -160,13 +189,14 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test (${{ matrix.suite }})
-        run: pnpm vitest run tests/${{ matrix.suite }} --reporter=dot
+      - name: Test (${{ matrix.suite.name }})
+        run: pnpm vitest run ${{ matrix.suite.path }} --reporter=dot
         env:
           TESTCONTAINERS_RYUK_DISABLED: 'true'
   ```
 
-  > **Note on `blocks` being empty today:** Vitest exits 0 when given a path with no matching files. Once Plans A–U add `.spec.ts` files under `tests/blocks/`, the suite activates automatically.
+  > **Note on empty dirs today:** Vitest exits 0 when given a path with no matching files. Once Plans A–U add `.spec.ts` files under `tests/blocks/` etc., those suites activate automatically.
+  > **Coverage check:** every Vitest dir under `tests/` is in the matrix EXCEPT `a11y`/`e2e` (Playwright), `security` (own job), `helpers` (no tests). `src/server` is folded into the `server` job. If you add a new top-level `tests/<dir>`, add it here too.
 
 - [ ] Verify YAML syntax locally:
 
@@ -288,19 +318,33 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
   | Suite | Path |
   |-------|------|
   | api | `tests/api` |
-  | components | `tests/components` |
-  | lib | `tests/lib` |
-  | collab | `tests/collab` |
-  | db | `tests/db` |
-  | integration | `tests/integration` |
-  | suggestions | `tests/suggestions` |
-  | siem | `tests/siem` |
-  | unit | `tests/unit` |
+  | app | `tests/app` |
   | blocks | `tests/blocks` |
+  | collab | `tests/collab` |
+  | components | `tests/components` |
+  | db | `tests/db` |
+  | e2e-flag | `tests/e2e-flag` |
+  | i18n | `tests/i18n` |
+  | integration | `tests/integration` |
+  | lib | `tests/lib` |
+  | openapi | `tests/openapi` |
+  | pwa | `tests/pwa` |
+  | scripts | `tests/scripts` |
+  | server | `tests/server src/server` |
+  | settings | `tests/settings` |
+  | siem | `tests/siem` |
+  | styles | `tests/styles` |
+  | suggestions | `tests/suggestions` |
+  | ui | `tests/ui` |
+  | unit | `tests/unit` |
+  | workflow | `tests/workflow` |
 
-  The `security` suite runs in the dedicated `security` CI job (also runs
-  `pnpm audit` + gitleaks). The `a11y` suite runs in the dedicated `a11y` job
-  via `pnpm test:a11y` (Playwright + real built app).
+  Coverage invariant: every Vitest dir under `tests/` is a matrix entry EXCEPT
+  the three run elsewhere. `security` runs in the dedicated `security` CI job
+  (also `pnpm audit` + gitleaks). `a11y` + `e2e` are Playwright, run by the
+  `a11y` job via `pnpm test:a11y` (and excluded from Vitest via `vitest.config`
+  `exclude`). `helpers` holds shared helpers, not test files. `src/server`
+  tests are folded into the `server` entry.
 
   With 2 self-hosted Linux x64 runners, at most 2 matrix jobs execute
   simultaneously. The heaviest suites (integration, db) benefit most: they no

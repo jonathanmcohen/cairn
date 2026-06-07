@@ -101,7 +101,7 @@ Five density / legibility items for the editor and sidebar. Three require real c
 
 **Pre-check result:** `src/app/globals.css` has an existing `.ProseMirror` block (font-size + line-height) and a `.ProseMirror h1/h2/h3` block (font-size, font-weight, letter-spacing only). No margin rules exist anywhere on `.ProseMirror` selectors. The `@theme inline` block has no `--cairn-block-gap` token.
 
-**Design decision — scope:** margin rules go on `.ProseMirror` only (editor surface), not on `.prose` / public `/p/*`. The existing Tailwind-typography `@plugin "@tailwindcss/typography"` governs public rendering; it should not be overridden here. Sharing a `--cairn-block-gap` token is acceptable since the token is defined in `:root` and only consumed by the `.ProseMirror` rules.
+**Design decision — scope (REVISED after review):** `.ProseMirror` is a class ProseMirror applies at RUNTIME to its editor DOM node — and the public `/p/[slug]` reader renders `ReadOnlyView`, which also mounts a TipTap editor and therefore ALSO gets `.ProseMirror`. So a bare `.ProseMirror …` rule WOULD leak to the public reader (and in-app reader mode). To keep the change editor-only, every margin rule is scoped to `.ProseMirror[contenteditable="true"]`: TipTap sets `contenteditable="true"` only when `editable:true` (the editor), while `ReadOnlyView` is `editable:false` → `contenteditable="false"`, so it is excluded. The public `/p/*` rhythm (governed by `@plugin "@tailwindcss/typography"`) stays untouched. The `--cairn-block-gap` token lives in `@theme inline`/`:root` and is consumed only by these scoped rules.
 
 - [ ] **C3-T1 — Write failing test first**
 
@@ -122,37 +122,44 @@ Five density / legibility items for the editor and sidebar. Three require real c
   });
 
   describe('editor block spacing rules (#141)', () => {
-    it('adds a block-gap rule to .ProseMirror siblings', () => {
-      expect(css).toContain('.ProseMirror > * + *');
+    // All rules MUST be scoped to the editable surface
+    // (.ProseMirror[contenteditable="true"]) so they do not leak to the public
+    // /p/* read-only reader, which also carries the runtime .ProseMirror class.
+    it('scopes the block-gap rule to the editable .ProseMirror surface', () => {
+      expect(css).toContain('.ProseMirror[contenteditable="true"] > * + *');
       expect(css).toContain('var(--cairn-block-gap');
     });
 
-    it('adds h1 margin-bottom', () => {
-      // The rule must be on .ProseMirror h1 (merged into the existing block or new)
-      expect(css).toMatch(/\.ProseMirror h1[^}]*margin-bottom/s);
+    it('does NOT add bare (unscoped) .ProseMirror margin rules (would hit public reader)', () => {
+      // guard against regression to the leaky selector
+      expect(css).not.toMatch(/\.ProseMirror >\s*\*\s*\+\s*\*/);
     });
 
-    it('adds h2 top + bottom margins', () => {
-      expect(css).toMatch(/\.ProseMirror h2[^}]*margin-top/s);
-      expect(css).toMatch(/\.ProseMirror h2[^}]*margin-bottom/s);
+    it('adds h1 margin-bottom on the editable surface', () => {
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] h1[^}]*margin-bottom/s);
     });
 
-    it('adds h3 top + bottom margins', () => {
-      expect(css).toMatch(/\.ProseMirror h3[^}]*margin-top/s);
-      expect(css).toMatch(/\.ProseMirror h3[^}]*margin-bottom/s);
+    it('adds h2 top + bottom margins on the editable surface', () => {
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] h2[^}]*margin-top/s);
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] h2[^}]*margin-bottom/s);
     });
 
-    it('zeros paragraph margin', () => {
-      expect(css).toMatch(/\.ProseMirror p[^}]*margin:\s*0/s);
+    it('adds h3 top + bottom margins on the editable surface', () => {
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] h3[^}]*margin-top/s);
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] h3[^}]*margin-bottom/s);
     });
 
-    it('adds ul/ol left indent', () => {
-      expect(css).toMatch(/\.ProseMirror [uo]l[^}]*padding-left/s);
+    it('zeros paragraph margin on the editable surface', () => {
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] p[^}]*margin:\s*0/s);
     });
 
-    it('adds blockquote and pre vertical margins', () => {
-      expect(css).toMatch(/\.ProseMirror blockquote[^}]*margin/s);
-      expect(css).toMatch(/\.ProseMirror pre[^}]*margin/s);
+    it('adds ul/ol left indent on the editable surface', () => {
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] [uo]l[^}]*padding-left/s);
+    });
+
+    it('adds blockquote and pre vertical margins on the editable surface', () => {
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] blockquote[^}]*margin/s);
+      expect(css).toMatch(/\.ProseMirror\[contenteditable="true"\] pre[^}]*margin/s);
     });
   });
   ```
@@ -176,48 +183,53 @@ Five density / legibility items for the editor and sidebar. Three require real c
   2. After the existing `.ProseMirror h3 { ... }` closing brace, add the following block (do NOT duplicate the `.ProseMirror` font-size/line-height block — those rules already exist):
 
      ```css
-     /* v0.9.14 C3 #141 — editor block spacing. Applied to .ProseMirror only so
-        the public /p/* prose surface (governed by @plugin "@tailwindcss/typography")
-        is unaffected. The sibling gap is the token default; headings override with
-        explicit rhythm values matching Notion's cadence. */
+     /* v0.9.14 C3 #141 — editor block spacing. Scoped to
+        .ProseMirror[contenteditable="true"] — the EDITABLE surface only.
+        IMPORTANT: `.ProseMirror` is a class ProseMirror applies at RUNTIME to
+        BOTH the editable editor AND the read-only public reader (/p/[slug] uses
+        ReadOnlyView, which also mounts a TipTap editor → also gets .ProseMirror).
+        TipTap sets contenteditable="true" only when editable:true, so the
+        [contenteditable="true"] attribute selector hits the editor and NOT the
+        public reader (ReadOnlyView is editable:false → contenteditable="false").
+        This keeps the public /p/* rhythm (governed by @tailwindcss/typography)
+        untouched. Headings override the sibling gap via specificity + source order. */
 
      /* Default sibling gap for any block element inside the editor. */
-     .ProseMirror > * + * {
+     .ProseMirror[contenteditable="true"] > * + * {
        margin-top: var(--cairn-block-gap, 6px);
      }
 
-     /* Heading-specific overrides (win over the sibling rule via specificity parity
-        + source order). */
-     .ProseMirror h1 {
+     /* Heading-specific overrides. */
+     .ProseMirror[contenteditable="true"] h1 {
        margin-bottom: 8px;
      }
-     .ProseMirror h2 {
+     .ProseMirror[contenteditable="true"] h2 {
        margin-top: 24px;
        margin-bottom: 8px;
      }
-     .ProseMirror h3 {
+     .ProseMirror[contenteditable="true"] h3 {
        margin-top: 16px;
        margin-bottom: 6px;
      }
 
      /* Paragraphs carry no extra margin; the sibling gap handles spacing. */
-     .ProseMirror p {
+     .ProseMirror[contenteditable="true"] p {
        margin: 0;
      }
 
      /* Lists: no vertical margin; indent via padding-left only. */
-     .ProseMirror ul,
-     .ProseMirror ol {
+     .ProseMirror[contenteditable="true"] ul,
+     .ProseMirror[contenteditable="true"] ol {
        margin: 0;
        padding-left: 24px;
      }
-     .ProseMirror li {
+     .ProseMirror[contenteditable="true"] li {
        margin: 2px 0;
      }
 
      /* Blockquotes and code blocks get a uniform 8px vertical rhythm. */
-     .ProseMirror blockquote,
-     .ProseMirror pre {
+     .ProseMirror[contenteditable="true"] blockquote,
+     .ProseMirror[contenteditable="true"] pre {
        margin: 8px 0;
      }
      ```
