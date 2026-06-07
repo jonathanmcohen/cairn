@@ -4,9 +4,9 @@ import { describe, expect, it } from 'vitest';
 
 const src = readFileSync(join(process.cwd(), 'src/components/sidebar.tsx'), 'utf8');
 
-describe('sidebar default width (#131)', () => {
-  it('falls back to 14rem (224px), not 16rem', () => {
-    expect(src).toContain('var(--cairn-sidebar-w, 14rem)');
-    expect(src).not.toContain('var(--cairn-sidebar-w, 16rem)');
+describe('sidebar default width (C1 v0.9.14)', () => {
+  it('falls back to 15rem (240px), matching Notion default', () => {
+    expect(src).toContain('var(--cairn-sidebar-w, 15rem)');
+    expect(src).not.toContain('var(--cairn-sidebar-w, 14rem)');
   });
 });

@@ -306,9 +306,9 @@ export function VersionHistory({
                         key={idx}
                         className={
                           line.kind === 'add'
-                            ? 'bg-green-500/15 text-green-700 dark:text-green-400'
+                            ? 'bg-success/15 text-success'
                             : line.kind === 'remove'
-                              ? 'bg-red-500/15 text-red-700 dark:text-red-400'
+                              ? 'bg-destructive/15 text-destructive'
                               : 'text-muted-foreground'
                         }
                       >

@@ -59,12 +59,12 @@ export function ProfileForm({ initialName }: { initialName: string }) {
           {saving ? t('profile.saving') : t('profile.save')}
         </Button>
         {status === 'saved' ? (
-          <span role="status" className="text-green-700 text-sm">
+          <span role="status" className="text-success text-sm">
             {t('profile.saved')}
           </span>
         ) : null}
         {status === 'error' ? (
-          <span role="alert" className="text-red-700 text-sm">
+          <span role="alert" className="text-destructive text-sm">
             {t('profile.saveError')}
           </span>
         ) : null}

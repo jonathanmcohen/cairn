@@ -74,6 +74,16 @@ export async function updatePage(
     let mergedMetadata = (current.metadata ?? {}) as Record<string, unknown>;
     let metadataChanged = false;
     if (input.patch.content !== undefined) {
+      // CONTENT-WRITE PRECEDENCE NOTE (#A3, v0.9.14):
+      // While a Hocuspocus collab session holds a Y.Doc open for this page,
+      // collab/server.ts#materialize() will overwrite `pages.content` with the
+      // Yjs state on the next debounce flush (≤2s) or last-disconnect. This REST
+      // PATCH is therefore authoritative ONLY when no active Yjs session is open.
+      // Documented behavior: "editor (Yjs) wins while a doc is open; API content
+      // writes apply when no active Yjs doc is present."
+      // TODO (v0.10.x): implement option (a) publish-through-Hocuspocus or
+      // option (b) API-triggers-Yjs-flush to eliminate the overwrite race.
+      // See: tests/api/pages-content-patch.spec.ts for the regression assertion.
       values.content = input.patch.content as never;
       // v0.9.0 G3 P20 — extract ISO timestamps from every `datetime` block in
       // the saved doc and stash their ms-epoch values into `metadata.datetimes`.

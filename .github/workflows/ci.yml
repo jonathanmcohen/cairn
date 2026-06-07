@@ -126,18 +126,20 @@ jobs:
         # files at runtime and crashes. Clean before each build to dodge that.
         run: rm -rf .next && pnpm build
 
-  # Vitest suite, sharded across runners. The Testcontainers Postgres singleton
-  # forces a SERIAL pool (maxWorkers 1) within a single process, so the whole
-  # suite ran ~28 min in one job. `vitest --shard=N/TOTAL` splits the FILES into
-  # TOTAL groups; each shard is its own job/process on its own runner and boots
-  # its own Testcontainers Postgres, so the shards run in parallel — wall-clock
-  # drops to ~suite/TOTAL. With 2 self-hosted x64 runners, 2 shards run at once.
+  # Vitest suite, one job per top-level test directory.
+  # Each job is serial within itself (Testcontainers maxWorkers 1) but the
+  # jobs interleave across the 2 self-hosted Linux x64 runners — improving
+  # log locality and triage speed vs the old 2-shard approach.
   #
-  # To add the macOS M4 (arm64) as a 3rd shard once it has Docker (Colima/
-  # OrbStack) + DOCKER_HOST wired into the runner env: bump `total: 2` -> `3`,
-  # add `3` to the `shard:` list, and widen `runs-on` to allow the arm label
-  # (the `test` job uses Testcontainers, NOT a `services:` container, so it CAN
-  # run on macOS — unlike the a11y/lighthouse jobs).
+  # COVERAGE INVARIANT: this matrix must run EVERY Vitest dir the old
+  # `pnpm test --shard` covered, or those tests silently stop running.
+  # Excluded ON PURPOSE (run elsewhere): `security` (dedicated `security` job),
+  # `a11y` + `e2e` (Playwright, run by the `a11y` job / pnpm test:a11y),
+  # `helpers` (shared helpers, no test files).
+  # `server` folds in BOTH tests/server AND src/server (the vitest include
+  # also matches src/server/**/*.test.ts — it must land in a job).
+  # New-but-empty dirs (blocks/workflow/settings/ui) are listed so .spec.ts
+  # files added by Plans A–U run automatically; vitest exits 0 on no files.
   test:
     runs-on: [self-hosted, linux, x64]
     permissions:
@@ -146,8 +148,28 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shard: [1, 2]
-        total: [2]
+        suite:
+          - { name: api,         path: tests/api }
+          - { name: app,         path: tests/app }
+          - { name: blocks,      path: tests/blocks }
+          - { name: collab,      path: tests/collab }
+          - { name: components,  path: tests/components }
+          - { name: db,          path: tests/db }
+          - { name: e2e-flag,    path: tests/e2e-flag }
+          - { name: i18n,        path: tests/i18n }
+          - { name: integration, path: tests/integration }
+          - { name: lib,         path: tests/lib }
+          - { name: openapi,     path: tests/openapi }
+          - { name: pwa,         path: tests/pwa }
+          - { name: scripts,     path: tests/scripts }
+          - { name: server,      path: "tests/server src/server" }
+          - { name: settings,    path: tests/settings }
+          - { name: siem,        path: tests/siem }
+          - { name: styles,      path: tests/styles }
+          - { name: suggestions, path: tests/suggestions }
+          - { name: ui,          path: tests/ui }
+          - { name: unit,        path: tests/unit }
+          - { name: workflow,    path: tests/workflow }
     env:
       DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
       AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
@@ -168,7 +190,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       # Auth the docker daemon to GHCR so Testcontainers can pull the private
-      # postgres-pgvector image during `pnpm test`.
+      # postgres-pgvector image during `pnpm vitest run`.
       - name: GHCR login (Testcontainers image)
         uses: docker/login-action@v4
         with:
@@ -176,8 +198,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Test (shard ${{ matrix.shard }}/${{ matrix.total }})
-        run: pnpm test --shard=${{ matrix.shard }}/${{ matrix.total }}
+      - name: Test (${{ matrix.suite.name }})
+        run: pnpm vitest run ${{ matrix.suite.path }} --reporter=dot
         env:
           TESTCONTAINERS_RYUK_DISABLED: 'true'
 

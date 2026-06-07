@@ -77,8 +77,8 @@ export function E2EEnrollCard({ enabled = true }: { enabled?: boolean }) {
   if (!enabled) {
     return (
       <section className="space-y-2 rounded-lg border p-4">
-        <h2 className="font-semibold text-lg">{t('e2e.enroll.title')}</h2>
-        <EncryptionDisabledNotice />
+        <h2 className="font-semibold text-lg">{t('e2ee.disabledTitle')}</h2>
+        <EncryptionDisabledNotice hideTitle />
       </section>
     );
   }
