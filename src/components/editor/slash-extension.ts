@@ -422,12 +422,12 @@ const items: SlashItem[] = [
     keywords: ['ol', 'ordered', 'number'],
   },
   {
-    title: 'Task list',
-    description: 'Checkbox list',
+    title: 'Checkbox list',
+    description: 'Inline checkbox list (for /my-tasks see the sidebar)',
     category: 'basic',
     icon: ListChecks,
     command: (editor) => editor.chain().focus().toggleTaskList().run(),
-    keywords: ['check', 'todo', 'checkbox', 'checklist'],
+    keywords: ['check', 'todo', 'checkbox', 'checklist', 'task'],
   },
   {
     title: 'Quote',

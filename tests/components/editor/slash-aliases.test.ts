@@ -23,7 +23,7 @@ describe('slash item keyword aliases (#148)', () => {
       expect.arrayContaining(['diagram', 'flowchart']),
     );
     expect(byTitle('Flashcard')?.keywords).toEqual(expect.arrayContaining(['anki', 'card']));
-    expect(byTitle('Task list')?.keywords).toEqual(expect.arrayContaining(['check', 'todo']));
+    expect(byTitle('Checkbox list')?.keywords).toEqual(expect.arrayContaining(['check', 'todo']));
     expect(byTitle('Bookmark')?.keywords).toContain('link');
   });
 });
@@ -65,8 +65,8 @@ describe('catalog resolves spec synonyms via the shared matcher (#148)', () => {
   it('"photo" surfaces Image', () => {
     expect(find('photo')).toContain('Image');
   });
-  it('"todo" surfaces Task list', () => {
-    expect(find('todo')).toContain('Task list');
+  it('"todo" surfaces Checkbox list', () => {
+    expect(find('todo')).toContain('Checkbox list');
   });
   it('"flowchart" surfaces Mermaid diagram', () => {
     expect(find('flowchart')).toContain('Mermaid diagram');
