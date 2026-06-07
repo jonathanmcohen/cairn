@@ -440,3 +440,23 @@ are still empty when this lands.)
   ```sh
   source ~/.zshenv && git add docs/superpowers/plans/v0.9.14/plan-V-test-infrastructure.md && git commit -m "docs: capture full test reorg as deferred (plan V)"
   ```
+
+---
+
+## Deferred: full by-feature reorg (future PR, post-v0.9.14)
+
+The 958 existing `.test.{ts,tsx}` files under `tests/api/`, `tests/lib/`,
+`tests/components/`, etc. were intentionally **not moved** in this plan.
+A full migration would reorganise them into a `tests/features/` tree mirroring
+`src/` (one dir per domain: `pages`, `blocks`, `databases`, `collab`, `auth`,
+…) and would require updating ~200+ relative import paths to `../helpers/db`.
+
+That migration is safe to do in a single dedicated PR once v0.9.14 ships:
+1. Create `tests/features/<domain>/` dirs.
+2. Move each `.test.ts` file with a mechanical `git mv`.
+3. Fix all relative helper imports (sed one-liner or codemod).
+4. Update `vitest.config.ts` include to `tests/**/*.{test,spec}.{ts,tsx}` (no path change needed if using `tests/**`).
+5. Update `ci.yml` matrix `suite:` list to match new top-level dirs.
+6. Delete now-empty by-layer dirs.
+
+Track as a separate issue/PR — do not merge into any v0.9.14 plan branch.
