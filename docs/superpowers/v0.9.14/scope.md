@@ -27,7 +27,7 @@ Supporting docs: [polish-audit.md](polish-audit.md) · [audit-v0.9.13-retrospect
 - **D — Suggest edits:** D1 #118 inline diff in cards · D2 #119 whole-chip clickable→scroll+select.
 - **E — Notifications/settings:** E1 #16 notification event-matrix expansion · E2 #89 passkeys admin/user copy split · E3 encryption-off heading copy · E4 #5 `/settings/admin`→`/audit`.
 - **U — Notion polish:** the 20-point audit (see polish-audit.md).
-- **V — Test infra:** `tests/{blocks,database,api,collab,workflow,settings,ui,e2e}` + CI matrix + per-feature/per-block/per-endpoint specs + backfill for every fix here + `tests/README.md`.
+- **V — Test infra:** by-feature convention dirs `tests/{blocks,workflow,settings,ui}` (NEW) alongside existing layer dirs (`tests/db` for schema/migrations, `tests/api`, `tests/collab`, `tests/e2e`, …) + CI matrix + per-feature/per-block/per-endpoint specs + backfill for every fix here + `tests/README.md`. NOTE: no `tests/database` — schema/migration tests stay in the existing `tests/db`. e2e specs live in the existing `tests/e2e` (Playwright `testDir` is `tests/a11y`; CI extends `testMatch` to include `tests/e2e`), NOT a root `e2e/`.
 
 ## Carry-forward context (already analysed / proven)
 

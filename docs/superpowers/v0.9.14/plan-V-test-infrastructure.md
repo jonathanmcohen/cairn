@@ -26,10 +26,11 @@ tests/
 
   # New by-feature convention — empty dirs already present, populated by Plans A–U
   blocks/         ← per-block-type regression specs (.spec.ts)
-  database/       ← inline-database specs
-  workflow/       ← page-lifecycle / approval workflow specs
+  workflow/       ← page-lifecycle / approval / suggest-edits specs
   settings/       ← settings-page specs
   ui/             ← component interaction / visual regression specs
+  # NOTE: no `database/` — DB schema/migration specs stay in the existing
+  #   `tests/db`; DB feature behaviour stays in `tests/lib` + `tests/components`.
 
 vitest.config.ts
   include: ['tests/**/*.test.{ts,tsx}', 'tests/**/*.spec.{ts,tsx}', 'src/server/**/*.test.ts']
@@ -109,7 +110,7 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
   #
   # Suites excluded here: `security` (already run by the dedicated `security`
   # job above), `a11y`/`e2e` (run by the `a11y` job and pnpm test:a11y).
-  # Dirs without .test files today (blocks, database, workflow, settings, ui)
+  # Dirs without .test files today (blocks, workflow, settings, ui)
   # are included so new .spec.ts files added by Plans A–U are automatically
   # exercised without further ci.yml edits.
   test:
@@ -237,11 +238,14 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
   tests/
     blocks/       — Per-block-type regression specs
                     (task-list, checkbox, heading-collapse, slash-menu, …)
-    database/     — Inline-database feature specs
-    workflow/     — Page-lifecycle / approval workflow specs
+    workflow/     — Page-lifecycle / approval / suggest-edits specs
     settings/     — Settings-page and settings-route specs
     ui/           — Component interaction and visual regression specs
   ```
+
+  > No `tests/database/`: DB **schema/migration** specs stay in the existing
+  > `tests/db`; DB **feature behaviour** (filters, sort, views) stays in
+  > `tests/lib` + `tests/components`. Adding a third DB dir would fragment them.
 
   Add subdirectories freely: `tests/blocks/task-list.spec.ts`,
   `tests/blocks/slash-menu.spec.ts`, etc.
@@ -256,7 +260,7 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
   source ~/.zshenv && pnpm vitest run tests/blocks/task-list.spec.ts
 
   # Run all by-feature specs
-  source ~/.zshenv && pnpm vitest run tests/blocks tests/database tests/workflow tests/settings tests/ui --reporter=dot
+  source ~/.zshenv && pnpm vitest run tests/blocks tests/workflow tests/settings tests/ui --reporter=dot
 
   # Run the full suite (slow — uses Testcontainers for every file)
   source ~/.zshenv && pnpm test
@@ -320,19 +324,21 @@ The full reorg (move 978 files into by-feature dirs) would produce a 978-file di
 ### T4 — Place a `.gitkeep` in each empty by-feature dir so they survive git
 
 Git does not track empty directories. Without a placeholder the four empty
-dirs (`blocks/`, `database/`, `workflow/`, `settings/`, `ui/`) vanish on
-checkout and the CI matrix `test (blocks)` step finds no directory.
+dirs (`blocks/`, `workflow/`, `settings/`, `ui/`) vanish on checkout and the
+CI matrix `test (blocks)` step finds no directory. (Most carry a `.spec.ts`
+stub already from the v0.9.14 planning bundle; `.gitkeep` covers any that
+are still empty when this lands.)
 
-- [ ] Create placeholder files:
+- [ ] Create placeholder files (only for dirs without a committed spec yet):
 
   ```sh
-  source ~/.zshenv && touch tests/blocks/.gitkeep tests/database/.gitkeep tests/workflow/.gitkeep tests/settings/.gitkeep tests/ui/.gitkeep
+  source ~/.zshenv && touch tests/blocks/.gitkeep tests/workflow/.gitkeep tests/settings/.gitkeep tests/ui/.gitkeep
   ```
 
 - [ ] Commit:
 
   ```sh
-  source ~/.zshenv && git add tests/blocks/.gitkeep tests/database/.gitkeep tests/workflow/.gitkeep tests/settings/.gitkeep tests/ui/.gitkeep && git commit -m "chore(tests): add .gitkeep to empty by-feature dirs"
+  source ~/.zshenv && git add tests/blocks/.gitkeep tests/workflow/.gitkeep tests/settings/.gitkeep tests/ui/.gitkeep && git commit -m "chore(tests): add .gitkeep to empty by-feature dirs"
   ```
 
 ---
