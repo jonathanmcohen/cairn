@@ -8,7 +8,9 @@
 import { describe, it } from 'vitest';
 
 describe('Plan A1 #140 — page export', () => {
-  it.todo('export route static-import closure contains NO `from "@playwright/test"` (build-graph guard)');
+  it.todo(
+    'export route static-import closure contains NO `from "@playwright/test"` (build-graph guard)',
+  );
   it.todo('format=md → 200, text/markdown, non-empty body');
   it.todo('format=json → 200, application/json, non-empty body');
   it.todo('format=html → 200, text/html, non-empty body');
