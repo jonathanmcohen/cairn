@@ -4,7 +4,22 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    include: ['tests/**/*.test.{ts,tsx}', 'src/server/**/*.test.ts'],
+    include: [
+      'tests/**/*.test.{ts,tsx}',
+      'tests/**/*.spec.{ts,tsx}',
+      'src/server/**/*.test.ts',
+    ],
+    // CRITICAL: tests/a11y and tests/e2e are Playwright specs (*.spec.ts) that
+    // import @playwright/test — they MUST NOT be collected by Vitest or the whole
+    // suite fails at collection. Vitest's defaultExclude is only node_modules/.git,
+    // so we re-include those defaults AND add the Playwright dirs. tests/e2e-flag
+    // is a real Vitest *.test.ts (encryption-roundtrip) — do NOT exclude it.
+    exclude: [
+      '**/node_modules/**',
+      '**/.git/**',
+      'tests/a11y/**',
+      'tests/e2e/**',
+    ],
     setupFiles: ['tests/setup.ts'],
     testTimeout: 60_000,
     hookTimeout: 60_000,
