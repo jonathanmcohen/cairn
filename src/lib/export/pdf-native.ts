@@ -1,5 +1,4 @@
 import type { Browser } from '@playwright/test';
-import { chromium } from '@playwright/test';
 import { pageToPdfHtml } from './pdf';
 
 // biome-ignore lint/suspicious/noExplicitAny: mirrors pageToPdfHtml's ExportPage shape
@@ -38,6 +37,11 @@ function installSigtermHandlerOnce(): void {
 async function getBrowser(): Promise<Browser> {
   if (!browserPromise) {
     installSigtermHandlerOnce();
+    // Dynamic import so next-build standalone never traces @playwright/test
+    // at module-load time. The standalone bundle omits playwright-core/browsers.json,
+    // causing a module-load crash for EVERY export format (md/json/html/docx too)
+    // if this is a static import (#140). Only reached when CAIRN_NATIVE_PDF==='1'.
+    const { chromium } = await import('@playwright/test');
     browserPromise = chromium.launch({
       // Sandboxing is intentionally permissive — Cairn runs as a single
       // user in its container; matches the v0.6 P14 a11y-test launch flags.
