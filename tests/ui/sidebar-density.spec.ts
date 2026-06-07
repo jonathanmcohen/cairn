@@ -1,12 +1,32 @@
 /**
- * Plan C1/C2 — sidebar width + text density.
- * Contract stub. Real assertions land with Plan C.
- * See docs/superpowers/v0.9.14/plan-C-ui-density-polish.md.
+ * Plan C1/C2 (v0.9.14) — sidebar width + text density.
+ * Source-assertion regression slice. C1 widens the default width fallback to
+ * 15rem (240px); C2 is regression-only (the StudyLink density triplet shipped
+ * earlier — guard it against regression to bare text-sm).
+ * See docs/superpowers/plans/v0.9.14/plan-C-ui-density-polish.md.
  */
-import { describe, it } from 'vitest';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
 
-describe('Plan C1/C2 — sidebar density', () => {
-  it.todo('sidebar default width fallback is 15rem (240px)');
-  it.todo('sidebar text uses the --cairn-sidebar-text token (13px), not bare text-sm');
-  it.todo('StudyLink + utility rows carry the density triplet (regression)');
+const sidebar = readFileSync(join(process.cwd(), 'src/components/sidebar.tsx'), 'utf8');
+const studyLink = readFileSync(
+  join(process.cwd(), 'src/components/sidebar/study-link.tsx'),
+  'utf8',
+);
+
+describe('Plan C1 — sidebar default width', () => {
+  it('falls back to 15rem (240px), not 14rem', () => {
+    expect(sidebar).toContain('var(--cairn-sidebar-w, 15rem)');
+    expect(sidebar).not.toContain('var(--cairn-sidebar-w, 14rem)');
+  });
+});
+
+describe('Plan C2 — sidebar text density (regression; shipped)', () => {
+  it('StudyLink carries the 13px density triplet, not bare text-sm', () => {
+    expect(studyLink).toContain('text-[length:var(--cairn-sidebar-text)]');
+    expect(studyLink).toContain('leading-[var(--cairn-sidebar-leading)]');
+    expect(studyLink).toContain('tracking-[0.1px]');
+    expect(studyLink).not.toMatch(/(^|["\s])text-sm(["\s])/);
+  });
 });
