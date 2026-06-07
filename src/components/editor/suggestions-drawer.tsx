@@ -53,7 +53,7 @@ function SuggestionCard({
                 <span className="sr-only">{t('pageActions.suggest.diffDeletedLabel')}: </span>
                 <del
                   title={t('pageActions.suggest.diffDeletedLabel')}
-                  className="rounded-sm bg-red-500/10 px-0.5 text-red-700 line-through decoration-red-500/70 dark:text-red-300"
+                  className="rounded-sm bg-destructive/10 px-0.5 text-destructive line-through decoration-destructive/70"
                 >
                   {s.diff.deleted}
                 </del>
@@ -65,7 +65,7 @@ function SuggestionCard({
                 <span className="sr-only">{t('pageActions.suggest.diffInsertedLabel')}: </span>
                 <ins
                   title={t('pageActions.suggest.diffInsertedLabel')}
-                  className="rounded-sm bg-green-500/10 px-0.5 text-green-700 no-underline dark:text-green-300"
+                  className="rounded-sm bg-success/10 px-0.5 text-success no-underline"
                 >
                   {s.diff.inserted}
                 </ins>
@@ -85,14 +85,14 @@ function SuggestionCard({
         <button
           type="button"
           onClick={() => onAccept(s.id)}
-          className="rounded px-2 py-1 text-green-700 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring dark:text-green-400"
+          className="rounded px-2 py-1 text-success text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
         >
           {t('pageActions.suggest.accept')}
         </button>
         <button
           type="button"
           onClick={() => onReject(s.id)}
-          className="rounded px-2 py-1 text-red-700 text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring dark:text-red-400"
+          className="rounded px-2 py-1 text-destructive text-xs hover:bg-accent focus-visible:outline-hidden focus-visible:ring-1 focus-visible:ring-ring"
         >
           {t('pageActions.suggest.reject')}
         </button>
