@@ -74,16 +74,15 @@ export async function updatePage(
     let mergedMetadata = (current.metadata ?? {}) as Record<string, unknown>;
     let metadataChanged = false;
     if (input.patch.content !== undefined) {
-      // CONTENT-WRITE PRECEDENCE NOTE (#A3, v0.9.14):
+      // CONTENT-WRITE PRECEDENCE (#A3, fixed v0.9.15):
       // While a Hocuspocus collab session holds a Y.Doc open for this page,
-      // collab/server.ts#materialize() will overwrite `pages.content` with the
-      // Yjs state on the next debounce flush (≤2s) or last-disconnect. This REST
-      // PATCH is therefore authoritative ONLY when no active Yjs session is open.
-      // Documented behavior: "editor (Yjs) wins while a doc is open; API content
-      // writes apply when no active Yjs doc is present."
-      // TODO (v0.10.x): implement option (a) publish-through-Hocuspocus or
-      // option (b) API-triggers-Yjs-flush to eliminate the overwrite race.
-      // See: tests/api/pages-content-patch.spec.ts for the regression assertion.
+      // collab/server.ts#materialize() overwrites `pages.content` with the Yjs
+      // state on the next debounce flush (≤2s) or last-disconnect. To stop that
+      // from silently losing this REST PATCH, we PUBLISH the new content into
+      // the live Y.Doc after committing the DB write (see publishContentToCollab
+      // below). If no session is open, the publish is a no-op and the DB write
+      // is authoritative. The publish is best-effort and never blocks/breaks the
+      // save. See: tests/api/pages-content-patch-vs-yjs.spec.ts.
       values.content = input.patch.content as never;
       // v0.9.0 G3 P20 — extract ISO timestamps from every `datetime` block in
       // the saved doc and stash their ms-epoch values into `metadata.datetimes`.
@@ -125,6 +124,22 @@ export async function updatePage(
     }
     return updated;
   });
+  // #A3 (v0.9.15) — push the freshly-written content into the live Yjs doc (if a
+  // collab session holds it open) so a subsequent materialize() flush can't
+  // clobber this PATCH. Best-effort + fail-open: the DB write above is already
+  // committed, so a collab outage never breaks the save. No-ops when
+  // CAIRN_COLLAB_INTERNAL_URL is unset (single-process deploys / tests).
+  if (input.patch.content !== undefined) {
+    void (async () => {
+      try {
+        const { publishContentToCollab } = await import('@/lib/collab/publish-client');
+        await publishContentToCollab({ pageId: input.pageId, content: input.patch.content });
+      } catch (err) {
+        const { logger } = await import('@/lib/observability/logger');
+        logger.warn({ err, pageId: input.pageId }, 'publishContentToCollab dispatch failed');
+      }
+    })();
+  }
   // Fire-and-forget webhook (self-guarding; never throws into the caller).
   // The payload builder fails-closed: encrypted pages get body:null +
   // page.encrypted=true so downstream consumers never see ciphertext or

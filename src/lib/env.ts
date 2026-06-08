@@ -9,6 +9,14 @@ const Schema = z.object({
   CAIRN_TRASH_RETENTION_DAYS: z.coerce.number().int().nonnegative().default(30),
   CAIRN_LOG_LEVEL: z.enum(['debug', 'info', 'warn', 'error']).default('info'),
   COLLAB_URL: z.string().default('ws://localhost:1234'),
+  // v0.9.15 #A3 — internal HTTP base URL the Next app uses to push REST-PATCH
+  // content writes into the live Yjs doc held by the collab process (so a
+  // materialize() flush can't clobber an API write while an editor session is
+  // open). Points at the SAME host:port as the collab WS server but over http
+  // (e.g. http://cairn-collab:1234). When UNSET the publish path is disabled and
+  // the documented "API wins only when no Yjs doc is open" precedence applies —
+  // safe for single-process / no-collab deployments. Auth reuses AUTH_SECRET.
+  CAIRN_COLLAB_INTERNAL_URL: z.url().optional(),
   AUTH_GOOGLE_ID: z.string().optional(),
   AUTH_GOOGLE_SECRET: z.string().optional(),
   AUTH_GITHUB_ID: z.string().optional(),

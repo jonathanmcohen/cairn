@@ -6,6 +6,7 @@ import { authorizeCollab } from '../src/lib/collab/authorize.js';
 import { yjsStateToProseDoc } from '../src/lib/collab/materialize.js';
 import { reconcileFlashcardsRaw } from '../src/lib/flashcards/reconcile-raw.js';
 import { incCollabDocUpdate, setCollabConnections } from '../src/lib/observability/metrics.js';
+import { handleInternalReplace } from './internal-replace.js';
 import { createMaterializeScheduler } from './materialize-scheduler.js';
 
 const DATABASE_URL = process.env.DATABASE_URL;
@@ -65,6 +66,15 @@ const scheduler = createMaterializeScheduler({
 
 const server = new Server({
   port: PORT,
+  // v0.9.15 #A3 — internal HTTP control plane on the SAME port as the WS server.
+  // POST /internal/pages/:id/replace pushes a REST-PATCH content write into the
+  // live Y.Doc (if open) so a materialize() flush can't clobber the API save.
+  // handleInternalReplace either fully responds (and neutralizes the response so
+  // Hocuspocus's default 'Welcome' write no-ops) or returns false to fall
+  // through. It never throws, so the request handler always resolves cleanly.
+  async onRequest({ request, response, instance }) {
+    await handleInternalReplace(request, response, instance, secret);
+  },
   // documentName is the page id (uuid).
   async onAuthenticate({ token, documentName }) {
     const result = authorizeCollab(token, documentName, secret);
