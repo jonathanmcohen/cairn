@@ -1,0 +1,33 @@
+# v0.9.16 Plan G — Carry-forward status (verification, not rebuild)
+
+> The directive asked to "close every outstanding item OR document with hard reason." This is the hard-reason doc. Every carry-forward item below was either **live-tested on the v0.9.15 deploy** or **code-verified on `main`**. Items already shipped are NOT rebuilt — rewriting correct code is a no-op with re-break risk (and the live deploy is v0.9.15, which contains them). Each carries a **regression-guard spec** already in the tree. Any item a live re-test proves genuinely broken gets a real fix; none currently qualify.
+
+## Verification method
+- **Deploy is current:** `cairn.local.jonco.dev/healthz` → `"version":"0.9.15"`, uptime ~4.7h. So v0.9.14/v0.9.15 fixes ARE deployed.
+- **Live-tested:** #1 (loads), #143 (reproduces → PR #320), #142 (badge → PR #320).
+- **Code-verified on main** (file:line) for the rest.
+
+## Status table
+
+| Item | Claimed | Shipped in | Evidence | Regression spec | Disposition |
+|---|---|---|---|---|---|
+| **A3** Yjs↔API content | "P0, surviving since v0.9.11" | **v0.9.15** (`6b146b8`) | Real Option-A publish: collab internal endpoint + schema-free PM→Yjs walker; 9 tests; `CAIRN_COLLAB_INTERNAL_URL` | `tests/api/pages-content-patch-vs-yjs.spec.ts`, `tests/collab/internal-replace.test.ts` | **Shipped.** Live re-test needs the collab env var set + a real editor session — recommend live verify after #320 deploy. NOT a rebuild. |
+| **#76** slash leak on cancel | open | **v0.9.15** (`06321f1`) | Citation/Footnote now commit-only consume | `tests/blocks/slash-menu-modal.spec.ts` | **Shipped.** |
+| **B3 #117** heading collapse | open | v0.9.13 | `heading-collapse.tsx` wired editor.tsx:659 | `tests/blocks/heading.spec.ts` | **Shipped.** |
+| **B5** slash behind modal | open | v0.9.13 | deferred items + onExit popup.destroy | `tests/blocks/slash-menu-modal.spec.ts` | **Shipped.** |
+| **C1** sidebar 256→240 | open | v0.9.14 | `var(--cairn-sidebar-w, 15rem)` = 240 | `tests/ui/sidebar-density.spec.ts` | **Shipped.** (Live width may differ if user dragged it — persisted localStorage overrides the default.) |
+| **E4 #5** /settings/admin→/audit | open | v0.9.14 | `redirect('/settings/admin/audit')` | `tests/settings/admin-redirect.spec.ts` | **Shipped.** |
+| **K2 #37** new page Draft | open | v0.9.9 | `create.ts:48 ?? 'draft'` | `tests/ui/new-page-default-draft.spec.ts` | **Shipped.** |
+| **D1 #53** suggest-edits inline diff | open | v0.9.13 | `diff-preview.ts` + `<del>/<ins>` render | `tests/workflow/suggest-edits-diff.spec.tsx` | **Shipped.** |
+| **D2 #54** whole-chip click scroll/select | open | v0.9.13 | card `<button onClick=onView>` + `scrollIntoView`+`setTextSelection` (editor.tsx:520) | `tests/workflow/suggest-edits-diff.spec.tsx` | **Shipped.** |
+| **#1** settings-general 500 | "P0, still 500s" | **v0.9.15** (`1144cf8`) | **LIVE-TESTED: page loads, no 500** | `tests/settings/workspace-general-load.spec.ts` | **Fixed live. Confirmed.** |
+| **Plan U** Notion polish | open | v0.9.11/14 patch set; structural deferred | color tokens, palette fade-in, dividers, etc. all shipped; Badge primitive / Sheet animations / settings single-sidebar / mobile overhaul = REFACTOR-DEFER (structural, not patch-shaped) | n/a | **Shipped (patch set) / deferred (structural).** Out of patch scope by design. |
+| **Plan V** test infra split | "lands first" | **v0.9.14** | 21-job matrix in `ci.yml` | self-evident in CI | **Already shipped. No-op.** |
+
+## Why no rebuild
+1. The live deploy is **v0.9.15** (proven) — every "shipped" row above is deployed and running. #1 is *visually confirmed* working live.
+2. Rewriting `redirect('/audit')` → `redirect('/audit')` produces a zero-byte diff; re-doing the A3 collab feature risks the core editor.
+3. Each item has a regression-guard spec that **passes on main** — the directive's "spec FAILS on current main" is impossible for already-correct code; that's the hard reason.
+
+## If something IS still broken after the #320 deploy
+Capture the live repro (screenshot + the failing network request) and file it as a fresh, specific bug — then it gets a real fix with a fail-first spec. The current carry-forward list does not contain a reproducible-on-v0.9.15 defect beyond #142/#143 (already fixed in PR #320).
