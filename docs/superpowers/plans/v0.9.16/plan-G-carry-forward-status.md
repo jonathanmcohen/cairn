@@ -13,7 +13,7 @@
 |---|---|---|---|---|---|
 | **A3** Yjs↔API content | "P0, surviving since v0.9.11" | **v0.9.15** (`6b146b8`) | Real Option-A publish: collab internal endpoint + schema-free PM→Yjs walker; 9 tests; `CAIRN_COLLAB_INTERNAL_URL` | `tests/api/pages-content-patch-vs-yjs.spec.ts`, `tests/collab/internal-replace.test.ts` | **Shipped.** Live re-test needs the collab env var set + a real editor session — recommend live verify after #320 deploy. NOT a rebuild. |
 | **#76** slash leak on cancel | open | **v0.9.15** (`06321f1`) | Citation/Footnote now commit-only consume | `tests/blocks/slash-menu-modal.spec.ts` | **Shipped.** |
-| **B3 #117** heading collapse | open | v0.9.13 | `heading-collapse.tsx` wired editor.tsx:659 | `tests/blocks/heading.spec.ts` | **Shipped.** |
+| **B3 #117** heading collapse | open | v0.9.13 | `heading-collapse.tsx` wired editor.tsx:659 | `tests/blocks/heading.spec.tsx` | **Shipped.** |
 | **B5** slash behind modal | open | v0.9.13 | deferred items + onExit popup.destroy | `tests/blocks/slash-menu-modal.spec.ts` | **Shipped.** |
 | **C1** sidebar 256→240 | open | v0.9.14 | `var(--cairn-sidebar-w, 15rem)` = 240 | `tests/ui/sidebar-density.spec.ts` | **Shipped.** (Live width may differ if user dragged it — persisted localStorage overrides the default.) |
 | **E4 #5** /settings/admin→/audit | open | v0.9.14 | `redirect('/settings/admin/audit')` | `tests/settings/admin-redirect.spec.ts` | **Shipped.** |
@@ -31,3 +31,6 @@
 
 ## If something IS still broken after the #320 deploy
 Capture the live repro (screenshot + the failing network request) and file it as a fresh, specific bug — then it gets a real fix with a fail-first spec. The current carry-forward list does not contain a reproducible-on-v0.9.15 defect beyond #142/#143 (already fixed in PR #320).
+
+## Spec-file coverage (closing the "each item has a spec file" gap)
+Every carry-forward item maps to a regression spec that EXISTS on disk (verified): A3→`tests/api/pages-content-patch-vs-yjs.spec.ts`+`tests/collab/internal-replace.test.ts`; #76/B5→`tests/blocks/slash-menu-modal.spec.ts`; B3→`tests/blocks/heading.spec.tsx`+`tests/components/editor/heading-collapse.test.tsx`; C1→`tests/ui/sidebar-density.spec.ts`; E4→`tests/settings/admin-redirect.spec.ts`; K2→`tests/ui/new-page-default-draft.spec.ts`; D1/D2→`tests/workflow/suggest-edits-diff.spec.tsx`; #1→`tests/settings/workspace-general-load.spec.ts`. Plan U = polish (no code spec by nature; structural items deferred). Plan V = the CI matrix itself (self-evident in `ci.yml`). These are REGRESSION GUARDS (pass on main) — fail-first is impossible for already-shipped code; that is the documented hard reason.
