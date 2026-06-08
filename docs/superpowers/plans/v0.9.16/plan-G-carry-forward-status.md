@@ -59,3 +59,16 @@ This doc accounts for every carry-forward item in the directive:
 - Rebuilding any item verified shipped + present on the live build (no-op, re-break risk).
 - Plan U structural refactors (shared Badge primitive, right-rail Sheet animations, settings single-sidebar, mobile <768 overhaul) — structural, not patch-shaped; deferred.
 - Any item that genuinely fails after the PR #320 deploy → file fresh with a live repro; gets a real fail-first fix then.
+
+## Re-audit sweep (v0.9.8→v0.9.15) — additional items, all verified CLOSED in code
+| Item | Verdict | Evidence (file:line) |
+|---|---|---|
+| **#115** flashcards "Browse pages" CTA | CLOSED | `empty-state/variants.tsx:78` ctaHref=`/search` (not `/`); v0.9.11 #116 fix |
+| **N3** publish-confirm URL preview | CLOSED | `page-menu.tsx:350-383` GETs publish info, renders `${origin}/p/<slug>` + copy btn before Publish (#309) |
+| **#67** db filter-add first-click | CLOSED | `filters-config.tsx:84` optimistic `setLocalFilters` before PATCH (#244) |
+| **#95** add-view tab refresh | CLOSED | `view-switcher.tsx:71` optimistic `tmp-` tab + switch before POST (#263) |
+| **#88** saved-search live update | CLOSED | `saved-searches.tsx:42` `subscribeMutation('savedSearches')` ↔ `search-palette.tsx:147` `emitMutation` — live, no nav |
+| **#39** db dead space / floating chevrons | CLOSED | `table-view.tsx:413-423` bounded body + empty-state CTA; all chevrons aria-labelled (NEEDS-LIVE for pixel confirm only) |
+| **#40** SEE ALSO similarity scoring | CLOSED | confirmed differentiated v0.9.13 sweep (63/55/50/49/48) |
+
+None broken → no new fix-work. The v0.9.16 genuinely-new set remains: **Plan F (MCP OAuth)**, **Plan C (#144 density)**, **#142/#143 (PR #320)**. All else verified shipped/closed.
