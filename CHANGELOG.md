@@ -5,6 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.15] - 2026-06-08
+
+Patch release — Trash icon renderer fix. No migration.
+
+### Fixed
+- **Trash list printed the raw `emoji::` prefix.** `/trash` rendered each entry's icon as the literal stored string (e.g. `emoji::📄`) instead of the emoji, because `trash-list.tsx` concatenated `pages.icon` straight into the DOM while the sidebar/title strip the `emoji::`/`file::` shortcode. Extracted a shared client-safe `<InlineIcon>` renderer (`src/components/page-icon-inline.tsx`) that routes every value through `parseIcon` — `emoji::🚀`→🚀, bare emoji passthrough, `file::<uuid>`→neutral image glyph, null/empty→document fallback — and used it in the Trash list. Migrated the sidebar page-tree and see-also panel to the same component to kill the duplicated local renderers (prevents future drift). Regression test `tests/ui/icon-render.spec.ts` covers every prefix form.
+
 ## [0.9.14] - 2026-06-07
 
 Consolidated patch release — P0 export hotfix, editor/density fixes, test-infra split, polish. No migration (latest stays 0068). Single PR across 7 plans (V/A/B/D/E/C/U).
