@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, or } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
@@ -48,14 +48,27 @@ export async function POST(
     const dayStart = dayWindowStart(now);
     const monthStart = monthWindowStart(now);
     await db.transaction(async (tx) => {
-      // Scope: only current day-window + current month-window rows. Historical
-      // rows (T-13..T-1) are preserved so the dashboard sparkline stays intact.
+      // Scope: only the CURRENT day-window 'day' row + CURRENT month-window
+      // 'month' row. Match on (windowKind, windowStart) PAIRS, not windowStart
+      // alone — early in a month a historical 'day' row's windowStart can equal
+      // monthStart (e.g. on the 8th, the T-7 day row lands on the 1st = month
+      // start), and a windowStart-only `inArray` would wrongly delete it,
+      // wiping the sparkline history. Kind-scoped predicates keep T-13..T-1.
       await tx
         .delete(schema.patQuotaUsage)
         .where(
           and(
             eq(schema.patQuotaUsage.tokenId, tokenId),
-            inArray(schema.patQuotaUsage.windowStart, [dayStart, monthStart]),
+            or(
+              and(
+                eq(schema.patQuotaUsage.windowKind, 'day'),
+                eq(schema.patQuotaUsage.windowStart, dayStart),
+              ),
+              and(
+                eq(schema.patQuotaUsage.windowKind, 'month'),
+                eq(schema.patQuotaUsage.windowStart, monthStart),
+              ),
+            ),
           ),
         );
       await recordAudit(tx, {
