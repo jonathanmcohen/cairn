@@ -1,13 +1,20 @@
 'use client';
 import { Check, ChevronDown, Plus } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { DropdownMenu } from 'radix-ui';
 import { useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 import { WorkspaceCreateDialog } from '@/components/workspace-create-dialog';
 import type { MemberRole } from '@/lib/auth/require-role';
 import { useT } from '@/lib/i18n/provider';
 
-export type SwitcherWorkspace = { id: string; name: string; role: MemberRole };
+export type SwitcherWorkspace = {
+  id: string;
+  name: string;
+  role: MemberRole;
+  // Prefix-encoded icon ("emoji::🪨" / "file::<uuid>") or null. Rendered in the
+  // trigger + row badge, falling back to the name's letter initial. (#142)
+  icon: string | null;
+};
 
 function initial(name: string): string {
   return (name.trim()[0] ?? '?').toUpperCase();
@@ -24,7 +31,6 @@ export function WorkspaceSwitcher({
   activeId: string | null;
 }) {
   const t = useT();
-  const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const active = workspaces.find((w) => w.id === activeId) ?? workspaces[0];
@@ -37,11 +43,13 @@ export function WorkspaceSwitcher({
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ workspaceId: id }),
     });
-    setBusy(false);
-    router.refresh();
-    // #82 — land on the new workspace's home page (resolveLandingPage runs at
-    // '/'), not whatever route the user was on (e.g. /templates).
-    router.push('/');
+    // #143 — HARD navigation (not router.push/refresh). A soft client nav keeps
+    // the client-cached sidebar queries (page tree, saved searches, flashcard
+    // queue, workspace meta/badge) on the OLD workspace; only a full reload
+    // refetches them under the new workspace cookie (which the fetch above set).
+    // #82 — land on '/' so resolveLandingPage runs (the new workspace's home),
+    // not whatever route the user was on (e.g. /templates).
+    window.location.assign('/');
   }
 
   return (
@@ -56,7 +64,7 @@ export function WorkspaceSwitcher({
               aria-hidden="true"
               className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
             >
-              {initial(active?.name ?? '?')}
+              <InlineIcon value={active?.icon ?? null} fallback={initial(active?.name ?? '?')} />
             </span>
             <span className="truncate">{active?.name ?? 'No workspace'}</span>
           </span>
@@ -84,7 +92,7 @@ export function WorkspaceSwitcher({
                   aria-hidden="true"
                   className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
                 >
-                  {initial(w.name)}
+                  <InlineIcon value={w.icon} fallback={initial(w.name)} />
                 </span>
                 <span className="truncate">{w.name}</span>
               </DropdownMenu.Item>

@@ -5,7 +5,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
-## [0.9.15] - 2026-06-08
+## [0.9.16] - 2026-06-08
+
+Patch — two workspace bugs found testing the v0.9.15 deploy. No migration.
+
+### Fixed
+- **Workspace switcher left the sidebar stale (#143).** Switching workspaces updated the active-workspace cookie and main pane but the client-cached sidebar queries (page tree, saved searches, flashcard queue, workspace badge) kept showing the previous workspace until a manual reload — `switchTo` used `router.refresh()` + `router.push('/')` (soft nav), which doesn't refetch them. Now does a hard `window.location.assign('/')` after the switch so every workspace-scoped query refetches (Notion behavior).
+- **Workspace icon never showed in the sidebar badge (#142).** The switcher rendered only the name's first letter for the active trigger and every row, never the saved `icon` (and the workspace list query didn't even project it). The badge now renders the icon via the shared `<InlineIcon>` (emoji / file-glyph), falling back to the letter when unset; `icon` is threaded through `listUserWorkspaces`. The save round-trip (form → PATCH `/api/workspaces/:id/settings` → `updateWorkspaceSettings` → read-back) was verified correct end-to-end — the visible "icon does nothing" was the badge never reading it.
 
 Patch release — Trash icon, Yjs↔API content sync, stale-deploy hardening, slash + quota fixes. No migration.
 

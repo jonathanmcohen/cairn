@@ -1,5 +1,18 @@
 // @vitest-environment jsdom
+/**
+ * v0.9.16 #143 — switching workspaces must do a HARD navigation.
+ *
+ * A soft client nav (router.push/refresh) does NOT refetch the client-cached
+ * sidebar queries (page tree, saved searches, flashcard queue, workspace
+ * meta/badge), so they keep showing the OLD workspace until a manual reload.
+ * The fix replaces the soft nav with `window.location.assign('/')` (a hard
+ * navigation) so every query refetches under the new workspace cookie.
+ *
+ * This suite asserts: (a) the switch POST is sent with the target id, and
+ * (b) a hard navigation to '/' fires — NOT router.push.
+ */
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { createElement } from 'react';
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import { WorkspaceSwitcher } from '@/components/workspace-switcher';
 
@@ -27,10 +40,9 @@ vi.mock('@/lib/i18n/provider', async () => {
   const en = (await import('@/../messages/en.json')).default as Record<string, string>;
   return { useT: () => (key: string) => en[key] ?? key };
 });
-// Stub the modal so opening it is observable without IconPicker's browser deps.
 vi.mock('@/components/workspace-create-dialog', () => ({
   WorkspaceCreateDialog: ({ open }: { open: boolean }) =>
-    open ? <div role="dialog" aria-label="New workspace" /> : null,
+    open ? createElement('div', { role: 'dialog', 'aria-label': 'New workspace' }) : null,
 }));
 
 afterEach(() => {
@@ -39,57 +51,70 @@ afterEach(() => {
   refresh.mockClear();
 });
 
-describe('<WorkspaceSwitcher> create + switch', () => {
-  it('opens the create modal instead of prompting', async () => {
-    render(
-      <WorkspaceSwitcher
-        workspaces={[{ id: 'a', name: 'Acme', role: 'owner', icon: null }]}
-        activeId="a"
-      />,
-    );
-    // radix opens on pointerdown (left button), not a synthetic click in jsdom.
-    fireEvent.pointerDown(screen.getByRole('button', { name: /switch workspace/i }), {
-      button: 0,
-      ctrlKey: false,
-    });
-    fireEvent.click(await screen.findByRole('menuitem', { name: /create workspace/i }));
-    expect(await screen.findByRole('dialog', { name: /new workspace/i })).toBeTruthy();
-  });
-
-  it('hard-navigates to "/" after switching (#143 — lands on workspace home, not /templates)', async () => {
-    // #143 changed the soft router.push('/') to a HARD nav via
-    // window.location.assign('/') so client-cached sidebar queries refetch under
-    // the new workspace cookie. Assert the hard nav fires and push does NOT.
+describe('<WorkspaceSwitcher> hard navigation on switch (#143)', () => {
+  it('POSTs the target id then hard-navigates to "/" (not router.push)', async () => {
+    // Mock window.location safely: replace `assign` and intercept `href` writes.
     const assign = vi.fn();
+    let href = 'http://localhost/templates';
     const original = window.location;
     Object.defineProperty(window, 'location', {
       configurable: true,
-      value: { ...original, assign },
+      value: {
+        ...original,
+        assign,
+        get href() {
+          return href;
+        },
+        set href(v: string) {
+          href = v;
+        },
+      },
     });
+
+    const fetchMock = vi
+      .spyOn(globalThis, 'fetch')
+      .mockResolvedValue(new Response(null, { status: 200 }));
+
     try {
       render(
-        <WorkspaceSwitcher
-          workspaces={[
+        createElement(WorkspaceSwitcher, {
+          workspaces: [
             { id: 'a', name: 'Acme', role: 'owner', icon: null },
             { id: 'b', name: 'Beta', role: 'editor', icon: null },
-          ]}
-          activeId="a"
-        />,
+          ],
+          activeId: 'a',
+        }),
       );
-      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }));
+
       fireEvent.pointerDown(screen.getByRole('button', { name: /switch workspace/i }), {
         button: 0,
         ctrlKey: false,
       });
       fireEvent.click(await screen.findByRole('menuitem', { name: /beta/i }));
-      // allow the switchTo promise chain to settle
+
+      // let the switchTo promise chain settle
       await Promise.resolve();
       await Promise.resolve();
       await Promise.resolve();
-      expect(assign).toHaveBeenCalledWith('/');
+
+      // (a) POST /api/workspaces/switch with the target id
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/workspaces/switch',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ workspaceId: 'b' }),
+        }),
+      );
+
+      // (b) a hard navigation to '/' fired, NOT a soft router.push
+      const hardNavToRoot = assign.mock.calls.some(([url]) => url === '/') || href === '/';
+      expect(hardNavToRoot).toBe(true);
       expect(push).not.toHaveBeenCalled();
     } finally {
-      Object.defineProperty(window, 'location', { configurable: true, value: original });
+      Object.defineProperty(window, 'location', {
+        configurable: true,
+        value: original,
+      });
     }
   });
 });

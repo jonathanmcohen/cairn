@@ -6,6 +6,9 @@ export type UserWorkspace = {
   id: string;
   name: string;
   role: schema.MemberRole;
+  // Prefix-encoded icon ("emoji::🪨" / "file::<uuid>") or null (#142). Threaded
+  // through to the WorkspaceSwitcher badge.
+  icon: string | null;
 };
 
 /** List the workspaces a user belongs to (oldest membership first), with their role in each. */
@@ -18,6 +21,7 @@ export async function listUserWorkspaces(
       id: schema.workspaces.id,
       name: schema.workspaces.name,
       role: schema.workspaceMembers.role,
+      icon: schema.workspaces.icon,
     })
     .from(schema.workspaceMembers)
     .innerJoin(schema.workspaces, eq(schema.workspaces.id, schema.workspaceMembers.workspaceId))

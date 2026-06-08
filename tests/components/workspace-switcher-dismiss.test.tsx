@@ -31,7 +31,10 @@ afterEach(cleanup);
 describe('<WorkspaceSwitcher> dismiss', () => {
   it('closes the menu when Escape is pressed', async () => {
     render(
-      <WorkspaceSwitcher workspaces={[{ id: 'a', name: 'Acme', role: 'owner' }]} activeId="a" />,
+      <WorkspaceSwitcher
+        workspaces={[{ id: 'a', name: 'Acme', role: 'owner', icon: null }]}
+        activeId="a"
+      />,
     );
     const trigger = screen.getByRole('button', { name: /switch workspace/i });
     // radix opens on pointerdown (left button), not a synthetic click in jsdom.
