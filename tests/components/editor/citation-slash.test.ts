@@ -53,10 +53,12 @@ describe('citation + footnote slash entries — basic shape', () => {
   });
 });
 
-describe('citation slash — popup destroy + range leak fix (#76 #136)', () => {
-  it('consumeSlashRange is called synchronously before the dialog resolves for citationMenuItem', () => {
-    // The fix: consumeSlashRange must be called before openEditorDialog resolves
-    // so that TipTap's onExit fires and the popup is destroyed immediately on open.
+describe('citation slash — commit-only range consume (#76 #136)', () => {
+  // #76 — Citation + Footnote now match Equation/Flashcard: the trigger range
+  // is consumed ONLY once the dialog resolves to a real insert. Popup teardown
+  // on open is owned by the Suggestion `render().onExit`, not by a synchronous
+  // consume, so cancelling preserves the typed "/query" text.
+  it('does NOT consume the range synchronously on open for citationMenuItem', () => {
     vi.spyOn(bus, 'openEditorDialog').mockReturnValue(new Promise(() => {})); // never resolves
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
     const chain = { focus: () => ({ deleteRange }) };
@@ -66,11 +68,11 @@ describe('citation slash — popup destroy + range leak fix (#76 #136)', () => {
     const range = { from: 2, to: 10 };
     citationMenuItem.run(editor as never, range);
 
-    // consumeSlashRange calls editor.chain().focus().deleteRange(range).run()
-    expect(deleteRange).toHaveBeenCalledWith(range);
+    // Dialog still open → no commit → trigger text untouched.
+    expect(deleteRange).not.toHaveBeenCalled();
   });
 
-  it('consumeSlashRange is called synchronously before the dialog resolves for footnoteMenuItem', () => {
+  it('does NOT consume the range synchronously on open for footnoteMenuItem', () => {
     vi.spyOn(bus, 'openEditorDialog').mockReturnValue(new Promise(() => {})); // never resolves
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
     const chain = { focus: () => ({ deleteRange }) };
@@ -80,10 +82,10 @@ describe('citation slash — popup destroy + range leak fix (#76 #136)', () => {
     const range = { from: 2, to: 10 };
     footnoteMenuItem.run(editor as never, range);
 
-    expect(deleteRange).toHaveBeenCalledWith(range);
+    expect(deleteRange).not.toHaveBeenCalled();
   });
 
-  it('on cancel (null result), citationMenuItem does NOT insert and range was already consumed', async () => {
+  it('on cancel (null result), citationMenuItem does NOT insert and does NOT consume the range', async () => {
     vi.spyOn(bus, 'openEditorDialog').mockResolvedValue(null);
     const insertContent = vi.fn();
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
@@ -96,16 +98,14 @@ describe('citation slash — popup destroy + range leak fix (#76 #136)', () => {
     const range = { from: 2, to: 10 };
     citationMenuItem.run(editor as never, range);
 
-    // Range consumed synchronously before dialog
-    expect(deleteRange).toHaveBeenCalledWith(range);
-
     await new Promise((r) => setTimeout(r, 0));
 
-    // No insert on cancel
+    // Cancel → no insert AND the typed "/query" is left intact.
     expect(insertContent).not.toHaveBeenCalled();
+    expect(deleteRange).not.toHaveBeenCalled();
   });
 
-  it('on cancel (null result), footnoteMenuItem does NOT set mark and range was already consumed', async () => {
+  it('on cancel (null result), footnoteMenuItem does NOT set mark and does NOT consume the range', async () => {
     vi.spyOn(bus, 'openEditorDialog').mockResolvedValue(null);
     const setMark = vi.fn();
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
@@ -118,10 +118,9 @@ describe('citation slash — popup destroy + range leak fix (#76 #136)', () => {
     const range = { from: 2, to: 10 };
     footnoteMenuItem.run(editor as never, range);
 
-    expect(deleteRange).toHaveBeenCalledWith(range);
-
     await new Promise((r) => setTimeout(r, 0));
 
     expect(setMark).not.toHaveBeenCalled();
+    expect(deleteRange).not.toHaveBeenCalled();
   });
 });
