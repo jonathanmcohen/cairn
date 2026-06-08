@@ -163,7 +163,9 @@ export const footnoteMenuItem: CitationSlashEntry = {
   icon: Asterisk,
   keywords: ['note', 'fn'],
   run: (editor: Editor, range?: SlashRange): void => {
-    consumeSlashRange(editor, range);
+    // #76 — defer the trigger-range consume until the dialog resolves to a real
+    // insert (commit-only), matching Equation/Flashcard. Cancelling the modal
+    // leaves the typed `/query` text intact instead of silently deleting it.
     void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((raw) => {
       const result = asFormResult(raw);
       const content = result?.text;
@@ -172,6 +174,7 @@ export const footnoteMenuItem: CitationSlashEntry = {
       if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
         editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
       }
+      consumeSlashRange(editor, range);
       const id = crypto.randomUUID();
       editor.chain().focus().setMark('footnote', { id, content }).run();
     });
@@ -185,7 +188,10 @@ export const citationMenuItem: CitationSlashEntry = {
   icon: Quote,
   keywords: ['cite', 'ref', 'reference', 'bibliography'],
   run: (editor: Editor, range?: SlashRange): void => {
-    consumeSlashRange(editor, range);
+    // #76 — defer the trigger-range consume until the dialog resolves to a real
+    // insert (commit-only), matching Equation/Flashcard. Cancelling the modal
+    // leaves the typed `/query` text intact. The consume happens inside the
+    // lazy-load resolve below, atomically before the insert.
     void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((raw) => {
       const result = asFormResult(raw);
       if (!result) return;

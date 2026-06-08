@@ -5,6 +5,17 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.15] - 2026-06-08
+
+Patch release — Trash icon, Yjs↔API content sync, stale-deploy hardening, slash + quota fixes. No migration.
+
+### Fixed
+- **Trash list printed the raw `emoji::` prefix (#141).** `/trash` rendered each entry's icon as the literal stored string (e.g. `emoji::📄`) instead of the emoji. Extracted a shared client-safe `<InlineIcon>` renderer (`src/components/page-icon-inline.tsx`) routing every value through `parseIcon` (`emoji::🚀`→🚀, bare passthrough, `file::<uuid>`→neutral glyph, null→📄), used in Trash and unified across the sidebar page-tree + see-also panel (killed 3 duplicate local renderers). Regression test covers every prefix form.
+- **API content writes lost to the live Yjs doc (A3).** `PATCH /api/(v1/)pages/:id` wrote `pages.content` but an open collaborative doc overwrote it on next materialize → empty body on hard reload. The collab process now hosts an `AUTH_SECRET`-gated internal endpoint; the API best-effort publishes new content into the live Y.Doc via a schema-free ProseMirror-JSON→Yjs walker (safe for custom block types). Fail-open — collab unreachable still persists to DB and returns 200. New optional `CAIRN_COLLAB_INTERNAL_URL`.
+- **`/settings/workspace/general` 500 on stale deploys (#1).** The loader selected `workspaces.icon` (added in migration 0054); a DB deployed before that migration ran threw Postgres 42703 and 500'd the settings segment. The icon read is now isolated and a 42703 degrades to `null` (any other error re-throws); redeploy + migrate restores it. Regression test reproduces the drift and guards the fix.
+- **Citation/footnote slash items lost typed text on modal cancel (#76).** Both consumed the `/query` range synchronously on selection; now they defer to the dialog-commit path like Equation/Flashcard, so cancelling preserves what you typed.
+- **PAT quota reset wiped sparkline history at month boundaries.** Admin "reset quota" deleted usage rows by `windowStart` value alone, so early in a month a historical day-row landing on the 1st (= current month-window start) was wrongly deleted. Now matched on `(windowKind, windowStart)` pairs.
+
 ## [0.9.14] - 2026-06-07
 
 Consolidated patch release — P0 export hotfix, editor/density fixes, test-infra split, polish. No migration (latest stays 0068). Single PR across 7 plans (V/A/B/D/E/C/U).

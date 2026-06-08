@@ -58,9 +58,11 @@ function makeEditor(extensions: { name: string }[] = []) {
 // All modal-spawning items are deferred so `runSlashItem` never pre-deletes
 // the trigger range itself — each command owns range consumption.
 const MODAL_ITEMS = ['Equation', 'Citation', 'Footnote', 'Flashcard'];
-// Of those, Equation and Flashcard gate `consumeSlashRange` behind the dialog
-// resolving to a real insert, so cancelling leaves the typed text intact (#76).
-const COMMIT_ONLY_CONSUME_ITEMS = ['Equation', 'Flashcard'];
+// #76 — ALL four modal items gate `consumeSlashRange` behind the dialog
+// resolving to a real insert, so cancelling leaves the typed text intact.
+// (Citation + Footnote were moved here once their synchronous top-level consume
+// was deferred into the commit path, matching Equation/Flashcard.)
+const COMMIT_ONLY_CONSUME_ITEMS = ['Equation', 'Flashcard', 'Citation', 'Footnote'];
 
 describe('Plan B4/B5 — slash modal consistency (regression)', () => {
   it('every modal-spawning slash item is deferred:true', () => {
@@ -88,7 +90,7 @@ describe('Plan B4/B5 — slash modal consistency (regression)', () => {
     }
   });
 
-  it('commit-only items (Equation/Flashcard) do not consume the range when the dialog is cancelled', () => {
+  it('commit-only items (Equation/Flashcard/Citation/Footnote) do not consume the range when the dialog is cancelled', () => {
     for (const title of COMMIT_ONLY_CONSUME_ITEMS) {
       const item = SLASH_ITEMS.find((i) => i.title === title);
       if (!item) continue;

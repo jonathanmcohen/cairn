@@ -13,6 +13,10 @@ services:
       AUTH_SECRET: ${AUTH_SECRET}
       NEXTAUTH_URL: ${PUBLIC_URL}
       COLLAB_URL: ${COLLAB_URL:-ws://localhost:1234}
+      # v0.9.15 #A3 — internal HTTP base for pushing API content writes into the
+      # live Yjs doc (same host:port as the collab WS server, over http). On the
+      # compose network the collab service is reachable by name.
+      CAIRN_COLLAB_INTERNAL_URL: ${CAIRN_COLLAB_INTERNAL_URL:-http://cairn-collab:1234}
       AUTH_GOOGLE_ID: ${AUTH_GOOGLE_ID:-}
       AUTH_GOOGLE_SECRET: ${AUTH_GOOGLE_SECRET:-}
       AUTH_GITHUB_ID: ${AUTH_GITHUB_ID:-}

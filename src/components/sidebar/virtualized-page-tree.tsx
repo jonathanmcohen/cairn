@@ -1,28 +1,31 @@
 'use client';
 
 import { useVirtualizer } from '@tanstack/react-virtual';
-import { ChevronDown, ChevronRight, FileText, Folder, Image as ImageIcon } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Folder } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useMemo, useRef, useState } from 'react';
 import { EmptyPageTree } from '@/components/empty-state/variants';
+import { InlineIcon } from '@/components/page-icon-inline';
 import { useT } from '@/lib/i18n/provider';
-import { parseIcon } from '@/lib/pages/icon-format';
 import type { FlatPageNode } from '@/lib/pages/tree';
 import { PageRowActionsMenu } from './page-row-actions-menu';
 import { PageRowContextMenu } from './page-row-context-menu';
 import { usePageRowActions } from './use-page-row-actions';
 
 /**
- * Render a page row's stored icon string. Always routes through `parseIcon` so
- * the `emoji::`/`file::` shortcode prefix never leaks into the DOM. File icons
- * resolve to images server-side elsewhere; here we show a neutral placeholder.
+ * Render a page row's stored icon string via the shared client-safe
+ * {@link InlineIcon} so the `emoji::`/`file::` shortcode prefix never leaks into
+ * the DOM. Null → a neutral document glyph; file icons → the InlineIcon default
+ * neutral image glyph (signed image URLs resolve server-side elsewhere).
  */
 function renderNodeIcon(stored: string | null): React.ReactNode {
-  const parsed = parseIcon(stored);
-  if (!parsed) return <FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
-  if (parsed.kind === 'emoji') return parsed.value;
-  return <ImageIcon aria-hidden="true" className="h-4 w-4 text-muted-foreground" />;
+  return (
+    <InlineIcon
+      value={stored}
+      fallback={<FileText aria-hidden="true" className="h-4 w-4 text-muted-foreground" />}
+    />
+  );
 }
 
 export const ROW_HEIGHT_PX = 26; // Compact dense row (#208).

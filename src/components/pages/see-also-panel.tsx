@@ -1,12 +1,12 @@
 import type { Route } from 'next';
 import { cookies, headers } from 'next/headers';
 import Link from 'next/link';
+import { InlineIcon } from '@/components/page-icon-inline';
 import { getDb } from '@/db/client';
 import { LOCALE_COOKIE } from '@/lib/i18n/config';
 import { getMessages } from '@/lib/i18n/messages';
 import { resolveLocale } from '@/lib/i18n/resolve';
 import { createT } from '@/lib/i18n/t';
-import { parseIcon } from '@/lib/pages/icon-format';
 import { findRelatedPages } from '@/lib/search/see-also';
 
 /**
@@ -29,17 +29,13 @@ async function serverT() {
 }
 
 /**
- * Render a related page's stored icon string. Routes through `parseIcon` so the
- * `emoji::`/`file::` shortcode prefix never leaks into the DOM (the bug fixed in
- * the page-icon polish, now applied to this code path too). File-backed icons
- * collapse to a neutral placeholder here — the compact panel intentionally does
- * not resolve signed image URLs.
+ * Render a related page's stored icon string via the shared client-safe
+ * {@link InlineIcon} so the `emoji::`/`file::` shortcode prefix never leaks into
+ * the DOM. File-backed icons collapse to a neutral 🖼️ placeholder here — the
+ * compact panel intentionally does not resolve signed image URLs.
  */
 function renderRelatedIcon(stored: string | null): React.ReactNode {
-  const parsed = parseIcon(stored);
-  if (!parsed) return '📄';
-  if (parsed.kind === 'emoji') return parsed.value;
-  return '🖼️';
+  return <InlineIcon value={stored} fileFallback="🖼️" />;
 }
 
 export type SeeAlsoPanelProps = {
