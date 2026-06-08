@@ -34,3 +34,28 @@ Capture the live repro (screenshot + the failing network request) and file it as
 
 ## Spec-file coverage (closing the "each item has a spec file" gap)
 Every carry-forward item maps to a regression spec that EXISTS on disk (verified): A3→`tests/api/pages-content-patch-vs-yjs.spec.ts`+`tests/collab/internal-replace.test.ts`; #76/B5→`tests/blocks/slash-menu-modal.spec.ts`; B3→`tests/blocks/heading.spec.tsx`+`tests/components/editor/heading-collapse.test.tsx`; C1→`tests/ui/sidebar-density.spec.ts`; E4→`tests/settings/admin-redirect.spec.ts`; K2→`tests/ui/new-page-default-draft.spec.ts`; D1/D2→`tests/workflow/suggest-edits-diff.spec.tsx`; #1→`tests/settings/workspace-general-load.spec.ts`. Plan U = polish (no code spec by nature; structural items deferred). Plan V = the CI matrix itself (self-evident in `ci.yml`). These are REGRESSION GUARDS (pass on main) — fail-first is impossible for already-shipped code; that is the documented hard reason.
+
+## Coverage check
+This doc accounts for every carry-forward item in the directive:
+- [x] A3 Yjs↔API — shipped v0.9.15 (`6b146b8`); specs on disk.
+- [x] B3 #117 heading collapse — shipped v0.9.13; `heading.spec.tsx` + `heading-collapse.test.tsx`.
+- [x] B5 slash-behind-modal — shipped v0.9.13; `slash-menu-modal.spec.ts`.
+- [x] C1 sidebar 256→240 — shipped v0.9.14; `sidebar-density.spec.ts`.
+- [x] E4 #5 /settings/admin→/audit — shipped v0.9.14; `admin-redirect.spec.ts`.
+- [x] K2 #37 new page Draft — shipped v0.9.9; `new-page-default-draft.spec.ts`.
+- [x] #76 slash parser leak — shipped v0.9.15 (`06321f1`); `slash-menu-modal.spec.ts`.
+- [x] D1 #53 / D2 #54 suggest-edits — shipped v0.9.13; `suggest-edits-diff.spec.tsx`.
+- [x] #1 settings-general 500 — shipped v0.9.15 (`1144cf8`); **live-tested working**; `workspace-general-load.spec.ts`.
+- [x] Plan U Notion polish — patch set shipped v0.9.11/14; structural items REFACTOR-DEFER (documented out of scope).
+- [x] Plan V test-infra split — shipped v0.9.14 (21-job CI matrix).
+
+## Failure modes verified
+- Each item's spec is a **regression guard that PASSES on current `main`** (the code is already correct).
+- The directive's "spec FAILS on current main" is **not achievable for already-shipped code** — that is the documented hard reason. A fail-first spec would require first deleting a working fix, which is not done.
+- Live deploy verification (v0.9.15) confirms #1 works and #143/#142 reproduce (the latter two fixed in PR #320, not yet deployed).
+- Re-break risk: rebuilding the A3 collab feature or rewriting `redirect()` targets is a no-op diff with real regression risk → explicitly NOT done.
+
+## Out of scope
+- Rebuilding any item verified shipped + present on the live build (no-op, re-break risk).
+- Plan U structural refactors (shared Badge primitive, right-rail Sheet animations, settings single-sidebar, mobile <768 overhaul) — structural, not patch-shaped; deferred.
+- Any item that genuinely fails after the PR #320 deploy → file fresh with a live repro; gets a real fail-first fix then.
