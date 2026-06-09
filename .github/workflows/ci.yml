@@ -79,7 +79,7 @@ env:
 
 jobs:
   ci:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     # ghcr.io/jonathanmcohen/postgres-pgvector is a private package; the
     # Testcontainers helper pulls it on `pnpm test`. `packages: read` lets
     # the docker login step exchange GITHUB_TOKEN for a pull-capable creds
@@ -128,7 +128,7 @@ jobs:
 
   # Vitest suite, one job per top-level test directory.
   # Each job is serial within itself (Testcontainers maxWorkers 1) but the
-  # jobs interleave across the 2 self-hosted Linux x64 runners — improving
+  # jobs run in parallel across GitHub-hosted runners (public repo) — improving
   # log locality and triage speed vs the old 2-shard approach.
   #
   # COVERAGE INVARIANT: this matrix must run EVERY Vitest dir the old
@@ -141,7 +141,7 @@ jobs:
   # New-but-empty dirs (blocks/workflow/settings/ui) are listed so .spec.ts
   # files added by Plans A–U run automatically; vitest exits 0 on no files.
   test:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: read
@@ -204,7 +204,7 @@ jobs:
           TESTCONTAINERS_RYUK_DISABLED: 'true'
 
   security:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     # gitleaks-action calls the PR REST API to scope the scan and (optionally)
     # post review comments — both require pull-requests: write on top of the
     # default contents: read. Without these, the action throws
@@ -254,7 +254,7 @@ jobs:
         run: pnpm test tests/security
 
   a11y:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     # Private GHCR image needs packages: read for the services credentials
     # block + the explicit docker login step (used by the Playwright web
     # server which spawns its own db:migrate before pnpm test:a11y).
