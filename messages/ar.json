@@ -879,5 +879,11 @@
   "oauthConnections.lastUsed": "آخر استخدام {when}",
   "oauthConnections.neverUsed": "لم يُستخدم قط",
   "oauthConnections.revoke": "إلغاء التصريح",
-  "oauthConnections.empty": "لا توجد تطبيقات متصلة بعد. اربط Claude Desktop أو Cursor عبر OAuth — دون لصق أي رمز."
+  "oauthConnections.empty": "لا توجد تطبيقات متصلة بعد. اربط Claude Desktop أو Cursor عبر OAuth — دون لصق أي رمز.",
+  "devTokens.connectHeading": "اربط أدواتك بـ Cairn",
+  "devTokens.connectIntro": "اربط Claude Desktop أو Cursor عبر OAuth — دون لصق أي رمز. أو أنشئ رمز وصول شخصيًا للنصوص البرمجية وواجهة برمجة التطبيقات. كلاهما مقيّد بحسابك ويخضع لأذونات مساحة عملك.",
+  "mcpConn.oauthTitle": "OAuth (موصى به)",
+  "mcpConn.oauthBody": "أضف عنوان URL هذا للخادم في Claude Desktop أو Cursor. سيفتح عميلك متصفحًا للموافقة على الوصول — دون لصق أي رمز.",
+  "mcpConn.bearerToggle": "استخدام رمز bearer بدلاً من ذلك",
+  "mcpConn.bearerBody": "هل تفضّل رمزًا طويل الأمد؟ أنشئ رمز وصول شخصيًا أدناه والصقه في إعدادات عميلك."
 }

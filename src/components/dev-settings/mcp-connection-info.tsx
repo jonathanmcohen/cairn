@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useT } from '@/lib/i18n/provider';
 
 export function McpConnectionInfo({ publicUrl }: { publicUrl: string }) {
+  const t = useT();
   const [copied, setCopied] = useState<string | null>(null);
   const mcpUrl = `${publicUrl}/api/mcp`;
 
@@ -50,11 +52,8 @@ export function McpConnectionInfo({ publicUrl }: { publicUrl: string }) {
         {/* v0.9.16 Plan F — lead with OAuth: the client opens a browser to
             approve access; no token to paste. */}
         <div>
-          <p className="font-medium text-sm">OAuth (recommended)</p>
-          <p className="text-muted-foreground text-sm">
-            Add this server URL in Claude Desktop or Cursor. Your client will open a browser to
-            approve access — no token to paste.
-          </p>
+          <p className="font-medium text-sm">{t('mcpConn.oauthTitle')}</p>
+          <p className="text-muted-foreground text-sm">{t('mcpConn.oauthBody')}</p>
           <div className="mt-2 flex items-center justify-between gap-2">
             <code className="block flex-1 break-all rounded bg-muted p-2 font-mono text-xs">
               {mcpUrl}
@@ -71,12 +70,9 @@ export function McpConnectionInfo({ publicUrl }: { publicUrl: string }) {
         </div>
 
         <details className="rounded border p-2">
-          <summary className="cursor-pointer text-sm">Use a bearer token instead</summary>
+          <summary className="cursor-pointer text-sm">{t('mcpConn.bearerToggle')}</summary>
           <div className="mt-3 space-y-4">
-            <p className="text-muted-foreground text-xs">
-              Prefer a long-lived token? Mint a personal access token below and paste it into your
-              client config.
-            </p>
+            <p className="text-muted-foreground text-xs">{t('mcpConn.bearerBody')}</p>
             <div>
               <div className="flex items-center justify-between">
                 <p id="mcp-claude-label" className="text-sm">

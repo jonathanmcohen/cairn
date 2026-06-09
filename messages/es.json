@@ -875,5 +875,11 @@
   "oauthConnections.lastUsed": "Último uso {when}",
   "oauthConnections.neverUsed": "Nunca usada",
   "oauthConnections.revoke": "Revocar",
-  "oauthConnections.empty": "Aún no hay aplicaciones conectadas. Conecta Claude Desktop o Cursor con OAuth, sin pegar ningún token."
+  "oauthConnections.empty": "Aún no hay aplicaciones conectadas. Conecta Claude Desktop o Cursor con OAuth, sin pegar ningún token.",
+  "devTokens.connectHeading": "Conecta tus herramientas a Cairn",
+  "devTokens.connectIntro": "Conecta Claude Desktop o Cursor con OAuth, sin pegar ningún token. O crea un token de acceso personal para scripts y la API. Ambos están limitados a tu cuenta y respetan los permisos de tu espacio de trabajo.",
+  "mcpConn.oauthTitle": "OAuth (recomendado)",
+  "mcpConn.oauthBody": "Añade esta URL del servidor en Claude Desktop o Cursor. Tu cliente abrirá un navegador para aprobar el acceso, sin pegar ningún token.",
+  "mcpConn.bearerToggle": "Usar un token bearer en su lugar",
+  "mcpConn.bearerBody": "¿Prefieres un token de larga duración? Crea un token de acceso personal abajo y pégalo en la configuración de tu cliente."
 }
