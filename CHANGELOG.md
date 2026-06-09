@@ -7,11 +7,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [0.9.16] - 2026-06-08
 
-Patch — two workspace bugs found testing the v0.9.15 deploy. No migration.
+Feature + fix release — MCP OAuth 2.1 authorization server, sidebar density, two workspace bugs. **Migration 0069.**
+
+### Added
+- **OAuth 2.1 authorization server for MCP clients (Plan F).** MCP clients (Claude Desktop, Cursor, etc.) can now connect over OAuth instead of a hand-pasted bearer token. New server at `/api/oauth/*` — `authorize` (consent screen), `token` (code→token + refresh with rotation), `register` (RFC 7591 dynamic client registration), `revoke` (RFC 7009) — plus discovery at `/.well-known/oauth-authorization-server` (RFC 8414) and `/.well-known/oauth-protected-resource` (RFC 9728). The MCP endpoint returns `401 WWW-Authenticate: Bearer resource_metadata="…"` when unauthenticated so clients can auto-discover. Security: PKCE S256 required, `redirect_uri` exact-match, all codes/tokens/secrets sha256-hashed at rest, consent intersects the granted scopes with the user's workspace role, and refresh-token rotation revokes descendant tokens on reuse. OAuth tokens resolve through the **same** scope-enforcement path as PATs (a third `resolveToken` branch) and reuse the 16 PAT scopes + `mcp:read`/`mcp:write`/`admin` presets verbatim. Settings → Developer gains an OAuth connections list with per-grant revoke. New audit events `oauth.client_registered` / `oauth.consent_granted` / `oauth.token_issued` / `oauth.token_revoked`. **PATs keep working unchanged.** Migration 0069 adds `oauth_clients`, `oauth_authorization_codes`, `oauth_tokens`. Docs: `docs/mcp-oauth.md`.
+
+### Changed
+- **Top-of-sidebar density (#144).** Compacted the workspace switcher (44→32px), command-palette button (54→36px), section headers, and PAGES header on fine pointers for a tighter header stack. The 44px touch floor (WCAG 2.5.5) is preserved on every interactive row via the `pointer-coarse:` overrides, and the workspace icon badge is untouched.
 
 ### Fixed
 - **Workspace switcher left the sidebar stale (#143).** Switching workspaces updated the active-workspace cookie and main pane but the client-cached sidebar queries (page tree, saved searches, flashcard queue, workspace badge) kept showing the previous workspace until a manual reload — `switchTo` used `router.refresh()` + `router.push('/')` (soft nav), which doesn't refetch them. Now does a hard `window.location.assign('/')` after the switch so every workspace-scoped query refetches (Notion behavior).
 - **Workspace icon never showed in the sidebar badge (#142).** The switcher rendered only the name's first letter for the active trigger and every row, never the saved `icon` (and the workspace list query didn't even project it). The badge now renders the icon via the shared `<InlineIcon>` (emoji / file-glyph), falling back to the letter when unset; `icon` is threaded through `listUserWorkspaces`. The save round-trip (form → PATCH `/api/workspaces/:id/settings` → `updateWorkspaceSettings` → read-back) was verified correct end-to-end — the visible "icon does nothing" was the badge never reading it.
+
+## [0.9.15] - 2026-06-08
 
 Patch release — Trash icon, Yjs↔API content sync, stale-deploy hardening, slash + quota fixes. No migration.
 
