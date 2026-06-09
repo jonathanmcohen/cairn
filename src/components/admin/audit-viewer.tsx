@@ -180,6 +180,11 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'federation.peer_enabled': 'Federated peer enabled',
   'federation.peer_disabled': 'Federated peer disabled',
   'federation.peer_deleted': 'Federated peer removed',
+  // v0.9.16 Plan F — MCP OAuth lifecycle.
+  'oauth.client_registered': 'OAuth client registered',
+  'oauth.consent_granted': 'OAuth consent granted',
+  'oauth.token_issued': 'OAuth token issued',
+  'oauth.token_revoked': 'OAuth token revoked',
 };
 
 export function actionLabel(action: string): string {

@@ -15,7 +15,7 @@ describe('workspace-switcher trigger density (#130)', () => {
   it('renders the active-workspace trigger at 13px density token, keeping min-h-11', () => {
     render(
       <WorkspaceSwitcher
-        workspaces={[{ id: 'w1', name: 'Homelab', role: 'owner' }]}
+        workspaces={[{ id: 'w1', name: 'Homelab', role: 'owner', icon: null }]}
         activeId="w1"
       />,
     );

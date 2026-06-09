@@ -8,6 +8,7 @@ import {
   routeRpcMethod,
   successEnvelope,
 } from '@/lib/mcp/protocol';
+import { publicOrigin } from '@/lib/url';
 
 // MCP route needs Node APIs (resolveToken DB hit, dispatcher DB writes).
 export const runtime = 'nodejs';
@@ -51,11 +52,21 @@ export async function POST(req: Request): Promise<Response> {
   // ── Auth ──────────────────────────────────────────────────────────────
   const ctx = await resolveToken(req.headers.get('authorization')).catch(() => null);
   if (!ctx) {
-    return jsonResponse({ error: 'unauthorized' }, 401);
+    // v0.9.16 Plan F — advertise OAuth via RFC 9728 protected-resource metadata.
+    // The MCP 2025-06 client probes /api/mcp, gets this 401, fetches the
+    // resource metadata, discovers the AS, and runs the PKCE flow — no paste.
+    const origin = await publicOrigin().catch(() => '');
+    const headers: Record<string, string> = { 'content-type': 'application/json' };
+    if (origin) {
+      headers['WWW-Authenticate'] =
+        `Bearer resource_metadata="${origin}/.well-known/oauth-protected-resource"`;
+    }
+    return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers });
   }
-  if (ctx.kind !== 'pat') {
-    // MCP is PAT-only by design (api_key tokens have no `mcp:*` scopes anyway).
-    return jsonResponse({ error: 'mcp transport requires a personal access token' }, 403);
+  if (ctx.kind !== 'pat' && ctx.kind !== 'oauth') {
+    // MCP accepts PATs and OAuth access tokens. api_key tokens are rejected by
+    // design (they synthesize role-derived scopes with no `mcp:*` scope).
+    return jsonResponse({ error: 'mcp transport requires a personal access token or OAuth' }, 403);
   }
   const hasMcpScope = ctx.scopes.some((s) => s.startsWith('mcp:'));
   if (!hasMcpScope) {

@@ -42,7 +42,10 @@ afterEach(() => {
 describe('<WorkspaceSwitcher> create + switch', () => {
   it('opens the create modal instead of prompting', async () => {
     render(
-      <WorkspaceSwitcher workspaces={[{ id: 'a', name: 'Acme', role: 'owner' }]} activeId="a" />,
+      <WorkspaceSwitcher
+        workspaces={[{ id: 'a', name: 'Acme', role: 'owner', icon: null }]}
+        activeId="a"
+      />,
     );
     // radix opens on pointerdown (left button), not a synthetic click in jsdom.
     fireEvent.pointerDown(screen.getByRole('button', { name: /switch workspace/i }), {
@@ -53,25 +56,40 @@ describe('<WorkspaceSwitcher> create + switch', () => {
     expect(await screen.findByRole('dialog', { name: /new workspace/i })).toBeTruthy();
   });
 
-  it('navigates to "/" after switching workspaces (lands on workspace home, not /templates)', async () => {
-    render(
-      <WorkspaceSwitcher
-        workspaces={[
-          { id: 'a', name: 'Acme', role: 'owner' },
-          { id: 'b', name: 'Beta', role: 'editor' },
-        ]}
-        activeId="a"
-      />,
-    );
-    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }));
-    fireEvent.pointerDown(screen.getByRole('button', { name: /switch workspace/i }), {
-      button: 0,
-      ctrlKey: false,
+  it('hard-navigates to "/" after switching (#143 — lands on workspace home, not /templates)', async () => {
+    // #143 changed the soft router.push('/') to a HARD nav via
+    // window.location.assign('/') so client-cached sidebar queries refetch under
+    // the new workspace cookie. Assert the hard nav fires and push does NOT.
+    const assign = vi.fn();
+    const original = window.location;
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: { ...original, assign },
     });
-    fireEvent.click(await screen.findByRole('menuitem', { name: /beta/i }));
-    // allow the switchTo promise chain to settle
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(push).toHaveBeenCalledWith('/');
+    try {
+      render(
+        <WorkspaceSwitcher
+          workspaces={[
+            { id: 'a', name: 'Acme', role: 'owner', icon: null },
+            { id: 'b', name: 'Beta', role: 'editor', icon: null },
+          ]}
+          activeId="a"
+        />,
+      );
+      vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 200 }));
+      fireEvent.pointerDown(screen.getByRole('button', { name: /switch workspace/i }), {
+        button: 0,
+        ctrlKey: false,
+      });
+      fireEvent.click(await screen.findByRole('menuitem', { name: /beta/i }));
+      // allow the switchTo promise chain to settle
+      await Promise.resolve();
+      await Promise.resolve();
+      await Promise.resolve();
+      expect(assign).toHaveBeenCalledWith('/');
+      expect(push).not.toHaveBeenCalled();
+    } finally {
+      Object.defineProperty(window, 'location', { configurable: true, value: original });
+    }
   });
 });

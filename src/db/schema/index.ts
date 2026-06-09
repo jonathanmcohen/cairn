@@ -28,6 +28,10 @@ export * from './flashcards';
 export * from './import-jobs';
 export * from './invite-tokens';
 export * from './notifications';
+// v0.9.16 Plan F — MCP OAuth 2.1 authorization-server tables.
+export * from './oauth-authorization-codes';
+export * from './oauth-clients';
+export * from './oauth-tokens';
 export * from './page-acl-invites';
 export * from './page-acls';
 export * from './page-approvals';

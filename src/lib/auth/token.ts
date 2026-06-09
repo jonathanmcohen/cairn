@@ -2,12 +2,13 @@ import { getDb } from '@/db/client';
 import { verifyKey } from '@/lib/api/keys';
 import { type PatContext, verifyPatToken } from '@/lib/auth/pat';
 import { HttpError, type MemberRole } from '@/lib/auth/require-role';
+import { verifyOauthAccessToken } from '@/lib/oauth/tokens';
 
 const BEARER = /^Bearer\s+(\S+)$/i;
 
 /** Unified token context — superset of the v0.5 AuthContext. */
 export type TokenContext = {
-  kind: 'api_key' | 'pat';
+  kind: 'api_key' | 'pat' | 'oauth';
   tokenId: string;
   userId?: string; // PAT carries the minting user; api_key carries createdBy
   workspaceId: string;
@@ -88,6 +89,15 @@ export async function resolveToken(
     const pat: PatContext | null = await verifyPatToken(db, secret);
     if (!pat) return null;
     return pat;
+  }
+
+  // v0.9.16 Plan F — OAuth access tokens resolve through the SAME enforcement
+  // path as PATs (requireScope + the MCP mcp:* gate), so scope checks are
+  // identical. Refresh tokens are NEVER presented here — only at /api/oauth/token.
+  if (secret.startsWith('cairn_oauth_')) {
+    const oauth = await verifyOauthAccessToken(db, secret);
+    if (!oauth) return null;
+    return oauth;
   }
 
   if (secret.startsWith('cairn_sk_')) {

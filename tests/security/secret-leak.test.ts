@@ -89,7 +89,16 @@ const FORBIDDEN_KEYS = [
 // admin audit viewer response (a full minted token would start with one of
 // these). They're separated from `FORBIDDEN_KEYS` because the api-key listing
 // legitimately surfaces a 4-char display prefix that starts with `cairn_sk_`.
-const FORBIDDEN_SECRET_PREFIXES = ['cairn_whsec_', 'cairn_sk_', 'cairn_pat_'];
+const FORBIDDEN_SECRET_PREFIXES = [
+  'cairn_whsec_',
+  'cairn_sk_',
+  'cairn_pat_',
+  // v0.9.16 Plan F — MCP OAuth secrets.
+  'cairn_oauth_',
+  'cairn_oart_',
+  'cairn_oac_',
+  'cairn_ocs_',
+];
 
 function assertNoSecrets(body: string) {
   for (const k of FORBIDDEN_KEYS) {
@@ -750,5 +759,34 @@ describe('secret-leak: connector secrets', () => {
         expect(hex).not.toContain(Buffer.from(s, 'utf8').toString('hex'));
       }
     }
+  });
+});
+
+// ---------------------------------------------------------------------------
+// v0.9.16 Plan F: MCP OAuth secrets. The four issued-secret prefixes
+// (access / refresh / auth-code / client-secret) are added to
+// FORBIDDEN_SUBSTRINGS so `assertAuditMetadataClean` throws if any of them ever
+// slips into audit metadata. No DB needed — this guards the leak-guard itself.
+// ---------------------------------------------------------------------------
+describe('secret-leak: OAuth secret prefixes trip assertAuditMetadataClean', () => {
+  it.each([
+    ['cairn_oauth_', 'access token'],
+    ['cairn_oart_', 'refresh token'],
+    ['cairn_oac_', 'authorization code'],
+    ['cairn_ocs_', 'client secret'],
+  ])('a value containing %s (%s) throws', async (prefix) => {
+    const { assertAuditMetadataClean } = await import('@/lib/audit/record');
+    expect(() => assertAuditMetadataClean({ note: `${prefix}AbCdEf123456` })).toThrow();
+  });
+
+  it('a clean metadata object (ids + scope names + counts only) passes', async () => {
+    const { assertAuditMetadataClean } = await import('@/lib/audit/record');
+    expect(() =>
+      assertAuditMetadataClean({
+        clientId: 'abc123',
+        scopes: ['mcp:read', 'pages:read'],
+        redirectUriCount: 1,
+      }),
+    ).not.toThrow();
   });
 });

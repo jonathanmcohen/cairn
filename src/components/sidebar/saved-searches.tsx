@@ -82,10 +82,10 @@ export function SavedSearches() {
   if (items.length === 0) return null;
 
   return (
-    <section aria-label={t('savedSearches.heading')} className="mb-3">
-      <div className="mb-1 flex items-center gap-2 px-2">
+    <section aria-label={t('savedSearches.heading')} className="mb-2">
+      <div className="mb-0.5 flex items-center gap-2 px-2">
         <Bookmark aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">
+        <p className="text-[11px] uppercase tracking-wide text-muted-foreground">
           {t('savedSearches.heading')}
         </p>
       </div>

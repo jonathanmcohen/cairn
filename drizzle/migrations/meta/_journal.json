@@ -484,6 +484,13 @@
       "when": 1780760597497,
       "tag": "0068_backfill_legacy_orange_covers",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1780760597498,
+      "tag": "0069_mcp_oauth",
+      "breakpoints": true
     }
   ]
 }
