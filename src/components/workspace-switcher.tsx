@@ -57,7 +57,7 @@ export function WorkspaceSwitcher({
       <DropdownMenu.Root>
         <DropdownMenu.Trigger
           aria-label={t('workspaceSwitcher.switch')}
-          className="flex min-h-11 w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-1.5 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] font-medium hover:bg-accent"
+          className="flex min-h-[32px] w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-0.5 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] font-medium hover:bg-accent pointer-coarse:min-h-11 pointer-coarse:py-1.5"
         >
           <span className="flex min-w-0 items-center gap-2">
             <span

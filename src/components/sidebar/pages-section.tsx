@@ -22,11 +22,11 @@ export function PagesSection({ tree, spaces }: { tree: FlatPageNode[]; spaces?: 
     <section className="flex min-h-0 flex-1 flex-col">
       <div
         data-pages-header=""
-        className="sticky top-0 z-10 mb-1 flex items-center justify-between gap-1 bg-card px-2 py-1"
+        className="sticky top-0 z-10 mb-0.5 flex min-h-[28px] items-center justify-between gap-1 bg-card px-2 py-0.5 pointer-coarse:min-h-11 pointer-coarse:py-1.5"
       >
         <p
           id="sidebar-pages-heading"
-          className="text-xs uppercase tracking-wide text-muted-foreground"
+          className="text-[11px] uppercase tracking-wide text-muted-foreground"
         >
           {t('sidebar.pages.heading')}
         </p>
