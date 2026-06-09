@@ -7,9 +7,17 @@
  * SECURITY-CRITICAL: `network-only` is checked FIRST and exhaustively so no read
  * rule can ever shadow it. Mutations, auth, signed `/api/files/*` reads, and the
  * collab token/WS endpoint are NEVER cached.
+ *
+ * #143 (multi-tenant data isolation): authenticated `/api/` GET reads are scoped
+ * by the active-workspace COOKIE, not the URL. A URL-keyed cache (the old `swr`
+ * `api-reads` store) therefore served workspace A's response to workspace B after
+ * a switch (saved searches, flashcard due-count, pins, comments, databases, …).
+ * So `/api/` reads are now `network-first`: online always re-fetches for the
+ * current workspace (kills the leak), and the per-URL cache is used only as an
+ * offline fallback. The `swr` strategy is retired.
  */
 
-export type SwStrategy = 'network-only' | 'swr' | 'network-first' | 'precache';
+export type SwStrategy = 'network-only' | 'network-first' | 'precache';
 
 const MUTATING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
@@ -37,11 +45,8 @@ export function matchStrategy(url: URL, method: string): SwStrategy {
     return 'precache';
   }
 
-  // 3. swr — cacheable API reads (e.g. /api/pages, /api/search).
-  if (pathname.startsWith('/api/')) {
-    return 'swr';
-  }
-
-  // 4. network-first — navigations and everything else.
+  // 3. network-first — authenticated `/api/` GET reads (cookie-scoped: see the
+  // #143 note above), navigations, and everything else. Online → fresh for the
+  // current workspace; the per-URL cache is an offline fallback only.
   return 'network-first';
 }
