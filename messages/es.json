@@ -881,5 +881,7 @@
   "mcpConn.oauthTitle": "OAuth (recomendado)",
   "mcpConn.oauthBody": "Añade esta URL del servidor en Claude Desktop o Cursor. Tu cliente abrirá un navegador para aprobar el acceso, sin pegar ningún token.",
   "mcpConn.bearerToggle": "Usar un token bearer en su lugar",
-  "mcpConn.bearerBody": "¿Prefieres un token de larga duración? Crea un token de acceso personal abajo y pégalo en la configuración de tu cliente."
+  "mcpConn.bearerBody": "¿Prefieres un token de larga duración? Crea un token de acceso personal abajo y pégalo en la configuración de tu cliente.",
+  "adminLanding.title": "Administración",
+  "adminLanding.intro": "Controles de todo el espacio de trabajo: auditoría, miembros, acceso, seguridad e integraciones."
 }
