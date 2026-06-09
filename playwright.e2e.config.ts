@@ -29,9 +29,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
     video: 'retain-on-failure',
   },
-  projects: [
-    { name: 'light', use: { ...devices['Desktop Chrome'], colorScheme: 'light' } },
-  ],
+  projects: [{ name: 'light', use: { ...devices['Desktop Chrome'], colorScheme: 'light' } }],
   // Boot the built standalone server against the test DB. The caller runs
   // `pnpm build` first. `output: 'standalone'` => no `next start`; we migrate,
   // copy static assets into the standalone tree, then launch server.js.
