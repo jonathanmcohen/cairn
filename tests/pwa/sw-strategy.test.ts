@@ -29,9 +29,24 @@ describe('matchStrategy — security allow-list', () => {
     expect(matchStrategy(new URL('wss://app.example.com/collab'), 'GET')).toBe('network-only');
   });
 
-  it('swr for /api/pages and /api/search GET reads', () => {
-    expect(matchStrategy(url('/api/pages/abc'), 'GET')).toBe('swr');
-    expect(matchStrategy(url('/api/search?q=foo'), 'GET')).toBe('swr');
+  it('network-first for /api GET reads (NOT URL-cached) — #143 workspace isolation', () => {
+    // Cookie-scoped reads must never be served from a URL-keyed cache, or a
+    // post-switch reload shows the previous workspace's data. Every one of
+    // these is network-first so an online switch always re-fetches for the
+    // active workspace; the per-URL cache is an offline fallback only.
+    for (const path of [
+      '/api/pages/abc',
+      '/api/search?q=foo',
+      '/api/search/saved',
+      '/api/flashcards/due',
+      '/api/workspace/pins',
+      '/api/comments?pageId=abc',
+      '/api/databases',
+      '/api/favorites',
+      '/api/inbox',
+    ]) {
+      expect(matchStrategy(url(path), 'GET')).toBe('network-first');
+    }
   });
 
   it('network-first for navigations', () => {
