@@ -198,7 +198,9 @@ export async function dispatchTool(
     throw err;
   }
 
-  if (!ctx.mcpTools.includes(toolId)) {
+  // v0.9.16 Plan F — the per-tool allowlist is a PAT-only refinement. OAuth
+  // grants gate by scope alone (checked above), so they bypass the allowlist.
+  if (ctx.kind !== 'oauth' && !ctx.mcpTools.includes(toolId)) {
     const err = mcpError(MCP_ERROR_CODE.ALLOWLIST_DENIED, 'tool not in PAT allowlist', {
       tool: toolId,
     });

@@ -2,6 +2,10 @@ import { and, desc, eq, isNull } from 'drizzle-orm';
 import type { Route } from 'next';
 import { redirect } from 'next/navigation';
 import { McpConnectionInfo } from '@/components/dev-settings/mcp-connection-info';
+import {
+  type OauthConnectionRow,
+  OauthConnectionsList,
+} from '@/components/dev-settings/oauth-connections-list';
 import { type DevTokenRow, TokenList } from '@/components/dev-settings/token-list';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
@@ -44,6 +48,29 @@ export default async function DeveloperSettingsPage() {
     createdAt: r.createdAt.toISOString(),
   }));
 
+  // v0.9.16 Plan F — the signed-in user's active OAuth connections (non-revoked,
+  // joined to their client) for the connections list.
+  const oauthRows = await getDb()
+    .select({
+      id: schema.oauthTokens.id,
+      clientName: schema.oauthClients.clientName,
+      scopes: schema.oauthTokens.scopes,
+      lastUsedAt: schema.oauthTokens.lastUsedAt,
+    })
+    .from(schema.oauthTokens)
+    .innerJoin(schema.oauthClients, eq(schema.oauthClients.clientId, schema.oauthTokens.clientId))
+    .where(
+      and(eq(schema.oauthTokens.userId, session.user.id), isNull(schema.oauthTokens.revokedAt)),
+    )
+    .orderBy(desc(schema.oauthTokens.createdAt));
+
+  const initialConnections: OauthConnectionRow[] = oauthRows.map((r) => ({
+    id: r.id,
+    clientName: r.clientName,
+    scopes: r.scopes,
+    lastUsedAt: r.lastUsedAt ? r.lastUsedAt.toISOString() : null,
+  }));
+
   // Real public origin (forwarded-host aware) — see src/lib/url.ts / GH #50.
   const publicUrl = await publicOrigin();
 
@@ -54,14 +81,16 @@ export default async function DeveloperSettingsPage() {
         page="Personal tokens"
       />
       <header>
-        <h1 className="font-semibold text-2xl">Personal access tokens</h1>
+        <h1 className="font-semibold text-2xl">Connect tools to Cairn</h1>
         <p className="text-muted-foreground text-sm">
-          Personal access tokens for the Cairn API + MCP server. Tokens are scoped to your account
-          and obey your workspace permissions.
+          Connect Claude Desktop or Cursor with OAuth — no token to paste. Or mint a personal access
+          token for scripts and the API. Both are scoped to your account and obey your workspace
+          permissions.
         </p>
       </header>
-      <TokenList initialTokens={initialTokens} />
+      <OauthConnectionsList initial={initialConnections} />
       <McpConnectionInfo publicUrl={publicUrl} />
+      <TokenList initialTokens={initialTokens} />
     </main>
   );
 }

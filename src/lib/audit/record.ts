@@ -26,6 +26,12 @@ const FORBIDDEN_SUBSTRINGS = [
   'cairn_whsec_',
   'cairn_sk_',
   'cairn_pat_', // v0.7.0 G1 P5
+  // v0.9.16 Plan F — MCP OAuth secret prefixes: access / refresh / auth-code /
+  // client-secret. All sha256-hashed at rest; never allowed in audit metadata.
+  'cairn_oauth_',
+  'cairn_oart_',
+  'cairn_oac_',
+  'cairn_ocs_',
   'token_hash',
   'password_hash',
   'secret_encrypted',

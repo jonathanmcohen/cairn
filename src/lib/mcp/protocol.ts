@@ -132,9 +132,12 @@ export type ToolListEntry = {
 };
 
 export async function handleToolsList(ctx: TokenContext): Promise<{ tools: ToolListEntry[] }> {
+  // v0.9.16 Plan F — OAuth grants gate MCP access by scope alone (no per-tool
+  // allowlist, which is a PAT-only refinement). PATs keep their `mcpTools`
+  // allowlist ∩ scope filtering.
+  const allowlisted = (toolId: string) => ctx.kind === 'oauth' || ctx.mcpTools.includes(toolId);
   const visible = registry.filter(
-    (t) =>
-      ctx.mcpTools.includes(t.id) && (ctx.scopes.includes(t.scope) || ctx.scopes.includes('admin')),
+    (t) => allowlisted(t.id) && (ctx.scopes.includes(t.scope) || ctx.scopes.includes('admin')),
   );
   return {
     tools: visible.map((t) => ({

@@ -47,70 +47,98 @@ export function McpConnectionInfo({ publicUrl }: { publicUrl: string }) {
         <CardTitle>MCP connection info</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* v0.9.16 Plan F — lead with OAuth: the client opens a browser to
+            approve access; no token to paste. */}
         <div>
-          <p className="text-sm">Server URL</p>
-          <code className="block break-all rounded bg-muted p-2 font-mono text-xs">{mcpUrl}</code>
-        </div>
-        <div>
-          <div className="flex items-center justify-between">
-            <p id="mcp-claude-label" className="text-sm">
-              Claude Desktop config
-            </p>
+          <p className="font-medium text-sm">OAuth (recommended)</p>
+          <p className="text-muted-foreground text-sm">
+            Add this server URL in Claude Desktop or Cursor. Your client will open a browser to
+            approve access — no token to paste.
+          </p>
+          <div className="mt-2 flex items-center justify-between gap-2">
+            <code className="block flex-1 break-all rounded bg-muted p-2 font-mono text-xs">
+              {mcpUrl}
+            </code>
             <Button
               size="sm"
               variant="outline"
-              onClick={() => copy('claude', claudeDesktop)}
-              // WCAG 2.5.5: enforce ≥44×44 touch target on inline Copy.
-              className="min-h-11 min-w-11"
+              onClick={() => copy('url', mcpUrl)}
+              className="min-h-11 min-w-11 shrink-0"
             >
-              {copied === 'claude' ? 'Copied' : 'Copy'}
+              {copied === 'url' ? 'Copied' : 'Copy'}
             </Button>
           </div>
-          {/* axe `scrollable-region-focusable` requires the overflow <pre> to
-              be keyboard-reachable; `tabIndex={0}` + a labelled `role=region`
-              satisfies that. Biome's noNoninteractiveTabindex /
-              useSemanticElements are intentionally suppressed below. */}
-          {/* biome-ignore-start lint/a11y/useSemanticElements: scrollable region role is correct for the overflow surface; <pre> is the visual container. */}
-          {/* biome-ignore-start lint/a11y/noNoninteractiveTabindex: scrollable overflow region — keyboard-reachable per axe scrollable-region-focusable. */}
-          <pre
-            tabIndex={0}
-            role="region"
-            aria-labelledby="mcp-claude-label"
-            className="overflow-x-auto rounded bg-muted p-2 text-xs"
-          >
-            {claudeDesktop}
-          </pre>
-          {/* biome-ignore-end lint/a11y/noNoninteractiveTabindex: end. */}
-          {/* biome-ignore-end lint/a11y/useSemanticElements: end. */}
         </div>
-        <div>
-          <div className="flex items-center justify-between">
-            <p id="mcp-cursor-label" className="text-sm">
-              Cursor config
+
+        <details className="rounded border p-2">
+          <summary className="cursor-pointer text-sm">Use a bearer token instead</summary>
+          <div className="mt-3 space-y-4">
+            <p className="text-muted-foreground text-xs">
+              Prefer a long-lived token? Mint a personal access token below and paste it into your
+              client config.
             </p>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => copy('cursor', cursor)}
-              // WCAG 2.5.5: enforce ≥44×44 touch target on inline Copy.
-              className="min-h-11 min-w-11"
-            >
-              {copied === 'cursor' ? 'Copied' : 'Copy'}
-            </Button>
+            <div>
+              <div className="flex items-center justify-between">
+                <p id="mcp-claude-label" className="text-sm">
+                  Claude Desktop config
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copy('claude', claudeDesktop)}
+                  // WCAG 2.5.5: enforce ≥44×44 touch target on inline Copy.
+                  className="min-h-11 min-w-11"
+                >
+                  {copied === 'claude' ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              {/* axe `scrollable-region-focusable` requires the overflow <pre> to
+                  be keyboard-reachable; `tabIndex={0}` + a labelled `role=region`
+                  satisfies that. Biome's noNoninteractiveTabindex /
+                  useSemanticElements are intentionally suppressed below. */}
+              {/* biome-ignore-start lint/a11y/useSemanticElements: scrollable region role is correct for the overflow surface; <pre> is the visual container. */}
+              {/* biome-ignore-start lint/a11y/noNoninteractiveTabindex: scrollable overflow region — keyboard-reachable per axe scrollable-region-focusable. */}
+              <pre
+                tabIndex={0}
+                role="region"
+                aria-labelledby="mcp-claude-label"
+                className="overflow-x-auto rounded bg-muted p-2 text-xs"
+              >
+                {claudeDesktop}
+              </pre>
+              {/* biome-ignore-end lint/a11y/noNoninteractiveTabindex: end. */}
+              {/* biome-ignore-end lint/a11y/useSemanticElements: end. */}
+            </div>
+            <div>
+              <div className="flex items-center justify-between">
+                <p id="mcp-cursor-label" className="text-sm">
+                  Cursor config
+                </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copy('cursor', cursor)}
+                  // WCAG 2.5.5: enforce ≥44×44 touch target on inline Copy.
+                  className="min-h-11 min-w-11"
+                >
+                  {copied === 'cursor' ? 'Copied' : 'Copy'}
+                </Button>
+              </div>
+              {/* biome-ignore-start lint/a11y/useSemanticElements: scrollable region role is correct for the overflow surface; <pre> is the visual container. */}
+              {/* biome-ignore-start lint/a11y/noNoninteractiveTabindex: scrollable overflow region — keyboard-reachable per axe scrollable-region-focusable. */}
+              <pre
+                tabIndex={0}
+                role="region"
+                aria-labelledby="mcp-cursor-label"
+                className="overflow-x-auto rounded bg-muted p-2 text-xs"
+              >
+                {cursor}
+              </pre>
+              {/* biome-ignore-end lint/a11y/noNoninteractiveTabindex: end. */}
+              {/* biome-ignore-end lint/a11y/useSemanticElements: end. */}
+            </div>
           </div>
-          {/* biome-ignore-start lint/a11y/useSemanticElements: scrollable region role is correct for the overflow surface; <pre> is the visual container. */}
-          {/* biome-ignore-start lint/a11y/noNoninteractiveTabindex: scrollable overflow region — keyboard-reachable per axe scrollable-region-focusable. */}
-          <pre
-            tabIndex={0}
-            role="region"
-            aria-labelledby="mcp-cursor-label"
-            className="overflow-x-auto rounded bg-muted p-2 text-xs"
-          >
-            {cursor}
-          </pre>
-          {/* biome-ignore-end lint/a11y/noNoninteractiveTabindex: end. */}
-          {/* biome-ignore-end lint/a11y/useSemanticElements: end. */}
-        </div>
+        </details>
       </CardContent>
     </Card>
   );

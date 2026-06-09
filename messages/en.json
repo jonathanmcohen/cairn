@@ -863,5 +863,17 @@
   "devTokens.scope.mcp:read.tip": "mcp:read — Let MCP clients call read-only tools (search, fetch). No changes.",
   "devTokens.scope.mcp:write.tip": "mcp:write — Let MCP clients call tools that create or edit content. Cannot delete.",
   "devTokens.scope.mcp:destructive.tip": "mcp:destructive — Let MCP clients call destructive tools that delete content (irreversible).",
-  "devTokens.scope.admin.tip": "admin — Full workspace administration: members, settings, billing, and all data. Grant with extreme care."
+  "devTokens.scope.admin.tip": "admin — Full workspace administration: members, settings, billing, and all data. Grant with extreme care.",
+  "oauthConsent.title": "Connect {client}?",
+  "oauthConsent.intro": "{client} wants to connect to your {workspace} workspace and will be able to:",
+  "oauthConsent.scopesHeading": "This app will be able to",
+  "oauthConsent.allow": "Allow",
+  "oauthConsent.cancel": "Cancel",
+  "oauthConnections.heading": "Connected apps",
+  "oauthConnections.description": "Apps you've authorized over OAuth to access your account. Revoke any you no longer use.",
+  "oauthConnections.scopesHeading": "Scopes",
+  "oauthConnections.lastUsed": "Last used {when}",
+  "oauthConnections.neverUsed": "Never used",
+  "oauthConnections.revoke": "Revoke",
+  "oauthConnections.empty": "No connected apps yet. Connect Claude Desktop or Cursor with OAuth — no token to paste."
 }
