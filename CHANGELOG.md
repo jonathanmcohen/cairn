@@ -5,6 +5,16 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.17] - 2026-06-09
+
+Tooling + docs release — schema↔migrations drift guard. No migration, no runtime change. Redeploy to pick up the v0.9.16 schema (migrations 0054→0069) on any database that was left un-migrated.
+
+### Added
+- **Schema ↔ migrations drift guard** (`tests/db/schema/schema-migration-drift.test.ts`). On a fresh migrated Testcontainers DB, issues a zero-row `SELECT` of every schema-declared column of every exported `pgTable`. A column present in `schema.ts` but created by no migration raises Postgres 42703 and fails the existing `db` CI matrix job — catching the "feature PR adds a schema column but forgets the migration" class before merge. Currently guards 74 tables.
+
+### Docs
+- **Post-mortem** `docs/superpowers/v0.9.15.1/postmortem-workspaces-icon-42703.md` — the homelab `workspaces.icon` 42703 was a **stale, un-migrated deployment**, not a missing migration (`0054_workspace_icon` ships since v0.9.4 and the boot migrator has been fail-loud since v0.9.5). Resolution is to redeploy; a duplicate `ALTER` was explicitly rejected (would brick already-migrated DBs). Bumping to v0.9.17 gives operators a clean version to redeploy and verify via `/healthz`.
+
 ## [0.9.16] - 2026-06-08
 
 Feature + fix release — MCP OAuth 2.1 authorization server, sidebar density, two workspace bugs. **Migration 0069.**
