@@ -1,4 +1,10 @@
-import { test as base, type Cookie, type Page } from '@playwright/test';
+import {
+  type Browser,
+  type BrowserContext,
+  test as base,
+  type Cookie,
+  type Page,
+} from '@playwright/test';
 import { type SeededA11y, seedA11yFixtures } from './seed';
 
 type AuthCookies = Cookie[];
@@ -72,6 +78,29 @@ export async function signIn(page: Page, seeded: SeededA11y): Promise<void> {
   if (!browser) throw new Error('a11y harness: page.context().browser() returned null');
   const cookies = await getOrCreateAuthCookies(browser, seeded);
   await page.context().addCookies(cookies);
+}
+
+/**
+ * Sign a SECOND user in inside their OWN fresh browser context, for two-actor
+ * specs that need two distinct authenticated sessions at once. Unlike
+ * {@link signIn} (which injects the worker-cached cookie jar for the primary
+ * user), this drives the credentials form once for the given account — its
+ * distinct email is a separate auth rate-limit bucket, so the single sign-in
+ * won't trip the 5/min limit shared by the primary user. The caller owns the
+ * returned context and must `context.close()` it (e.g. in a `finally`).
+ */
+export async function signInSecondUser(
+  browser: Browser,
+  user: { email: string; password: string },
+): Promise<{ context: BrowserContext; page: Page }> {
+  const context = await browser.newContext();
+  const page = await context.newPage();
+  await page.goto('/login');
+  await page.locator('input[name="email"]').fill(user.email);
+  await page.locator('input[name="password"]').fill(user.password);
+  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
+  await page.waitForURL('**/', { timeout: 30_000 });
+  return { context, page };
 }
 
 export { expect } from '@playwright/test';

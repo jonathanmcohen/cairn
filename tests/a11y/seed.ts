@@ -1,5 +1,5 @@
 import { getSchema } from '@tiptap/core';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { prosemirrorJSONToYDoc } from 'y-prosemirror';
@@ -24,10 +24,19 @@ export type SeededA11y = {
   userPassword: string;
 };
 
+export type SeededSecondUser = { userId: string; email: string; password: string };
+
 const USER_EMAIL = 'a11y@cairn.test';
 const USER_PASSWORD = 'a11y-password-123';
 const WORKSPACE_SLUG = 'a11y';
 const WORKSPACE_NAME = 'A11y Workspace';
+
+// A SECOND deterministic account for two-actor specs (e.g. suggest-edits where
+// one user authors a suggestion and another reviews/accepts it). A distinct
+// email puts it in its own auth rate-limit bucket (5/min/ip+email). The
+// password must be >= 12 chars to satisfy the credentials policy.
+const SECOND_USER_EMAIL = 'a11y-2@cairn.test';
+const SECOND_USER_PASSWORD = 'a11y-second-password-1';
 
 /** A small but real ProseMirror document so the editor page renders content. */
 function sampleDocument(): unknown {
@@ -316,6 +325,71 @@ export async function seedA11yFixtures(databaseUrl: string): Promise<SeededA11y>
       userEmail: USER_EMAIL,
       userPassword: USER_PASSWORD,
     };
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
+/**
+ * Idempotently seed a SECOND user and make them a member of an existing
+ * workspace, for two-actor specs (e.g. suggest-edits author vs reviewer). Like
+ * {@link seedA11yFixtures} it talks to the DB the booted app points at and
+ * reuses the app's real password hasher, so the second user can sign in through
+ * the normal credentials form. Returns the user id + the credentials to sign in
+ * with. Defaults: a distinct email (own rate-limit bucket) and an `editor` role
+ * (can view AND accept/reject suggestions; a `viewer` would get 403 on resolve).
+ */
+export async function seedSecondUser(
+  databaseUrl: string,
+  args: {
+    workspaceId: string;
+    email?: string;
+    password?: string;
+    role?: 'admin' | 'editor' | 'viewer';
+  },
+): Promise<SeededSecondUser> {
+  const email = (args.email ?? SECOND_USER_EMAIL).toLowerCase();
+  const password = args.password ?? SECOND_USER_PASSWORD;
+  const role = args.role ?? 'editor';
+  const sql = postgres(databaseUrl, { max: 1 });
+  const db = drizzle(sql, { schema }) as unknown as PostgresJsDatabase<typeof schema>;
+
+  try {
+    const [existing] = await db
+      .select({ id: schema.users.id })
+      .from(schema.users)
+      .where(eq(schema.users.email, email))
+      .limit(1);
+    let userId: string;
+    if (existing) {
+      userId = existing.id;
+    } else {
+      const passwordHash = await hashPassword(password);
+      const [user] = await db
+        .insert(schema.users)
+        .values({ email, passwordHash, name: 'A11y Second User' })
+        .returning({ id: schema.users.id });
+      if (!user) throw new Error('failed to create second user');
+      userId = user.id;
+    }
+
+    const [membership] = await db
+      .select({ userId: schema.workspaceMembers.userId })
+      .from(schema.workspaceMembers)
+      .where(
+        and(
+          eq(schema.workspaceMembers.workspaceId, args.workspaceId),
+          eq(schema.workspaceMembers.userId, userId),
+        ),
+      )
+      .limit(1);
+    if (!membership) {
+      await db
+        .insert(schema.workspaceMembers)
+        .values({ workspaceId: args.workspaceId, userId, role });
+    }
+
+    return { userId, email, password };
   } finally {
     await sql.end({ timeout: 5 });
   }
