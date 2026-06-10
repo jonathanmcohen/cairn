@@ -1,11 +1,16 @@
 import { sql } from 'drizzle-orm';
 import type { Route } from 'next';
+import { cookies, headers } from 'next/headers';
 import semver from 'semver';
 import { UpgradeApplyButton } from '@/components/admin/upgrade-apply-button';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { isCollabBridgeConfigured } from '@/lib/collab/publish-client';
+import { LOCALE_COOKIE } from '@/lib/i18n/config';
+import { getMessages } from '@/lib/i18n/messages';
+import { resolveLocale } from '@/lib/i18n/resolve';
+import { createT } from '@/lib/i18n/t';
 import { readPackageVersion } from '@/lib/upgrade/version';
 
 export const dynamic = 'force-dynamic';
@@ -47,6 +52,13 @@ export default async function AdminUpgradePage() {
   // but never reach an open editor session (the v0.9.18 live miss). Read at
   // request time on the server; the env value itself is never sent to the client.
   const collabBridgeConfigured = isCollabBridgeConfigured();
+  const cookieStore = await cookies();
+  const hdrs = await headers();
+  const locale = resolveLocale(
+    cookieStore.get(LOCALE_COOKIE)?.value ?? null,
+    hdrs.get('accept-language'),
+  );
+  const t = createT(locale, getMessages(locale));
 
   return (
     <section>
@@ -61,12 +73,8 @@ export default async function AdminUpgradePage() {
           className="mb-4 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
           data-testid="collab-bridge-warning"
         >
-          <p className="font-medium">Live-editor sync is disabled</p>
-          <p className="mt-1 text-muted-foreground">
-            <code>CAIRN_COLLAB_INTERNAL_URL</code> is not set, so REST API writes to a page&rsquo;s
-            content update the database but won&rsquo;t reach an open editor until reload. Set it in
-            your environment (see <code>docker-compose.yml</code>) to enable the API↔editor bridge.
-          </p>
+          <p className="font-medium">{t('admin.upgrade.collabBridge.title')}</p>
+          <p className="mt-1 text-muted-foreground">{t('admin.upgrade.collabBridge.body')}</p>
         </div>
       ) : null}
       <p className="mb-4 text-muted-foreground text-sm">
