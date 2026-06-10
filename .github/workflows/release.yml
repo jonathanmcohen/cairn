@@ -54,6 +54,10 @@ jobs:
 
   build:
     needs: verify-carry-forward-closed
+    # The gate job is SKIPPED for prerelease tags (-rcN) by design — but a
+    # skipped `needs` skips dependents by default, which silently killed RC
+    # builds. Run when the gate passed OR was skipped; never after a failure.
+    if: ${{ !cancelled() && (needs.verify-carry-forward-closed.result == 'success' || needs.verify-carry-forward-closed.result == 'skipped') }}
     # GitHub-hosted NATIVE runners per arch (public repo): amd64 on
     # ubuntu-latest, arm64 on ubuntu-24.04-arm. No QEMU emulation either way.
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
