@@ -25,6 +25,17 @@ vi.mock('@/components/editor/extensions-lazy', () => ({
   loadEditorExtension: vi.fn(async () => ({ name: 'stub' })),
 }));
 
+// B5 — spy on the suggestion plugin's exit dispatcher without touching the real
+// Suggestion/SuggestionPluginKey the slash extension also imports. ESM named
+// exports can't be `vi.spyOn`'d, so swap just `exitSuggestion` via the mock
+// factory and keep everything else live. `vi.hoisted` defines the spy ahead of
+// the hoisted `vi.mock` factory so the factory can close over it.
+const { exitSuggestionMock } = vi.hoisted(() => ({ exitSuggestionMock: vi.fn() }));
+vi.mock('@tiptap/suggestion', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@tiptap/suggestion')>();
+  return { ...actual, exitSuggestion: exitSuggestionMock };
+});
+
 const SLASH_SRC = readFileSync(
   new URL('../../src/components/editor/slash-extension.ts', import.meta.url),
   'utf8',
@@ -130,6 +141,62 @@ describe('Plan B4/B5 — slash modal consistency (regression)', () => {
     // dispatched — this is what keeps the slash menu from sitting behind the
     // modal (#128/#136).
     expect(SLASH_SRC).toMatch(/onExit:\s*\(\)\s*=>\s*\{[^}]*popup\.destroy\(\)/);
+  });
+
+  // B5 — selecting a deferred item must drive the suggestion plugin to EXIT
+  // (which fires onExit → popup.destroy) even though no doc transaction is
+  // dispatched at select time. Without this, the popup lingers ON TOP of the
+  // modal the deferred command opens. The exit is the plugin's own meta, so it
+  // changes NO content and #76 (cancel-preserves-text) is unaffected.
+  it('runSlashItem dismisses the active slash popup (via exitSuggestion) for deferred items without consuming the range', async () => {
+    const { SuggestionPluginKey } = await import('@tiptap/suggestion');
+    exitSuggestionMock.mockClear();
+
+    const item = SLASH_ITEMS.find((i) => i.title === 'Citation');
+    expect(item, 'Citation item missing').toBeDefined();
+    if (!item) return;
+
+    const { chain, deleteRange } = makeChain();
+    // `SuggestionPluginKey.getState(state)` resolves to `state[key.key]`; use
+    // its actual registered key string so the active-state lookup in
+    // `dismissSlashPopup` succeeds regardless of PluginKey registration order.
+    const pkKey = (SuggestionPluginKey as unknown as { key: string }).key;
+    const editor = {
+      isDestroyed: false,
+      extensionManager: { extensions: [] },
+      chain: () => chain,
+      setOptions: vi.fn(),
+      view: { dispatch: vi.fn(), state: {} },
+      // Slash suggestion reports active → dismissSlashPopup proceeds to exit.
+      // `doc.textBetween` is read by slashTriggerRange (#38 range correction).
+      state: { [pkKey]: { active: true }, doc: { textBetween: () => '' } },
+    };
+    vi.spyOn(bus, 'openEditorDialog').mockResolvedValue(null);
+
+    runSlashItem({ editor: editor as never, range: { from: 2, to: 4 }, item });
+
+    expect(
+      exitSuggestionMock,
+      'deferred select must dispatch the suggestion exit meta',
+    ).toHaveBeenCalledTimes(1);
+    // exitSuggestion(view, SuggestionPluginKey) — targets the slash plugin key.
+    expect(exitSuggestionMock).toHaveBeenCalledWith(editor.view, SuggestionPluginKey);
+    expect(
+      deleteRange.mock.calls.length,
+      'dismissing the popup must NOT consume the trigger range',
+    ).toBe(0);
+    vi.restoreAllMocks();
+  });
+
+  it('runSlashItem does not call exitSuggestion when the slash suggestion is not active', () => {
+    exitSuggestionMock.mockClear();
+    const item = SLASH_ITEMS.find((i) => i.title === 'Citation');
+    if (!item) return;
+    const editor = makeEditor(); // state has no slash plugin entry → inactive
+    vi.spyOn(bus, 'openEditorDialog').mockResolvedValue(null);
+    runSlashItem({ editor: editor as never, range: { from: 2, to: 4 }, item });
+    expect(exitSuggestionMock, 'no-op when popup is not active').not.toHaveBeenCalled();
+    vi.restoreAllMocks();
   });
 });
 

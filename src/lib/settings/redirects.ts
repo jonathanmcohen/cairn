@@ -34,7 +34,11 @@ const PREFIX_REDIRECTS: Array<[from: string, to: string]> = [
 const EXACT_REDIRECTS: Record<string, string> = {
   '/settings': '/settings/account/profile',
   '/settings/profile': '/settings/account/profile',
-  '/settings/admin': '/settings/workspace/members',
+  // v0.9.18 item #5 — /settings/admin no longer redirects: it has its own
+  // landing page (src/app/(app)/settings/admin/page.tsx). The old entry sent
+  // it to /settings/workspace/members (v0.8 restructure, when the bare admin
+  // landing WAS the members table), which silently shadowed the page-level
+  // redirect and made /settings/admin itself unreachable.
   '/settings/developer': '/settings/developer/api-keys',
 };
 

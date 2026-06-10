@@ -51,13 +51,10 @@ const runtimeCaching: RuntimeCaching[] = [
     handler: new StaleWhileRevalidate({ cacheName: 'static-assets' }),
   },
   {
-    // 3. swr — cacheable API reads (/api/pages, /api/search GETs).
-    matcher: (o) => is(o, 'swr'),
-    handler: new StaleWhileRevalidate({ cacheName: 'api-reads' }),
-  },
-  {
-    // 4. network-first — navigations and everything else. Fall back to cache
-    // after a short timeout so a flaky network still renders the last good shell.
+    // 3. network-first — authenticated `/api/` GET reads (cookie-scoped per
+    // #143 — never URL-cache cross-workspace), navigations, and everything
+    // else. Fall back to cache after a short timeout so a flaky network still
+    // renders the last good shell.
     matcher: (o) => is(o, 'network-first'),
     handler: new NetworkFirst({
       cacheName: 'pages',

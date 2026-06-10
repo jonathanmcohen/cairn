@@ -41,7 +41,19 @@ function hoverFirstHeading() {
   fireEvent.mouseMove(h2);
 }
 
-describe('<HeadingCollapse> (#276)', () => {
+// The collapse state is now owned by ProseMirror (#117): toggling dispatches a
+// plugin transaction and a `decorations` prop stamps `hidden` +
+// `data-cairn-collapsed` onto the affected blocks. Because the same `<p>` DOM
+// element is re-decorated (not recreated), we re-query it after each toggle to
+// read the *current* decorated DOM rather than holding a stale reference.
+function paragraph(): HTMLElement {
+  return editor.view.dom.querySelector('p') as HTMLElement;
+}
+function secondHeadingEl(): HTMLElement {
+  return editor.view.dom.querySelectorAll('h2')[1] as HTMLElement;
+}
+
+describe('<HeadingCollapse> (#276 / #117)', () => {
   it('reveals a collapse chevron on heading hover and toggles the section', () => {
     render(<HeadingCollapse editor={editor} />);
     hoverFirstHeading();
@@ -49,18 +61,35 @@ describe('<HeadingCollapse> (#276)', () => {
     const collapseBtn = screen.getByLabelText('editor.heading.collapse');
     expect(collapseBtn).toBeTruthy();
 
-    const paraEl = editor.view.dom.querySelector('p') as HTMLElement;
-    const secondHeading = editor.view.dom.querySelectorAll('h2')[1] as HTMLElement;
-    expect(paraEl.hasAttribute('hidden')).toBe(false);
+    expect(paragraph().hasAttribute('hidden')).toBe(false);
+    expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(false);
 
+    // Collapse: the following paragraph is hidden via PM decorations, and the
+    // collapse STICKS (PM owns the state, so a redraw can't wipe it).
     fireEvent.click(collapseBtn);
-    expect(paraEl.hasAttribute('hidden')).toBe(true);
-    // the second heading B is NOT hidden (equal level stops the collapse).
-    expect(secondHeading.hasAttribute('hidden')).toBe(false);
+    expect(paragraph().hasAttribute('hidden')).toBe(true);
+    expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(true);
+    // The second heading B is NOT hidden (equal level stops the collapse).
+    expect(secondHeadingEl().hasAttribute('hidden')).toBe(false);
 
     // After collapse the button flips to "expand".
     const expandBtn = screen.getByLabelText('editor.heading.expand');
     fireEvent.click(expandBtn);
-    expect(paraEl.hasAttribute('hidden')).toBe(false);
+    expect(paragraph().hasAttribute('hidden')).toBe(false);
+    expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(false);
+  });
+
+  it('keeps the collapse after a document redraw (the #117 regression)', () => {
+    render(<HeadingCollapse editor={editor} />);
+    hoverFirstHeading();
+    fireEvent.click(screen.getByLabelText('editor.heading.collapse'));
+    expect(paragraph().hasAttribute('hidden')).toBe(true);
+
+    // Force a doc transaction (the kind of redraw that previously wiped the raw
+    // DOM attributes). The decoration is re-derived from plugin state, so the
+    // paragraph stays hidden and its position is remapped through the edit.
+    editor.commands.insertContentAt(editor.state.doc.content.size, ' more');
+    expect(paragraph().hasAttribute('hidden')).toBe(true);
+    expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(true);
   });
 });

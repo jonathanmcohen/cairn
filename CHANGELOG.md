@@ -5,6 +5,24 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.18] - 2026-06-10
+
+Carry-forward closure release — every outstanding item fixed or runtime-guarded under the new release gates (one PR per item, runtime e2e specs, carry-forward CI block). No migration.
+
+### Fixed
+- **Workspace switch leaked previous workspace's data to PWA clients (#143).** The service worker URL-cached cookie-scoped `/api` reads (StaleWhileRevalidate); after a switch, saved searches / flashcard counts / pins — and every other client-fetched workspace read — served the old workspace's cached body. `/api` GET reads are now network-first (online = always fresh; per-URL cache = offline fallback only).
+- **`/settings/admin` was unreachable (#5).** The proxy 308'd it to `/settings/workspace/members` before the page's own (dead) redirect ever ran. Admin now has a real landing page: gated card grid linking all 11 admin surfaces; both layers pinned by regression specs.
+- **Sidebar snapped back to 256px on hydration (C1).** The v0.9.14 fix changed only the SSR fallback to 240px; the resize handle's runtime default still applied 256 on mount when no width was persisted. Runtime default aligned to 240 with a lockstep test against the SSR fallback.
+- **Heading collapse never actually collapsed (#117).** The chevron flipped, but the code set `hidden` on ProseMirror-owned DOM and PM's redraw immediately erased it. Collapse state is now owned by a ProseMirror plugin (decorations), surviving redraws and remote Yjs edits.
+- **Slash menu floated on top of modals (B5).** Deferred slash items (Citation/Footnote/…) dispatched no PM transaction on select, so the suggestion plugin never exited and the popup (z-9999) rendered over the dialog. Selecting a deferred item now dispatches the suggestion exit meta — popup torn down, typed text still preserved on cancel (#76 unaffected).
+
+### Added
+- **Release gates (mechanical):** `verify-carry-forward-closed` CI job blocks the tag while labelled items are open; PR template requires before/after repro or an explicit regression-guard justification; Playwright e2e harness (`pnpm test:e2e`) boots the real app + collab server; RC preview-image script.
+- **Runtime regression guards** for the already-shipped items: A3 (API content PATCH reaches the live Yjs editor without reload), #76 (slash cancel preserves text), #37 (new page defaults to Draft), #53 (suggestions drawer renders inline del/ins diff), #54 (suggestion chip click scrolls to + selects the range).
+
+### Infrastructure
+- **CI moved to GitHub-hosted runners** (repo now public): ubuntu-latest + native ubuntu-24.04-arm for the arm64 image; big vitest suites sharded (api ×3, components ×2, lib ×5) — full matrix wall time ~6min. GHCR login for the security job, postgresql-client-18 for the pg_dump suites, HuggingFace embedding assets cached + retried.
+
 ## [0.9.17] - 2026-06-09
 
 Tooling + docs release — schema↔migrations drift guard. No migration, no runtime change. Redeploy to pick up the v0.9.16 schema (migrations 0054→0069) on any database that was left un-migrated.

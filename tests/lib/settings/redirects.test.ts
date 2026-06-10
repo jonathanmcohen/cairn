@@ -10,8 +10,15 @@ describe('resolveSettingsRedirect', () => {
     expect(resolveSettingsRedirect('/settings/profile')).toBe('/settings/account/profile');
   });
 
+  // v0.9.18 item #5 — the PROXY layer is the one that decides where
+  // /settings/admin lands (it runs before the page component, which is how the
+  // old page-level redirect was silently dead). /settings/admin must NOT
+  // redirect anymore: it has its own landing page.
+  it('does NOT redirect /settings/admin (it has its own landing page, #5)', () => {
+    expect(resolveSettingsRedirect('/settings/admin')).toBeNull();
+  });
+
   it.each([
-    ['/settings/admin', '/settings/workspace/members'],
     ['/settings/admin/invites', '/settings/workspace/invites'],
     ['/settings/admin/settings', '/settings/workspace/general'],
     ['/settings/admin/danger', '/settings/workspace/danger'],

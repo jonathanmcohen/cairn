@@ -1,6 +1,6 @@
 {
   "name": "cairn",
-  "version": "0.9.17",
+  "version": "0.9.18",
   "private": true,
   "description": "Self-hosted, Notion-style block-based notes",
   "license": "MIT",
@@ -22,6 +22,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:a11y": "playwright test --config=playwright.config.ts",
+    "test:e2e": "playwright test --config=playwright.e2e.config.ts",
     "test:watch": "vitest",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/db/migrate.ts",

@@ -29,13 +29,28 @@ export const EMBEDDING_ASSETS = {
 
 const HF_BASE = 'https://huggingface.co';
 
-async function download(url, dest) {
+async function download(url, dest, attempts = 3) {
   mkdirSync(dirname(dest), { recursive: true });
-  const res = await fetch(url);
-  if (!res.ok || !res.body) {
-    throw new Error(`fetch-embedding-assets: ${res.status} ${res.statusText} for ${url}`);
+  // The HuggingFace CDN intermittently times out from CI runners
+  // (ConnectTimeoutError, ~10s) — retry with backoff before failing the build.
+  for (let attempt = 1; ; attempt++) {
+    try {
+      const res = await fetch(url);
+      if (!res.ok || !res.body) {
+        throw new Error(`fetch-embedding-assets: ${res.status} ${res.statusText} for ${url}`);
+      }
+      await pipeline(res.body, createWriteStream(dest));
+      return;
+    } catch (err) {
+      if (attempt >= attempts) throw err;
+      const delaySeconds = attempt * 5;
+      // biome-ignore lint/suspicious/noConsole: build-time script status output
+      console.warn(
+        `[embed-assets] attempt ${attempt}/${attempts} failed for ${url} (${err?.cause ?? err?.message}); retrying in ${delaySeconds}s`,
+      );
+      await new Promise((resolveDelay) => setTimeout(resolveDelay, delaySeconds * 1000));
+    }
   }
-  await pipeline(res.body, createWriteStream(dest));
 }
 
 async function stageModel() {

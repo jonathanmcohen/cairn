@@ -19,7 +19,45 @@ permissions:
 # GitHub Release once.
 
 jobs:
+  # Gate 4 (v0.9.18 release gates — docs/superpowers/v0.9.18/gates.md).
+  # Block the whole publish pipeline until every carry-forward item for THIS
+  # release is closed on GitHub. The label is derived from the tag
+  # (e.g. tag `v0.9.18` -> label `v0.9.18`), so the gate is reusable per
+  # release without editing this file. Skipped for prerelease tags
+  # (`vX.Y.Z-rcN`), which are pre-verification builds by design.
+  # NOTE: requires the GitHub CLI (`gh`) on PATH and an issue label matching
+  # the tag; fails closed if `gh` is missing (intended — never silently pass).
+  verify-carry-forward-closed:
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.ref_name, '-') }}
+    steps:
+      - name: All carry-forward items for this release must be closed
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          LABEL: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          open_items=$(gh issue list \
+            --repo "$REPO" \
+            --label "$LABEL" \
+            --label carry-forward \
+            --state open \
+            --json number \
+            --jq '.[].number' | tr '\n' ' ')
+          if [ -n "$open_items" ]; then
+            echo "::error::Carry-forward items still open for ${LABEL}: ${open_items}"
+            echo "Close each tracked item (or drop the carry-forward label) before tagging."
+            exit 1
+          fi
+          echo "No open carry-forward items for ${LABEL} — Gate 4 passed."
+
   build:
+    needs: verify-carry-forward-closed
+    # The gate job is SKIPPED for prerelease tags (-rcN) by design — but a
+    # skipped `needs` skips dependents by default, which silently killed RC
+    # builds. Run when the gate passed OR was skipped; never after a failure.
+    if: ${{ !cancelled() && (needs.verify-carry-forward-closed.result == 'success' || needs.verify-carry-forward-closed.result == 'skipped') }}
     # GitHub-hosted NATIVE runners per arch (public repo): amd64 on
     # ubuntu-latest, arm64 on ubuntu-24.04-arm. No QEMU emulation either way.
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
@@ -77,6 +115,10 @@ jobs:
 
   merge:
     needs: build
+    # A skipped job propagates TRANSITIVELY: the rc-skipped gate poisoned the
+    # default success() here even though build itself ran (its `if` rescues
+    # only build, not dependents). Check build's own result explicitly.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -123,8 +165,9 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
           tags: |
             type=raw,value=${{ steps.ver.outputs.version }}
-            type=raw,value=${{ steps.ver.outputs.majorminor }}
-            type=raw,value=${{ steps.ver.outputs.major }}
+            # Rolling tags (0.9 / 0 / latest) must never point at a prerelease.
+            type=raw,value=${{ steps.ver.outputs.majorminor }},enable=${{ !contains(steps.ver.outputs.version, '-') }}
+            type=raw,value=${{ steps.ver.outputs.major }},enable=${{ !contains(steps.ver.outputs.version, '-') }}
             type=raw,value=latest,enable=${{ !contains(steps.ver.outputs.version, '-') }}
 
       - name: Create multi-arch manifest list and push
@@ -158,6 +201,8 @@ jobs:
 
   release:
     needs: merge
+    # Same transitive-skip hazard as merge — check the direct dependency only.
+    if: ${{ !cancelled() && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Extract version from tag
