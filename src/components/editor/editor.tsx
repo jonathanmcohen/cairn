@@ -1,6 +1,6 @@
 'use client';
 
-import type { Editor as TiptapEditor } from '@tiptap/react';
+import type { Content, Editor as TiptapEditor } from '@tiptap/react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
@@ -543,10 +543,15 @@ export function Editor({
     [currentUser.id],
   );
 
-  // Resolve a suggestion server-side (authoritative 200/403/409), then mirror
-  // the SAME pure transform onto the live Y.Doc so all peers converge. Reuses
-  // the v0.3.0 seeding pattern: build a fresh Y.Doc from the next JSON and apply
-  // it as an update inside a transaction.
+  // Resolve a suggestion server-side (authoritative 200/403/409), then apply the
+  // SAME pure transform to the LIVE document so all peers converge. The resolved
+  // doc MUST be applied THROUGH the editor (setContent) rather than by building a
+  // fresh Y.Doc and Y.applyUpdate-ing it: applying a freshly-built doc's state is
+  // a CRDT *merge*, which can never express the DELETIONS that remove the
+  // resolved suggestion's marks — so the marks survived in the live doc for every
+  // connected peer (and even on reload, until the collab room was evicted). Going
+  // through the editor lets y-prosemirror's ySyncPlugin diff old→new and emit the
+  // granular Yjs deletes/inserts that actually propagate the accept/reject.
   const resolve = useCallback(
     async (action: 'accept' | 'reject', suggestionId: string) => {
       const ed = editorRef.current;
@@ -562,10 +567,7 @@ export function Editor({
         action === 'accept'
           ? acceptSuggestion(current, suggestionId)
           : rejectSuggestion(current, suggestionId);
-      const seeded = prosemirrorJSONToYDoc(ed.schema, next, 'default');
-      ydoc.transact(() => {
-        Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(seeded));
-      });
+      ed.commands.setContent(next as Content, { emitUpdate: false });
       setOpenCount((c) => Math.max(0, c - 1));
       setOpenSuggestions((rows) => rows.filter((r) => r.id !== suggestionId));
       if (activeSuggestionRef.current === suggestionId) {
