@@ -5,7 +5,13 @@ import { useT } from '@/lib/i18n/provider';
 
 const MIN_WIDTH = 200;
 const MAX_WIDTH = 480;
-const DEFAULT_WIDTH = 256; // = w-64 (16rem)
+// C1 (v0.9.18 item) — MUST equal the SSR fallback in sidebar.tsx
+// (`var(--cairn-sidebar-w, 15rem)` = 240px, Notion parity). The v0.9.14 C1 fix
+// changed only that fallback; this runtime default still said 256, so the
+// mount effect snapped the sidebar back to 256px on every hydration with no
+// persisted width — exactly the carry-forward. Keep the two in lockstep
+// (pinned by tests/components/sidebar-resize-handle.test.tsx).
+const DEFAULT_WIDTH = 240; // = 15rem
 const STEP = 16;
 const CSS_VAR = '--cairn-sidebar-w';
 
@@ -23,7 +29,7 @@ function applyWidth(w: number): void {
  * P19 #42 — drag- and keyboard-resizable sidebar boundary. Drives the sidebar
  * width via the `--cairn-sidebar-w` CSS custom property on <html> and persists
  * it to localStorage (device/viewport preference — no DB migration warranted).
- * Clamped to [200, 480]px; default 256px (= w-64). Desktop-only affordance
+ * Clamped to [200, 480]px; default 240px (= 15rem, C1). Desktop-only affordance
  * (`hidden md:block`); the mobile drawer is unaffected.
  *
  * The visible grabber is a thin line, but the pointer/touch hit area is widened
