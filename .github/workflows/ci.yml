@@ -119,6 +119,17 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+      # The build's fetch-embedding-assets.mjs downloads the MiniLM model from
+      # the HuggingFace CDN, which intermittently times out from hosted
+      # runners. The script skips downloads when the staged dir exists
+      # (sentinel check), so a cache hit means zero network. Key is static —
+      # the model repo+revision are pinned in the script; bump -v1 if they change.
+      - name: Cache embedding assets
+        uses: actions/cache@v5
+        with:
+          path: public/models/Xenova/all-MiniLM-L6-v2
+          key: embed-assets-Xenova-all-MiniLM-L6-v2-main-v1
+
       - name: Build smoke
         # Self-hosted runners persist .next/ between runs. A stale standalone
         # bundle from a prior commit can include source .ts files that Next 16's
@@ -374,6 +385,13 @@ jobs:
       # ubuntu-latest.
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
+
+      # Mirrors the ci job's embedding-assets cache (HuggingFace CDN flake guard).
+      - name: Cache embedding assets
+        uses: actions/cache@v5
+        with:
+          path: public/models/Xenova/all-MiniLM-L6-v2
+          key: embed-assets-Xenova-all-MiniLM-L6-v2-main-v1
 
       - name: Build
         # Self-hosted runners persist .next/ between runs. A stale standalone
