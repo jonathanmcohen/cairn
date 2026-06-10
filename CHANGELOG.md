@@ -5,6 +5,15 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+### Fixed
+
+- New pages now default to **Draft** in every workspace, including those
+  created before v0.9.9 (#37). Migration 0066 changed only the column default;
+  this release backfills existing `workspaces.default_page_status = 'published'`
+  rows to `'draft'` (migration 0070). Note: a workspace whose admin had
+  deliberately chosen "published" is reset to "draft" as well — there is no way
+  to distinguish that from a stale pre-v0.9.9 row.
+
 ## [0.9.18] - 2026-06-10
 
 Carry-forward closure release — every outstanding item fixed or runtime-guarded under the new release gates (one PR per item, runtime e2e specs, carry-forward CI block). No migration.
