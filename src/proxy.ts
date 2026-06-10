@@ -19,6 +19,19 @@ const PUBLIC_PATHS = [
   // be gated behind a session cookie — otherwise anonymous public-page image
   // requests get redirected to /login.
   '/api/files',
+  // OAuth 2.1 + MCP are consumed by HEADLESS clients that carry NO session
+  // cookie — they authenticate via PKCE/bearer tokens, not the browser session.
+  // Each of these routes is its own access boundary, so the cookie gate must
+  // not bounce them to /login (which broke the entire live MCP/OAuth flow):
+  //   - /.well-known/oauth-* : public discovery metadata by RFC 8414 / 9728.
+  //   - /api/oauth/*         : authorize self-redirects to /login when there is
+  //                            no session; token/register/revoke are token- and
+  //                            PKCE-authenticated, never cookie-authenticated.
+  //   - /api/mcp             : authenticates the Authorization: Bearer token and
+  //                            returns 401 + WWW-Authenticate itself.
+  '/.well-known/oauth-',
+  '/api/oauth',
+  '/api/mcp',
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
