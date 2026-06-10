@@ -54,7 +54,7 @@ export function CitationAddDialog(props: CitationAddDialogProps) {
   const styleId = useId();
   const titleId = useId();
   const abortRef = useRef<AbortController | null>(null);
-  const dialogRef = useFocusTrap<HTMLDivElement>(open);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, false); // A2 #76 — EditorDialogs owns focus restore
 
   useEffect(() => {
     if (!open) return;

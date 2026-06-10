@@ -1,5 +1,6 @@
 'use client';
 
+import type { Editor } from '@tiptap/react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   CitationAddDialog,
@@ -95,7 +96,7 @@ function classifyId(input: string): { kind: 'doi' | 'pubmed'; value: string } | 
 
 type LookupResponse = { meta: CitationMeta; formatted: FormattedCitation };
 
-export function EditorDialogs() {
+export function EditorDialogs({ editor }: { editor?: Editor | null }) {
   const t = useT();
   const [request, setRequest] = useState<EditorDialogRequest | null>(null);
   const [values, setValues] = useState<Record<string, string>>({});
@@ -154,8 +155,28 @@ export function EditorDialogs() {
 
   const settle = (result: EditorDialogResult) => {
     const req = request;
+    // v0.9.19 A2 (#76) — restore the editor's focus + selection BEFORE the
+    // dialog unmounts. On cancel the slash command early-returns without
+    // inserting, so the PM selection is still at the slash trigger but the
+    // dialog holds DOM focus. If we let React remove the dialog first, the
+    // browser bounces focus to <body> (it processes the removed focused
+    // element's blur after our synchronous focus call wins), and the user's
+    // next keystrokes are dropped or leak into the wrong block (the v0.9.18
+    // live repro). Focusing the editor while the dialog is still mounted means
+    // there is no focused-element removal to bounce off. The custom dialogs
+    // also opt out of useFocusTrap's own restore so it can't refocus <body>.
+    //
+    // The focus must land on the NEXT frame: a mouse-click on Cancel keeps the
+    // browser's focus machinery busy through the click sequence (and it bounces
+    // to <body> when the focused button unmounts), so a synchronous focus here
+    // is overridden. An rAF after the trap opt-out has no competitor and sticks.
     setRequest(null);
     req?.resolve(result);
+    if (editor && !editor.isDestroyed) {
+      requestAnimationFrame(() => {
+        if (!editor.isDestroyed) editor.commands.focus();
+      });
+    }
   };
 
   // v0.9.7 G19 #166 — the DOI/PubMed lookup uses its own self-contained dialog

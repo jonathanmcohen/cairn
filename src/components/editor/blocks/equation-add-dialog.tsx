@@ -27,7 +27,7 @@ export function EquationAddDialog({ open, onClose, onInsert }: EquationAddDialog
   const [display, setDisplay] = useState(true);
   const inputId = useId();
   const titleId = useId();
-  const dialogRef = useFocusTrap<HTMLDivElement>(open);
+  const dialogRef = useFocusTrap<HTMLDivElement>(open, false); // A2 #76 — EditorDialogs owns focus restore
   const preview = useMemo(() => renderMath(latex, display), [latex, display]);
 
   useEffect(() => {

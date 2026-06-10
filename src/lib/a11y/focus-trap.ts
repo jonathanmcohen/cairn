@@ -31,8 +31,17 @@ export function getFocusable(container: HTMLElement): HTMLElement[] {
  * focuses the first focusable child on activation, wraps Tab / Shift+Tab at the
  * edges, and restores focus to the previously-focused element on deactivation.
  * Attach the returned ref to the trap container.
+ *
+ * `restoreFocus` (default true): on deactivation, return focus to whatever was
+ * focused before the trap engaged. Pass false when the caller owns focus
+ * restoration itself (e.g. the editor dialogs refocus the ProseMirror view in a
+ * layout effect — v0.9.19 A2/#76 — and the trap's own restore would otherwise
+ * refocus <body> a frame later and drop the user's next keystrokes).
  */
-export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(active: boolean) {
+export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(
+  active: boolean,
+  restoreFocus = true,
+) {
   const ref = useRef<T | null>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -72,9 +81,9 @@ export function useFocusTrap<T extends HTMLElement = HTMLDivElement>(active: boo
     container.addEventListener('keydown', onKeyDown);
     return () => {
       container.removeEventListener('keydown', onKeyDown);
-      previouslyFocused.current?.focus?.();
+      if (restoreFocus) previouslyFocused.current?.focus?.();
     };
-  }, [active]);
+  }, [active, restoreFocus]);
 
   return ref;
 }
