@@ -39,7 +39,9 @@ on:
     # the e2e job — on the COMBINED branch (v0.9.19 Plan B1; the #117
     # cross-merge regression shipped because nothing re-tested the release
     # branch after individual PRs merged).
-    branches: [main, 'release/**']
+    # Item branches are excluded — they already run via pull_request; the
+    # push trigger is for the COMBINED release branch after merges.
+    branches: [main, 'release/**', '!release/**-item-**']
     paths-ignore:
       # Pure docs / markdown / legal — no app or test behavior touches.
       - 'docs/**'
