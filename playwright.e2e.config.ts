@@ -46,6 +46,16 @@ export default defineConfig({
         HOSTNAME: '127.0.0.1',
         NEXTAUTH_URL: BASE_URL,
         COLLAB_URL,
+        // item A3 — the publish path under guard (REST PATCH → collab internal
+        // /replace → Yjs broadcast → live editor) is env-gated and OFF when
+        // CAIRN_COLLAB_INTERNAL_URL is unset (src/lib/collab/publish-client.ts).
+        // Point the booted Next server at the harness collab process (the
+        // internal HTTP control plane shares the WS port), exactly like
+        // docker-compose.yml wires it in production, so
+        // tests/e2e/item-A3-api-content-vs-yjs.spec.ts exercises the real path.
+        // AUTH_SECRET (the bearer both sides compare) comes from .env via
+        // loadEnv above.
+        CAIRN_COLLAB_INTERNAL_URL: `http://localhost:${COLLAB_PORT}`,
       },
     },
     {
