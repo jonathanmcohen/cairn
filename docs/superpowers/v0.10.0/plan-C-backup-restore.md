@@ -97,9 +97,33 @@ that a schedule row always carries `--out` (the CLI throws without it,
 - Multi-instance double-fire is documented + the runner takes a pg advisory
   lock so two pods cannot run the same backup concurrently.
 
-## Deferred to v0.10.1 — seed 6, selective restore
+## C4 — Selective restore (seed 6) — Net-new (in scope per user decision)
 
-Page-/workspace-level restore from a snapshot without full clobber is net-new
-(restore into a scratch schema, extract the subtree, remap FKs into the live
-DB). It builds directly on C1–C3's job/list/read-only infra. Explicitly listed,
-not silently dropped.
+Page- or workspace-level restore from a snapshot **without** full DB clobber:
+pick a page (with subtree) or a workspace from a snapshot, restore into a
+target workspace.
+
+**Approach (locks the design):** `pg_restore` the snapshot into a **scratch
+schema** (`restore_tmp_<jobid>`), extract the selected page subtree / workspace
+rows, remap primary keys + FKs (new UUIDs; `parent_id` self-FK, `databases` /
+`db_rows` / `files` / `comments` chains), insert into the live workspace via
+the app's real creators (the seed-faithfulness rule), then drop the scratch
+schema. Conflicts: restored pages always get NEW ids — never overwrite a live
+row. Yjs: regenerate `page_yjs.state` from the restored `pages.content`
+(the established `prosemirrorJSONToYDoc` seed path).
+
+**Builds on:** C1 list/manifest, C2 upload + job pattern. Ships last in Plan C.
+
+**Failure modes verified:**
+- Restore a page subtree into a workspace that already has a page with the
+  same title → both exist, no overwrite (spec asserts row counts +2, original
+  untouched).
+- FK remap completeness: restored page with an inline database + rows + files
+  round-trips openable in the editor (the deepest-chain spec).
+- Cross-tenant: selecting workspace A's page from a snapshot and restoring
+  into workspace B requires admin of B; the restored rows carry B's
+  workspace_id everywhere (tenant-isolation spec greps the inserted rows).
+- Scratch schema is dropped on success AND on failure (spec kills the job
+  mid-restore, asserts no `restore_tmp_*` schema remains).
+- Snapshot from an OLDER schema version → migration-aware guard: refuse with a
+  clear error naming the versions (no silent half-restore).

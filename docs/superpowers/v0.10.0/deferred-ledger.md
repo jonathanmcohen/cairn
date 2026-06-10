@@ -1,64 +1,60 @@
-# Deferred ledger — everything explicitly held past v0.10.0
+# Deferred ledger → absorption record
 
-Nothing is silently dropped; this is the complete parking lot as of the
-v0.10.0 scaffold (2026-06-10). Triage targets are proposals, not commitments.
+**By user decision (2026-06-10) NOTHING is deferred past v0.10.0.** This file
+was the parking lot; it is now the audit trail proving every one of the 22
+parked items was folded into a v0.10.0 plan. No silent drops — each row below
+names its plan home. If scope pressure later forces a cut, the cut is reported
+explicitly in the release notes (pre-agreed first candidates: F3 → E6 → E5).
 
-## v0.10.1 (committed deferrals — see README)
+## Absorption map (22 → plans)
 
-1. Selective restore (page/workspace from snapshot) — builds on v0.10.0 C1–C3.
-2. Migration status panel (`compareJournalToDb` → admin surface + retry).
-3. pgvector HNSW index rebuild trigger.
-4. Workspace brand customization (logo + primary-color override).
-5. Custom slash commands → templates.
-6. Onboarding tour (element-anchored walkthrough; wizard already shipped).
-7. UX rows from the v0.9.19 sweep: #117 chevron discoverability;
-   Suggest-mode auto-mark-on-type (manual mode is by design,
-   `editor.tsx:493-497`); A4 collab-bridge banner placement (mounted only on
-   `/settings/admin/upgrade` — folding its signal into the v0.10.0 D4 health
-   panel partially addresses this).
+| # | Ledger item | v0.10.0 home |
+|---|-------------|--------------|
+| 1 | Selective restore (page/workspace from snapshot) | **C4** |
+| 2 | Migration status panel (`compareJournalToDb` → surface) | **D7** |
+| 3 | pgvector HNSW index rebuild trigger | **D8** |
+| 4 | Workspace brand customization (logo + primary color) | **F1** |
+| 5 | Custom slash commands → templates | **F2** |
+| 6 | Onboarding tour (element-anchored) | **F3** |
+| 7a | #117 chevron discoverability (sweep residual) | **E3** |
+| 7b | Suggest-mode auto-mark-on-type (manual is by design) | **E4** (decision + impl) |
+| 7c | A4 collab-bridge banner placement | **D4** (signal folded into Health panel) |
+| 8 | Settings double-sidebar (REFACTOR; polish row 19) | **E5** |
+| 9 | Top-toolbar consolidation (REFACTOR; polish row 5) | **E6** |
+| 10 | Search-palette mount fade-in (polish row 15) | **E7** |
+| 11 | `peer_instances.shared_secret_hash` stores RAW secret | **G1** (real bug) |
+| 12 | Inbound federated peer route lacks per-peer rate limit | **G2** |
+| 13 | Refresh-token reuse = single-token revoke only (asymmetric) | **G3** |
+| 14 | `/api/oauth/revoke` no client auth (RFC 7009) | **G4** (decision + impl) |
+| 15 | `/api/oauth/register` unauthenticated + unthrottled | **G5** (prevention; D3 = detection/purge) |
+| 16 | Legacy e2e de-rot (10/29 red, excluded from gate) | **H1** |
+| 17 | `auth-signout.spec.ts:35` flake | **H2** |
+| 18 | C1 sidebar-density source-assertion-only guard | **H3** |
+| 19 | OIDC IdP form missing `scopes` field | **H4a** |
+| 20 | Legacy `require_2fa` / `CAIRN_ENFORCE_2FA` sign-in no-op | **H4b** (wire or remove) |
+| 21 | Workspace import page has no sidebar entry | **H4c** |
+| 22 | `/api/health` always-200 even on `db:'down'` | **H4d** (decision; D4 surfaces it) |
 
-## Orphaned from v0.9.19 ("v0.9.20 triage" — v0.10.0 took that slot)
+## Notes on the absorption
 
-Recorded in `docs/superpowers/v0.9.19/plan-U-notion-polish.md`; re-homed here
-→ propose v0.10.1:
+- **Decisions, not silent fixes:** E4, G4, H4b, H4d are *design decisions* — each
+  plan records the call (and its rationale) before implementing, so a "keep as
+  is" outcome is documented, never a dropped item.
+- **Detection vs prevention split (OAuth register):** D3 adds admin *visibility +
+  purge* (#15 detection); G5 adds *flood-control* (#15 prevention). Both ship.
+- **A4 banner (#7c)** is partially addressed by D4 folding the collab-bridge
+  signal into the admin Health panel (a page admins actually visit) rather than
+  leaving it only on `/settings/admin/upgrade`. If a dedicated banner is still
+  wanted after D4, it is a follow-up — recorded, not promised.
+- **Original triage targets** (the old "v0.10.1 / no version assigned" labels)
+  are void: the user folded everything into v0.10.0. This file no longer assigns
+  future versions.
 
-8. Settings double-sidebar — workspace `<Sidebar>` + `SettingsSidebar` both
-   render under `/settings` (REFACTOR; polish-audit row 19).
-9. Top-toolbar consolidation — editor control strip + page action bar render
-   as two stacked bars (REFACTOR; polish-audit row 5).
-10. Search-palette mount fade-in (minor; polish-audit row 15).
+## Carry-over from the v0.9.19 sweep (for completeness)
 
-## Security backlog (no version assigned — propose triage at v0.10.1 planning)
-
-11. `peer_instances.shared_secret_hash` stores the RAW shared secret despite
-    the column name (federated re-audit finding).
-12. Inbound federated peer route lacks per-peer rate limiting.
-13. Refresh-token reuse triggers single-token revocation only — no
-    family/descendant revocation (asymmetric vs auth-code reuse, which DOES
-    family-revoke; F1 investigation OQ).
-14. `/api/oauth/revoke` performs no client authentication (RFC 7009 expects
-    it; acceptable for the self-hosted threat model? — decide explicitly).
-15. `/api/oauth/register` is unauthenticated and unthrottled (RFC 7591
-    open-registration by design, but flood-control/rate-limit unscoped;
-    v0.10.0 D3 adds admin visibility + purge, not prevention).
-
-## Test-infra debt
-
-16. Legacy e2e de-rot — 10/29 non-item specs red; excluded from the CI gate by
-    the `tests/e2e/item-` filter (documented in v0.9.19 plan-B).
-17. Local `auth-signout.spec.ts` line-35 flake (post-sign-out `/`→`/login`
-    re-check; dev-DB accumulation artifact, not in the CI gate; disclosed in
-    PR #348).
-18. C1 sidebar-density guard is source-assertion only; runtime computed-px e2e
-    upgrade deferred unless requested (brittleness risk documented).
-
-## Minor polish (from re-audit verdicts)
-
-19. OIDC IdP form doesn't render the `scopes` field its PATCH route accepts.
-20. Legacy `workspaces.require_2fa` / `CAIRN_ENFORCE_2FA` General-settings
-    control is a sign-in no-op behind a default-off env flag — remove or wire.
-21. Workspace import page reachable only by direct URL (no sidebar entry;
-    export has one).
-22. `/api/health` always returns HTTP 200 even when `db:'down'` (body-only
-    signal); v0.10.0 D4 documents it — switching to a real 503 is a separate
-    breaking-ish change for anything keyed on the current behavior.
+The three v0.9.19 live-deploy "failures" that were **working-as-designed**
+(verification-method artifacts, not bugs) are NOT in this ledger — they were
+closed at audit time (README "Closed by re-audit" table): A1 #117 heading
+collapse (hover+click path verified), C3 suggestion track (manual by design →
+E4), A4 banner (→ D4). The one real bug from that sweep, A2 #76 slash leak, is
+**Plan B1**.

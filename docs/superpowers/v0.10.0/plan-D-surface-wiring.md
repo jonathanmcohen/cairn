@@ -2,9 +2,10 @@
 
 > **HOLD until GO.**
 
-Six items the re-audit proved live server-side with no (or unreachable) UI.
-Every spec here drives the real browser surface — handler-import tests
-explicitly do not count toward the gate (the F1 lesson).
+Eight items the re-audit proved live server-side with no (or unreachable) UI
+(D7/D8 absorbed from the deferred ledger per user decision). Every spec here
+drives the real browser surface — handler-import tests explicitly do not count
+toward the gate (the F1 lesson).
 
 ## D1 — SIEM forwarder "Send test" (seed 8) — Backend-exists-no-UI
 
@@ -122,3 +123,47 @@ wrapping `reconcileQuota`.
   (spec compares against `sum(files.size)`).
 - Limit change takes effect on the next upload without restart.
 - Editor/viewer can read usage, only admin/owner can change the limit.
+
+## D7 — Migration status panel (seed 15) — Backend-stub (in scope per user decision)
+
+**Exists:** `compareJournalToDb` yields `applied[] + pending[] + drift`, wired
+only into the boot crash-guard and the upgrade-CLI healthcheck — never exposed
+via a route or panel. The boot guard's only response to a bad migration is
+`process.exit(1)`.
+
+**Build:** GET `/api/admin/migrations` (journal vs DB: current version, applied
+list with timestamps, pending, drift), an Admin → Migrations panel (read-only;
+fold into the D4 Health page as a tab if cleaner), and a documented recovery
+note instead of a "retry" button — re-running a half-applied migration
+in-process is exactly the duplicate-ALTER trap the v0.9.17 postmortem rejected,
+so "failed-migration retry" ships as *guidance + drift visibility*, not a
+one-click re-run.
+
+**Failure modes verified:**
+- Panel shows pending>0 when a migration file exists without a DB row (spec
+  seeds a fake journal entry against the test DB).
+- Drift (column in schema.ts, no migration) renders as a distinct warning
+  state, not lumped with pending.
+- Admin-only; viewer/editor → 403.
+
+## D8 — pgvector index rebuild (seed 16) — Backend-stub (in scope per user decision)
+
+**Exists:** HNSW index created once (migration 0025); `pnpm cli
+reindex-embeddings` refreshes embedding **vectors** (data) only — nothing ever
+`REINDEX`es the index itself; no route, no UI.
+
+**Build:** a `reindex-vector-index` CLI verb (`REINDEX INDEX CONCURRENTLY` on
+the page_embeddings HNSW index) + POST `/api/admin/search/reindex` running BOTH
+passes (vectors then index) as a job, surfaced as a "Rebuild semantic index"
+button with progress/last-run on the admin search/health page.
+
+**Failure modes verified:**
+- `REINDEX CONCURRENTLY` cannot run inside a transaction — the job must use a
+  raw non-transactional connection (spec asserts the job completes; the
+  in-transaction variant is the known footgun).
+- Rebuild while searches are in flight → searches keep answering (CONCURRENTLY
+  contract; spec runs a search mid-job).
+- Embedding provider unavailable (the e2e `local_files_only` model error class)
+  → vector pass reports per-page failures without killing the index pass.
+- Button is admin-only and debounced — a second click while a job runs returns
+  the running job, not a concurrent rebuild.
