@@ -77,3 +77,24 @@ target, accept round-trip over live collab.
 same way as C2 (locally break the chip onClick, watch red, paste); both
 contexts run against the SAME booted app + collab server so the Yjs path is
 real, not stubbed.
+
+## C1 re-audit outcome (2026-06-10): already shipped, no gap
+
+The required step-1 re-audit found **all** v0.9.16 plan-C rows already shipped
+AND guarded — there is no unshipped row, so per "ship only gaps" no code change
+was made. Evidence (current `release/v0.9.19`):
+
+| Row | Target | Current source | Shipped |
+|-----|--------|----------------|---------|
+| Workspace switcher trigger | `min-h-[32px]` + `pointer-coarse:min-h-11` + `py-0.5`/`pointer-coarse:py-1.5` + 13px token | `workspace-switcher.tsx:60` | ✅ |
+| Command-palette button | `min-h-[36px]` (the "42→36" delta) + coarse floor | `search-hint-button.tsx` | ✅ |
+| Saved-searches header | `mb-2` section / `mb-0.5` header / `text-[11px]` label | `sidebar/saved-searches.tsx:85-88` | ✅ |
+| PAGES header | `min-h-[28px]` + `py-0.5` + `mb-0.5` + `text-[11px]` + coarse floor | `sidebar/pages-section.tsx:25-29` | ✅ |
+
+Guard: `tests/ui/sidebar-top-density.spec.ts` — 5 tests / 29 assertions, green.
+The user's "command palette 42→36" delta shipped in v0.9.16; the belief it was
+outstanding was stale (the v0.9.18 class-3 pattern — re-audit prevented
+re-shipping already-fixed work). The existing guard is source-assertion only
+(jsdom can't compute CSS); upgrading it to a runtime computed-px e2e is the one
+possible follow-up, deferred unless requested (risk: min-height + content makes
+exact px brittle).
