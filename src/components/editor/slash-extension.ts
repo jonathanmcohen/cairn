@@ -1,7 +1,11 @@
 import { Extension } from '@tiptap/core';
 import type { Editor } from '@tiptap/react';
 import { ReactRenderer } from '@tiptap/react';
-import Suggestion, { type SuggestionOptions } from '@tiptap/suggestion';
+import Suggestion, {
+  exitSuggestion,
+  type SuggestionOptions,
+  SuggestionPluginKey,
+} from '@tiptap/suggestion';
 import {
   Asterisk,
   BookMarked,
@@ -864,21 +868,61 @@ export function slashTriggerRange(editor: Editor, range: SlashRange): SlashRange
 }
 
 /**
- * #38/#76/#77/#111/#112 — single dispatch for a chosen slash item. This is the
- * correctness core extracted for unit testing.
+ * B5 (#76 follow-up) — tear the slash popup down when a DEFERRED item is picked.
+ *
+ * The @tiptap/suggestion popup is destroyed by its `render().onExit`, which only
+ * fires when the suggestion plugin transitions active→inactive. SYNCHRONOUS
+ * items trigger that transition for free — they delete the trigger range, the
+ * doc change re-runs the plugin's `apply`, the `/` match is gone, `active`
+ * flips false, `onExit` runs. DEFERRED items dispatch NO transaction on select
+ * (the range is consumed later, only when the dialog/picker commits), so the
+ * plugin stays active and the popup lingers ON TOP of the modal the deferred
+ * item just opened (z-9999 over the dialog overlay).
+ *
+ * `exitSuggestion` dispatches the plugin's own `{ exit: true }` meta — the SAME
+ * mechanism Escape-in-editor uses (`handleKeyDown` → `dispatchExit`). It flips
+ * `active` false (→ `onExit` → `popup.destroy()` + `component.destroy()`) and
+ * records `dismissedRange` so the menu won't immediately re-open against the
+ * still-present `/query`. Crucially it changes NO document content, so the
+ * typed text survives and a later Cancel still has it to restore (#76 stays
+ * green). We pass the slash plugin's key (the default `SuggestionPluginKey` —
+ * the slash Suggestion is configured without a custom key, unlike mention /
+ * page-link which use their own) so only the slash popup is torn down.
+ */
+function dismissSlashPopup(editor: Editor): void {
+  if (editor.isDestroyed) return;
+  const state = SuggestionPluginKey.getState(editor.state);
+  // Only dispatch when the slash suggestion is actually active — avoids a
+  // redundant no-op transaction if the item was invoked outside the menu.
+  if (!state?.active) return;
+  exitSuggestion(editor.view, SuggestionPluginKey);
+}
+
+/**
+ * #38/#76/#77/#111/#112 + B5 — single dispatch for a chosen slash item. This is
+ * the correctness core extracted for unit testing.
  *
  * - SYNCHRONOUS items (immediate insert): delete the corrected trigger range
  *   FIRST, then run the command — the insert happens synchronously so the
- *   trigger is consumed and nothing is left behind.
+ *   trigger is consumed and nothing is left behind. The doc change tears the
+ *   popup down via the suggestion plugin's own exit path.
  * - DEFERRED items (`deferred: true` — dialogs, file pickers, lazy/async
- *   inserts): do NOT pre-delete. We hand the corrected range to the command,
- *   which deletes it itself ONLY when it actually commits an insert. On
- *   cancel/early-return the `/query` text is left intact (no lone `/`).
+ *   inserts): do NOT pre-delete. We FIRST tear the slash popup down via
+ *   `dismissSlashPopup` (so it can't sit on top of the modal the command is
+ *   about to open — B5), WITHOUT consuming the range, then hand the corrected
+ *   range to the command, which deletes it itself ONLY when it actually commits
+ *   an insert. On cancel/early-return the `/query` text is left intact (no lone
+ *   `/`, #76).
  */
 export function runSlashItem(args: { editor: Editor; range: SlashRange; item: SlashItem }): void {
   const { editor, item } = args;
   const range = slashTriggerRange(editor, args.range);
   if (item.deferred) {
+    // B5 — dismiss the popup before opening the deferred modal/picker. This
+    // dispatches the suggestion exit meta only (no doc edit), so the range
+    // handed to the command below is still valid and the typed text is
+    // preserved on cancel.
+    dismissSlashPopup(editor);
     item.command(editor, range);
     return;
   }
