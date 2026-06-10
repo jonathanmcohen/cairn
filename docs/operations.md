@@ -239,6 +239,28 @@ tool rejects `format=pdf` with `INVALID_REQUEST` when `CAIRN_NATIVE_PDF`
 is unset (to keep the tool truthful — there is no MCP shape that can
 deliver an HTML "save as" dialog).
 
+## Stale `/settings/admin` redirect after upgrade (v0.9.19 A5 / #5)
+
+Before v0.9.18, `/settings/admin` server-side **308-redirected** to
+`/settings/workspace/members`. A 308 is permanently cacheable, so a browser
+that visited the old path cached that hop and keeps serving it locally —
+even after v0.9.18 turned `/settings/admin` into a real admin landing page.
+Affected users land on the members table (or a redirect loop) instead of the
+new index.
+
+v0.9.19 prevents recurrence: settings redirects now use **307** (temporary,
+non-cacheable) and the proxy sends `Cache-Control: no-store` on both the
+redirects and the `/settings/admin` page. But a browser already holding the
+old cached 308 must clear it once:
+
+- **Hard reload** the page (Cmd/Ctrl+Shift+R), or
+- Open `/settings/admin` in a private/incognito window to confirm the new page
+  renders, or
+- Clear site data for the Cairn origin (DevTools → Application → Clear storage).
+
+No server-side action recovers an already-poisoned browser — the cached 308
+short-circuits before the request reaches Cairn.
+
 ## WebAuthn / passkeys (v0.9.0 G1 P8)
 
 Cairn supports passkeys (WebAuthn FIDO2 credentials) as a complement to the
