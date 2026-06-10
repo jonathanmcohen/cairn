@@ -35,10 +35,10 @@ rows, security backlog, test-infra debt, polish), all land here.
 | **B** (2) | B1 #76 cancel-path fix (real bug, root-caused) · B2 #117 correction record (docs) | Carry-forward |
 | **C** (4) | C1 snapshot UI · C2 restore UI + read-only mode · C3 scheduled backups · C4 selective restore | Backup & restore |
 | **D** (8) | D1 SIEM test-fire · D2 audit CSV · D3 OAuth client registry · D4 health/readiness panel · D5 archived-pages view · D6 storage usage + quota admin · D7 migration status panel · D8 pgvector index rebuild | Surface wiring |
-| **G** (5) | G1 hash federated shared secrets · G2 per-peer rate limit · G3 refresh-token family revocation · G4 revoke-endpoint client auth (decision + impl) · G5 register flood control | Security hardening |
-| **E** (7) | E1 `?` shortcuts sheet · E2 What's-new panel (ships LAST) · E3 #117 chevron discoverability · E4 suggest-mode auto-mark (design decision + impl) · E5 settings double-sidebar refactor · E6 toolbar consolidation refactor · E7 palette mount fade-in | UX |
+| **G** (5) | G1 encrypt federated shared secrets at rest (HMAC needs the raw key — hash impossible) · G2 per-peer rate limit · G3 refresh-reuse detection + family revocation (needs `family_id` migration) · G4 revoke-endpoint client auth (decision + impl) · G5 register flood control | Security hardening |
+| **E** (7) | E1 `?` shortcuts sheet · E2 What's-new panel (ships LAST) · E3 #117 chevron discoverability · E4 suggest-mode auto-mark (design decision + impl) · E5 settings double-sidebar refactor · E6 toolbar consolidation refactor · E7 palette reduced-motion guard (fade-in itself shipped v0.9.14) | UX |
 | **F** (3) | F1 workspace brand (logo + primary color) · F2 custom slash commands → templates · F3 onboarding tour | Net-new |
-| **H** (4) | H1 legacy e2e de-rot (incl. Radix focus-scope/timer chips + a11y budget) · H2 auth-signout flake · H3 C1 density runtime-px guard · H4 polish batch (OIDC scopes field, legacy 2FA toggle, import sidebar entry, `/api/health` 503 decision) | Test-infra + polish |
+| **H** (4) | H1 legacy e2e de-rot (8 files / 32 cases; red count re-measured at start) · H2 auth-signout flake · H3 C1 density runtime-px guard (contract is 26px, `ROW_HEIGHT_PX`) · H4 polish batch (OIDC scopes field, 2FA flag reconciliation — enforcement EXISTS at the app layout, env comment stale — import sidebar entry, `/api/health` 503 decision) | Test-infra + polish |
 
 ### Deferred past v0.10.0
 
@@ -78,8 +78,12 @@ Item e2e suite is a blocking CI job (`ci.yml e2e`, no `if:`);
 `release.yml verify-item-e2e` gates the tag with explicit result checks.
 UI-wiring specs must drive the real browser surface through the proxy
 (handler-import tests don't count — the F1 lesson). Migrations land in
-C4/D7/F1/F2 territory — every one must backfill existing rows where behavior
-changes (the A3 lesson).
+**C3 (backup_runs), G1 (peer-secret format), G3 (oauth_tokens.family_id),
+F1 (workspace brand), F2 (workspace_slash_commands)** — plus E2/F3 if their
+per-user seen-markers become new columns rather than reusing an existing prefs
+store. Every migration must backfill existing rows where behavior changes (the
+A3 lesson). (Earlier draft said C4/D7 — wrong: C4 uses a runtime scratch
+schema, D7 is a read-only panel; neither migrates.)
 
 ## Reporting (verbatim strings)
 

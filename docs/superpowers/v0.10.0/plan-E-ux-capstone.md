@@ -74,9 +74,9 @@ buttons stay for marking pre-existing ranges.
 
 **Failure modes verified:**
 - **Auto-wrap goes THROUGH the editor command pipeline** so it propagates over
-  Yjs — the C3 lesson from v0.9.19: never reconstruct a fresh Y.Doc and
-  `Y.applyUpdate`; a CRDT merge can't express deletions. Spec runs two clients
-  and asserts the wrap replicates.
+  Yjs — the documented resolve-path lesson (`editor.tsx:546-554`): never
+  reconstruct a fresh Y.Doc and `Y.applyUpdate`; a CRDT merge can't express
+  deletions. Spec runs two clients and asserts the wrap replicates.
 - IME / composition input wraps ONCE per committed token, not per fragment
   (compositionstart/end guard; spec drives a composition event).
 - Toggling suggest mode OFF mid-paragraph stops wrapping cleanly; subsequent
@@ -109,30 +109,36 @@ pathname, or a settings route group whose layout omits the workspace aside).
 **Today:** the editor control strip (`editor.tsx`) and the page action bar
 (`page.tsx`) render as two stacked toolbars. **Build:** fold the editor
 status/outline/suggest group into the single page action bar — one toolbar row.
-Largest E item; **first declared cut candidate if scope slips** (README lists
-F3/E6/E5 as the pre-agreed cut order — reconciled here: E6 is the largest
-refactor, cut before E5).
+Largest E item; **second cut candidate if scope slips (first among E items) —
+F3 cuts before it**, per the README's pre-agreed F3 → E6 → E5 order.
 
 **Failure modes verified:**
 - Focus-mode / reader-mode toggles still reachable from the consolidated bar
   (spec toggles each).
 - Suggest + bibliography + outline controls keep their disabled-in-lock states
-  (the D3-from-v0.6.0 lock contract; spec locks a page, asserts disabled).
-- No horizontal overflow on a narrow viewport — the C2-from-v0.9.19 lesson: the
-  bar wraps/scrolls, never pushes a control off-screen (spec at 360px asserts
+  (the D3-from-v0.9.9 lock contract, #188 — `editor.tsx:591-613`
+  mounted-but-disabled under lock; spec locks a page, asserts disabled).
+- No horizontal overflow on a narrow viewport — the workspace-switcher overflow
+  lesson from v0.9.19 (`workspace-switcher.tsx` max-h + scroll fix): the bar
+  wraps/scrolls, never pushes a control off-screen (spec at 360px asserts
   every action is in-viewport and clickable).
 
-## E7 — Search-palette mount fade-in (ledger; polish-audit row 15) — minor
+## E7 — Search-palette reduced-motion guard (ledger; polish-audit row 15) — minor (RESCOPED)
 
-**Today:** the ⌘K palette mounts instantly. **Build:** `animate-in fade-in-0
-zoom-in-95 duration-150`, motion-reduce safe.
+**Review correction (2026-06-10):** the fade-in already SHIPPED — the cmdk
+panel carries `animate-in fade-in-0 zoom-in-95 duration-150`
+(`search-palette.tsx:221`, since v0.9.14). The ledger row was stale. The only
+real gap: **no `motion-reduce` guard** (grep: no `prefers-reduced-motion` in
+the file). E7 shrinks to adding the guard + the spec.
+
+**Build:** `motion-reduce:animate-none` (or equivalent) on the animated panel.
 
 **Failure modes verified:**
-- `prefers-reduced-motion` → no animation (spec emulates reduced motion,
-  asserts no transition).
-- The fade does NOT delay focus-trap or the first keystroke — typing
+- `prefers-reduced-motion` emulation → no animation (the actual missing piece).
+- Default motion → the existing fade still plays (no regression of the shipped
+  v0.9.14 behavior).
+- The animation does NOT delay focus-trap or the first keystroke — typing
   immediately on open still filters (spec opens + types in the same tick).
-- No layout shift on open (CLS check; the palette is overlay-positioned).
 
 ## Release flow note
 

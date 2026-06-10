@@ -32,9 +32,14 @@ is **one fix + one correction record**.
 (cancel), delete the slash trigger range — i.e. run `consumeSlashRange(editor,
 range)` in the cancel branch, not only after a successful insert — and clear
 the plugin's `dismissedRange`. The user's pre-trigger text stays (the original
-#76 guarantee); only the `/query` trigger is removed. Apply to all four
-deferred commands (equation `:660`, footnote `:174`, citation `:201`,
-flashcard `:761`) or centralize in `runSlashItem`'s deferred branch.
+#76 guarantee); only the `/query` trigger is removed. Apply to all **five**
+dialog-based deferred commands (equation `:660`, footnote `:174`, citation
+`:201`, `/cite-doi` lookup `:257-298` — early return `:262` before its
+`consumeSlashRange` at `:269` — and flashcard `:761`) or centralize in
+`runSlashItem`'s deferred branch. The review also found the non-dialog
+deferred pickers (image, file, pdf, audio, page embed, database) share the
+cancel-never-consumes pattern — the centralized fix covers them; the per-command
+fix must enumerate them too.
 
 **Files:** `src/components/editor/slash-extension.ts` (primary);
 `src/components/editor/editor-dialogs.tsx` only if cleanup is centralized in
@@ -55,7 +60,10 @@ exactly the wrong text to preserve.
 - Escape path still preserves-and-recovers identically (existing test 1 stays
   green — no regression of the original #76 behavior for typed body text).
 - Successful insert path unaffected: `/equation` → Enter → submit a formula →
-  trigger text consumed, node inserted (existing assertions).
+  trigger text consumed, node inserted. (Node-insert is already asserted —
+  `tests/components/editor/equation-slash.test.ts:35-56`,
+  `tests/e2e/slash-ux.spec.ts:44-64` — but NO existing test asserts the
+  trigger text was consumed on success; the B1 spec adds that assertion.)
 - Repeat-cancel: cancel twice in a row, then `/` → menu still opens
   (dismissedRange cleared each time, no stale-range wedge).
 - Cancel with text BEFORE the slash (`hello /equation` → cancel) → `hello `
@@ -77,4 +85,4 @@ collab-safe design — a NodeView rewrite would regress the v0.9.18 #117 lesson)
 note in `docs/operations.md` (static DOM greps cannot see hover-gated or
 click-gated editor surfaces; verify by hover → `[data-heading-collapse-toggle]`
 → click → `[data-cairn-collapsed]`). Chevron *discoverability* (always-visible
-affordance or a wider hover zone) → v0.10.1 UX row.
+affordance or a wider hover zone) → **E3, this release**.

@@ -21,7 +21,7 @@ explicitly in the release notes (pre-agreed first candidates: F3 → E6 → E5).
 | 7c | A4 collab-bridge banner placement | **D4** (signal folded into Health panel) |
 | 8 | Settings double-sidebar (REFACTOR; polish row 19) | **E5** |
 | 9 | Top-toolbar consolidation (REFACTOR; polish row 5) | **E6** |
-| 10 | Search-palette mount fade-in (polish row 15) | **E7** |
+| 10 | Search-palette mount fade-in (polish row 15) | **E7** (rescoped: fade-in shipped v0.9.14 — E7 is the missing `motion-reduce` guard) |
 | 11 | `peer_instances.shared_secret_hash` stores RAW secret | **G1** (real bug) |
 | 12 | Inbound federated peer route lacks per-peer rate limit | **G2** |
 | 13 | Refresh-token reuse = single-token revoke only (asymmetric) | **G3** |
@@ -52,9 +52,12 @@ explicitly in the release notes (pre-agreed first candidates: F3 → E6 → E5).
 
 ## Carry-over from the v0.9.19 sweep (for completeness)
 
-The three v0.9.19 live-deploy "failures" that were **working-as-designed**
-(verification-method artifacts, not bugs) are NOT in this ledger — they were
-closed at audit time (README "Closed by re-audit" table): A1 #117 heading
-collapse (hover+click path verified), C3 suggestion track (manual by design →
-E4), A4 banner (→ D4). The one real bug from that sweep, A2 #76 slash leak, is
-**Plan B1**.
+Of the v0.9.19 live-deploy findings: **A1 #117** ("heading collapse not in
+runtime DOM") was the only one closed outright by the re-audit (README "Closed
+by re-audit" table — working-as-designed, hover+click path verified; its
+discoverability residual is row 7a → E3). The **suggestion-track** and
+**A4-banner** findings were NOT closed — they are rows 7b and 7c above,
+absorbed into E4 (decision + impl) and D4 (signal folded into the Health
+panel). The one real bug from that sweep, A2 #76 slash leak, is **Plan B1**.
+(Count note: the ledger is 22 numbered rows; row 7 splits into 7a/7b/7c, so
+the absorption map lists 24 lines.)

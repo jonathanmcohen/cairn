@@ -2,52 +2,65 @@
 
 > **HOLD until GO.**
 
-Five findings surfaced by the v0.9.0 federation re-audit and the v0.9.19 Plan F
-OAuth investigation. Ships **before** Plan F so net-new features don't widen an
-unhardened surface. Every item drives a falsifiable test at the layer that
-actually catches the flaw (the F1 lesson — handler-import tests that bypass the
-proxy do not count toward the gate).
+Five findings surfaced by the federation re-audit done for this scaffold
+(2026-06-10) and the v0.9.19 Plan F OAuth investigation
+(`docs/superpowers/v0.9.19/plan-F-mcp-oauth-verify.md`). Ships **before** Plan
+F so net-new features don't widen an unhardened surface. Every item drives a
+falsifiable test at the layer that actually catches the flaw (the F1 lesson —
+handler-import tests that bypass the proxy do not count toward the gate).
 
-Shared constraint: federation + OAuth secrets land in migrations (G1 changes a
-stored-secret column shape) — every migration that changes how an existing row
-behaves MUST backfill (the A3 lesson). G1's backfill is one-way (we can hash a
-stored raw secret, but never recover a raw secret from an already-hashed
-column), so the migration is gated on a re-pairing path being documented.
+Shared constraint: G1 and G3 land migrations — every migration that changes how
+an existing row behaves MUST backfill (the A3 lesson).
 
-## G1 — Hash federated peer shared secrets — Backend-bug (real)
+## G1 — Protect federated peer shared secrets at rest — Backend-bug (real)
 
 **Finding:** `peer_instances.shared_secret_hash` stores the **raw** shared
-secret despite the column name — the pairing path writes the plaintext secret
-and the inbound verify compares plaintext. A DB read (backup, replica, SQL
-injection elsewhere) leaks every peer's live credential.
+secret despite the column name. The inbound verify
+(`/api/search/federated/peer/route.ts:42` → `peer-hmac.ts:128-135`) uses the
+stored value as the **HMAC-SHA256 key** to recompute and timing-safe-compare
+envelope signatures (`peer-hmac.ts:88-91` — the compare is already
+constant-time). A DB read (backup, replica, SQL injection elsewhere) leaks
+every peer's live credential.
 
-**Build:** hash on write (`scrypt`/`argon2id`, the same primitive the password
-path uses), constant-time compare on verify. Migration 00NN: the column already
-holds raw secrets, so the migration **re-hashes existing rows in place**
-(`UPDATE … SET shared_secret_hash = hash(shared_secret_hash)` is wrong — it
-double-counts on re-run; instead add a `secret_format` discriminator column
-defaulting `'raw'`, hash-on-next-verify-then-rewrite, OR force re-pair). Lock
-the design to: **add `secret_format` ('raw'|'scrypt'), verify accepts both,
-rewrites raw→scrypt on first successful verify, new pairings always write
-scrypt.** This backfills without a flag-day and without needing the plaintext.
+**Design constraint the review surfaced: hashing is impossible here.** HMAC
+verification needs the raw key at verify time — a one-way hash would break the
+protocol. So the fix is **encrypt-at-rest**, not hash: wrap the secret with
+AES-256-GCM under an operator env key (reuse the
+`CAIRN_BACKUP_ENCRYPTION_PASSPHRASE`-style envelope primitive from
+`src/lib/backups/encryption.ts`), decrypt only in the verify path. (The
+alternative — switching the federation protocol to asymmetric signatures — is
+a breaking cross-instance change; out of scope, recorded.)
+
+**Build:** new env key `CAIRN_PEER_SECRET_KEY` (required to enable federation
+once set); encrypt on pairing write; decrypt at verify; rename the column or
+add `secret_format` ('raw'|'enc-v1') so the migration backfills without a
+flag-day: verify accepts both, re-encrypts a raw row on first successful
+verify, new pairings always write encrypted. Document the rotation path
+(re-pair) and that an operator who never sets the key keeps today's raw-at-rest
+behavior with a startup warning — never a silent lock-out of existing peers.
 
 **Failure modes verified:**
 - A row written by the OLD code (raw) still authenticates, and after one
-  successful verify the stored value is scrypt (spec seeds a raw row, verifies,
-  asserts `secret_format='scrypt'` + value changed).
-- A new pairing never writes a raw secret (spec pairs, greps the row — no
-  plaintext).
-- Wrong secret fails in constant time (timing-safe compare; spec asserts reject
-  path doesn't early-return on length).
+  successful verify the stored value is `enc-v1` (spec seeds a raw row,
+  verifies, asserts format + value changed).
+- A new pairing never writes a raw secret when the key is set (spec pairs,
+  greps the row — no plaintext).
+- Wrong env key (rotated/lost) → verify fails CLOSED with a clear operator
+  error naming the env var, never an open relay or a crash-loop.
 - Re-running the migration is idempotent (spec applies it twice — no
-  double-hash, raw rows still `'raw'` until verified).
+  double-encrypt, raw rows still `'raw'` until verified).
+- Signature compare stays timing-safe end-to-end (already true at
+  `peer-hmac.ts:88-91`; spec pins it so the refactor can't regress it).
 
 ## G2 — Per-peer inbound rate limiting — Backend-gap
 
 **Finding:** the inbound federated-peer route authenticates the shared secret
 but has **no per-peer rate limit** — a compromised or hostile peer can flood
-cross-instance search / sync. The auth rate-limiter (v0.5.1 T5) covers login,
-not the federation surface.
+cross-instance **search** (the only peer-authenticated inbound surface; there
+is no inbound sync route — `last_synced_at` is bookkeeping). Each request costs
+an O(N)-HMAC sweep over all peers plus a full FTS query
+(`/api/search/federated/peer/route.ts:31-67`), so the amplification is real.
+The auth rate-limiter (v0.5.1 T5) covers login, not this surface.
 
 **Build:** reuse the existing token-bucket limiter keyed by `peer_instance.id`
 (not IP — peers sit behind one egress); configurable ceiling per peer; 429 with
@@ -67,25 +80,42 @@ multi-replica honesty rule).
 
 ## G3 — Refresh-token family revocation on reuse — Backend-gap (asymmetric)
 
-**Finding:** OAuth refresh-token **reuse** triggers single-token revocation
-only, while auth-**code** reuse already family-revokes (descendant chain). An
-attacker who exfiltrates a refresh token and races the legitimate client keeps a
-working descendant after the victim's one token is killed.
+**Finding (worse than first ledgered):** refresh-token reuse is not just
+under-punished — it is **not even detected**. `refreshTokens`
+(`src/lib/oauth/exchange.ts:150-187`) looks up the presented hash `WHERE
+revoked_at IS NULL`; a replayed (already-rotated) token finds no row and
+returns a generic `invalid_grant` indistinguishable from a junk token, while
+the attacker's rotated descendant keeps working. Meanwhile auth-**code** reuse
+(`exchange.ts:60-77`) blanket-revokes every token for the same
+user+client+workspace. The asymmetry is real; the mechanism to fix it does not
+exist yet: **`oauth_tokens` has no rotation-lineage column**
+(`src/db/schema/oauth-tokens.ts:11-36` — no parent/family field; migration
+0069 confirms).
 
-**Build:** on detected refresh-token reuse (a token presented after it was
-already rotated), revoke the **entire token family** (the rotation lineage),
-matching the auth-code reuse behavior. Token rows already carry a rotation
-parent link from the v0.9.19 Plan F rotation work — walk it.
+**Build (three pieces, not a lineage walk):**
+1. Migration: add `family_id` (uuid) to `oauth_tokens`; backfill existing rows
+   with a fresh family each; the rotation insert copies the parent's family.
+2. Detection: on refresh, look the hash up **including revoked rows** — a hit
+   on a revoked-by-rotation row IS the reuse signal (today's `isNull` filter
+   hides it).
+3. Response: revoke the whole `family_id` set, matching (and scoping better
+   than) the code-reuse blanket.
 
 **Failure modes verified:**
 - Rotate A→B→C, then replay A → B and C are BOTH revoked (spec asserts all
-  descendants 401, not just A).
+  descendants 401, not just A). RED today — the replay currently returns
+  invalid_grant and C keeps working.
 - A legitimate single rotation does NOT revoke the family (no false positive;
   spec rotates normally, asserts the new token works).
 - Family revocation is audited with the reuse trigger (spec asserts the audit
-  reason names "refresh reuse").
+  reason names "refresh reuse"); today the event doesn't exist at all.
 - Two independent grants for the same client/user are separate families — one's
-  reuse doesn't kill the other (family isolation spec).
+  reuse doesn't kill the other (family isolation; NOTE this is intentionally
+  narrower than the code-reuse blanket, which kills sibling grants — record the
+  difference, don't accidentally "fix" code-reuse to match).
+- Backfilled pre-migration rows each form their own family (the A3 backfill
+  lesson; spec asserts an old token's reuse doesn't revoke an unrelated old
+  token).
 
 ## G4 — `/api/oauth/revoke` client authentication — decision + impl
 

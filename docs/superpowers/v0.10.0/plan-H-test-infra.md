@@ -2,36 +2,47 @@
 
 > **HOLD until GO.**
 
-Ships **last** (the test-infra cleanup + the small polish reconciliations that
-don't fit the feature plans). H1 (de-rot) may interleave EARLIER if legacy rot
-blocks another item's spec from running — call that out when it happens rather
-than working around a red harness.
+Ships **last among the plans — except E2 (What's-new), which ships after Plan H
+at the very end of the release** so the panel can announce v0.10.0 itself. H1
+(de-rot) may interleave EARLIER if legacy rot blocks another item's spec from
+running — call that out when it happens rather than working around a red
+harness.
 
 ## H1 — Legacy e2e de-rot
 
-**Finding:** 10/29 non-`item-` e2e specs are red and are **excluded from the CI
-gate** by the `tests/e2e/item-*` filter (documented in v0.9.19 plan-B). The gate
-only ever runs the per-item specs, so the legacy suite has rotted unobserved.
-Known rot classes from the v0.9.19 runs: Radix focus-scope console chips
-(focus-trap warnings failing strict-console specs), fake-timer chips
-(`vi.useFakeTimers` leaking across the Playwright boundary), and the axe a11y
-budget drifting as the surface grew.
+**Finding:** the non-`item-` e2e specs are **excluded from the CI gate** by the
+`tests/e2e/item-*` filter (`ci.yml:496-504`, documented in v0.9.19 plan-B), so
+the legacy suite rots unobserved. The v0.9.19 runs observed 10 red of the
+then-29; today the suite is **8 non-item spec files / 32 test cases**
+(auth-signout, comment-edit, empty-states-nav, search-refresh, security-ux,
+slash-ux, theme-light-mode, workspace-onboarding) — the red count must be
+re-measured at H1 start, not assumed. Rot classes observed in the v0.9.19 runs
+(runtime evidence, re-confirm on the first full run): Radix focus-scope chips,
+fake-timer leakage across the Playwright boundary, and axe failures as the
+surface grew.
 
-**Build:** triage the 10 red specs into {fix, rewrite, delete-as-superseded};
-quarantine genuinely-obsolete ones with a documented reason (never a silent
-skip); bring the survivors back under the CI gate by widening the filter or
-porting them to `item-`-style names. Re-baseline the axe budget to the current
-surface with the violations enumerated, not blanket-suppressed.
+**Build:** run the full suite, triage every red spec into {fix, rewrite,
+delete-as-superseded}; quarantine genuinely-obsolete ones with a documented
+reason (never a silent skip); bring survivors back under the CI gate by
+widening the filter or porting them to `item-`-style names. The axe gate is a
+**zero-violation assertion** (`tests/a11y/axe.ts:13-23`, `toEqual([])`) — there
+is no budget structure to re-baseline; red means either fix the violations or
+introduce an explicit enumerated known-violations list (a new structure, each
+entry with a reason), never a blanket suppression.
 
 **Failure modes verified:**
 - After de-rot, `pnpm test:e2e` (full, not just `item-*`) is green in CI, OR
   every excluded spec has a one-line documented quarantine reason in the suite
   (no silent exclusion — the GHA-skip-propagation lesson: a skipped gate that
   reads as "passing" is the trap).
-- The Radix focus-scope chip is fixed at the source (focus management), not
-  suppressed by relaxing the console assertion (spec keeps strict-console on).
-- The a11y budget lists its known violations explicitly; a NEW violation still
-  fails the gate (spec adds a contrived violation, asserts red).
+- Any console-noise failure (e.g. the Radix focus-scope chip) is fixed at the
+  source (focus management), not by deleting the assertion that caught it.
+  (Note: the current harness has NO console assertions at all — if rot was
+  console-driven it was via Playwright's own failures, and adding a
+  strict-console fixture is an H1 option, recorded either way.)
+- The a11y gate still fails on a NEW violation after de-rot (spec adds a
+  contrived violation, asserts red) — whether the gate stays zero-violation or
+  gains an enumerated list.
 
 ## H2 — `auth-signout.spec.ts` line-35 flake
 
@@ -58,12 +69,16 @@ while the rendered row height drifts. Documented brittleness in the ledger.
 
 **Build:** upgrade it to a runtime computed-px e2e: render the sidebar, read
 `getBoundingClientRect().height` / computed `line-height` on a row, assert the
-30px row / 16px icon contract at the pixel level.
+current contract at the pixel level. **The contract is 26px, not the ledger's
+stale 30px** — `ROW_HEIGHT_PX = 26` (`virtualized-page-tree.tsx:31`, #208,
+guarded by `tests/components/sidebar-density-tokens.test.ts`). The e2e asserts
+against the exported constant, not a hardcoded number, so a deliberate token
+change updates both in one place.
 
 **Failure modes verified:**
-- A CSS change that breaks the 30px row height fails the spec (spec perturbs the
-  class in a fixture, asserts red) — the source-grep version could not catch
-  this.
+- A CSS change that breaks the rendered row height (vs `ROW_HEIGHT_PX`) fails
+  the spec (spec perturbs the class in a fixture, asserts red) — the
+  source-grep version could not catch this.
 - The measurement is taken after fonts/layout settle (no CLS race; the spec
   waits for the row to be stable before measuring).
 
@@ -78,14 +93,20 @@ UI can set. Add the field (default `openid profile email`), wired to the
 existing PATCH. Spec: set scopes in the form → PATCH persists → re-render shows
 them.
 
-**H4b — Legacy `require_2fa` / `CAIRN_ENFORCE_2FA` cleanup.** The
-General-settings `workspaces.require_2fa` control behind the default-off
-`CAIRN_ENFORCE_2FA` env flag is a **sign-in no-op** (the real enforcement is the
-v0.9.0 P8 MFA-policy path). **Decide + act:** either WIRE the legacy control to
-the real policy engine or REMOVE the dead control + flag. Proposed default:
-remove the dead General-settings toggle, since P8's policy is the live path.
-Spec asserts the dead control is gone (or, if wired, that toggling it actually
-enforces at sign-in).
+**H4b — `require_2fa` / `CAIRN_ENFORCE_2FA` reconciliation.** **Review
+correction (2026-06-10): the ledger's "sign-in no-op" claim was wrong.**
+`workspaces.require_2fa` IS enforced — not at the sign-in step, but by the
+`(app)` layout (`src/app/(app)/layout.tsx:41-49`: any workspace requiring 2FA +
+no enabled TOTP → forced redirect to `/settings/security?enroll=required`, via
+`userHasWorkspaceRequiring2fa`, `two-factor.ts:148-163`). The actual debt is
+three inconsistencies: (a) the `env.ts:137-143` comment still says "enforcement
+is unimplemented" — stale; (b) `CAIRN_ENFORCE_2FA` (default OFF) hides the
+settings toggle that was hidden BECAUSE enforcement didn't exist — the reason
+is gone, so decide: default the flag on, or drop it; (c) the layout gate covers
+pages only — `/api/*` is proxy-exempt, so an enrolled-nowhere user's session
+still works against the API (decide if that's acceptable; document either
+way). Spec: set require_2fa → un-enrolled member is redirected to enrollment
+on next page load; the env comment and flag state match reality.
 
 **H4c — Workspace import sidebar entry.** The workspace import page is reachable
 only by direct URL (export has a sidebar entry, import doesn't). Add the
@@ -103,8 +124,9 @@ decision. Spec asserts the documented contract for whichever branch is chosen.
 
 **Failure modes verified (H4 batch):**
 - H4a: a scope set in the form survives a reload (persist round-trip).
-- H4b: if removed, no settings control writes `require_2fa`; if wired, a
-  sign-in without 2FA is actually blocked (no silent no-op either way).
+- H4b: enforcement spec is RED-able — a require_2fa workspace member without
+  TOTP cannot reach app pages (redirect asserted); the stale env comment is
+  gone; the flag decision (default-on or removed) is recorded.
 - H4c: the import entry is role-gated identically to export (no privilege drift).
 - H4d: the chosen health/readiness contract is asserted at the route level, and
   the decision (not just the code) is written down — no silent status-code flip

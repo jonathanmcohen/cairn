@@ -15,8 +15,9 @@ envelope `CAIRN-ENC-BAK-v1`, Argon2id), `restore()` at `cli.ts:205`
 
 Shared constraints discovered by the re-audit (every C item must respect):
 
-- `FileStorage` has **no `list()`** (`src/lib/files/s3-storage.ts` is put/read
-  only) → snapshot listing needs a manifest index or a storage-list extension.
+- `FileStorage` has **no `list()`** (`src/lib/files/s3-storage.ts:33-70`
+  implements put/exists/delete/read — no list) → snapshot listing needs a
+  manifest index or a storage-list extension.
 - `pg_dump`/`pg_restore` binaries: present in the runner image; any
   in-process invocation must verify availability and match server major.
 - Long dumps cannot run synchronously in a request handler → job pattern
@@ -53,8 +54,9 @@ modal → restore-in-place with an app-wide read-only/maintenance mode.
 net-new** (no snapshot-vs-DB comparison exists anywhere; no app-wide read-only
 mode exists). Scope the modal to what is real without new computation: the
 snapshot's manifest (version/createdAt/database) + a retype-to-confirm gate
-mirroring the CLI's `confirmDestructive`. A row-count diff is OUT of v0.10.0
-(falls with seed 6 / selective restore in v0.10.1).
+mirroring the CLI's `confirmDestructive`. A row-count diff is OUT of C2 — it
+lands with C4 (selective restore, this release), which builds the
+scratch-schema machinery that makes snapshot-vs-DB comparison cheap.
 
 **Failure modes verified:**
 - Restore starts only after the app enters read-only (writes 503 with a banner;

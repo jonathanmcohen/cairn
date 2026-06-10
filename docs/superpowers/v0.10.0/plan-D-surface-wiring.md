@@ -75,9 +75,9 @@ uptime/version). **Missing:** any admin surface; any readiness distinction.
 
 **Build:** Admin → Health panel reading `/healthz` (db state, version, uptime,
 collab-bridge configured — fold A4's signal in here so it's visible on a page
-admins actually visit), plus either a real `/readyz` (migrations-applied +
-collab reachable) or documenting `/healthz` as the readiness probe in
-docs/operations.md.
+admins actually visit). The readiness-probe decision (`/readyz` vs documenting
+`/healthz`) is owned by **H4d** — D4 builds only the panel, so the decision has
+exactly one home.
 
 **Failure modes verified:**
 - `/api/health` returns 200 with `db:'down'` — panel must read the BODY field
@@ -100,8 +100,13 @@ explicit filter (`status:archived` operator already parses — verify).
 **Failure modes verified:**
 - Archive a page → it appears in the Archived view and can be un-archived
   back to draft (RED today — nothing lists it; the falsifiable core).
-- Archiving a published page silently kills its public `/s/<slug>` link —
-  surface a warning in the status picker (spec asserts the warning).
+- Archiving a published page silently kills its public **`/p/<slug>` render**
+  (`src/lib/pages/public.ts:30` requires `status='published'`) while the
+  `/s/<slug>` site index does NOT status-filter
+  (`src/lib/pages/public-site.ts:50` — published+not-deleted only), so the
+  archived page can stay LISTED with a dead link. Surface a warning in the
+  status picker AND status-filter the site index (spec asserts both: the
+  warning, and the archived page absent from `/s/<slug>`).
 - Tenant + role: viewers see the archived list read-only; cross-workspace 404.
 
 ## D6 — Storage usage indicator + quota admin (seed 19) — Backend-exists-no-UI
@@ -127,9 +132,11 @@ wrapping `reconcileQuota`.
 ## D7 — Migration status panel (seed 15) — Backend-stub (in scope per user decision)
 
 **Exists:** `compareJournalToDb` yields `applied[] + pending[] + drift`, wired
-only into the boot crash-guard and the upgrade-CLI healthcheck — never exposed
-via a route or panel. The boot guard's only response to a bad migration is
-`process.exit(1)`.
+into the boot crash-guard (`migrations.ts:114` via `src/db/migrate.ts:54`) and
+three upgrade-CLI paths (healthcheck `src/lib/upgrade/healthcheck.ts:40`,
+preview `preview.ts:37`, apply `apply.ts:131`) — all CLI/boot-side, never
+exposed via a route or panel. The boot guard's only response to a bad
+migration is `process.exit(1)`.
 
 **Build:** GET `/api/admin/migrations` (journal vs DB: current version, applied
 list with timestamps, pending, drift), an Admin → Migrations panel (read-only;
