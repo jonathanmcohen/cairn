@@ -53,4 +53,69 @@ test.describe('item #76 — slash dialog cancel preserves typed text', () => {
     // as <sup data-footnote-id> — src/components/editor/blocks/footnote-mark.ts).
     await expect(editor.locator('sup[data-footnote-id]')).toHaveCount(0);
   });
+
+  // v0.9.19 A2 — the user's actual repro (the v0.9.18 guard tested the wrong
+  // path): /equation → Enter → modal opens → click the CANCEL BUTTON (not
+  // Escape) → keep typing. The next text must continue in the slash paragraph,
+  // not leak into another block — dialog dismissal has to restore the editor
+  // selection + focus to the slash trigger.
+  test('cancelling the /equation modal by button keeps typing in the slash paragraph', async ({
+    page,
+    seeded,
+  }) => {
+    await signIn(page, seeded);
+    const stamp = Date.now().toString(36);
+    const anchor = `item76 cancelbtn anchor ${stamp}`;
+    const pageId = await createPageViaApi(
+      page,
+      `Item 76 cancel button ${stamp}`,
+      pmDoc(pmParagraph(anchor)),
+    );
+    const editor = await openPageEditor(page, pageId, anchor);
+
+    await typeSlashQueryAtDocEnd(page, editor, '/equation');
+    await expect(page.locator('.tippy-box.cairn-slash-popup')).toBeVisible({ timeout: 10_000 });
+
+    // Enter selects the highlighted Equation option → modal-first flow.
+    await page.keyboard.press('Enter');
+    const latexField = page.getByLabel('LaTeX');
+    await expect(latexField).toBeVisible({ timeout: 10_000 });
+
+    // Click the CANCEL button (the repro path — not Escape).
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await expect(latexField).toBeHidden({ timeout: 10_000 });
+
+    // The fix: dismissing the modal returns focus to the editor (at the slash
+    // trigger). On v0.9.18 focus stayed on <body>, so this poll never resolves
+    // — the gate's red state. (A mouse-click on Cancel keeps the browser's
+    // focus machinery busy through the click + the focused button's removal, so
+    // the restore lands on the next frame, not synchronously — hence the poll.)
+    await expect
+      .poll(
+        () =>
+          page.evaluate(() => {
+            type EditorEl = Element & { editor?: { view: { hasFocus(): boolean } } };
+            return (
+              (
+                document.querySelector('.ProseMirror') as EditorEl | null
+              )?.editor?.view.hasFocus() ?? false
+            );
+          }),
+        { timeout: 10_000 },
+      )
+      .toBe(true);
+
+    // Keep typing. The text must continue in the slash paragraph; on v0.9.18
+    // the editor had lost its selection so this leaked into the wrong block.
+    await page.keyboard.type('plus more');
+
+    // The slash paragraph now reads "/equationplus more" (typed text intact +
+    // continuation), and the anchor paragraph is untouched (no leak).
+    await expect(editor.locator('p', { hasText: '/equationplus more' })).toHaveCount(1, {
+      timeout: 10_000,
+    });
+    await expect(editor.locator('p', { hasText: anchor })).toHaveText(anchor);
+    // No math node was inserted by the cancelled dialog.
+    await expect(editor.locator('[data-type="math"]')).toHaveCount(0);
+  });
 });

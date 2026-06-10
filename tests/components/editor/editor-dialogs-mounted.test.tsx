@@ -6,6 +6,8 @@ describe('editor mounts the dialog host', () => {
   it('imports and renders <EditorDialogs>', () => {
     const src = readFileSync('src/components/editor/editor.tsx', 'utf8');
     expect(src).toContain("import { EditorDialogs } from './editor-dialogs'");
-    expect(src).toContain('<EditorDialogs />');
+    // v0.9.19 A2 (#76) — the host now receives the editor so it can refocus the
+    // view when a slash dialog closes (focus-restore fix).
+    expect(src).toContain('<EditorDialogs editor={editor} />');
   });
 });

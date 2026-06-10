@@ -50,36 +50,40 @@ function isCollapsibleHeading(node: PMNode): boolean {
 
 /**
  * Build the decoration set for the current doc + collapsed positions. For each
- * collapsed heading, hide every following TOP-LEVEL block until the next heading
- * whose level <= the collapsed heading's level (a same-or-higher heading ends
- * the section; deeper headings are part of it and stay hidden).
+ * collapsed heading, hide every following SIBLING block (within the same
+ * parent) until the next heading whose level <= the collapsed heading's level
+ * (a same-or-higher heading ends the section; deeper headings are part of it
+ * and stay hidden).
+ *
+ * v0.9.19 A1 — siblings, NOT top-level children: the v0.9.18 version walked
+ * only `doc.forEach` top-level blocks, so a heading nested inside any `block+`
+ * wrapper (column, toggle, callout) toggled a position the builder skipped —
+ * the chevron glyph flipped and nothing collapsed, which is exactly the live
+ * miss the user reported. A collapse never escapes its parent: hiding stops at
+ * the parent boundary.
  */
 function buildDecorations(doc: PMNode, collapsed: Set<number>): DecorationSet {
   if (collapsed.size === 0) return DecorationSet.empty;
 
-  // Flat list of top-level children with their start offsets + heading levels.
-  const tops: { pos: number; node: PMNode; isHeading: boolean; level: number }[] = [];
-  doc.forEach((node, offset) => {
-    const heading = isCollapsibleHeading(node);
-    tops.push({
-      pos: offset,
-      node,
-      isHeading: heading,
-      level: heading ? (node.attrs.level as number) : 0,
-    });
-  });
-
   const decorations: Decoration[] = [];
-  for (let i = 0; i < tops.length; i++) {
-    const entry = tops[i];
-    if (!entry?.isHeading || !collapsed.has(entry.pos)) continue;
-    for (let j = i + 1; j < tops.length; j++) {
-      const sib = tops[j];
-      if (!sib) break;
+  for (const pos of collapsed) {
+    if (pos < 0 || pos >= doc.content.size) continue;
+    const heading = doc.nodeAt(pos);
+    // Stale/remapped positions that no longer start a collapsible heading are
+    // skipped (the entry stays in the set and revives if the heading returns,
+    // e.g. via undo).
+    if (!heading || !isCollapsibleHeading(heading)) continue;
+
+    const $pos = doc.resolve(pos);
+    const parent = $pos.parent;
+    const level = heading.attrs.level as number;
+    for (let i = $pos.index() + 1; i < parent.childCount; i++) {
+      const sib = parent.child(i);
       // Stop at the next heading of equal-or-higher level.
-      if (sib.isHeading && sib.level <= entry.level) break;
+      if (isCollapsibleHeading(sib) && (sib.attrs.level as number) <= level) break;
+      const from = $pos.posAtIndex(i);
       decorations.push(
-        Decoration.node(sib.pos, sib.pos + sib.node.nodeSize, {
+        Decoration.node(from, from + sib.nodeSize, {
           hidden: '',
           'data-cairn-collapsed': '',
         }),

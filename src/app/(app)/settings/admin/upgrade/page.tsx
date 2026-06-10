@@ -1,10 +1,16 @@
 import { sql } from 'drizzle-orm';
 import type { Route } from 'next';
+import { cookies, headers } from 'next/headers';
 import semver from 'semver';
 import { UpgradeApplyButton } from '@/components/admin/upgrade-apply-button';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
+import { isCollabBridgeConfigured } from '@/lib/collab/publish-client';
+import { LOCALE_COOKIE } from '@/lib/i18n/config';
+import { getMessages } from '@/lib/i18n/messages';
+import { resolveLocale } from '@/lib/i18n/resolve';
+import { createT } from '@/lib/i18n/t';
 import { readPackageVersion } from '@/lib/upgrade/version';
 
 export const dynamic = 'force-dynamic';
@@ -41,6 +47,19 @@ export default async function AdminUpgradePage() {
     semver.valid(currentVersion) &&
     semver.gt(available.version, currentVersion);
 
+  // v0.9.19 A4 (#A3) — surface a misconfigured REST→Yjs bridge to admins. When
+  // CAIRN_COLLAB_INTERNAL_URL is unset, REST PATCH content writes update the DB
+  // but never reach an open editor session (the v0.9.18 live miss). Read at
+  // request time on the server; the env value itself is never sent to the client.
+  const collabBridgeConfigured = isCollabBridgeConfigured();
+  const cookieStore = await cookies();
+  const hdrs = await headers();
+  const locale = resolveLocale(
+    cookieStore.get(LOCALE_COOKIE)?.value ?? null,
+    hdrs.get('accept-language'),
+  );
+  const t = createT(locale, getMessages(locale));
+
   return (
     <section>
       <SettingsBreadcrumb
@@ -48,6 +67,16 @@ export default async function AdminUpgradePage() {
         page="Upgrade"
       />
       <h1 className="mb-4 font-semibold text-xl">Cairn upgrade</h1>
+      {!collabBridgeConfigured ? (
+        <div
+          role="status"
+          className="mb-4 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm"
+          data-testid="collab-bridge-warning"
+        >
+          <p className="font-medium">{t('admin.upgrade.collabBridge.title')}</p>
+          <p className="mt-1 text-muted-foreground">{t('admin.upgrade.collabBridge.body')}</p>
+        </div>
+      ) : null}
       <p className="mb-4 text-muted-foreground text-sm">
         The release-watch daemon polls the configured release feed and inserts a notification when a
         newer stable tag is published. Use the button below to apply the upgrade in place (snapshot

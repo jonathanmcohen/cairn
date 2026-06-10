@@ -704,6 +704,8 @@
   "statusBanner.success": "Correcto",
   "statusBanner.warning": "Advertencia",
   "workspaceSettings.saved": "Configuración guardada.",
+  "admin.upgrade.collabBridge.body": "CAIRN_COLLAB_INTERNAL_URL no está configurada, por lo que las escrituras de la API REST en el contenido de una página actualizan la base de datos pero no llegan a un editor abierto hasta recargar. Configúrala en tu entorno (consulta docker-compose.yml) para habilitar el puente API-editor.",
+  "admin.upgrade.collabBridge.title": "La sincronización del editor en vivo está desactivada",
   "admin.upgrade.confirmTitle": "¿Aplicar la actualización ahora?",
   "admin.upgrade.confirmBody": "Esto reinicia Cairn para aplicar la nueva versión. Las ediciones en curso pueden interrumpirse.",
   "admin.upgrade.confirmCta": "Aplicar actualización",

@@ -146,8 +146,9 @@ export function SettingsSidebar({
         id: 'admin',
         label: t('settings.nav.admin'),
         // Parent click navigates straight to the first real leaf. The bare
-        // /settings/admin route still 308-redirects here server-side, but the
-        // nav no longer depends on that round-trip (audit item A).
+        // /settings/admin route renders its own landing page (v0.9.18 #5) and
+        // is served no-store (v0.9.19 A5) so a stale cached 308 can't shadow
+        // it; the nav targets the leaf directly regardless.
         href: '/settings/admin/audit' as Route,
         children: adminChildren,
       },

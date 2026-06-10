@@ -19,6 +19,19 @@ const PUBLIC_PATHS = [
   // be gated behind a session cookie — otherwise anonymous public-page image
   // requests get redirected to /login.
   '/api/files',
+  // OAuth 2.1 + MCP are consumed by HEADLESS clients that carry NO session
+  // cookie — they authenticate via PKCE/bearer tokens, not the browser session.
+  // Each of these routes is its own access boundary, so the cookie gate must
+  // not bounce them to /login (which broke the entire live MCP/OAuth flow):
+  //   - /.well-known/oauth-* : public discovery metadata by RFC 8414 / 9728.
+  //   - /api/oauth/*         : authorize self-redirects to /login when there is
+  //                            no session; token/register/revoke are token- and
+  //                            PKCE-authenticated, never cookie-authenticated.
+  //   - /api/mcp             : authenticates the Authorization: Bearer token and
+  //                            returns 401 + WWW-Authenticate itself.
+  '/.well-known/oauth-',
+  '/api/oauth',
+  '/api/mcp',
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
@@ -65,15 +78,24 @@ export function proxy(req: NextRequest) {
     publicPath: pathname.startsWith('/p/'),
   });
 
-  // v0.8.0 G4 P12 — settings hub restructure. Legacy paths 308-redirect to
-  // the new sectioned home; non-settings paths pass through. Runs BEFORE the
-  // auth gate so logged-out hits get the new path baked into `?next=`.
+  // v0.8.0 G4 P12 — settings hub restructure. Legacy paths redirect to the new
+  // sectioned home; non-settings paths pass through. Runs BEFORE the auth gate
+  // so logged-out hits get the new path baked into `?next=`.
+  //
+  // v0.9.19 A5 (#5) — 307 (temporary), NOT 308. A 308 is cacheable-permanent by
+  // default: when /settings/admin used to 308 → /settings/workspace/members
+  // (removed in item #5), browsers cached that hop forever and never re-asked
+  // the server, so the new /settings/admin landing page stayed unreachable for
+  // them. 307 + `Cache-Control: no-store` makes every settings redirect
+  // non-cacheable so this class cannot recur. (Already-poisoned browsers still
+  // need a hard reload / clear-site-data — documented in docs/operations.md.)
   const settingsRedirect = resolveSettingsRedirect(pathname);
   if (settingsRedirect) {
     const dest = req.nextUrl.clone();
     dest.pathname = settingsRedirect;
-    const res = NextResponse.redirect(dest, 308);
+    const res = NextResponse.redirect(dest, 307);
     res.headers.set('Content-Security-Policy', csp);
+    res.headers.set('Cache-Control', 'no-store, must-revalidate');
     return record(res, start, method, pathname);
   }
 
@@ -104,6 +126,12 @@ export function proxy(req: NextRequest) {
   requestHeaders.set('x-pathname', pathname);
   const res = NextResponse.next({ request: { headers: requestHeaders } });
   res.headers.set('Content-Security-Policy', csp);
+  // v0.9.19 A5 (#5) — never let the bare /settings/admin landing page be cached
+  // as anything (it was a 308 in a prior version). no-store guarantees a fresh
+  // server hit so the real index always renders, even after future route moves.
+  if (pathname === '/settings/admin') {
+    res.headers.set('Cache-Control', 'no-store, must-revalidate');
+  }
   return record(res, start, method, pathname);
 }
 
