@@ -74,3 +74,22 @@ branches were never re-tested in combination.
   one cannot mask a failure in the other.
 - Wall-clock cost: full e2e suite ~5-10 min on hosted runner with build cache;
   acceptable for tag-time only (not per-PR — per-PR runs are B1's job).
+
+## Discovered during B1 rollout (2026-06-10): legacy e2e spec rot
+
+First-ever CI execution of the full `tests/e2e/` suite surfaced that the
+LEGACY specs (pre-v0.9.18: auth-signout, comment-edit, empty-states-nav,
+security-ux, slash-ux, theme-light-mode, workspace-onboarding, search-refresh)
+are rotten: 10 red in CI and 10 red locally on main — but only 4 overlap
+(comment-edit aside [strict-mode: 2 asides], flashcards-due CTA, citation-DOI
+modal, theme swatches); the other failures flip between runs as ~30s
+timeouts. They were authored across v0.9.9–v0.9.17, ran once locally at
+authoring time, and never again.
+
+Decision: both gates are scoped to `tests/e2e/item-*.spec.ts` (7 specs,
+deterministic both envs: 6 green + #117 red pending A1). Widening the glob
+back to the full dir is a tracked v0.9.19 follow-up item — "legacy e2e
+de-rot" — requiring each legacy spec to be made deterministic (or deleted as
+superseded) with the same red→green artifact discipline. Evidence:
+PR #340's e2e job log vs `/tmp/local-main-e2e.log` (2026-06-10), summarized
+in the PR thread.
