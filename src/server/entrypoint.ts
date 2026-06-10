@@ -38,6 +38,19 @@ async function main() {
     // Either env var missing or unparseable — leave validation to runtime env() callers.
   }
 
+  // v0.9.19 A4 (#A3) — the REST→Yjs publish bridge is OFF unless
+  // CAIRN_COLLAB_INTERNAL_URL is set (and AUTH_SECRET, which credentials auth
+  // already requires). When OFF, a REST PATCH to a page's content updates the
+  // DB but never reaches an open editor session — the v0.9.18 live miss.
+  // Deployments on an old docker-compose silently ran without it; warn loudly
+  // at every boot so the operator sees the misconfiguration. (Inlined, not
+  // imported: the entrypoint stays a relative-import-only ESM orchestrator.)
+  if (!process.env.CAIRN_COLLAB_INTERNAL_URL) {
+    console.warn(
+      '[collab] API↔Yjs bridge is DISABLED — set CAIRN_COLLAB_INTERNAL_URL in env to enable; PATCH /api/v1/pages/:id will only update DB, not live editor.',
+    );
+  }
+
   // NOTE: the webhook startup sweep (recovering pending/failed deliveries left
   // by a previous process) runs from `src/instrumentation.ts#register()` inside
   // the Next app, NOT here. The entrypoint stays a minimal ESM orchestrator with

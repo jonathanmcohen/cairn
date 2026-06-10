@@ -1,0 +1,1 @@
+[collab] API↔Yjs bridge is DISABLED — set CAIRN_COLLAB_INTERNAL_URL in env to enable; PATCH /api/v1/pages/:id will only update DB, not live editor.
