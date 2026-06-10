@@ -34,21 +34,45 @@ export function HeadingCollapse({ editor }: { editor: Editor }) {
     function onMove(e: MouseEvent) {
       const node = (e.target as HTMLElement)?.closest('h1, h2, h3');
       if (!node || !root.contains(node)) {
-        setChevron(null);
+        // Don't clear while the pointer travels from the heading text to the
+        // gutter chevron: intermediate mousemove targets (the editor root, a
+        // margin) used to unmount the button under the cursor before it could
+        // be clicked. Keep the chevron while the pointer stays in the gutter
+        // band next to it; clear everywhere else.
+        setChevron((prev) => {
+          if (!prev) return null;
+          const rootRect = root.getBoundingClientRect();
+          const inGutter = e.clientX <= rootRect.left + 8 && e.clientX >= rootRect.left - 44;
+          const inBand = Math.abs(e.clientY - (rootRect.top + prev.top + 12)) <= 28;
+          return inGutter && inBand ? prev : null;
+        });
         return;
       }
-      const rect = node.getBoundingClientRect();
-      const rootRect = root.getBoundingClientRect();
-      const pos = editor.view.posAtDOM(node, 0);
-      const $pos = editor.state.doc.resolve(pos);
-      const headingStart = $pos.before(1);
-      const level = Number(node.tagName.slice(1));
-      setChevron({
-        top: rect.top - rootRect.top,
-        pos: headingStart,
-        level,
-        collapsed: isHeadingCollapsed(editor.state, headingStart),
-      });
+      // posAtDOM can throw while the view is being rebuilt (e.g. the initial
+      // Yjs sync replacing the doc under the pointer). Keep the previous
+      // chevron instead of dying mid-handler — the next mousemove recomputes.
+      try {
+        const rect = node.getBoundingClientRect();
+        const rootRect = root.getBoundingClientRect();
+        const pos = editor.view.posAtDOM(node, 0);
+        const $pos = editor.state.doc.resolve(pos);
+        // The heading node's OWN start — `$pos.parent` here is the heading
+        // itself, so `before($pos.depth)` is the position directly before it.
+        // (v0.9.18 used `before(1)`: the TOP-LEVEL ancestor. For a heading
+        // nested in a column/toggle/callout that toggled the wrapper's
+        // position, which the decoration builder rightly ignored — the
+        // live-miss half of #117.)
+        const headingStart = $pos.before($pos.depth);
+        const level = Number(node.tagName.slice(1));
+        setChevron({
+          top: rect.top - rootRect.top,
+          pos: headingStart,
+          level,
+          collapsed: isHeadingCollapsed(editor.state, headingStart),
+        });
+      } catch {
+        // View mid-rebuild — leave the current chevron as-is.
+      }
     }
     root.addEventListener('mousemove', onMove);
     return () => root.removeEventListener('mousemove', onMove);

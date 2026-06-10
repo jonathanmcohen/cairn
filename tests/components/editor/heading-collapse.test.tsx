@@ -92,4 +92,63 @@ describe('<HeadingCollapse> (#276 / #117)', () => {
     expect(paragraph().hasAttribute('hidden')).toBe(true);
     expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(true);
   });
+
+  // v0.9.19 A1 — the v0.9.18 live miss. The chevron computed the heading
+  // position as `$pos.before(1)` (the TOP-LEVEL ancestor) and the decoration
+  // builder walked only top-level children, so a heading nested inside any
+  // `block+` wrapper (column, toggle, callout) toggled a position the builder
+  // skipped: the glyph flipped, nothing collapsed. Real pages nest headings;
+  // the v0.9.18 harness doc was flat, which is how this passed the gate.
+  it('collapses a heading nested inside a column (the v0.9.18 live miss)', () => {
+    editor.commands.setContent({
+      type: 'doc',
+      content: [
+        {
+          type: 'columnList',
+          content: [
+            {
+              type: 'column',
+              content: [
+                {
+                  type: 'heading',
+                  attrs: { level: 2 },
+                  content: [{ type: 'text', text: 'Nested' }],
+                },
+                { type: 'paragraph', content: [{ type: 'text', text: 'nested body one' }] },
+                { type: 'paragraph', content: [{ type: 'text', text: 'nested body two' }] },
+              ],
+            },
+            {
+              type: 'column',
+              content: [
+                { type: 'paragraph', content: [{ type: 'text', text: 'other column stays' }] },
+              ],
+            },
+          ],
+        },
+      ],
+    });
+    render(<HeadingCollapse editor={editor} />);
+    const nestedHeading = editor.view.dom.querySelector('h2') as HTMLElement;
+    fireEvent.mouseMove(nestedHeading);
+    fireEvent.click(screen.getByLabelText('editor.heading.collapse'));
+
+    const byText = (text: string) =>
+      Array.from(editor.view.dom.querySelectorAll('p')).find(
+        (p) => p.textContent === text,
+      ) as HTMLElement;
+
+    // Both following siblings INSIDE the same column are hidden…
+    expect(byText('nested body one').hasAttribute('hidden')).toBe(true);
+    expect(byText('nested body one').hasAttribute('data-cairn-collapsed')).toBe(true);
+    expect(byText('nested body two').hasAttribute('hidden')).toBe(true);
+    // …while the sibling column's content is untouched.
+    expect(byText('other column stays').hasAttribute('hidden')).toBe(false);
+
+    // Expand restores both.
+    fireEvent.mouseMove(nestedHeading);
+    fireEvent.click(screen.getByLabelText('editor.heading.expand'));
+    expect(byText('nested body one').hasAttribute('hidden')).toBe(false);
+    expect(byText('nested body two').hasAttribute('hidden')).toBe(false);
+  });
 });

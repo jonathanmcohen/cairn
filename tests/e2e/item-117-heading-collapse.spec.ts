@@ -38,13 +38,49 @@ const HEADING_DOC = {
   ],
 } as const;
 
+// v0.9.19 A1 — the v0.9.18 live miss reproduced: a heading nested inside a
+// column (any `block+` wrapper). The flat HEADING_DOC above is why the v0.9.18
+// guard passed while real pages no-op'd: the chevron toggled the WRAPPER's
+// top-level position and the decoration builder only walked top-level blocks.
+const NESTED_HEADING_DOC = {
+  type: 'doc',
+  content: [
+    {
+      type: 'columnList',
+      content: [
+        {
+          type: 'column',
+          content: [
+            {
+              type: 'heading',
+              attrs: { level: 2 },
+              content: [{ type: 'text', text: 'NestedHead' }],
+            },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Nested body one' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Nested body two' }] },
+          ],
+        },
+        {
+          type: 'column',
+          content: [{ type: 'paragraph', content: [{ type: 'text', text: 'Other column stays' }] }],
+        },
+      ],
+    },
+  ],
+} as const;
+
 /**
  * Seed the page document directly in the DB (both `pages.content` and the
  * Hocuspocus-persisted `page_yjs.state`), exactly like tests/a11y/seed.ts. The
  * editor renders from the pre-seeded Yjs state on connect, so we get the exact
  * h2/p/h2 structure deterministically instead of fighting markdown input rules.
  */
-async function seedHeadingDoc(args: { pageId: string; workspaceId: string }) {
+async function seedHeadingDoc(args: {
+  pageId: string;
+  workspaceId: string;
+  doc?: typeof HEADING_DOC | typeof NESTED_HEADING_DOC;
+}) {
+  const docJson = args.doc ?? HEADING_DOC;
   const url = process.env.DATABASE_URL;
   if (!url) throw new Error('DATABASE_URL required for the item-117 seed');
   const sql = postgres(url, { max: 1 });
@@ -62,11 +98,11 @@ async function seedHeadingDoc(args: { pageId: string; workspaceId: string }) {
       workspaceId: args.workspaceId,
       byUserId: user.id,
       adminOverride: true,
-      patch: { content: HEADING_DOC },
+      patch: { content: docJson },
     });
 
     const pmSchema = getSchema(schemaExtensions());
-    const ydoc = prosemirrorJSONToYDoc(pmSchema, HEADING_DOC, 'default');
+    const ydoc = prosemirrorJSONToYDoc(pmSchema, docJson, 'default');
     const state = Buffer.from(Y.encodeStateAsUpdate(ydoc));
     await db
       .insert(schema.pageYjs)
@@ -134,5 +170,50 @@ test.describe('item #117 — heading collapse chevron', () => {
     await expandToggle.click();
     await expect(body).toBeVisible();
     await expect(body).not.toHaveAttribute('data-cairn-collapsed', '');
+  });
+
+  // v0.9.19 A1 — the heading lives INSIDE a column. On v0.9.18 this exact flow
+  // no-ops (chevron flips, nothing hides): the live miss the user reported.
+  test('collapses a heading nested inside a column (v0.9.18 live miss)', async ({
+    page,
+    seeded,
+  }) => {
+    await seedHeadingDoc({
+      pageId: seeded.pageId,
+      workspaceId: seeded.workspaceId,
+      doc: NESTED_HEADING_DOC,
+    });
+    await signIn(page, seeded);
+    await page.goto(`/pages/${seeded.pageId}`);
+
+    const editor = page.locator('.ProseMirror').first();
+    await expect(editor).toBeVisible({ timeout: 30_000 });
+    const nestedHeading = editor.locator('h2', { hasText: 'NestedHead' });
+    await expect(nestedHeading).toBeVisible({ timeout: 30_000 });
+
+    const bodyOne = editor.locator('p', { hasText: 'Nested body one' });
+    const bodyTwo = editor.locator('p', { hasText: 'Nested body two' });
+    const otherColumn = editor.locator('p', { hasText: 'Other column stays' });
+    await expect(bodyOne).toBeVisible();
+
+    await nestedHeading.hover();
+    const toggle = page.locator('[data-heading-collapse-toggle]').first();
+    await expect(toggle).toBeVisible({ timeout: 10_000 });
+    await toggle.click();
+
+    // Both following siblings inside the SAME column hide; the sibling column
+    // is untouched. On v0.9.18 these assertions fail — bodyOne stays visible.
+    await expect(bodyOne).toBeHidden();
+    await expect(bodyOne).toHaveAttribute('data-cairn-collapsed', '');
+    await expect(bodyTwo).toBeHidden();
+    await expect(otherColumn).toBeVisible();
+
+    // Expand restores.
+    await nestedHeading.hover();
+    const expandToggle = page.locator('[data-heading-collapse-toggle]').first();
+    await expect(expandToggle).toHaveAttribute('aria-label', 'Expand section');
+    await expandToggle.click();
+    await expect(bodyOne).toBeVisible();
+    await expect(bodyTwo).toBeVisible();
   });
 });
