@@ -52,12 +52,95 @@ jobs:
           fi
           echo "No open carry-forward items for ${LABEL} — Gate 4 passed."
 
+  # v0.9.19 Plan B2 (docs/superpowers/v0.9.19/plan-B-ci-gates.md) — run the
+  # full item e2e suite at the TAGGED COMMIT before any image builds. v0.9.18
+  # tagged a release whose combined branch was never re-tested and shipped a
+  # cross-merge regression (#117). This also hardens Gate 4: "no item spec is
+  # RED" is asserted structurally (this job gates `build`), not in prose.
+  #
+  # DELIBERATELY no `if:` — runs for rc tags AND final tags (the rc is where
+  # the combined branch is first exercised), and an unconditional job cannot
+  # re-introduce the transitive-skip hole that broke v0.9.18-rc1.
+  verify-item-e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_USER: cairn
+          POSTGRES_PASSWORD: cairn
+          POSTGRES_DB: cairn_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
+      AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
+      NEXTAUTH_URL: http://localhost:3200
+      E2E_PORT: '3200'
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Cache embedding assets
+        uses: actions/cache@v5
+        with:
+          path: public/models/Xenova/all-MiniLM-L6-v2
+          key: embed-assets-Xenova-all-MiniLM-L6-v2-main-v1
+
+      - name: Build
+        run: rm -rf .next && pnpm build
+
+      - name: Item e2e suite (tag gate)
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-e2e-report
+          path: playwright-report/
+          retention-days: 7
+
   build:
-    needs: verify-carry-forward-closed
-    # The gate job is SKIPPED for prerelease tags (-rcN) by design — but a
-    # skipped `needs` skips dependents by default, which silently killed RC
-    # builds. Run when the gate passed OR was skipped; never after a failure.
-    if: ${{ !cancelled() && (needs.verify-carry-forward-closed.result == 'success' || needs.verify-carry-forward-closed.result == 'skipped') }}
+    needs: [verify-carry-forward-closed, verify-item-e2e]
+    # The carry-forward gate is SKIPPED for prerelease tags (-rcN) by design —
+    # but a skipped `needs` skips dependents by default, which silently killed
+    # RC builds. Check each dependency's result EXPLICITLY (never default
+    # success()): carry-forward gate passed-or-skipped AND the item e2e gate
+    # passed. The e2e gate has no skip path, so only 'success' is accepted.
+    if: ${{ !cancelled() && (needs.verify-carry-forward-closed.result == 'success' || needs.verify-carry-forward-closed.result == 'skipped') && needs.verify-item-e2e.result == 'success' }}
     # GitHub-hosted NATIVE runners per arch (public repo): amd64 on
     # ubuntu-latest, arm64 on ubuntu-24.04-arm. No QEMU emulation either way.
     runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}

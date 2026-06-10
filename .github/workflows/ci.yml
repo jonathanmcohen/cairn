@@ -35,7 +35,11 @@ on:
       - '.github/workflows/postgres-pgvector-image.yml'
       - '.github/workflows/release.yml'
   push:
-    branches: [main]
+    # release/** included so every item-PR merge re-runs full CI — including
+    # the e2e job — on the COMBINED branch (v0.9.19 Plan B1; the #117
+    # cross-merge regression shipped because nothing re-tested the release
+    # branch after individual PRs merged).
+    branches: [main, 'release/**']
     paths-ignore:
       # Pure docs / markdown / legal — no app or test behavior touches.
       - 'docs/**'
@@ -409,5 +413,92 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+  # v0.9.19 Plan B1 (docs/superpowers/v0.9.19/plan-B-ci-gates.md) — the item
+  # e2e suite (tests/e2e/item-*.spec.ts, playwright.e2e.config.ts) now runs in
+  # CI. v0.9.18 shipped a cross-merge regression (#117) because these specs
+  # existed but only ever ran locally per-branch; the combined release branch
+  # was never re-tested. Mirrors the a11y job's environment exactly.
+  #
+  # DELIBERATELY no `if:` condition on this job — a skipped job poisons
+  # dependents transitively (the v0.9.18-rc1 lesson, see release.yml). This
+  # job runs on every PR and every push to main/release/**, or fails loudly.
+  e2e:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    services:
+      postgres:
+        image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+        credentials:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          POSTGRES_USER: cairn
+          POSTGRES_PASSWORD: cairn
+          POSTGRES_DB: cairn_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://cairn:cairn@localhost:5432/cairn_test
+      # Shared by the booted Next server and the harness collab server (the
+      # internal /replace control plane compares this bearer on both sides).
+      AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
+      NEXTAUTH_URL: http://localhost:3200
+      E2E_PORT: '3200'
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Cache embedding assets
+        uses: actions/cache@v5
+        with:
+          path: public/models/Xenova/all-MiniLM-L6-v2
+          key: embed-assets-Xenova-all-MiniLM-L6-v2-main-v1
+
+      - name: Build
+        run: rm -rf .next && pnpm build
+
+      # The webServer entries in playwright.e2e.config.ts run db:migrate and
+      # boot the standalone server + collab process themselves.
+      - name: Item e2e suite
+        run: pnpm test:e2e
+
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-e2e-report
           path: playwright-report/
           retention-days: 7
