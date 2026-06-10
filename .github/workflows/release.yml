@@ -54,10 +54,9 @@ jobs:
 
   build:
     needs: verify-carry-forward-closed
-    # amd64 on Linux x64 self-hosted; arm64 on macOS arm64 self-hosted
-    # (Apple Silicon w/ Docker Desktop — Linux VM produces real
-    # linux/arm64 layers despite the macOS host).
-    runs-on: ${{ matrix.arch == 'amd64' && fromJSON('["self-hosted", "linux", "x64"]') || fromJSON('["self-hosted", "macOS", "arm64"]') }}
+    # GitHub-hosted NATIVE runners per arch (public repo): amd64 on
+    # ubuntu-latest, arm64 on ubuntu-24.04-arm. No QEMU emulation either way.
+    runs-on: ${{ matrix.arch == 'amd64' && 'ubuntu-latest' || 'ubuntu-24.04-arm' }}
     strategy:
       fail-fast: false
       matrix:
@@ -87,43 +86,10 @@ jobs:
         id: ver
         run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
 
-      # macOS self-hosted runner: Docker Desktop rewrites
-      # ~/.docker/config.json with credsStore=desktop (or osxkeychain) on
-      # every launch. Both helpers need an interactive session — fails
-      # headless. Bypass: redirect DOCKER_CONFIG to a per-run temp dir
-      # with a hand-written `auths` block (plain base64 user:token).
-      # buildx + build-push-action read creds from this config, no helper
-      # invocation, no keychain. Skip docker/login-action on macOS since
-      # the creds are already in place.
-      - name: Pre-write GHCR auth to DOCKER_CONFIG (macOS runner only)
-        if: runner.os == 'macOS'
-        env:
-          GH_USERNAME: ${{ github.actor }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/docker-config"
-          AUTH=$(printf '%s:%s' "$GH_USERNAME" "$GH_TOKEN" | base64)
-          cat > "$RUNNER_TEMP/docker-config/config.json" <<EOF
-          {
-            "auths": {
-              "ghcr.io": { "auth": "$AUTH" }
-            }
-          }
-          EOF
-          echo "DOCKER_CONFIG=$RUNNER_TEMP/docker-config" >> "$GITHUB_ENV"
-          # Docker Desktop puts its socket at ~/.docker/run/docker.sock
-          # when "Allow default Docker socket to be used" is OFF. Point
-          # DOCKER_HOST at the user-scoped socket so buildx + push don't
-          # try /var/run/docker.sock (which doesn't exist on macOS
-          # without the default-socket toggle enabled).
-          echo "DOCKER_HOST=unix://$HOME/.docker/run/docker.sock" >> "$GITHUB_ENV"
-
       - name: Set up Buildx
         uses: docker/setup-buildx-action@v4
 
       - name: Log in to ghcr.io
-        if: runner.os != 'macOS'
         uses: docker/login-action@v4
         with:
           registry: ghcr.io
@@ -145,7 +111,7 @@ jobs:
 
   merge:
     needs: build
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         image: [cairn, cairn-collab]
@@ -226,7 +192,7 @@ jobs:
 
   release:
     needs: merge
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     steps:
       - name: Extract version from tag
         id: ver
