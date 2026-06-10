@@ -578,7 +578,7 @@ export function Editor({
 
   return (
     <div className="relative">
-      <EditorDialogs />
+      <EditorDialogs editor={editor} />
       <CollabOfflineBanner status={status} />
       {/* a30 #39 (round-2 styling) — top control strip. Thin `h-4 w-px bg-border`
           separators divide the logical groups (suggest-edits / presence+status /
