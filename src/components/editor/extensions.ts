@@ -38,6 +38,7 @@ import { VideoBlock } from './blocks/video';
 import { DatabaseNode } from './database-extension';
 import { EditorLinkShortcut } from './editor-link-shortcut';
 import { FileAttachmentWithView } from './file-view-extension';
+import { HeadingCollapseExtension } from './heading-collapse-extension';
 import { CairnImageWithView } from './image-view-extension';
 import { MarkdownMarkInputRules } from './marks/markdown-input-rules';
 import { SuggestionDelete } from './marks/suggestion-delete';
@@ -144,6 +145,15 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     // the ⌘K palette). Present in the collab path too since collabExtensions()
     // spreads baseExtensions().
     EditorLinkShortcut,
+    // #117 — heading-collapse state owned by ProseMirror. A plugin tracks the
+    // set of collapsed heading positions and a `decorations` prop applies the
+    // `hidden` + `data-cairn-collapsed` attributes between a collapsed heading
+    // and the next same-or-higher heading. Per-viewer presentation state (no
+    // schema/attr write), so it's collab-safe; the React hover-chevron overlay
+    // (HeadingCollapse, mounted in editor.tsx) dispatches its `toggle...`
+    // command instead of mutating PM-owned DOM (the prior approach the
+    // DOMObserver kept wiping on redraw). SAFE.
+    HeadingCollapseExtension,
     MentionExtension,
     PageLink,
     PageMention,

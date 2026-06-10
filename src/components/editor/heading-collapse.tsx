@@ -2,79 +2,33 @@
 
 import type { Editor } from '@tiptap/react';
 import { ChevronDown, ChevronRight } from 'lucide-react';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
+import { isHeadingCollapsed } from './heading-collapse-extension';
 
 type ChevronPos = { top: number; pos: number; level: number; collapsed: boolean };
 
 /**
- * #276 — heading-collapse hover affordance. A chevron appears in the left gutter
- * when the pointer is over an `h1/h2/h3`; clicking it collapses (visually hides)
- * the top-level blocks between this heading and the next heading of equal-or-
- * higher level. This is a per-VIEWER presentation state — no Yjs write, no schema
- * change — so it stays collab-safe (other editors don't see the collapse).
+ * #276 / #117 — heading-collapse hover affordance. A chevron appears in the left
+ * gutter when the pointer is over an `h1/h2/h3`; clicking it collapses (visually
+ * hides) the top-level blocks between this heading and the next heading of
+ * equal-or-higher level. This is a per-VIEWER presentation state — no Yjs write,
+ * no schema change — so it stays collab-safe (other editors don't see the
+ * collapse).
  *
- * Reuses the `DragHandle` mousemove-over-heading detection to position the
- * chevron, and re-applies the hidden state on every `editor` update so edits
- * don't desync the overlay.
+ * #117 FIX: the collapse state is OWNED BY PROSEMIRROR (see
+ * `heading-collapse-extension.ts`). This overlay no longer mutates PM-owned
+ * block DOM — instead it reads collapsed state from the plugin and the click
+ * dispatches the `toggleHeadingCollapse` command. A plugin `decorations` prop
+ * applies the `hidden` + `data-cairn-collapsed` attributes, so a ProseMirror
+ * redraw (local re-render or remote Yjs edit) can no longer wipe the collapse.
  */
 export function HeadingCollapse({ editor }: { editor: Editor }) {
   const t = useT();
   const [chevron, setChevron] = useState<ChevronPos | null>(null);
-  // Set of collapsed heading doc-positions (the position of the heading node's
-  // start). Per-viewer in-memory state.
-  const collapsedRef = useRef<Set<number>>(new Set());
 
-  /**
-   * Walk the top-level children after the heading at `headingPos` and toggle a
-   * `data-cairn-collapsed` attribute + `hidden` on each block's DOM until the
-   * next heading whose level <= the collapsed heading's level.
-   */
-  const applyCollapse = useCallback(() => {
-    const { doc } = editor.state;
-    const collapsed = collapsedRef.current;
-    // First clear any stale hidden state, then re-hide for active collapses.
-    doc.forEach((_node, offset) => {
-      const dom = editor.view.nodeDOM(offset) as HTMLElement | null;
-      if (dom?.removeAttribute) {
-        dom.removeAttribute('hidden');
-        dom.removeAttribute('data-cairn-collapsed');
-      }
-    });
-    if (collapsed.size === 0) return;
-    // Build a flat list of top-level (heading|other) entries with their offsets.
-    const tops: { offset: number; isHeading: boolean; level: number }[] = [];
-    doc.forEach((node, offset) => {
-      const isHeading = node.type.name === 'heading';
-      tops.push({ offset, isHeading, level: isHeading ? (node.attrs.level as number) : 0 });
-    });
-    for (let i = 0; i < tops.length; i++) {
-      const entry = tops[i];
-      if (!entry?.isHeading || !collapsed.has(entry.offset)) continue;
-      for (let j = i + 1; j < tops.length; j++) {
-        const sib = tops[j];
-        if (!sib) break;
-        // Stop at the next heading of equal-or-higher level.
-        if (sib.isHeading && sib.level <= entry.level) break;
-        const dom = editor.view.nodeDOM(sib.offset) as HTMLElement | null;
-        if (dom?.setAttribute) {
-          dom.setAttribute('hidden', '');
-          dom.setAttribute('data-cairn-collapsed', '');
-        }
-      }
-    }
-  }, [editor]);
-
-  // Re-apply on every doc update so edits don't desync the hidden overlay.
-  useEffect(() => {
-    const onUpdate = () => applyCollapse();
-    editor.on('update', onUpdate);
-    return () => {
-      editor.off('update', onUpdate);
-    };
-  }, [editor, applyCollapse]);
-
-  // Track the hovered heading to position the chevron.
+  // Track the hovered heading to position the chevron. Reads the live collapsed
+  // state from the plugin (never local DOM/ref state).
   useEffect(() => {
     const root = editor.view.dom as HTMLElement;
     function onMove(e: MouseEvent) {
@@ -93,21 +47,34 @@ export function HeadingCollapse({ editor }: { editor: Editor }) {
         top: rect.top - rootRect.top,
         pos: headingStart,
         level,
-        collapsed: collapsedRef.current.has(headingStart),
+        collapsed: isHeadingCollapsed(editor.state, headingStart),
       });
     }
     root.addEventListener('mousemove', onMove);
     return () => root.removeEventListener('mousemove', onMove);
   }, [editor]);
 
+  // Keep the chevron's collapsed/expanded glyph in sync when the plugin state
+  // changes (e.g. a toggle, or a remapped position after a concurrent edit).
+  useEffect(() => {
+    const onTx = () => {
+      setChevron((prev) =>
+        prev ? { ...prev, collapsed: isHeadingCollapsed(editor.state, prev.pos) } : prev,
+      );
+    };
+    editor.on('transaction', onTx);
+    return () => {
+      editor.off('transaction', onTx);
+    };
+  }, [editor]);
+
   const toggle = useCallback(() => {
     if (!chevron) return;
-    const collapsed = collapsedRef.current;
-    if (collapsed.has(chevron.pos)) collapsed.delete(chevron.pos);
-    else collapsed.add(chevron.pos);
-    applyCollapse();
-    setChevron({ ...chevron, collapsed: collapsed.has(chevron.pos) });
-  }, [chevron, applyCollapse]);
+    // #117 — dispatch the plugin transaction; ProseMirror owns the state and
+    // re-derives the `hidden` decorations on the next redraw.
+    editor.chain().focus().toggleHeadingCollapse(chevron.pos).run();
+    setChevron({ ...chevron, collapsed: isHeadingCollapsed(editor.state, chevron.pos) });
+  }, [chevron, editor]);
 
   if (!chevron) return null;
 
@@ -121,6 +88,7 @@ export function HeadingCollapse({ editor }: { editor: Editor }) {
       aria-label={label}
       aria-expanded={!isCollapsed}
       title={label}
+      data-heading-collapse-toggle=""
       onClick={toggle}
       style={{ position: 'absolute', top: chevron.top, left: -28 }}
       className="flex h-6 w-6 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground"
