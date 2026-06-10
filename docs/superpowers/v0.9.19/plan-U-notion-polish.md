@@ -54,3 +54,40 @@ SHIPPED-or-GAP checklist is the coverage record for the whole sweep.
 - Re-audit prevents the v0.9.18 class-3 failure (shipping "fixes" for things
   already fixed, masking what's actually broken): no row is implemented
   without a current-main GAP proof in the PR body.
+
+## U1 re-audit outcome (2026-06-10): all 9 PATCH rows already shipped, no gap
+
+Step-1 re-audit walked every extracted U-row against current `release/v0.9.19`.
+**All 9 PATCH rows ship today** — three releases (v0.9.11→.14→.16→.18) absorbed
+them — so per "ship only gaps" **no code change** was made. Evidence:
+
+| U-row | Audit row | Item | Status | Proof (current `release/v0.9.19`) |
+|-------|-----------|------|--------|-----------------------------------|
+| U1 | 1 | Inter via `next/font` | ✅ SHIPPED | `src/app/layout.tsx:1,21` (`Inter({subsets,display:'swap',variable:'--font-inter'})`); `globals.css:256` stack leads with `var(--font-inter)` |
+| U2 | 1 | Prose base + heading scale | ✅ SHIPPED | `globals.css:107-108` (`--cairn-prose-base:16px`/`--cairn-prose-leading:1.6`); `:183-187` `.ProseMirror h1{font-size:1.875rem;…letter-spacing:-0.01em}` |
+| U3 | 3 | Status-color token swaps | ✅ SHIPPED | `editor.tsx:87-89` `bg-warning`/`bg-success` (no raw `bg-amber/emerald-500`); `suggestion-toolbar.tsx:123,130` `text-success`/`text-destructive` (no raw `text-green/red-700`) |
+| U4 | 7 | Block-handle transition | ✅ SHIPPED | `drag-handle.tsx:101,111` `transition-colors duration-150` on both `+`/grip buttons |
+| U5 | 8 | Page-cover hairline | ✅ SHIPPED | `globals.css:433` `.cairn-cover { … border-bottom: 1px solid hsl(var(--border)) }` |
+| U6 | 10 | Button press-scale | ✅ SHIPPED | `ui/button.tsx:8` `active:scale-[0.98] motion-reduce:active:scale-100` |
+| U7 | 11 | Empty-state icons | ✅ SHIPPED | `empty-state/variants.tsx` — `EmptySearch`→`Search`, `EmptyInbox`→`Inbox`, `EmptyBacklinks`→`Link2`, `EmptyRecents`→`Clock` (all `aria-hidden`) |
+| U8 | 16 | Skeleton loaders | ✅ SHIPPED | `src/components/ui/skeleton.tsx` exists; applied in `search-palette.tsx`, `pages/cover-picker.tsx`, `notifications/drawer.tsx` (3 surfaces) |
+
+Existing guards already cover these (component/source specs landed with the
+original work). No new code, no new spec — this is the v0.9.18 class-3 lesson
+(re-audit prevents re-shipping already-fixed work), same as the C1 outcome.
+
+### Step-3 — remaining 20-point audit rows → v0.9.20 triage (NOT shipped here)
+
+The non-PATCH rows from `plans/v0.9.11/polish-audit.md` are out of this item's
+token/class scope and are listed (not silently dropped, not expanded into this
+PR):
+
+- **Row 5 — top-toolbar consolidation (REFACTOR):** the editor control strip
+  (`editor.tsx`) and the page action bar (`page.tsx`) render as two stacked
+  bars; folding the editor status/outline group into the page action bar is a
+  structural refactor. Defer to v0.9.20.
+- **Row 19 — settings double-sidebar (REFACTOR):** under `/settings` both the
+  workspace `<Sidebar>` and the `SettingsSidebar` render (two left navs);
+  hiding the workspace aside on settings routes is structural. Defer to v0.9.20.
+- **Row 15 — search-palette mount fade-in (minor):** optional `animate-in
+  fade-in-0 zoom-in-95` on the palette container. Cosmetic; defer.
