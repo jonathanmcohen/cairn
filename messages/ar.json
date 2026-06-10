@@ -708,6 +708,8 @@
   "statusBanner.success": "تم بنجاح",
   "statusBanner.warning": "تحذير",
   "workspaceSettings.saved": "تم حفظ الإعدادات.",
+  "admin.upgrade.collabBridge.body": "لم يتم ضبط CAIRN_COLLAB_INTERNAL_URL، لذلك تُحدّث عمليات الكتابة عبر REST API محتوى الصفحة في قاعدة البيانات لكنها لا تصل إلى محرر مفتوح حتى إعادة التحميل. اضبطها في بيئتك (انظر docker-compose.yml) لتفعيل جسر API-المحرر.",
+  "admin.upgrade.collabBridge.title": "مزامنة المحرر المباشر معطّلة",
   "admin.upgrade.confirmTitle": "تطبيق التحديث الآن؟",
   "admin.upgrade.confirmBody": "سيؤدي هذا إلى إعادة تشغيل Cairn لتطبيق الإصدار الجديد. قد تتعطل التعديلات الجارية.",
   "admin.upgrade.confirmCta": "تطبيق التحديث",
