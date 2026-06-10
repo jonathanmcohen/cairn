@@ -74,29 +74,35 @@ export function WorkspaceSwitcher({
           <DropdownMenu.Content
             align="start"
             sideOffset={4}
-            className="z-50 w-56 rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+            className="z-50 flex max-h-[min(24rem,70vh)] w-56 flex-col rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
           >
             <DropdownMenu.Label className="px-2 py-1.5 text-sm font-semibold">
               {t('workspaceSwitcher.heading')}
             </DropdownMenu.Label>
-            {workspaces.map((w) => (
-              <DropdownMenu.Item
-                key={w.id}
-                onSelect={() => void switchTo(w.id)}
-                className={ITEM_CLASS}
-              >
-                <Check
-                  className={`mr-1 h-4 w-4 shrink-0 ${w.id === activeId ? 'opacity-100' : 'opacity-0'}`}
-                />
-                <span
-                  aria-hidden="true"
-                  className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
+            {/* Scroll the workspace list, not the whole popover, so the Create
+                item stays reachable no matter how many workspaces exist. Without
+                this an account with many workspaces overflows the viewport and
+                the lower items become unclickable. */}
+            <div className="-mr-1 min-h-0 flex-1 overflow-y-auto pr-1">
+              {workspaces.map((w) => (
+                <DropdownMenu.Item
+                  key={w.id}
+                  onSelect={() => void switchTo(w.id)}
+                  className={ITEM_CLASS}
                 >
-                  <InlineIcon value={w.icon} fallback={initial(w.name)} />
-                </span>
-                <span className="truncate">{w.name}</span>
-              </DropdownMenu.Item>
-            ))}
+                  <Check
+                    className={`mr-1 h-4 w-4 shrink-0 ${w.id === activeId ? 'opacity-100' : 'opacity-0'}`}
+                  />
+                  <span
+                    aria-hidden="true"
+                    className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
+                  >
+                    <InlineIcon value={w.icon} fallback={initial(w.name)} />
+                  </span>
+                  <span className="truncate">{w.name}</span>
+                </DropdownMenu.Item>
+              ))}
+            </div>
             <DropdownMenu.Separator className="-mx-1 my-1 h-px bg-muted" />
             <DropdownMenu.Item onSelect={() => setCreateOpen(true)} className={ITEM_CLASS}>
               <Plus className="mr-2 h-4 w-4 shrink-0" />
