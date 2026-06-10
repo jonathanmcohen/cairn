@@ -225,7 +225,12 @@ jobs:
           echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
           sudo apt-get update -qq
           sudo apt-get install -y -qq postgresql-client-18
-          pg_dump --version
+          # postgresql-common's pg_wrapper keeps resolving `pg_dump` to the
+          # preinstalled v16 even with client-18 present — prepend the v18
+          # bindir so PATH lookup (this step AND the tests' subprocesses)
+          # hits the real 18 binary. Fail loud if it still isn't 18.
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/18/bin/pg_dump --version | grep -q " 18\." || { echo "pg_dump 18 not found"; exit 1; }
 
       - name: Test (${{ matrix.suite.name }})
         # `extra` carries the vitest --shard flag for the big suites; it
