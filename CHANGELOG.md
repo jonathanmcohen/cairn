@@ -5,14 +5,78 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.9.19] - 2026-06-10
+
+Audit-cleanup + carry-forward release. Every v0.9.18 audit finding closed, every
+carry-forward item runtime-guarded, and the guards are now wired into a blocking
+CI e2e gate (the v0.9.18 "spec exists but never ran" class is dead). Two of the
+new runtime guards caught **real, long-shipped bugs** that no unit test reached.
+**Migration 0070.**
+
 ### Fixed
 
-- New pages now default to **Draft** in every workspace, including those
-  created before v0.9.9 (#37). Migration 0066 changed only the column default;
-  this release backfills existing `workspaces.default_page_status = 'published'`
-  rows to `'draft'` (migration 0070). Note: a workspace whose admin had
-  deliberately chosen "published" is reset to "draft" as well — there is no way
-  to distinguish that from a stale pre-v0.9.9 row.
+- **Suggestion accept/reject never propagated over live collaboration (#53/#54
+  area).** `resolve()` rebuilt a fresh `Y.Doc` and `Y.applyUpdate`-merged it into
+  the live doc — a CRDT *merge* can't express deletions, so accepting/rejecting a
+  suggestion never removed its marks from the collaborative document for any
+  connected peer (or even after a reload, until the Hocuspocus room was evicted).
+  Broken since v0.6.0; no spec exercised accept-over-collab. The resolved doc is
+  now applied **through the editor** (`setContent`) so y-prosemirror's `ySyncPlugin`
+  emits the granular Yjs deletes/inserts that actually propagate. (C3)
+- **The entire MCP / OAuth 2.1 flow was unreachable for real clients.** The edge
+  proxy redirects every cookieless request to `/login`; MCP/OAuth clients are
+  headless (no session cookie, they authenticate via PKCE/bearer), so
+  `/.well-known/oauth-*`, `/api/oauth/*` and `/api/mcp` were all bounced to the
+  login page — discovery, registration, token exchange, and the MCP endpoint were
+  all unusable in a deployment since v0.9.16. Unit tests import the route handlers
+  directly and never hit the proxy. Those families are now on the proxy's
+  public-path allowlist; each still enforces its own auth (discovery is public by
+  RFC, `authorize` self-redirects to `/login`, token/register/revoke are
+  PKCE/token-authed, `/api/mcp` returns 401 + `WWW-Authenticate`). (F1)
+- **Workspace switcher overflowed off-screen with many workspaces.** The dropdown
+  rendered every workspace in a fixed popover with no max-height, so a long list
+  pushed lower items (incl. **Create workspace**) past the viewport and out of
+  reach. The list now scrolls inside the popover; header + Create stay pinned. (C2)
+- **New pages default to Draft in every workspace, including pre-v0.9.9 ones
+  (#37).** Migration 0066 changed only the column default; migration **0070**
+  backfills existing `workspaces.default_page_status = 'published'` rows to
+  `'draft'`. (A workspace whose admin deliberately chose "published" is reset too
+  — indistinguishable from a stale row.) (A3)
+- **Heading collapse for nested headings + chevron survival (#117).** The v0.9.18
+  fix regressed across a cross-merge: collapse didn't reach headings nested inside
+  columns, and the chevron vanished as the pointer crossed the gutter. Re-landed
+  (sibling-walk decorations against the heading's own node start; chevron kept
+  during the pointer trip). (A1)
+- **`/settings/admin` stayed unreachable behind a cached 308 (#5).** Settings
+  redirects now emit `307` + `Cache-Control: no-store, must-revalidate` (and the
+  bare landing page is `no-store`) so a browser that cached the pre-0.9.18 308
+  can't keep it dead. Workaround for already-poisoned browsers documented in
+  `docs/operations.md`. (A5)
+
+### Added
+
+- **Runtime regression guards, wired into a blocking CI e2e gate.** The Playwright
+  item suite (`pnpm test:e2e tests/e2e/item-*`) now runs as an unconditional CI
+  job on every PR and every release-branch merge, and a post-merge re-run gates
+  the release tag with explicit per-dependency result checks (no transitive skip).
+  New guards: #143 cross-workspace saved-search isolation on switch (two contexts,
+  live Yjs); #53/#54 suggest-edits across two distinct accounts incl. the
+  accept-over-collab round-trip; the MCP OAuth 2.1 full flow through the proxy
+  (discovery → registration → consent → PKCE token → MCP call → refresh rotation →
+  revoke + wrong-verifier / unauthenticated negatives); #117 nested heading
+  collapse; #76 slash-cancel preserves typed text via the **Cancel-button** path
+  (not just Escape). (B1, B2, A1, A2, C2, C3, F1)
+- **Visibility for the silently-disabled Yjs REST→collab bridge.** A boot warning
+  and an admin banner now appear when `CAIRN_COLLAB_INTERNAL_URL` is unset, so the
+  bridge being off (which makes REST writes not reach open editors) is no longer
+  invisible. (A4)
+
+### Changed
+
+- **Notion-polish re-audit (Plan U):** all 9 token/class polish rows confirmed
+  already shipped — no change. (U1)
+- **Top-of-sidebar density re-audit (#144):** confirmed shipped + guarded in
+  v0.9.16 — no change. (C1)
 
 ## [0.9.18] - 2026-06-10
 
