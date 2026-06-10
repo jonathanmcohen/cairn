@@ -28,7 +28,7 @@ jobs:
   # NOTE: requires the GitHub CLI (`gh`) on PATH and an issue label matching
   # the tag; fails closed if `gh` is missing (intended — never silently pass).
   verify-carry-forward-closed:
-    runs-on: [self-hosted, linux, x64]
+    runs-on: ubuntu-latest
     if: ${{ !contains(github.ref_name, '-') }}
     steps:
       - name: All carry-forward items for this release must be closed
@@ -115,6 +115,10 @@ jobs:
 
   merge:
     needs: build
+    # A skipped job propagates TRANSITIVELY: the rc-skipped gate poisoned the
+    # default success() here even though build itself ran (its `if` rescues
+    # only build, not dependents). Check build's own result explicitly.
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -161,8 +165,9 @@ jobs:
           images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
           tags: |
             type=raw,value=${{ steps.ver.outputs.version }}
-            type=raw,value=${{ steps.ver.outputs.majorminor }}
-            type=raw,value=${{ steps.ver.outputs.major }}
+            # Rolling tags (0.9 / 0 / latest) must never point at a prerelease.
+            type=raw,value=${{ steps.ver.outputs.majorminor }},enable=${{ !contains(steps.ver.outputs.version, '-') }}
+            type=raw,value=${{ steps.ver.outputs.major }},enable=${{ !contains(steps.ver.outputs.version, '-') }}
             type=raw,value=latest,enable=${{ !contains(steps.ver.outputs.version, '-') }}
 
       - name: Create multi-arch manifest list and push
@@ -196,6 +201,8 @@ jobs:
 
   release:
     needs: merge
+    # Same transitive-skip hazard as merge — check the direct dependency only.
+    if: ${{ !cancelled() && needs.merge.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - name: Extract version from tag
