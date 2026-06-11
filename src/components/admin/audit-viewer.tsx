@@ -193,6 +193,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'oauth.token_family_revoked': 'OAuth token family revoked (refresh reuse)',
   // v0.10.0 G5 — admin toggled the registration lock on /api/oauth/register.
   'oauth.register_lock_changed': 'OAuth registration lock changed',
+  // v0.10.0 F1 — workspace brand (logo + primary color) changed.
+  'workspace.brand_updated': 'Workspace brand updated',
 };
 
 export function actionLabel(action: string): string {
