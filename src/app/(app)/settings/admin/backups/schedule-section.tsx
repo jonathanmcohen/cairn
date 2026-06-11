@@ -2,6 +2,13 @@
 
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useT } from '@/lib/i18n/provider';
 
 // v0.10.0 C3 — "Scheduled backups" section of /settings/admin/backups.
@@ -157,16 +164,22 @@ export function ScheduleSection({ schedule, schedulerEnabled, runs }: SchedulePr
         <div className="flex flex-wrap items-end gap-4">
           <label className="block space-y-2 text-sm">
             <span className="font-medium">{t('settingsAdmin.backups.schedule.cadence')}</span>
-            <select
-              value={preset}
-              onChange={(e) => setPreset(e.target.value as Preset)}
-              data-testid="schedule-preset-select"
-              className={inputClass}
-            >
-              <option value="daily">{t('settingsAdmin.backups.schedule.preset.daily')}</option>
-              <option value="weekly">{t('settingsAdmin.backups.schedule.preset.weekly')}</option>
-              <option value="custom">{t('settingsAdmin.backups.schedule.preset.custom')}</option>
-            </select>
+            <Select value={preset} onValueChange={(next) => setPreset(next as Preset)}>
+              <SelectTrigger data-testid="schedule-preset-select" className="w-44">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">
+                  {t('settingsAdmin.backups.schedule.preset.daily')}
+                </SelectItem>
+                <SelectItem value="weekly">
+                  {t('settingsAdmin.backups.schedule.preset.weekly')}
+                </SelectItem>
+                <SelectItem value="custom">
+                  {t('settingsAdmin.backups.schedule.preset.custom')}
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </label>
           {preset === 'custom' ? (
             <label className="block space-y-2 text-sm">
@@ -183,15 +196,17 @@ export function ScheduleSection({ schedule, schedulerEnabled, runs }: SchedulePr
           ) : null}
           <label className="block space-y-2 text-sm">
             <span className="font-medium">{t('settingsAdmin.backups.schedule.target')}</span>
-            <select
-              value={target}
-              onChange={(e) => setTarget(e.target.value as 'local' | 's3')}
-              data-testid="schedule-target-select"
-              className={inputClass}
-            >
-              <option value="local">{t('settingsAdmin.backups.schedule.targetLocal')}</option>
-              <option value="s3">{t('settingsAdmin.backups.schedule.targetS3')}</option>
-            </select>
+            <Select value={target} onValueChange={(next) => setTarget(next as 'local' | 's3')}>
+              <SelectTrigger data-testid="schedule-target-select" className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="local">
+                  {t('settingsAdmin.backups.schedule.targetLocal')}
+                </SelectItem>
+                <SelectItem value="s3">{t('settingsAdmin.backups.schedule.targetS3')}</SelectItem>
+              </SelectContent>
+            </Select>
           </label>
           <label className="block space-y-2 text-sm">
             <span className="font-medium">{t('settingsAdmin.backups.schedule.retentionDays')}</span>
