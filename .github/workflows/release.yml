@@ -119,13 +119,28 @@ jobs:
           path: public/models/Xenova/all-MiniLM-L6-v2
           key: embed-assets-Xenova-all-MiniLM-L6-v2-main-v1
 
+      # v0.10.0 — the C1/C2 backup specs exec pg_dump against the v18 server
+      # container; the runner ships the v16 client, and postgresql-common's
+      # pg_wrapper keeps resolving to it (server version mismatch aborts the
+      # dump — first seen on the v0.10.0-rc1 tag gate). Same fix as ci.yml.
+      - name: postgresql-client-18 (pg_dump major must match the container)
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/18/bin/pg_dump --version | grep -q " 18\." || { echo "pg_dump 18 not found"; exit 1; }
+
       - name: Build
         run: rm -rf .next && pnpm build
 
-      # Scoped to item specs — same rationale as ci.yml's e2e job (legacy
-      # specs in tests/e2e are flaky-rotten; tracked v0.9.19 follow-up).
-      - name: Item e2e suite (tag gate)
-        run: pnpm test:e2e tests/e2e/item-
+      # v0.10.0 H1 de-rotted the legacy specs and widened ci.yml's gate to
+      # the whole dir; the tag gate mirrors it (171 tests).
+      - name: e2e suite (tag gate)
+        run: pnpm test:e2e tests/e2e/
 
       - name: Upload Playwright report
         if: failure()
