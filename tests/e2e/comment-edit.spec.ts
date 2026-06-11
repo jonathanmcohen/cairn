@@ -6,27 +6,23 @@
 // ./tests/a11y). CI extends testDir/testMatch to include tests/e2e, boots the
 // built/deployed image + seed, and runs these against production-identical
 // surfaces. Reuses the a11y fixtures (real seeded user + credentials sign-in).
-import { expect, test } from '../a11y/fixtures';
-
-async function signIn(
-  page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
-) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
+import { expect, signIn, test } from '../a11y/fixtures';
 
 // Open the first seeded page and reveal its comment panel. The panel is the
 // `aside` rendered by CommentPanel; the trigger is the comments toggle in the
 // page action bar.
 async function openFirstPageComments(page: import('@playwright/test').Page) {
-  // Navigate to a page via the sidebar tree; the first PAGES tree link is a page.
-  const firstPage = page.locator('[data-page-tree] a, nav a[href^="/pages/"]').first();
-  await firstPage.click();
-  await page.waitForURL('**/pages/**', { timeout: 20_000 });
+  // H1 de-rot: create a fresh page through the real API instead of clicking
+  // the first sidebar tree link. The helper's job is to REACH a page; at
+  // accumulated-page scale the virtualized tree re-measures continuously and
+  // the row click sat on "element is not stable" for the full timeout (tree
+  // interaction itself is covered elsewhere; churn noted for H3/H4).
+  const created = await page.request.post('/api/pages', {
+    data: { title: `comment-edit ${Date.now().toString(36)}` },
+  });
+  if (!created.ok()) throw new Error(`POST /api/pages failed: ${created.status()}`);
+  const { id } = (await created.json()) as { id: string };
+  await page.goto(`/pages/${id}`);
   // Toggle the comments panel open.
   await page
     .getByRole('button', { name: /comments/i })
@@ -38,7 +34,11 @@ test.describe('Plan T — comment edit affordance (#74/#255)', () => {
   test('comment panel renders as an aside', async ({ page, seeded }) => {
     await signIn(page, seeded);
     await openFirstPageComments(page);
-    await expect(page.locator('aside')).toBeVisible({ timeout: 15_000 });
+    // Scope past the workspace sidebar (also an <aside> since the C1 sticky
+    // shell) — the comments panel is the aside that carries the Comments copy.
+    await expect(page.locator('aside').filter({ hasText: 'Comments' })).toBeVisible({
+      timeout: 15_000,
+    });
   });
 
   test('author edits own comment inline and sees the (edited) marker', async ({ page, seeded }) => {
@@ -46,19 +46,34 @@ test.describe('Plan T — comment edit affordance (#74/#255)', () => {
     await openFirstPageComments(page);
 
     // Add a comment as the author so we have one we are allowed to edit.
+    // Unique per-run body: the dev DB persists across runs, so a fixed string
+    // accumulates duplicates and trips Playwright strict mode.
+    const stamp = Date.now().toString(36);
+    const original = `typpo comment ${stamp}`;
+    const fixed = `typo fixed ${stamp}`;
     const composer = page.locator('aside [contenteditable="true"]').first();
     await composer.click();
-    await composer.type('typpo comment');
+    await composer.type(original);
     await page.getByRole('button', { name: 'Comment', exact: true }).click();
-    await expect(page.getByText('typpo comment')).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByText(original)).toBeVisible({ timeout: 15_000 });
 
-    // The author sees the Edit pencil; click it, fix the body, Save.
-    await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
-    const editor = page.locator('aside textarea').first();
-    await editor.fill('typo fixed');
-    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    // The author sees the Edit pencil on OUR comment; scope to its list item
+    // (older comments from prior runs may carry Edit buttons too). The
+    // text-filtered locator goes STALE once editing starts — the paragraph is
+    // replaced by a textarea holding the new text — so the edit-mode controls
+    // are scoped to the panel instead (only one comment edits at a time).
+    const panel = page.locator('aside').filter({ hasText: 'Comments' });
+    await page
+      .getByRole('listitem')
+      .filter({ hasText: original })
+      .getByRole('button', { name: 'Edit', exact: true })
+      .click();
+    const editor = panel.locator('textarea').first();
+    await editor.fill(fixed);
+    await panel.getByRole('button', { name: 'Save', exact: true }).click();
 
-    await expect(page.getByText('typo fixed')).toBeVisible({ timeout: 15_000 });
-    await expect(page.getByText('(edited)')).toBeVisible();
+    const editedItem = page.getByRole('listitem').filter({ hasText: fixed });
+    await expect(editedItem).toBeVisible({ timeout: 15_000 });
+    await expect(editedItem.getByText('(edited)')).toBeVisible();
   });
 });

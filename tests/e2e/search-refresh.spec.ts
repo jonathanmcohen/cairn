@@ -8,18 +8,7 @@
 // the app + seed, so these run against the built/deployed image there. We reuse
 // the a11y fixtures (real seeded user + credentials sign-in) so the surface is
 // identical to production.
-import { expect, test } from '../a11y/fixtures';
-
-async function signIn(
-  page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
-) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
+import { expect, signIn, test } from '../a11y/fixtures';
 
 test.describe('Plan G search & refresh surfaces', () => {
   test('route-reachability — /search renders the Keyword/Semantic/Hybrid mode toggle', async ({
@@ -40,22 +29,35 @@ test.describe('Plan G search & refresh surfaces', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
+    await page.goto('/');
     // Open the palette and type a query.
     await page.keyboard.press('Meta+k');
     const input = page.locator('[data-cairn-palette] input').first();
     await expect(input).toBeVisible();
     const unique = `plan-g-${Date.now()}`;
     await input.fill(unique);
-    // Trigger "save current search" — accept the name prompt default.
+    // Trigger "save current search" — accept the name prompt default. Hard
+    // assert (H1: no silent if-guard skips — the old guard let the whole
+    // body pass unobserved when the affordance was missing).
     const saveBtn = page.getByRole('button', { name: /save this search to the sidebar/i });
-    if ((await saveBtn.count()) > 0) {
-      await saveBtn.click();
-      await page.getByRole('button', { name: 'Save', exact: true }).click();
-      await page.keyboard.press('Escape');
-      // Without a full reload, the sidebar Saved searches section now lists it.
-      await expect(
-        page.getByRole('region', { name: 'Saved searches' }).getByText(unique),
-      ).toBeVisible({ timeout: 10_000 });
+    await expect(saveBtn).toBeVisible({ timeout: 10_000 });
+    await saveBtn.click();
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await page.keyboard.press('Escape');
+    // Without a full reload, the sidebar Saved searches section now lists it.
+    await expect(
+      page.getByRole('region', { name: 'Saved searches' }).getByText(unique),
+    ).toBeVisible({ timeout: 10_000 });
+    // Cleanup (H1): the dev DB persists across runs — orphaned per-run saved
+    // searches piled up until the sidebar's saved-searches section crowded
+    // out the PAGES tree. Delete every plan-g-* row, ours included.
+    const listed = await page.request.get('/api/search/saved');
+    expect(listed.ok()).toBe(true);
+    const { savedSearches } = (await listed.json()) as {
+      savedSearches: { id: string; name: string }[];
+    };
+    for (const s of savedSearches.filter((x) => x.name.startsWith('plan-g-'))) {
+      await page.request.delete(`/api/search/saved/${s.id}`);
     }
   });
 
@@ -67,7 +69,7 @@ test.describe('Plan G search & refresh surfaces', () => {
     await page.goto('/search?q=planning');
     // Switch to Semantic mode (aria-pressed button) and re-run.
     await page.getByRole('button', { name: 'Semantic' }).click();
-    await page.getByRole('button', { name: 'Search' }).click();
+    await page.getByRole('button', { name: 'Search', exact: true }).click();
     // Each result row is a link with a bold title; a hit with body text also
     // renders a second muted span (the snippet). When results exist, at least
     // one row should carry that snippet span — i.e. not be title-only (#41).
