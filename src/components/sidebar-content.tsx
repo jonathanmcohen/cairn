@@ -55,18 +55,23 @@ export async function SidebarContent({
         <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
       </div>
       {/*
-        v0.9.9 C3 (#209) — the <nav> is now a flex column. The upper sections
-        (search/pinned/favorites/recents/saved-searches) are fixed-height; the
-        PagesSection below is flex-grown and owns the SOLE scroll container
-        (the tree's overflow-y-auto wrapper). Previously the whole <nav> was
-        the scroll container, so everything scrolled together.
+        v0.9.9 C3 (#209) — the <nav> is a flex column; PagesSection is
+        flex-grown and owns the page tree's scroll container. v0.10.0 H3: the
+        upper sections (search/pinned/favorites/recents/saved-searches) are
+        now capped as a GROUP at 45% of the nav with their own scrollbar —
+        unbounded, at laptop-height viewports with favorites/recents at cap
+        they consumed the whole nav and the PAGES tree rendered with ZERO
+        height (the H3 runtime-px guard found it: the virtualizer's scroll
+        container measured 0 and no rows mounted at all).
       */}
       <nav aria-labelledby="sidebar-pages-heading" className="flex min-h-0 flex-1 flex-col p-1.5">
-        <SearchHintButton />
-        <PinnedSection />
-        <SidebarFavorites favorites={favorites} />
-        <SidebarRecents recents={recents} />
-        <SavedSearches />
+        <div className="max-h-[45%] shrink-0 overflow-y-auto cairn-thin-scrollbar">
+          <SearchHintButton />
+          <PinnedSection />
+          <SidebarFavorites favorites={favorites} />
+          <SidebarRecents recents={recents} />
+          <SavedSearches />
+        </div>
         <PagesSection tree={tree} />
       </nav>
       <SidebarFooterNav version={appVersion()} />
