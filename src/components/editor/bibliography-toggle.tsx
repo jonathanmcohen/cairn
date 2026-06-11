@@ -18,12 +18,19 @@ export function BibliographyToggle({
   initialDisabled,
   citationCount,
   onChange,
+  disabled: lockDisabled = false,
 }: {
   pageId: string;
   initialDisabled: boolean;
   /** Live count of unique citations in the doc (finding D). */
   citationCount: number;
   onChange?: (disabled: boolean) => void;
+  /**
+   * v0.10.0 E6 / #188 — when the page is locked the toggle stays MOUNTED but
+   * disabled (the metadata PATCH it fires is rejected by `requireUnlocked`
+   * anyway), mirroring the suggest-edits lock contract instead of vanishing.
+   */
+  disabled?: boolean;
 }) {
   const t = useT();
   const [disabled, setDisabled] = useState(initialDisabled);
@@ -58,7 +65,8 @@ export function BibliographyToggle({
     <button
       type="button"
       onClick={() => void toggle()}
-      disabled={saving}
+      disabled={saving || lockDisabled}
+      aria-disabled={lockDisabled || undefined}
       aria-pressed={shown}
       title={t('editor.bibliography.toggleHint')}
       className={
