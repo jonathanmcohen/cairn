@@ -649,3 +649,38 @@ spec encodes this exact sequence; reuse it as the template for any future
 hover- or click-gated editor feature. (Chevron *discoverability* — making the
 affordance findable without knowing the gutter hover — is tracked separately
 as v0.10.0 item E3.)
+
+## Health endpoints (v0.10.0 H4d)
+
+Cairn exposes two unauthenticated health surfaces with deliberately different
+contracts — do not "fix" one to behave like the other:
+
+- `GET /api/health` — **always answers 200** and signals state in the BODY:
+  `{ status: 'ok' | 'degraded', version, db: 'ok' | 'down' }`. It is a
+  diagnostic endpoint for dashboards and humans who want a response (with the
+  running version) even while the database is down. Consumers must read the
+  body, never the status code.
+- `GET /healthz` — **the readiness probe**. Returns 200
+  `{ status: 'ok', version, db: 'ok', uptime_seconds }` when the database
+  answers `SELECT 1`, and **503** `{ status: 'degraded', db: 'unreachable' }`
+  when it does not, so load balancers / Kubernetes shed traffic from a broken
+  replica.
+
+Point liveness/readiness probes at `/healthz`. `/api/health` intentionally
+never returns 503.
+
+## Two-factor enforcement (`require_2fa` / `CAIRN_ENFORCE_2FA`, v0.10.0 H4b)
+
+Workspace admins can require 2FA under **Settings → Workspace → General →
+"Require two-factor authentication"** (the `workspaces.require_2fa` column).
+When a workspace requires 2FA, any member of it who has not enabled TOTP is
+redirected to `/settings/security?enroll=required` by the app layout before
+any app page renders, until they finish enrollment.
+
+- `CAIRN_ENFORCE_2FA` is an operator **opt-out** for the settings toggle and
+  defaults **on**: the toggle is visible unless the variable is explicitly set
+  to `false` or `0`. Hiding the toggle does not un-set `require_2fa` on
+  workspaces that already enabled it — enforcement keeps running.
+- Accepted scope limitation: `require_2fa` gates the app **UI** only. API
+  access is governed by token auth (PATs/OAuth) and is not blocked for
+  un-enrolled session users — `/api/*` is exempt from the layout gate.

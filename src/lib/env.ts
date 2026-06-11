@@ -150,13 +150,21 @@ const Schema = z.object({
   // bundles appear in the UI (and UI-made bundles are pruned by the CLI's
   // --retention-days sweeps).
   CAIRN_BACKUP_DIR: z.string().default('/data/backups'),
-  // v0.9.4 P17 #66 — gate for the workspace "Require 2FA" control. The
-  // `workspaces.require_2fa` column + settings API field exist, but NOTHING
-  // reads the flag at sign-in yet — enforcement is unimplemented. Shipping a
-  // no-op security toggle is misleading, so the UI is hidden until an operator
-  // opts in by setting this true (intended to flip on once sign-in enforcement
-  // lands, with no further code change). Default OFF.
-  CAIRN_ENFORCE_2FA: z.coerce.boolean().default(false),
+  // v0.9.4 P17 #66, reconciled v0.10.0 H4b — gate for the workspace "Require
+  // 2FA" control. Enforcement IS implemented: the (app) layout redirects any
+  // member of a require-2fa workspace without enabled TOTP to
+  // /settings/security?enroll=required (userHasWorkspaceRequiring2fa in
+  // src/lib/auth/two-factor.ts). The flag is an operator opt-OUT for the
+  // settings toggle and DEFAULTS ON; set 'false' or '0' to hide the toggle
+  // (existing require_2fa rows keep enforcing either way). Accepted scope
+  // limit: the gate is layout-level, so require_2fa gates the app UI only —
+  // /api/* is proxy-exempt, and API access is governed by token auth
+  // (PATs/OAuth) and is not blocked for un-enrolled session users. See
+  // docs/operations.md § "Two-factor enforcement".
+  CAIRN_ENFORCE_2FA: z
+    .string()
+    .optional()
+    .transform((v) => !(v === 'false' || v === '0')),
 });
 
 export type Env = z.infer<typeof Schema>;

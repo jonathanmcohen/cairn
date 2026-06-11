@@ -11,6 +11,11 @@ const PUBLIC_PATHS = [
   '/invite',
   '/api/auth',
   '/api/health',
+  // v0.10.0 H4d — /healthz is THE readiness probe (503s on db-down). A load
+  // balancer probes it unauthenticated; behind the session gate it answered
+  // 307-to-login, which LBs read as unhealthy. It exposes the same
+  // status/db/version signal /api/health already serves publicly.
+  '/healthz',
   '/p/',
   '/s/',
   '/api/public',

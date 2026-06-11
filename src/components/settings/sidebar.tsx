@@ -216,6 +216,15 @@ export function SettingsSidebar({
             label: t('settings.nav.developer.export'),
             href: '/settings/developer/export' as Route,
           },
+          // v0.10.0 H4c — the import page has existed since v0.7 G5 P15 but
+          // never had a nav entry (export did). Same gating as export: the
+          // entry is visible to every member here, and the page itself
+          // requires admin (both pages call requireRole('admin')).
+          {
+            id: 'developer-import',
+            label: t('settings.nav.developer.import'),
+            href: '/settings/developer/import' as Route,
+          },
         ],
       },
       {
