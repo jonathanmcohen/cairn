@@ -189,6 +189,10 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'oauth.token_revoked': 'OAuth token revoked',
   // v0.10.0 D3 — admin deleted a registered client app (revokes all its tokens).
   'oauth.client_deleted': 'OAuth client deleted',
+  // Post-v0.10.0 — admin manually provisioned a client (LAN clients without RFC 7591).
+  'oauth.client_created_manual': 'OAuth client created manually',
+  // Post-v0.10.0 — admin rotated a confidential client's secret.
+  'oauth.client_secret_rotated': 'OAuth client secret rotated',
   // v0.10.0 G3 — refresh-token reuse detected; whole rotation family revoked.
   'oauth.token_family_revoked': 'OAuth token family revoked (refresh reuse)',
   // v0.10.0 G5 — admin toggled the registration lock on /api/oauth/register.

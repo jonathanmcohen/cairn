@@ -2,6 +2,8 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { isValidRedirectUri, type RegisterClientResult, registerClient } from '@/lib/oauth/clients';
+import { hashOauthToken, mintOauthSecret, OAUTH_PREFIX } from '@/lib/oauth/tokens';
 
 /**
  * v0.10.0 D3 — admin registry over RFC 7591 dynamically-registered OAuth
@@ -122,4 +124,114 @@ export async function deleteRegisteredClient(
       revokedGrants: revoked.length,
     };
   });
+}
+
+/**
+ * Post-v0.10.0 — MANUAL client provisioning. The instance runs on a LAN where
+ * some MCP clients can't reach (or don't speak) RFC 7591 dynamic registration,
+ * so an admin mints client_id/client_secret pairs by hand and pastes them into
+ * the client's config. This is a thin admin-authed wrapper over the SAME
+ * `registerClient` core the open registration endpoint uses — identical id
+ * minting, secret hashing, and redirect-URI posture; only the caller differs.
+ */
+
+export const MANUAL_CLIENT_NAME_MAX = 100;
+export const MANUAL_CLIENT_MAX_REDIRECT_URIS = 10;
+
+export type CreateManualClientInput = {
+  clientName: string;
+  redirectUris: string[];
+  confidential: boolean;
+  createdBy?: string | null;
+};
+
+/** Typed validation failure — the route maps `kind` to a 400. */
+export type ManualClientValidationError = {
+  kind: 'invalid_client_name' | 'invalid_redirect_uris';
+  description: string;
+};
+
+export type CreateManualClientResult = RegisterClientResult | ManualClientValidationError;
+
+/**
+ * Validate + create a manually-provisioned OAuth client. Returns the inserted
+ * row plus the ONE-TIME plaintext secret (confidential clients only — public
+ * PKCE clients get `clientSecret: null`). The plaintext is never persisted;
+ * only its sha256 hash lands in `oauth_clients.client_secret_hash`.
+ */
+export async function createManualClient(
+  db: PostgresJsDatabase<typeof schema>,
+  input: CreateManualClientInput,
+): Promise<CreateManualClientResult> {
+  const name = input.clientName.trim();
+  if (name.length < 1 || name.length > MANUAL_CLIENT_NAME_MAX) {
+    return {
+      kind: 'invalid_client_name',
+      description: `client name must be 1..${MANUAL_CLIENT_NAME_MAX} characters`,
+    };
+  }
+  if (
+    input.redirectUris.length < 1 ||
+    input.redirectUris.length > MANUAL_CLIENT_MAX_REDIRECT_URIS
+  ) {
+    return {
+      kind: 'invalid_redirect_uris',
+      description: `between 1 and ${MANUAL_CLIENT_MAX_REDIRECT_URIS} redirect URIs are required`,
+    };
+  }
+  for (const uri of input.redirectUris) {
+    if (!isValidRedirectUri(uri)) {
+      // Same open-redirect guard as RFC 7591 registration: absolute http(s) only.
+      return {
+        kind: 'invalid_redirect_uris',
+        description: `invalid redirect URI: ${uri} (must be an absolute http(s) URL)`,
+      };
+    }
+  }
+
+  return registerClient(db, {
+    clientName: name,
+    redirectUris: input.redirectUris,
+    confidential: input.confidential,
+    createdBy: input.createdBy ?? null,
+  });
+}
+
+export type RotateClientSecretResult =
+  | { kind: 'rotated'; row: schema.OauthClient; clientSecret: string }
+  | { kind: 'not_found' }
+  /** Public PKCE clients have no secret to rotate — typed rejection, not a throw. */
+  | { kind: 'public_client' };
+
+/**
+ * Mint a fresh `cairn_ocs_` secret for a CONFIDENTIAL client and replace the
+ * stored hash in one update. The old secret stops verifying immediately
+ * (the token endpoint compares against `client_secret_hash`); already-issued
+ * tokens are untouched — rotation changes how the client authenticates, not
+ * what it was granted. The plaintext is returned ONCE and never persisted.
+ *
+ * `clientId` is the PUBLIC RFC 6749 client identifier (oauth_clients.client_id),
+ * not the uuid primary key.
+ */
+export async function rotateClientSecret(
+  db: PostgresJsDatabase<typeof schema>,
+  clientId: string,
+): Promise<RotateClientSecretResult> {
+  const [client] = await db
+    .select()
+    .from(schema.oauthClients)
+    .where(eq(schema.oauthClients.clientId, clientId))
+    .limit(1);
+  if (!client) return { kind: 'not_found' };
+  if (!client.clientSecretHash) return { kind: 'public_client' };
+
+  const clientSecret = mintOauthSecret(OAUTH_PREFIX.clientSecret);
+  const [row] = await db
+    .update(schema.oauthClients)
+    .set({ clientSecretHash: hashOauthToken(clientSecret) })
+    .where(eq(schema.oauthClients.id, client.id))
+    .returning();
+  if (!row) return { kind: 'not_found' };
+
+  return { kind: 'rotated', row, clientSecret };
 }

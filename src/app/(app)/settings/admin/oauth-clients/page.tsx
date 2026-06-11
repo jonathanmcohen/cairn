@@ -4,6 +4,7 @@ import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { listRegisteredClients } from '@/lib/oauth/admin-clients';
 import { getRegisterLock } from '@/lib/oauth/register-lock';
+import { CreateClientCard } from './create-client-card';
 import { OauthClientsView } from './oauth-clients-view';
 import { RegisterLockCard } from './register-lock-card';
 
@@ -29,6 +30,8 @@ export default async function OauthClientsSettingsPage() {
       />
       {/* v0.10.0 G5 — registration flood control: lock card above the registry. */}
       <RegisterLockCard locked={lock.locked} />
+      {/* Post-v0.10.0 — manual provisioning for LAN MCP clients without RFC 7591. */}
+      <CreateClientCard />
       <OauthClientsView
         clients={clients.map((c) => ({
           id: c.id,
