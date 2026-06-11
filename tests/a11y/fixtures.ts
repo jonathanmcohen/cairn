@@ -5,6 +5,7 @@ import {
   type Cookie,
   type Page,
 } from '@playwright/test';
+import { TOUR_SEEN_WILDCARD_KEY, TOUR_VERSION } from '../../src/components/tour/storage';
 import { type SeededA11y, seedA11yFixtures } from './seed';
 
 type AuthCookies = Cookie[];
@@ -73,11 +74,39 @@ async function doCredentialsSignIn(page: Page, seeded: SeededA11y): Promise<void
  * `(page, seeded)`. We read the cached cookies through the worker-level cache
  * directly so callers don't have to thread `authCookies` everywhere.
  */
-export async function signIn(page: Page, seeded: SeededA11y): Promise<void> {
+export async function signIn(
+  page: Page,
+  seeded: SeededA11y,
+  opts: { tour?: 'seen' | 'fresh' } = {},
+): Promise<void> {
   const browser = page.context().browser();
   if (!browser) throw new Error('a11y harness: page.context().browser() returned null');
   const cookies = await getOrCreateAuthCookies(browser, seeded);
+  if (opts.tour !== 'fresh') {
+    await suppressTourAutostart(page);
+  }
   await page.context().addCookies(cookies);
+}
+
+/**
+ * v0.10.0 F3 — the onboarding tour auto-starts on first load when its
+ * localStorage seen-marker is absent, which is true in EVERY fresh Playwright
+ * context. Pre-seed the wildcard marker (storage.ts honors
+ * `cairn:tour-seen:*`) so the tour popover doesn't overlay the UI in the
+ * dozens of unrelated specs. The F3 spec opts out via `{ tour: 'fresh' }`
+ * to exercise the real first-run path.
+ */
+async function suppressTourAutostart(page: Page): Promise<void> {
+  await page.addInitScript(
+    ([key, version]) => {
+      try {
+        localStorage.setItem(key, version);
+      } catch {
+        // ignore — worst case the tour shows and a spec fails loudly
+      }
+    },
+    [TOUR_SEEN_WILDCARD_KEY, TOUR_VERSION] as const,
+  );
 }
 
 /**
@@ -95,6 +124,9 @@ export async function signInSecondUser(
 ): Promise<{ context: BrowserContext; page: Page }> {
   const context = await browser.newContext();
   const page = await context.newPage();
+  // Two-actor specs predate the F3 tour; suppress its first-run auto-start in
+  // the second user's fresh context too (see suppressTourAutostart above).
+  await suppressTourAutostart(page);
   await page.goto('/login');
   await page.locator('input[name="email"]').fill(user.email);
   await page.locator('input[name="password"]').fill(user.password);

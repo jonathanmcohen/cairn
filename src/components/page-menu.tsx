@@ -172,6 +172,7 @@ export function PageMenu({
         ref={triggerRef}
         variant="ghost"
         size="icon"
+        data-tour="page-menu"
         aria-label={t('pageMenu.trigger')}
         aria-expanded={open}
         aria-haspopup="dialog"
