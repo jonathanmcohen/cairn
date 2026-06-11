@@ -60,6 +60,10 @@ import {
   type SlashMenuRef,
   type SlashRange,
 } from './slash-menu';
+import {
+  getWorkspaceSlashCommands,
+  type WorkspaceSlashCommandItem,
+} from './slash-workspace-commands';
 
 /**
  * Ensure a lazy editor extension (math/syncedBlock/embed) is registered on
@@ -921,6 +925,35 @@ export function matchesSlashQuery(item: SlashItem, query: string): boolean {
 export const SLASH_ITEMS: SlashItem[] = items;
 
 /**
+ * v0.10.0 F2 — adapt a workspace custom command (trigger → saved template)
+ * into a SlashItem under the 'Workspace' group. Exported for unit tests.
+ *
+ * SYNCHRONOUS (not `deferred`): the insertable content was already resolved
+ * server-side and cached at editor mount (slash-workspace-commands.ts), so
+ * the dispatcher pre-deletes the `/trigger` range and the insert lands in the
+ * SAME user gesture — all through `editor.chain().insertContent(...)`, the
+ * normal transaction pipeline, so y-prosemirror replicates it (the Yjs
+ * lesson: never a doc swap). Commands with no insertable content are filtered
+ * out before they reach the menu (`insertableWorkspaceSlashCommands`), so the
+ * empty-content guard here is belt-and-braces only.
+ */
+export function workspaceSlashItem(cmd: WorkspaceSlashCommandItem): SlashItem {
+  return {
+    title: cmd.label,
+    description: `/${cmd.trigger} · ${cmd.templateName}`,
+    category: 'workspace',
+    icon: FileText,
+    // Trigger + template name as search aliases; the title (label) is matched
+    // by matchesSlashQuery already.
+    keywords: [cmd.trigger, cmd.templateName.toLowerCase()],
+    command: (editor) => {
+      if (!Array.isArray(cmd.content) || cmd.content.length === 0) return;
+      editor.chain().focus().insertContent(cmd.content).run();
+    },
+  };
+}
+
+/**
  * #38 — correct the suggestion-provided range so it ALWAYS spans the leading
  * `/` trigger. In non-paragraph blocks (headings, list items, blockquotes) the
  * @tiptap/suggestion match range sometimes starts one position AFTER the `/`,
@@ -1048,7 +1081,15 @@ export const SlashCommand = Extension.create({
         // #122 — return the full filtered catalog (no slice cap). The grouped,
         // scrollable SlashMenu bounds its own height, so every block is now
         // discoverable both by scrolling categories and by typing.
-        items: ({ query }) => items.filter((i) => matchesSlashQuery(i, query)),
+        // F2 — append the workspace's custom template commands (primed into a
+        // module cache at editor mount; workspaceId travels via the editor's
+        // `cairn` storage namespace, same channel as pageId).
+        items: ({ query, editor }) => {
+          const workspaceId = (editor.storage as { cairn?: { workspaceId?: string } }).cairn
+            ?.workspaceId;
+          const workspaceItems = getWorkspaceSlashCommands(workspaceId).map(workspaceSlashItem);
+          return [...items, ...workspaceItems].filter((i) => matchesSlashQuery(i, query));
+        },
         render: () => {
           let component: ReactRenderer<
             SlashMenuRef,

@@ -198,6 +198,12 @@ export const AUDIT_ACTIONS = [
   // color). Metadata: { hasLogo, primaryColor } — the hex color is operator-
   // visible styling, not a secret.
   'workspace.brand_updated',
+  // v0.10.0 F2 — admin created/deleted a custom slash command (trigger word →
+  // saved template, workspace_slash_commands table). Metadata: { trigger,
+  // label, templateId } on create; { trigger, label } on delete — names + ids
+  // only, never the template payload.
+  'workspace.slash_command_created',
+  'workspace.slash_command_deleted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -235,4 +241,6 @@ export type AuditTargetType =
   | 'peer_instance'
   // v0.9.16 Plan F — MCP OAuth client + issued-token rows.
   | 'oauth_client'
-  | 'oauth_token';
+  | 'oauth_token'
+  // v0.10.0 F2 — custom slash-command rows (workspace_slash_commands table).
+  | 'workspace_slash_command';

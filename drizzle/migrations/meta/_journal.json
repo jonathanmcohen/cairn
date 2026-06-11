@@ -526,6 +526,13 @@
       "when": 1780760597503,
       "tag": "0074_workspace_brand",
       "breakpoints": true
+    },
+    {
+      "idx": 75,
+      "version": "7",
+      "when": 1780760597504,
+      "tag": "0075_workspace_slash_commands",
+      "breakpoints": true
     }
   ]
 }

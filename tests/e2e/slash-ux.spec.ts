@@ -26,7 +26,13 @@ async function signIn(
 async function openSlashMenu(page: import('@playwright/test').Page, query: string) {
   const editor = page.locator('.ProseMirror').first();
   await editor.click();
-  await editor.press('End');
+  await editor.press('ControlOrMeta+End');
+  // Always start a FRESH paragraph: the shared seeded page accumulates the
+  // previous tests' trigger text (the #76 cancel-preserves-text contract keeps
+  // an unsubmitted `/citation` in the doc), and `/` typed directly after a
+  // word char must not fire (allowedPrefixes [' ']). A new block restores the
+  // line-start trigger position deterministically.
+  await editor.press('Enter');
   await page.keyboard.type(`/${query}`);
 }
 
@@ -67,8 +73,13 @@ test.describe('Plan E slash UX surfaces', () => {
     await signIn(page, seeded);
     await page.goto(`/pages/${seeded.pageId}`);
     await openSlashMenu(page, 'citation');
+    // The grouped slash menu (#122) made option accessible names
+    // title+description, so the old anchored /^Citation$/ stopped matching —
+    // latent rot CI never caught because its e2e glob only runs item-*.spec.ts.
+    // Anchor on the title prefix to stay distinct from "Citation (DOI/PubMed
+    // lookup)".
     await page
-      .getByRole('option', { name: /^Citation$/i })
+      .getByRole('option', { name: /^Citation Insert/i })
       .first()
       .click();
 
