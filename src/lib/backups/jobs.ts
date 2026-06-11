@@ -1,5 +1,6 @@
 import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
+import { existsSync } from 'node:fs';
 import path from 'node:path';
 
 /**
@@ -51,9 +52,16 @@ export function startBackupJob(opts: {
     return { ok: false, error: 'pg_dump-not-found' };
   }
 
-  // Same resolution as the cron scheduler (src/server/scheduler.ts): the app
-  // runs from the repo/image root, where `pnpm build:entrypoint` lands the CLI.
-  const cliPath = opts.cliPath ?? path.resolve(process.cwd(), 'dist/server/cli.js');
+  // Resolve the compiled CLI bundle. In the Docker image (and `pnpm start`)
+  // cwd is the app root where `pnpm build:entrypoint` lands `dist/`. But when
+  // the standalone server is launched with cwd INSIDE `.next/standalone` (the
+  // CI e2e harness does this), `dist/` lives two levels up — probe both
+  // candidates instead of trusting cwd (the scheduler's cwd-only resolution
+  // never hits this because cron runs in the image, but this route must work
+  // under the e2e harness too).
+  const fromCwd = path.resolve(process.cwd(), 'dist/server/cli.js');
+  const fromStandalone = path.resolve(process.cwd(), '../../dist/server/cli.js');
+  const cliPath = opts.cliPath ?? (existsSync(fromCwd) ? fromCwd : fromStandalone);
 
   const job: BackupJob = {
     id: randomUUID(),
