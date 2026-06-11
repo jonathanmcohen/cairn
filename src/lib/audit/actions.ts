@@ -175,6 +175,11 @@ export const AUDIT_ACTIONS = [
   'oauth.consent_granted',
   'oauth.token_issued',
   'oauth.token_revoked',
+  // v0.10.0 D3 — admin deleted a registered client app from the instance
+  // registry (/settings/admin/oauth-clients). The delete cascade-revokes every
+  // oauth_tokens row issued to the client. Metadata: { clientId, name,
+  // revokedGrants } — ids + counts only, never a secret.
+  'oauth.client_deleted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

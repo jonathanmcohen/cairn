@@ -89,6 +89,12 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.backups'),
         href: '/settings/admin/backups' as Route,
       },
+      // Instance OAuth client-application registry (v0.10.0 D3).
+      {
+        id: 'admin-oauth-clients',
+        label: t('settings.nav.admin.oauthClients'),
+        href: '/settings/admin/oauth-clients' as Route,
+      },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
     if (e2eEnabled) {
