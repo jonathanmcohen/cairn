@@ -134,6 +134,16 @@ const Schema = z.object({
   // SHOULD use much longer values stored in a secret manager. See
   // docs/operations.md § "Encrypted backup passphrase rotation".
   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE: z.string().min(8).optional(),
+  // v0.10.0 G1 — at-rest encryption key for federated peer shared secrets
+  // (`peer_instances.shared_secret_hash`). Optional. When set (≥ 16 chars),
+  // new pairings store an AES-256-GCM `enc-v1:` envelope and existing raw
+  // rows are lazily re-encrypted after their first successful verify. When
+  // unset, behavior is identical to v0.9 (raw at rest) with a once-per-process
+  // operator warning. Rotation = set the new key and re-pair peers — rows
+  // encrypted under the old key fail closed with an error naming this var.
+  // Use sites read process.env directly (the env() cache gotcha), same as
+  // CAIRN_BACKUP_ENCRYPTION_PASSPHRASE. See docs/operations.md.
+  CAIRN_PEER_SECRET_KEY: z.string().min(16).optional(),
   // v0.10.0 C1 — directory the web snapshot UI (/settings/admin/backups +
   // /api/admin/backups) lists bundles from and writes new ones into. The CLI's
   // `backup --out <dir>` should point at the SAME directory so CLI/cron-made

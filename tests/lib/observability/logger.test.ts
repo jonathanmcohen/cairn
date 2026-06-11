@@ -54,6 +54,7 @@ describe('pino logger redaction', () => {
       'cookie',
       'AUTH_SECRET',
       'CAIRN_METRICS_TOKEN',
+      'CAIRN_PEER_SECRET_KEY',
       'sig',
     ]) {
       expect(REDACT_PATHS.some((p) => p.includes(needle))).toBe(true);

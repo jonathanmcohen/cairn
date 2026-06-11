@@ -33,6 +33,12 @@ const PUBLIC_PATHS = [
   '/.well-known/oauth-',
   '/api/oauth',
   '/api/mcp',
+  // v0.10.0 G1 — INBOUND federated search is server-to-server: the calling
+  // Cairn instance carries NO session cookie, it authenticates via the
+  // HMAC-signed envelope which the route verifies itself (401 on failure).
+  // Same lesson as /api/mcp above: a cookieless headless route that is its
+  // own access boundary must not be bounced to /login by the cookie gate.
+  '/api/search/federated/peer',
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.

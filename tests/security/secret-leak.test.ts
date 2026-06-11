@@ -83,6 +83,12 @@ const FORBIDDEN_KEYS = [
   // v0.9.0 G8 P43 — encrypted-backup passphrase env var name; no Cairn API
   // surface should ever echo this back.
   'CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
+  // v0.10.0 G1 — federated peer secret at-rest key env var name + the
+  // secret-bearing column (PeerSummary in peer-admin.ts deliberately omits
+  // it; this pins the contract for every checked surface).
+  'CAIRN_PEER_SECRET_KEY',
+  'shared_secret_hash',
+  'sharedSecretHash',
 ];
 
 // Full-secret prefixes. These MUST never appear in audit metadata or in the

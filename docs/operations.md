@@ -498,6 +498,46 @@ ciphertext)`. No partial plaintext lands on disk.
   contains the ciphertext rows AND every other table) at rest on disk.
   Both can coexist for defense-in-depth.
 
+## Federated peer secret encryption (`CAIRN_PEER_SECRET_KEY`, v0.10.0 G1)
+
+`peer_instances.shared_secret_hash` holds the HMAC key each federated peer
+signs cross-instance search requests with. The HMAC protocol needs the **raw**
+key at verify/sign time, so it cannot be one-way hashed — instead it is
+**encrypted at rest** with AES-256-GCM (Argon2id-derived key, same parameters
+as the backup envelope) under the operator env key `CAIRN_PEER_SECRET_KEY`
+(≥ 16 chars; store it in a secret manager alongside
+`CAIRN_BACKUP_ENCRYPTION_PASSPHRASE`).
+
+### Enabling
+
+Set `CAIRN_PEER_SECRET_KEY` and restart. From then on:
+
+- **New pairings** store the secret as an `enc-v1:` envelope
+  (`secret_format = 'enc-v1'`).
+- **Existing raw rows keep authenticating** and are lazily re-encrypted in
+  place after their first **successful** inbound verify — no flag-day, no
+  re-pairing required.
+
+### Keyless (legacy) mode
+
+If the env var is never set, behavior is identical to v0.9: secrets are
+stored raw at rest, and Cairn logs a once-per-process warning naming
+`CAIRN_PEER_SECRET_KEY` whenever raw rows are used. Nothing is blocked.
+
+### Rotation / lost key
+
+There is no in-place re-encryption command: **rotation = set the new key and
+re-pair the affected peers.** Rows encrypted under the old key fail
+**closed** — the inbound route excludes them from the verify candidate list
+and the outbound fan-out skips them, each logging a `PeerSecretDecryptError`
+whose message names `CAIRN_PEER_SECRET_KEY` and the re-pair playbook (it
+never contains key material or ciphertext). Restoring the previous key value
+restores those rows without re-pairing.
+
+Setting the key for the first time, or unsetting it while `enc-v1` rows
+exist, follows the same rule: encrypted rows are unreadable without the key
+(fail closed), raw rows keep working in either mode.
+
 ## Collaboration auth (shared AUTH_SECRET)
 
 The `cairn` app and the `cairn-collab` real-time service form a single trust

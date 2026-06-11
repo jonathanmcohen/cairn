@@ -2,6 +2,7 @@ import { and, desc, eq } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { recordAudit } from '@/lib/audit/record';
+import { encryptPeerSecret } from '@/lib/search/peer-secret';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
@@ -51,15 +52,22 @@ export async function createPeer(
     sharedSecret: string;
   },
 ): Promise<PeerSummary> {
+  // v0.10.0 G1 — encrypt-at-rest when the operator key is set. HMAC needs the
+  // raw key at verify/sign time, so hashing is impossible (see the schema
+  // header); without CAIRN_PEER_SECRET_KEY we keep the legacy raw storage.
+  // Read process.env directly (NOT the cached env()) — the house pattern for
+  // optional secrets, and what lets tests toggle the key per-case.
+  const envKey = process.env.CAIRN_PEER_SECRET_KEY;
   const [row] = await db
     .insert(schema.peerInstances)
     .values({
       workspaceId: input.workspaceId,
       name: input.name,
       baseUrl: input.baseUrl,
-      // MVP: peer-fanout recomputes the HMAC from the raw secret, so it is
-      // stored as-is (see peer-instances.ts header). Treat like any secret.
-      sharedSecretHash: input.sharedSecret,
+      sharedSecretHash: envKey
+        ? await encryptPeerSecret(input.sharedSecret, envKey)
+        : input.sharedSecret,
+      secretFormat: envKey ? 'enc-v1' : 'raw',
       enabled: false,
     })
     .returning();
