@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dialog';
 import type { BackupBundle } from '@/lib/backups/list';
 import { useT } from '@/lib/i18n/provider';
+import { type AdminWorkspaceOption, SelectiveRestoreDialog } from './selective-restore-dialog';
 
 // Client view for the backup snapshot settings page. The parent RSC fetches
 // the bundle list and gates on requireRole('admin'); this renders the i18n
@@ -29,7 +30,16 @@ import { useT } from '@/lib/i18n/provider';
 // watches it here. On mount the view asks GET /api/admin/backups/restore once
 // so a reload mid-restore re-attaches to the banner (no idle polling: it only
 // keeps polling while maintenance is actually active).
-export function BackupsView({ bundles }: { bundles: BackupBundle[] }) {
+// v0.10.0 C4 — `adminWorkspaces` (the caller's admin/owner workspaces,
+// resolved by the parent RSC) feeds the per-bundle "Selective restore…"
+// dialog's target-workspace picker.
+export function BackupsView({
+  bundles,
+  adminWorkspaces,
+}: {
+  bundles: BackupBundle[];
+  adminWorkspaces: AdminWorkspaceOption[];
+}) {
   const t = useT();
   const router = useRouter();
   const [phase, setPhase] = useState<'idle' | 'running' | 'done' | 'failed'>('idle');
@@ -37,6 +47,8 @@ export function BackupsView({ bundles }: { bundles: BackupBundle[] }) {
   const [uploadPhase, setUploadPhase] = useState<'idle' | 'uploading' | 'done' | 'failed'>('idle');
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [restoreTarget, setRestoreTarget] = useState<BackupBundle | null>(null);
+  // v0.10.0 C4 — bundle slug the selective-restore dialog is open for.
+  const [selectiveTs, setSelectiveTs] = useState<string | null>(null);
   const [confirmText, setConfirmText] = useState('');
   const [restorePhase, setRestorePhase] = useState<
     'idle' | 'starting' | 'running' | 'done' | 'failed'
@@ -383,15 +395,26 @@ export function BackupsView({ bundles }: { bundles: BackupBundle[] }) {
                       {b.uploadsBytes === null ? '—' : formatBytes(b.uploadsBytes)}
                     </td>
                     <td className="px-4 py-2">
-                      <button
-                        type="button"
-                        onClick={() => openRestoreModal(b)}
-                        disabled={restoreBusy}
-                        className="rounded-md border border-destructive/50 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
-                        data-testid="backup-restore-button"
-                      >
-                        {t('settingsAdmin.backups.restore.button')}
-                      </button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => openRestoreModal(b)}
+                          disabled={restoreBusy}
+                          className="rounded-md border border-destructive/50 px-3 py-1 text-xs font-medium text-destructive hover:bg-destructive/10 disabled:opacity-50"
+                          data-testid="backup-restore-button"
+                        >
+                          {t('settingsAdmin.backups.restore.button')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectiveTs(b.ts)}
+                          disabled={restoreBusy}
+                          className="rounded-md border px-3 py-1 text-xs font-medium hover:bg-muted disabled:opacity-50"
+                          data-testid="backup-selective-restore-button"
+                        >
+                          {t('settingsAdmin.backups.selective.button')}
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -400,6 +423,12 @@ export function BackupsView({ bundles }: { bundles: BackupBundle[] }) {
           </div>
         )}
       </section>
+
+      <SelectiveRestoreDialog
+        bundleTs={selectiveTs}
+        workspaces={adminWorkspaces}
+        onClose={() => setSelectiveTs(null)}
+      />
 
       <Dialog open={restoreTarget !== null} onOpenChange={(open) => !open && closeRestoreModal()}>
         <DialogContent data-testid="restore-confirm-modal">

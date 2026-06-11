@@ -26,6 +26,9 @@ export async function GET(
       id: job.id,
       status: job.status,
       ...(job.error !== undefined ? { error: job.error } : {}),
+      // v0.10.0 C4 — selective-restore jobs report {pagesRestored,
+      // rowsRestored, skippedFiles} on completion.
+      ...(job.result !== undefined ? { result: job.result } : {}),
     });
   } catch (err) {
     if (err instanceof HttpError) {

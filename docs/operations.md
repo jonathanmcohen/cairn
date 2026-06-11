@@ -103,6 +103,39 @@ adapters and the command is a no-op.
 on the same connector double-pushes (and may double-create unmapped Cairn rows). Schedule it via
 the cron table above (e.g. `cron_spec '*/5 * * * *'` for 5-minute polls) or external cron.
 
+### Selective restore (v0.10.0 C4)
+
+Settings → Admin → Backups → per-bundle **Selective restore…** (or
+`POST /api/admin/backups/selective-restore`) copies a page subtree — or all pages of one
+workspace — OUT of a snapshot bundle INTO a live workspace. Unlike the full restore it is
+**additive**: every restored page/database/row/comment/file gets a brand-new id, nothing
+existing is modified or deleted, and the instance is NOT put into read-only mode while it
+runs. Worst case is an unwanted copy you delete.
+
+How it works: the bundle is `pg_restore`d into a throwaway scratch database
+(`cairn_restore_<id>_<epoch>`) on the same Postgres instance, the selected rows are read out,
+remapped (new ids, target `workspace_id`, parent chains and embedded
+database/page-link/page-embed references rewritten; the subtree root becomes a top-level page),
+and inserted in one transaction. Each restored page also gets a regenerated `page_yjs` state so
+the collaborative editor renders it immediately. The scratch DB is dropped on success and
+failure; leftovers from a crashed job are force-dropped by the next job after 1 hour.
+
+Caveats:
+
+- **Attribution**: restored rows are attributed to the admin who ran the restore — the
+  snapshot's user accounts are not copied.
+- **Files**: the DB dump carries file *rows* only. A file is restored (its binary **copied**
+  to a new path under the target workspace) only when the binary still exists in the file
+  storage; otherwise the row is skipped, its file/image blocks are stripped from the restored
+  content, and the job result reports the `skippedFiles` count.
+- **Sharing/lock/encryption state is reset**: restored pages are unpublished, unlocked and
+  unencrypted (E2E-encrypted pages are excluded outright — their keys do not transfer).
+- **References outside the restored set** (links/embeds to pages that were not part of the
+  selection) keep their old ids and render as links to missing pages.
+- **Version guard**: a snapshot whose manifest `MAJOR.MINOR` is newer than the running app is
+  refused upfront (upgrade first). Much older snapshots may fail with "snapshot schema is too
+  old for selective restore" — fall back to the full restore.
+
 ### Restore from S3
 
 `pnpm cli restore --from-s3 backups/cairn-backup-<ts>.dump [--force]` downloads the bundle

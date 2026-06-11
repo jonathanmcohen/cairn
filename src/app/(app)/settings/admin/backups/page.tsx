@@ -1,7 +1,7 @@
 import type { Route } from 'next';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
-import { requireRole } from '@/lib/auth/require-role';
+import { hasMinRole, requireRole } from '@/lib/auth/require-role';
 import { listBackupBundles } from '@/lib/backups/list';
 import {
   getBackupSchedule,
@@ -9,6 +9,7 @@ import {
   parseBackupCommand,
 } from '@/lib/backups/schedule';
 import { env } from '@/lib/env';
+import { listUserWorkspaces } from '@/lib/workspaces/list';
 import { BackupsView } from './backups-view';
 import { ScheduleSection } from './schedule-section';
 
@@ -27,10 +28,19 @@ export const dynamic = 'force-dynamic';
 // the scheduler boot) so the scheduler-off warning renders without a client
 // fetch.
 export default async function BackupsSettingsPage() {
-  await requireRole('admin');
+  const ctx = await requireRole('admin');
   const bundles = await listBackupBundles(env().CAIRN_BACKUP_DIR);
   const db = getDb();
-  const [schedule, runs] = await Promise.all([getBackupSchedule(db), listRecentBackupRuns(db, 20)]);
+  const [schedule, runs, workspaces] = await Promise.all([
+    getBackupSchedule(db),
+    listRecentBackupRuns(db, 20),
+    listUserWorkspaces(db, ctx.userId),
+  ]);
+  // v0.10.0 C4 — target options for the selective-restore dialog: only
+  // workspaces where the caller is admin/owner (the route re-verifies).
+  const adminWorkspaces = workspaces
+    .filter((ws) => hasMinRole(ws.role, 'admin'))
+    .map((ws) => ({ id: ws.id, name: ws.name }));
 
   return (
     <section className="space-y-8">
@@ -38,7 +48,7 @@ export default async function BackupsSettingsPage() {
         section={{ label: 'Admin', href: '/settings/admin' as Route }}
         page="Backups"
       />
-      <BackupsView bundles={bundles} />
+      <BackupsView bundles={bundles} adminWorkspaces={adminWorkspaces} />
       <ScheduleSection
         schedule={
           schedule

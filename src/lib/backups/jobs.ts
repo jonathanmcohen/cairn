@@ -20,7 +20,14 @@ import { disengageMaintenance, engageMaintenance, getMaintenance } from './maint
 
 export type BackupJobStatus = 'running' | 'done' | 'failed';
 
-export type BackupJobKind = 'backup' | 'restore';
+export type BackupJobKind = 'backup' | 'restore' | 'selective-restore';
+
+/** v0.10.0 C4 — completion summary of a selective restore job. */
+export type SelectiveRestoreJobResult = {
+  pagesRestored: number;
+  rowsRestored: number;
+  skippedFiles: number;
+};
 
 export type BackupJob = {
   id: string;
@@ -30,6 +37,8 @@ export type BackupJob = {
   finishedAt?: string;
   /** Failure detail: exit code + a tail of the CLI's stderr. */
   error?: string;
+  /** v0.10.0 C4 — present on done selective-restore jobs. */
+  result?: SelectiveRestoreJobResult;
 };
 
 export type StartBackupJobResult =
@@ -195,6 +204,42 @@ export function startRestoreJob(opts: {
     disengageMaintenance();
     throw err;
   }
+}
+
+/**
+ * v0.10.0 C4 — track an in-process async job (no CLI spawn). Used by the
+ * selective restore, whose work is a TypeScript pipeline (pg_restore into a
+ * scratch DB + remap + insert) rather than a `dist/server/cli.js` subcommand.
+ * The runner's resolved value becomes `job.result`; a rejection marks the job
+ * failed with the error message. Same per-process registry + caveats as the
+ * CLI-backed jobs above.
+ */
+export function trackAsyncJob(opts: {
+  kind: BackupJobKind;
+  run: () => Promise<SelectiveRestoreJobResult>;
+}): BackupJob {
+  const job: BackupJob = {
+    id: randomUUID(),
+    kind: opts.kind,
+    status: 'running',
+    startedAt: new Date().toISOString(),
+  };
+  jobs.set(job.id, job);
+
+  void opts.run().then(
+    (result) => {
+      job.status = 'done';
+      job.result = result;
+      job.finishedAt = new Date().toISOString();
+    },
+    (err: unknown) => {
+      job.status = 'failed';
+      job.error = err instanceof Error ? err.message : String(err);
+      job.finishedAt = new Date().toISOString();
+    },
+  );
+
+  return job;
 }
 
 export function getBackupJob(id: string): BackupJob | undefined {
