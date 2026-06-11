@@ -538,6 +538,22 @@ Setting the key for the first time, or unsetting it while `enc-v1` rows
 exist, follows the same rule: encrypted rows are unreadable without the key
 (fail closed), raw rows keep working in either mode.
 
+## Federated peer inbound rate limiting (`CAIRN_PEER_RATE_LIMIT_PER_MIN`, v0.10.0 G2)
+
+The inbound federated-search route (`/api/search/federated/peer`) limits each
+**authenticated** peer to `CAIRN_PEER_RATE_LIMIT_PER_MIN` requests per minute
+(default **60**; unset, unparseable, or non-positive values fall back to the
+default — never to "unlimited"). The bucket is keyed by the peer's row id, not
+by IP, so peers sharing an egress cannot throttle each other. The envelope
+signature is verified **before** the limit check, so unauthenticated garbage
+cannot burn a legitimate peer's budget. Over-limit requests get `429` with a
+`Retry-After` header (whole seconds) and a `federation.peer_rate_limited`
+audit row; if the limiter itself fails, the route fails **closed** with `503`
+rather than becoming an open relay. The limiter is in-process per replica
+(same as the login limiter): with R app replicas the effective ceiling is up
+to R × the configured limit — fine for the single-replica homelab target,
+worth noting before scaling out.
+
 ## Collaboration auth (shared AUTH_SECRET)
 
 The `cairn` app and the `cairn-collab` real-time service form a single trust

@@ -6,6 +6,11 @@ import * as schema from '@/db/schema';
 import { createPage } from '@/lib/pages/create';
 import { __resetNonceLruForTests, signEnvelope } from '@/lib/search/peer-hmac';
 import {
+  __resetPeerRateLimiterForTests,
+  __setPeerRateLimiterForTests,
+  PEER_RATE_LIMIT_ENV_VAR,
+} from '@/lib/search/peer-rate-limit';
+import {
   __resetPeerSecretCacheForTests,
   decryptPeerSecret,
   encryptPeerSecret,
@@ -36,21 +41,30 @@ beforeEach(async () => {
   await sql`TRUNCATE pages, workspaces, users, workspace_members, peer_instances RESTART IDENTITY CASCADE`;
   __resetNonceLruForTests();
   __resetPeerSecretCacheForTests();
+  __resetPeerRateLimiterForTests();
   delete process.env.CAIRN_PEER_SECRET_KEY;
+  delete process.env[PEER_RATE_LIMIT_ENV_VAR];
 });
 
 afterEach(() => {
   delete process.env.CAIRN_PEER_SECRET_KEY;
+  delete process.env[PEER_RATE_LIMIT_ENV_VAR];
+  __resetPeerRateLimiterForTests();
 });
 
 const sharedSecret = 'shared-secret-aaaaaaaaaaaaaaaaaaaaaaaa';
 
-async function seedPeer(workspaceId: string, name: string, enabled = true): Promise<void> {
+async function seedPeer(
+  workspaceId: string,
+  name: string,
+  enabled = true,
+  secret = sharedSecret,
+): Promise<void> {
   await db.insert(schema.peerInstances).values({
     workspaceId,
     name,
     baseUrl: 'http://x',
-    sharedSecretHash: sharedSecret,
+    sharedSecretHash: secret,
     enabled,
   });
 }
@@ -240,6 +254,123 @@ describe('POST /api/search/federated/peer — secret encryption at rest (G1)', (
 
     expect((await postSigned('g1-legacy-1')).status).toBe(200);
     const row = await loadRow('legacy');
+    expect(row.secret_format).toBe('raw');
+    expect(row.shared_secret_hash).toBe(sharedSecret);
+  });
+});
+
+// v0.10.0 G2 — per-peer inbound rate limit (peer-rate-limit.ts).
+describe('POST /api/search/federated/peer — per-peer rate limit (G2)', () => {
+  async function postSignedAs(secret: string, nonce: string, q = 'x'): Promise<Response> {
+    const { POST } = await import('@/app/api/search/federated/peer/route');
+    const signed = signEnvelope({ q, workspaceScope: 'all', ts: Date.now(), nonce }, secret);
+    return POST(
+      new Request('http://x/peer', { method: 'POST', headers: signed.headers, body: signed.body }),
+    );
+  }
+
+  it('allows N requests then 429s the N+1th with Retry-After ≥ 1 and writes the audit row', async () => {
+    process.env[PEER_RATE_LIMIT_ENV_VAR] = '3';
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    await seedPeer(w.workspaceId, 'limited');
+
+    for (let i = 0; i < 3; i++) {
+      expect((await postSignedAs(sharedSecret, `g2-ok-${i}`)).status).toBe(200);
+    }
+    const res = await postSignedAs(sharedSecret, 'g2-over');
+    expect(res.status).toBe(429);
+    const retryAfter = Number(res.headers.get('retry-after'));
+    expect(Number.isInteger(retryAfter)).toBe(true);
+    expect(retryAfter).toBeGreaterThanOrEqual(1);
+    expect(await res.json()).toEqual({ error: 'rate limited' });
+
+    const rows = await sql`
+      select workspace_id, actor_user_id, target_type, target_id, metadata
+        from audit_log where action = 'federation.peer_rate_limited'
+    `;
+    expect(rows).toHaveLength(1);
+    const audit = rows[0] as {
+      workspace_id: string;
+      actor_user_id: string | null;
+      target_type: string;
+      metadata: { peerName?: string; retryAfterMs?: number };
+    };
+    expect(audit.workspace_id).toBe(w.workspaceId);
+    expect(audit.actor_user_id).toBeNull();
+    expect(audit.target_type).toBe('peer_instance');
+    expect(audit.metadata.peerName).toBe('limited');
+    expect(audit.metadata.retryAfterMs).toBeGreaterThan(0);
+    // Never the shared secret — in any key or value.
+    expect(JSON.stringify(audit.metadata)).not.toContain(sharedSecret);
+  });
+
+  it('keys by peer id — a second peer is unaffected by the first one’s exhaustion', async () => {
+    process.env[PEER_RATE_LIMIT_ENV_VAR] = '2';
+    const otherSecret = 'other-secret-bbbbbbbbbbbbbbbbbbbbbbbb';
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    await seedPeer(w.workspaceId, 'peer-a');
+    await seedPeer(w.workspaceId, 'peer-b', true, otherSecret);
+
+    expect((await postSignedAs(sharedSecret, 'g2-iso-1')).status).toBe(200);
+    expect((await postSignedAs(sharedSecret, 'g2-iso-2')).status).toBe(200);
+    expect((await postSignedAs(sharedSecret, 'g2-iso-3')).status).toBe(429);
+    // peer-b's bucket is untouched.
+    expect((await postSignedAs(otherSecret, 'g2-iso-4')).status).toBe(200);
+  });
+
+  it('verify-before-limit: garbage signatures do not burn the peer’s budget', async () => {
+    process.env[PEER_RATE_LIMIT_ENV_VAR] = '2';
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    await seedPeer(w.workspaceId, 'unburned');
+
+    const { POST } = await import('@/app/api/search/federated/peer/route');
+    for (let i = 0; i < 5; i++) {
+      const signed = signEnvelope(
+        { q: 'x', workspaceScope: 'all', ts: Date.now(), nonce: `g2-junk-${i}` },
+        sharedSecret,
+      );
+      const badHeaders = { ...signed.headers, 'x-cairn-peer-sig': 'a'.repeat(64) };
+      const res = await POST(
+        new Request('http://x/peer', { method: 'POST', headers: badHeaders, body: signed.body }),
+      );
+      expect(res.status).toBe(401);
+    }
+    // The full budget is still available to the legitimate peer.
+    expect((await postSignedAs(sharedSecret, 'g2-burn-1')).status).toBe(200);
+    expect((await postSignedAs(sharedSecret, 'g2-burn-2')).status).toBe(200);
+    expect((await postSignedAs(sharedSecret, 'g2-burn-3')).status).toBe(429);
+  });
+
+  it('limiter failure FAILS CLOSED: 503, never an open relay', async () => {
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    await seedPeer(w.workspaceId, 'broken-limiter');
+    __setPeerRateLimiterForTests({
+      check: () => {
+        throw new Error('boom');
+      },
+    });
+
+    const res = await postSignedAs(sharedSecret, 'g2-closed-1');
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ error: 'rate limiter unavailable' });
+  });
+
+  it('a throttled request does NOT trigger the lazy G1 secret upgrade (no writes on 429)', async () => {
+    process.env.CAIRN_PEER_SECRET_KEY = 'g2-rate-limit-upgrade-key-012345';
+    const w = await createTestWorkspaceWithUser(db, { defaultPageStatus: 'published' });
+    await seedPeer(w.workspaceId, 'throttled-raw');
+    // Deny everything: the request verifies but is throttled before upgrade.
+    __setPeerRateLimiterForTests({
+      check: () => ({ allowed: false, remaining: 0, retryAfterMs: 1500 }),
+    });
+
+    const res = await postSignedAs(sharedSecret, 'g2-noup-1');
+    expect(res.status).toBe(429);
+
+    const rows = await sql`
+      select shared_secret_hash, secret_format from peer_instances where name = 'throttled-raw'
+    `;
+    const row = rows[0] as { shared_secret_hash: string; secret_format: string };
     expect(row.secret_format).toBe('raw');
     expect(row.shared_secret_hash).toBe(sharedSecret);
   });
