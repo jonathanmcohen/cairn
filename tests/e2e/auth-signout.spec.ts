@@ -14,35 +14,45 @@ test.describe('sign-out (#80, P0 security)', () => {
     page,
     seeded,
   }) => {
-    // H1 quarantine (NOT a silent skip): the post-sign-out redirect assert
-    // fails deterministically via this soft waitForURL poll — item H2
-    // (plan-H-test-infra.md ## H2) rewrites this spec hermetic (hard-nav
-    // `load` assertion + seeded auth state) and removes this fixme. The
-    // GET /logout test below stays active, so session-clearing IS still
-    // gated meanwhile.
-    test.fixme(true, 'H2 rewrites this hermetic — see plan-H-test-infra.md ## H2');
+    // H2 hermetic rewrite. Root cause of the old deterministic red (H1
+    // quarantine): the sign-in wait was the soft glob `waitForURL('**/')`,
+    // which resolved at the TRANSIENT '/' — the app then redirects '/' to the
+    // first/landing page (resolveLandingPage; always, now that the dev DB has
+    // pages), so the Sign-out click fired mid-navigation and was swallowed by
+    // the in-flight redirect; the test then waited on /login forever. The
+    // product path was never broken (verified: the Server Action POST answers
+    // 303 → /login). Hermetic = settle on a REAL post-login state (predicate
+    // + hydrated sidebar) before interacting.
     // Drive the real credentials form so we hold a genuine Auth.js jwt cookie.
     await page.goto('/login');
     await page.locator('input[name="email"]').fill(seeded.userEmail);
     await page.locator('input[name="password"]').fill(seeded.userPassword);
     await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-    // not-'/login' predicate: '/' redirects to the landing page when the
-    // workspace has pages, so a '**/' glob can miss the transient root (H1).
     await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
+    // Settled: the workspace sidebar (which hosts the Sign-out form) is
+    // mounted and the landing-page redirect chain has finished.
+    await expect(page.locator('[data-cairn-workspace-sidebar]')).toBeVisible({
+      timeout: 30_000,
+    });
 
     // The sidebar footer "Sign out" submits a Server Action (no CSRF-less POST
-    // to /api/auth/signout). After it resolves we must land on /login.
+    // to /api/auth/signout). Its redirect arrives as a SOFT same-document RSC
+    // navigation — no new `load` event ever fires, so `waitForURL(...,
+    // waitUntil: 'load')` (the old assert, and waitForURL's default) hangs for
+    // the full timeout even though the page IS on /login. Assert the URL with
+    // the lifecycle-agnostic toHaveURL instead. (This soft-nav-vs-load
+    // mismatch was the entire flake history of this test.)
     await page
+      .locator('[data-cairn-workspace-sidebar]')
       .getByRole('button', { name: /sign out/i })
-      .first()
       .click();
-    await page.waitForURL('**/login', { timeout: 30_000 });
-    expect(page.url()).toContain('/login');
+    await expect(page).toHaveURL(/\/login/, { timeout: 30_000 });
 
-    // Session is actually cleared: a protected route bounces back to login.
+    // Session is actually cleared: a protected route bounces back to login —
+    // and THIS is the hard-document-navigation proof (goto follows the
+    // redirect chain and completes a real load).
     await page.goto('/');
-    await page.waitForURL('**/login', { timeout: 30_000 });
-    expect(page.url()).toContain('/login');
+    await expect(page).toHaveURL(/\/login/, { timeout: 30_000 });
   });
 
   test('GET /logout signs out and redirects to /login', async ({ page, seeded }) => {
