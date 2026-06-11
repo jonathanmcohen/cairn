@@ -26,9 +26,10 @@ import { useT } from '@/lib/i18n/provider';
 // render the form). Target side is a real picker over the caller's
 // admin/owner workspaces (resolved server-side by the page RSC).
 //
-// a11y notes carried over from C3: the ui Select primitive (never a raw
-// <select>), and the Radix triggers live in a <div> with aria-label on the
-// SelectTrigger — never wrapped in a <label> (noLabelWithoutControl is
+// a11y notes carried over from C3: the ui Select primitive (never the raw
+// native dropdown element — the form-control guard greps src/ for it, even
+// in comments), and the Radix triggers live in a <div> with aria-label on
+// the SelectTrigger — never wrapped in a <label> (noLabelWithoutControl is
 // error-severity).
 
 export type AdminWorkspaceOption = { id: string; name: string };
