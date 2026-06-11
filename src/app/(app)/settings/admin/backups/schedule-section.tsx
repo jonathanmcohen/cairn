@@ -162,10 +162,14 @@ export function ScheduleSection({ schedule, schedulerEnabled, runs }: SchedulePr
         </label>
 
         <div className="flex flex-wrap items-end gap-4">
-          <label className="block space-y-2 text-sm">
+          <div className="block space-y-2 text-sm">
             <span className="font-medium">{t('settingsAdmin.backups.schedule.cadence')}</span>
             <Select value={preset} onValueChange={(next) => setPreset(next as Preset)}>
-              <SelectTrigger data-testid="schedule-preset-select" className="w-44">
+              <SelectTrigger
+                aria-label={t('settingsAdmin.backups.schedule.cadence')}
+                data-testid="schedule-preset-select"
+                className="w-44"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -180,7 +184,7 @@ export function ScheduleSection({ schedule, schedulerEnabled, runs }: SchedulePr
                 </SelectItem>
               </SelectContent>
             </Select>
-          </label>
+          </div>
           {preset === 'custom' ? (
             <label className="block space-y-2 text-sm">
               <span className="font-medium">{t('settingsAdmin.backups.schedule.customCron')}</span>
@@ -194,10 +198,14 @@ export function ScheduleSection({ schedule, schedulerEnabled, runs }: SchedulePr
               />
             </label>
           ) : null}
-          <label className="block space-y-2 text-sm">
+          <div className="block space-y-2 text-sm">
             <span className="font-medium">{t('settingsAdmin.backups.schedule.target')}</span>
             <Select value={target} onValueChange={(next) => setTarget(next as 'local' | 's3')}>
-              <SelectTrigger data-testid="schedule-target-select" className="w-36">
+              <SelectTrigger
+                aria-label={t('settingsAdmin.backups.schedule.target')}
+                data-testid="schedule-target-select"
+                className="w-36"
+              >
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -207,7 +215,7 @@ export function ScheduleSection({ schedule, schedulerEnabled, runs }: SchedulePr
                 <SelectItem value="s3">{t('settingsAdmin.backups.schedule.targetS3')}</SelectItem>
               </SelectContent>
             </Select>
-          </label>
+          </div>
           <label className="block space-y-2 text-sm">
             <span className="font-medium">{t('settingsAdmin.backups.schedule.retentionDays')}</span>
             <input
