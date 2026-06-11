@@ -28,12 +28,20 @@ test.describe('item H1 — e2e gate integrity', () => {
     // data: URI that CI's CSP blocked, and axe excludes the unloaded
     // (effectively invisible) element, so the meta-test passed locally and
     // failed on the runner.
+    // Let hydration and the initial client fetches settle BEFORE injecting:
+    // on the slower CI runner a React re-render between injection and
+    // analysis reconciled the foreign node away — the visibility assert
+    // (taken right after injection) passed while axe (run later) saw a page
+    // with no nameless button ("passes included button-name: true").
+    await page.waitForLoadState('networkidle');
     await page.evaluate(() => {
       const btn = document.createElement('button');
       btn.id = 'h1-contrived-violation';
       btn.type = 'button';
-      btn.style.cssText = 'width:24px;height:24px;';
-      (document.querySelector('main') ?? document.body).appendChild(btn);
+      btn.style.cssText = 'width:24px;height:24px;position:fixed;bottom:4px;right:4px;';
+      // document.body, not <main>: body-level appends sit outside the
+      // route's reconciled subtree and survive re-renders.
+      document.body.appendChild(btn);
     });
     // The injection must actually land and be visible — if this fails, the
     // detector below was never exercised (don't let the meta-test pass or
@@ -41,6 +49,12 @@ test.describe('item H1 — e2e gate integrity', () => {
     await expect(page.locator('#h1-contrived-violation')).toBeVisible();
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA_TAGS).analyze();
+    // Catch mid-analysis removal explicitly — a missing element would
+    // otherwise read as "the gate decayed".
+    await expect(
+      page.locator('#h1-contrived-violation'),
+      'the injected element vanished between injection and analysis',
+    ).toBeVisible();
     const buttonName = results.violations.find((v) => v.id === 'button-name');
     expect(
       buttonName,
