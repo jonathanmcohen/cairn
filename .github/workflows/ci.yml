@@ -492,6 +492,22 @@ jobs:
       - name: Build
         run: rm -rf .next && pnpm build
 
+      # C1 (backup snapshot UI) spawns the backup CLI from the booted server;
+      # pg_dump's major MUST match the Postgres 18 service container, but
+      # ubuntu-latest ships the v16 client ("aborting because of server
+      # version mismatch"). Same PGDG install the unit `server`/`lib-*`
+      # suites use above.
+      - name: postgresql-client-18 (pg_dump major must match the container)
+        run: |
+          set -euo pipefail
+          sudo install -d /usr/share/postgresql-common/pgdg
+          sudo curl -fsSL -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc https://www.postgresql.org/media/keys/ACCC4CF8.asc
+          echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-client-18
+          echo "/usr/lib/postgresql/18/bin" >> "$GITHUB_PATH"
+          /usr/lib/postgresql/18/bin/pg_dump --version | grep -q " 18\." || { echo "pg_dump 18 not found"; exit 1; }
+
       # The webServer entries in playwright.e2e.config.ts run db:migrate and
       # boot the standalone server + collab process themselves. Scoped to the
       # item specs (tests/e2e/item-*) — the legacy specs in the same dir
