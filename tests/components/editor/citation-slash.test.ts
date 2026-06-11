@@ -53,11 +53,13 @@ describe('citation + footnote slash entries — basic shape', () => {
   });
 });
 
-describe('citation slash — commit-only range consume (#76 #136)', () => {
-  // #76 — Citation + Footnote now match Equation/Flashcard: the trigger range
-  // is consumed ONLY once the dialog resolves to a real insert. Popup teardown
-  // on open is owned by the Suggestion `render().onExit`, not by a synchronous
-  // consume, so cancelling preserves the typed "/query" text.
+describe('citation slash — deferred range consume (#76 #136 → B1)', () => {
+  // #76 → B1 — the trigger range is consumed when the dialog RESOLVES (insert
+  // on commit, cancelSlashTrigger on cancel), never synchronously on open.
+  // Popup teardown on open is owned by the Suggestion `render().onExit`. B1
+  // changed the cancel half: leaving the `/query` wedged re-triggering
+  // (dismissedRange + allowedPrefixes), so cancel now deletes the trigger too;
+  // only pre-trigger body text survives.
   it('does NOT consume the range synchronously on open for citationMenuItem', () => {
     vi.spyOn(bus, 'openEditorDialog').mockReturnValue(new Promise(() => {})); // never resolves
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
@@ -85,7 +87,7 @@ describe('citation slash — commit-only range consume (#76 #136)', () => {
     expect(deleteRange).not.toHaveBeenCalled();
   });
 
-  it('on cancel (null result), citationMenuItem does NOT insert and does NOT consume the range', async () => {
+  it('on cancel (null result), citationMenuItem does NOT insert but DOES consume the trigger (B1)', async () => {
     vi.spyOn(bus, 'openEditorDialog').mockResolvedValue(null);
     const insertContent = vi.fn();
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
@@ -100,12 +102,14 @@ describe('citation slash — commit-only range consume (#76 #136)', () => {
 
     await new Promise((r) => setTimeout(r, 0));
 
-    // Cancel → no insert AND the typed "/query" is left intact.
+    // Cancel → no insert, but the `/query` trigger is removed so the slash
+    // menu can re-fire (B1 — the wedge fix).
     expect(insertContent).not.toHaveBeenCalled();
-    expect(deleteRange).not.toHaveBeenCalled();
+    expect(deleteRange).toHaveBeenCalledTimes(1);
+    expect(deleteRange).toHaveBeenCalledWith(range);
   });
 
-  it('on cancel (null result), footnoteMenuItem does NOT set mark and does NOT consume the range', async () => {
+  it('on cancel (null result), footnoteMenuItem does NOT set mark but DOES consume the trigger (B1)', async () => {
     vi.spyOn(bus, 'openEditorDialog').mockResolvedValue(null);
     const setMark = vi.fn();
     const deleteRange = vi.fn(() => ({ run: vi.fn() }));
@@ -121,6 +125,7 @@ describe('citation slash — commit-only range consume (#76 #136)', () => {
     await new Promise((r) => setTimeout(r, 0));
 
     expect(setMark).not.toHaveBeenCalled();
-    expect(deleteRange).not.toHaveBeenCalled();
+    expect(deleteRange).toHaveBeenCalledTimes(1);
+    expect(deleteRange).toHaveBeenCalledWith(range);
   });
 });

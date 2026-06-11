@@ -3,31 +3,32 @@
 // modal), E1b (#274 /citation DOI auto-fetch), E1c (#274/#64 modal-first
 // footnote/flashcard), and E2 (#73/#253 comment mention trailing text).
 //
-// DEFERRED-TO-CI: like tests/e2e/security-ux.spec.ts and search-refresh.spec.ts,
-// this spec lives under tests/e2e/ but is NOT run by the local `pnpm test:a11y`
-// (whose testDir is ./tests/a11y). CI extends testDir/testMatch to include
-// tests/e2e and boots the app + seed, so these run against the built/deployed
-// image there. We reuse the a11y fixtures (real seeded user + credentials
-// sign-in) so the surface matches production.
-import { expect, test } from '../a11y/fixtures';
+// v0.10.0 H1 de-rot: every test now runs on a FRESH page created through the
+// real API (tests/e2e/util.ts) instead of the shared seeded page. The dev DB
+// persists across runs, so the shared doc accumulated each run's inserted
+// equation/citation/footnote nodes until the doc-end caret position stopped
+// being a usable slash-trigger spot (order-dependent menu-never-opens reds).
+// Sign-in goes through the fixtures' worker-cached cookie jar — per-test
+// credential form drives tripped the 5/min auth limiter across the suite.
+import { expect, signIn, test } from '../a11y/fixtures';
+import {
+  createPageViaApi,
+  openPageEditor,
+  pmDoc,
+  pmParagraph,
+  typeSlashQueryAtDocEnd,
+} from './util';
 
-async function signIn(
+/** Create a fresh page with a sentinel, open its editor, type the query. */
+async function openSlashMenuOnFreshPage(
   page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
+  title: string,
+  query: string,
 ) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
-
-/** Open the slash menu in the page editor by typing `/` at the end of the doc. */
-async function openSlashMenu(page: import('@playwright/test').Page, query: string) {
-  const editor = page.locator('.ProseMirror').first();
-  await editor.click();
-  await editor.press('End');
-  await page.keyboard.type(`/${query}`);
+  const sentinel = `slash-ux ${title} ${Date.now().toString(36)}`;
+  const pageId = await createPageViaApi(page, sentinel, pmDoc(pmParagraph(sentinel)));
+  const editor = await openPageEditor(page, pageId, sentinel);
+  await typeSlashQueryAtDocEnd(page, editor, `/${query}`);
 }
 
 test.describe('Plan E slash UX surfaces', () => {
@@ -46,8 +47,7 @@ test.describe('Plan E slash UX surfaces', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
-    await page.goto(`/pages/${seeded.pageId}`);
-    await openSlashMenu(page, 'equation');
+    await openSlashMenuOnFreshPage(page, 'equation', 'equation');
     await page
       .getByRole('option', { name: /Equation/i })
       .first()
@@ -65,10 +65,13 @@ test.describe('Plan E slash UX surfaces', () => {
 
   test('#274 — /citation modal exposes a Fetch-from-DOI affordance', async ({ page, seeded }) => {
     await signIn(page, seeded);
-    await page.goto(`/pages/${seeded.pageId}`);
-    await openSlashMenu(page, 'citation');
+    await openSlashMenuOnFreshPage(page, 'citation', 'citation');
+    // The grouped slash menu (#122) made option accessible names
+    // title+description, so the old anchored /^Citation$/ stopped matching —
+    // latent rot CI never caught while its e2e glob only ran item-*. Anchor on
+    // the title prefix to stay distinct from "Citation (DOI/PubMed lookup)".
     await page
-      .getByRole('option', { name: /^Citation$/i })
+      .getByRole('option', { name: /^Citation Insert/i })
       .first()
       .click();
 
@@ -81,8 +84,7 @@ test.describe('Plan E slash UX surfaces', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
-    await page.goto(`/pages/${seeded.pageId}`);
-    await openSlashMenu(page, 'footnote');
+    await openSlashMenuOnFreshPage(page, 'footnote', 'footnote');
     await page
       .getByRole('option', { name: /Footnote/i })
       .first()
@@ -95,19 +97,32 @@ test.describe('Plan E slash UX surfaces', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
-    await page.goto(`/pages/${seeded.pageId}`);
-    // Open the comments panel and compose a comment with a mention + trailing text.
-    const composer = page.locator('[contenteditable]').filter({ hasText: '' }).last();
+    const sentinel = `slash-ux mention ${Date.now().toString(36)}`;
+    const pageId = await createPageViaApi(page, sentinel, pmDoc(pmParagraph(sentinel)));
+    await openPageEditor(page, pageId, sentinel);
+    // Open the comments panel and scope the composer to it — a bare
+    // `[contenteditable]` could resolve to the page editor itself (which also
+    // offers @-mentions), making the final assert order-dependent (H1 de-rot).
+    await page
+      .getByRole('button', { name: /comments/i })
+      .first()
+      .click();
+    const panel = page.locator('aside').filter({ hasText: 'Comments' });
+    await expect(panel).toBeVisible({ timeout: 15_000 });
+    const composer = panel.locator('[contenteditable="true"]').first();
     await composer.click();
     await page.keyboard.type('@');
-    // Pick the first member suggestion when the popup appears.
+    // Pick the first member suggestion via MOUSE. No silent skip: the popup
+    // MUST appear (the old `if (count > 0)` guard let the regression pass
+    // unobserved). The mouse path is the regression surface: without the
+    // mention list's mousedown preventDefault the click blurs the composer
+    // and the trailing text goes nowhere (#73/#253).
     const firstMember = page.locator('.tippy-box [role="option"], .tippy-box button').first();
-    if ((await firstMember.count()) > 0) {
-      await firstMember.click();
-      await page.keyboard.type('and the rest');
-      // Submit (Cmd/Ctrl+Enter) and verify the persisted comment shows trailing text.
-      await page.keyboard.press('ControlOrMeta+Enter');
-      await expect(page.getByText(/and the rest/)).toBeVisible({ timeout: 10_000 });
-    }
+    await expect(firstMember).toBeVisible({ timeout: 10_000 });
+    await firstMember.click();
+    const trailing = `and the rest ${Date.now().toString(36)}`;
+    await page.keyboard.type(trailing);
+    await panel.getByRole('button', { name: 'Comment', exact: true }).click();
+    await expect(panel.getByText(trailing)).toBeVisible({ timeout: 10_000 });
   });
 });

@@ -69,6 +69,17 @@ Security properties:
   revokes any tokens already issued from it.
 - Every consent, token issuance, and revocation is **audited**
   (`oauth.consent_granted`, `oauth.token_issued`, `oauth.token_revoked`).
+- **Revocation authenticates the client** (v0.10.0, RFC 7009 §2.1):
+  `POST /api/oauth/revoke` requires `client_id`, and confidential clients must
+  also present `client_secret` — as form fields, exactly like the token
+  endpoint (`client_secret_post`; HTTP Basic is not supported on either).
+  Public clients present no secret but can only revoke tokens issued to their
+  own `client_id`; a token bound to another client gets the standard silent
+  `200` **without** any revocation, so the endpoint never reveals whether a
+  token exists. **Breaking note:** anonymous revocation (a bare `token` field
+  with no `client_id`) no longer works — any script calling
+  `/api/oauth/revoke` must now send the `client_id` the token was issued to,
+  or it will receive `401 invalid_client`.
 
 Access tokens (`cairn_oauth_…`) resolve through the **same enforcement path as
 PATs**, so the `mcp:*` scope gate and all `requireScope` checks apply unchanged.

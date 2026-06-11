@@ -61,6 +61,33 @@ row to prevent a poison loop.
 and double-fire each due row. Multi-instance deployments should disable this scheduler and use
 external cron / Kubernetes CronJob to invoke the same CLI.
 
+### Scheduled backups (v0.10.0 C3)
+
+Admins can manage THE backup schedule from **Settings → Admin → Backups → Scheduled
+backups** — no SQL needed. The page (and `PUT /api/admin/backups/schedule`) accepts only
+structured fields (cadence, target, retention) and builds the cron command string
+server-side, so the stored row always carries `--out <CAIRN_BACKUP_DIR>` (a hand-authored
+row without `--out` throws on every tick) plus `--trigger scheduled`.
+
+Requirements & semantics:
+
+- **`CAIRN_SCHEDULER_ENABLED=1` is required** — without it the schedule row sits dormant
+  and never fires; the admin page shows a prominent warning when the flag is off.
+- **One schedule per instance.** Backups are instance-level (full `pg_dump`), so the API
+  upserts a single global `cron_schedules` row (matched by the `backup ` command prefix).
+- **Advisory lock prevents double-fire.** Every CLI `backup` run takes
+  `pg_try_advisory_lock` on a fixed key before dumping; a create-now click racing a cron
+  tick (or a second replica's scheduler) yields exactly one real dump. The loser exits 0
+  and records a failed `backup_runs` row with error `another backup is running`.
+- **Run history is durable.** Each run writes a `backup_runs` row
+  (running → done/failed, with duration, trigger, and bundle timestamp); the admin page
+  lists the last 20.
+- **`--retention-days N` vs `--keep N`:** retention-days is age-based — it deletes any
+  bundle older than N days, and can delete *everything* if backups stop being produced
+  for a while. keep-N is count-based — the newest N bundle stamps (dump + uploads tar +
+  manifest) always survive, regardless of age. When both are set, retention-days prunes
+  first, then keep-N; keep-N therefore acts as the floor.
+
 ### Connector sync (`connector:sync`)
 
 `pnpm cli connector:sync [--connector <id>]` runs one round-trip of the v0.7.0 connector engine
@@ -75,6 +102,39 @@ adapters and the command is a no-op.
 **SINGLE-INSTANCE only** — same ceiling as the rest of this section. Running it twice in parallel
 on the same connector double-pushes (and may double-create unmapped Cairn rows). Schedule it via
 the cron table above (e.g. `cron_spec '*/5 * * * *'` for 5-minute polls) or external cron.
+
+### Selective restore (v0.10.0 C4)
+
+Settings → Admin → Backups → per-bundle **Selective restore…** (or
+`POST /api/admin/backups/selective-restore`) copies a page subtree — or all pages of one
+workspace — OUT of a snapshot bundle INTO a live workspace. Unlike the full restore it is
+**additive**: every restored page/database/row/comment/file gets a brand-new id, nothing
+existing is modified or deleted, and the instance is NOT put into read-only mode while it
+runs. Worst case is an unwanted copy you delete.
+
+How it works: the bundle is `pg_restore`d into a throwaway scratch database
+(`cairn_restore_<id>_<epoch>`) on the same Postgres instance, the selected rows are read out,
+remapped (new ids, target `workspace_id`, parent chains and embedded
+database/page-link/page-embed references rewritten; the subtree root becomes a top-level page),
+and inserted in one transaction. Each restored page also gets a regenerated `page_yjs` state so
+the collaborative editor renders it immediately. The scratch DB is dropped on success and
+failure; leftovers from a crashed job are force-dropped by the next job after 1 hour.
+
+Caveats:
+
+- **Attribution**: restored rows are attributed to the admin who ran the restore — the
+  snapshot's user accounts are not copied.
+- **Files**: the DB dump carries file *rows* only. A file is restored (its binary **copied**
+  to a new path under the target workspace) only when the binary still exists in the file
+  storage; otherwise the row is skipped, its file/image blocks are stripped from the restored
+  content, and the job result reports the `skippedFiles` count.
+- **Sharing/lock/encryption state is reset**: restored pages are unpublished, unlocked and
+  unencrypted (E2E-encrypted pages are excluded outright — their keys do not transfer).
+- **References outside the restored set** (links/embeds to pages that were not part of the
+  selection) keep their old ids and render as links to missing pages.
+- **Version guard**: a snapshot whose manifest `MAJOR.MINOR` is newer than the running app is
+  refused upfront (upgrade first). Much older snapshots may fail with "snapshot schema is too
+  old for selective restore" — fall back to the full restore.
 
 ### Restore from S3
 
@@ -438,6 +498,93 @@ ciphertext)`. No partial plaintext lands on disk.
   contains the ciphertext rows AND every other table) at rest on disk.
   Both can coexist for defense-in-depth.
 
+## Federated peer secret encryption (`CAIRN_PEER_SECRET_KEY`, v0.10.0 G1)
+
+`peer_instances.shared_secret_hash` holds the HMAC key each federated peer
+signs cross-instance search requests with. The HMAC protocol needs the **raw**
+key at verify/sign time, so it cannot be one-way hashed — instead it is
+**encrypted at rest** with AES-256-GCM (Argon2id-derived key, same parameters
+as the backup envelope) under the operator env key `CAIRN_PEER_SECRET_KEY`
+(≥ 16 chars; store it in a secret manager alongside
+`CAIRN_BACKUP_ENCRYPTION_PASSPHRASE`).
+
+### Enabling
+
+Set `CAIRN_PEER_SECRET_KEY` and restart. From then on:
+
+- **New pairings** store the secret as an `enc-v1:` envelope
+  (`secret_format = 'enc-v1'`).
+- **Existing raw rows keep authenticating** and are lazily re-encrypted in
+  place after their first **successful** inbound verify — no flag-day, no
+  re-pairing required.
+
+### Keyless (legacy) mode
+
+If the env var is never set, behavior is identical to v0.9: secrets are
+stored raw at rest, and Cairn logs a once-per-process warning naming
+`CAIRN_PEER_SECRET_KEY` whenever raw rows are used. Nothing is blocked.
+
+### Rotation / lost key
+
+There is no in-place re-encryption command: **rotation = set the new key and
+re-pair the affected peers.** Rows encrypted under the old key fail
+**closed** — the inbound route excludes them from the verify candidate list
+and the outbound fan-out skips them, each logging a `PeerSecretDecryptError`
+whose message names `CAIRN_PEER_SECRET_KEY` and the re-pair playbook (it
+never contains key material or ciphertext). Restoring the previous key value
+restores those rows without re-pairing.
+
+Setting the key for the first time, or unsetting it while `enc-v1` rows
+exist, follows the same rule: encrypted rows are unreadable without the key
+(fail closed), raw rows keep working in either mode.
+
+## Federated peer inbound rate limiting (`CAIRN_PEER_RATE_LIMIT_PER_MIN`, v0.10.0 G2)
+
+The inbound federated-search route (`/api/search/federated/peer`) limits each
+**authenticated** peer to `CAIRN_PEER_RATE_LIMIT_PER_MIN` requests per minute
+(default **60**; unset, unparseable, or non-positive values fall back to the
+default — never to "unlimited"). The bucket is keyed by the peer's row id, not
+by IP, so peers sharing an egress cannot throttle each other. The envelope
+signature is verified **before** the limit check, so unauthenticated garbage
+cannot burn a legitimate peer's budget. Over-limit requests get `429` with a
+`Retry-After` header (whole seconds) and a `federation.peer_rate_limited`
+audit row; if the limiter itself fails, the route fails **closed** with `503`
+rather than becoming an open relay. The limiter is in-process per replica
+(same as the login limiter): with R app replicas the effective ceiling is up
+to R × the configured limit — fine for the single-replica homelab target,
+worth noting before scaling out.
+
+## OAuth registration flood control (v0.10.0 G5)
+
+RFC 7591 dynamic client registration (`POST /api/oauth/register`) is
+unauthenticated **by design** — MCP clients self-register before any user
+signs in — which previously made it an unbounded write surface. Two layers of
+flood control now apply, and the **default posture stays open** (zero-setup
+self-registration keeps working):
+
+- **Rate limiting** (always on): two token buckets are checked before any
+  other work — per client IP (`CAIRN_OAUTH_REGISTER_LIMIT_PER_MIN`, default
+  **10**/min) and instance-wide
+  (`CAIRN_OAUTH_REGISTER_GLOBAL_LIMIT_PER_MIN`, default **30**/min). Unset,
+  unparseable, or non-positive values fall back to the defaults — never to
+  "unlimited". Over-limit requests get `429` with a `Retry-After` header
+  (whole seconds) and an `error_description` naming the tripped bucket; if
+  the limiter itself fails the route fails **closed** with `503`. Per-IP
+  keying honors `x-forwarded-for` only when `TRUST_PROXY=true` (same flag as
+  the login limiter); without a trusted proxy all callers share one bucket
+  and the global ceiling is the effective backstop. In-process per replica,
+  like the other limiters.
+- **Registration lock** (opt-in): Settings → Admin → OAuth clients has a
+  "Registration lock" card. Locking mints an RFC 7591 §3.1.1 **initial
+  access token** (`cairn_oiat_…`) shown **exactly once** — only its SHA-256
+  hash is stored (`system_meta` keys `oauth.register_lock` /
+  `oauth.register_iat_hash`). While locked, registration requires
+  `Authorization: Bearer <token>`; anything else gets `401 invalid_token`.
+  "Regenerate token" replaces the token (the old one stops working);
+  unlocking deletes the lock state. Both transitions write an
+  `oauth.register_lock_changed` audit row. Throttled or locked-out requests
+  write nothing.
+
 ## Collaboration auth (shared AUTH_SECRET)
 
 The `cairn` app and the `cairn-collab` real-time service form a single trust
@@ -469,3 +616,71 @@ Operational consequences:
   mismatch. Since v0.9.8 the client retries the token fetch with exponential
   backoff and shows a dismissible "Collab offline — reconnecting…" banner, so
   the editor recovers automatically once resolution is restored.
+
+## Verifying hover-gated / click-gated editor UI (v0.10.0 B2 / #117)
+
+The v0.9.19 live-deploy sweep flagged heading collapse as "not in the runtime
+DOM" — a false alarm caused by the verification method, not the feature. Some
+editor surfaces intentionally mount NOTHING until an interaction happens, so a
+static DOM grep (view-source, `querySelector` on a freshly loaded page,
+crawler snapshots) cannot see them:
+
+- **Hover-gated overlays** — e.g. the heading-collapse chevron
+  (`[data-heading-collapse-toggle]`) mounts only on heading `mousemove`
+  (`src/components/editor/heading-collapse.tsx`). Before the hover there is no
+  chevron element at all.
+- **Click-gated decorations** — the collapse state itself is ProseMirror
+  decorations (`data-cairn-collapsed` + native `hidden` on the child blocks,
+  `heading-collapse-extension.ts`). Before the click there are no collapsed
+  attributes to find.
+
+To verify these surfaces, drive the interaction in a real browser (or
+Playwright) in order:
+
+1. Hover the heading **row** (`page.mouse.move` into the heading's bounding
+   box) → assert `[data-heading-collapse-toggle]` mounts.
+2. Click the toggle → assert `data-cairn-collapsed` appears on the heading and
+   the child blocks gain `hidden`.
+3. Click again → assert both attributes clear.
+
+A no-hover, no-click DOM inspection seeing neither layer is the EXPECTED
+state, not a regression. The `tests/e2e/item-117-heading-collapse.spec.ts`
+spec encodes this exact sequence; reuse it as the template for any future
+hover- or click-gated editor feature. (Chevron *discoverability* — making the
+affordance findable without knowing the gutter hover — is tracked separately
+as v0.10.0 item E3.)
+
+## Health endpoints (v0.10.0 H4d)
+
+Cairn exposes two unauthenticated health surfaces with deliberately different
+contracts — do not "fix" one to behave like the other:
+
+- `GET /api/health` — **always answers 200** and signals state in the BODY:
+  `{ status: 'ok' | 'degraded', version, db: 'ok' | 'down' }`. It is a
+  diagnostic endpoint for dashboards and humans who want a response (with the
+  running version) even while the database is down. Consumers must read the
+  body, never the status code.
+- `GET /healthz` — **the readiness probe**. Returns 200
+  `{ status: 'ok', version, db: 'ok', uptime_seconds }` when the database
+  answers `SELECT 1`, and **503** `{ status: 'degraded', db: 'unreachable' }`
+  when it does not, so load balancers / Kubernetes shed traffic from a broken
+  replica.
+
+Point liveness/readiness probes at `/healthz`. `/api/health` intentionally
+never returns 503.
+
+## Two-factor enforcement (`require_2fa` / `CAIRN_ENFORCE_2FA`, v0.10.0 H4b)
+
+Workspace admins can require 2FA under **Settings → Workspace → General →
+"Require two-factor authentication"** (the `workspaces.require_2fa` column).
+When a workspace requires 2FA, any member of it who has not enabled TOTP is
+redirected to `/settings/security?enroll=required` by the app layout before
+any app page renders, until they finish enrollment.
+
+- `CAIRN_ENFORCE_2FA` is an operator **opt-out** for the settings toggle and
+  defaults **on**: the toggle is visible unless the variable is explicitly set
+  to `false` or `0`. Hiding the toggle does not un-set `require_2fa` on
+  workspaces that already enabled it — enforcement keeps running.
+- Accepted scope limitation: `require_2fa` gates the app **UI** only. API
+  access is governed by token auth (PATs/OAuth) and is not blocked for
+  un-enrolled session users — `/api/*` is exempt from the layout gate.

@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 
@@ -23,17 +23,26 @@ vi.mock('@/lib/i18n/provider', async () => {
 
 afterEach(cleanup);
 
-describe('<SidebarFooterNav> version link', () => {
-  it('renders the version as an accessible external link with a discernible name', () => {
+describe('<SidebarFooterNav> version chip', () => {
+  // v0.10.0 E2 — the chip is now a BUTTON that opens the What's-new panel; the
+  // external GitHub release link moved into the panel footer (same href +
+  // target contract the chip itself used to carry).
+  it('renders the version as an accessible button opening the What’s-new panel, with the external link in the panel footer', () => {
     render(<SidebarFooterNav version="9.9.9" />);
-    const link = screen.getByRole('link', { name: /9\.9\.9|release notes/i });
-    expect(link.getAttribute('href')).toContain('9.9.9');
-    expect(link.getAttribute('target')).toBe('_blank');
+    const chip = screen.getByRole('button', { name: /9\.9\.9|release notes/i });
     // AA: must carry a PERSISTENT underline affordance (a bare `underline`
     // token, not the round-1 hover-only `hover:underline`) + a visible focus
-    // ring, so non-hover/keyboard users perceive it as a link.
-    expect(link.className).toMatch(/(^|\s)underline(\s|$)/);
-    expect(link.className).toMatch(/focus-visible:ring/);
+    // ring, so non-hover/keyboard users perceive it as interactive.
+    expect(chip.className).toMatch(/(^|\s)underline(\s|$)/);
+    expect(chip.className).toMatch(/focus-visible:ring/);
+
+    fireEvent.click(chip);
+    const link = screen.getByRole('link', { name: /view this release on github/i });
+    expect(link.getAttribute('href')).toContain('9.9.9');
+    expect(link.getAttribute('target')).toBe('_blank');
+    // 9.9.9 never matches the generated notes' version → the stale-notes guard
+    // must show the fallback, not some other version's section (E2 test (d)).
+    expect(screen.getByTestId('whats-new-fallback')).toBeTruthy();
   });
 
   it('renders Favorites + Inbox nav entries before My tasks (#202)', () => {

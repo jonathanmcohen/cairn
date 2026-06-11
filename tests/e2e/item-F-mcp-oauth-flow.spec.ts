@@ -148,21 +148,31 @@ test.describe('item F — MCP OAuth 2.1 full flow (runtime, through the proxy)',
     const oldAccessAfterRotate = await mcpCall(tok.access_token, 3, 'tools/list');
     expect(oldAccessAfterRotate.status(), 'rotation revokes the old access token').toBe(401);
 
+    // The rotated pair works BEFORE any reuse — order matters: since v0.10.0
+    // G3, replaying a rotated refresh token revokes the ENTIRE token family
+    // (descendants included), so this assert must precede the replay below.
+    const newAccessWorks = await mcpCall(tok2.access_token, 4, 'tools/list');
+    expect(newAccessWorks.ok(), 'rotated access token works').toBe(true);
+
     const reuseOldRefresh = await request.post('/api/oauth/token', {
       form: { grant_type: 'refresh_token', refresh_token: tok.refresh_token, client_id: clientId },
     });
     expect(reuseOldRefresh.status(), 'reused refresh token → 400').toBe(400);
     expect((await reuseOldRefresh.json()).error).toBe('invalid_grant');
 
-    const newAccessWorks = await mcpCall(tok2.access_token, 4, 'tools/list');
-    expect(newAccessWorks.ok(), 'rotated access token works').toBe(true);
+    // G3 contract: the reuse above burned the whole family — tok2 is dead too.
+    const afterReuse = await mcpCall(tok2.access_token, 5, 'tools/list');
+    expect(afterReuse.status(), 'refresh reuse revokes the rotated descendant').toBe(401);
 
-    // 7. Revoke (RFC 7009) → the MCP call with the revoked token is now 401.
+    // 7. Revoke (RFC 7009) — silent 200 even for the already-revoked token,
+    // and the MCP call stays 401. Since v0.10.0 G4 the endpoint authenticates
+    // the caller: this public client presents its client_id (no secret), and
+    // the token-bound check passes because the token was issued to it.
     const revokeRes = await request.post('/api/oauth/revoke', {
-      form: { token: tok2.access_token },
+      form: { token: tok2.access_token, client_id: clientId },
     });
     expect(revokeRes.status(), 'revoke 200').toBe(200);
-    const afterRevoke = await mcpCall(tok2.access_token, 5, 'tools/list');
+    const afterRevoke = await mcpCall(tok2.access_token, 6, 'tools/list');
     expect(afterRevoke.status(), 'revoked token → 401').toBe(401);
 
     // 8. Negative: wrong PKCE verifier on a fresh code → 400 invalid_grant.

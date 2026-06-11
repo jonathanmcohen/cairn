@@ -1,6 +1,6 @@
 {
   "name": "cairn",
-  "version": "0.9.19",
+  "version": "0.10.0",
   "private": true,
   "description": "Self-hosted, Notion-style block-based notes",
   "license": "MIT",
@@ -11,9 +11,10 @@
   "packageManager": "pnpm@11.4.0+sha512.f0febc7e37552ab485494a914241b338e0b3580b93d54ce31f00933015880863129038a1b4ae4e414a0ee63ac35bf21197e990172c4a68256450b5636310968f",
   "scripts": {
     "dev": "pnpm copy:emoji && next dev",
-    "build": "node scripts/fetch-embedding-assets.mjs && pnpm copy:emoji && next build && pnpm build:sw && pnpm build:entrypoint",
+    "build": "node scripts/fetch-embedding-assets.mjs && pnpm copy:emoji && pnpm notes:gen && next build && pnpm build:sw && pnpm build:entrypoint",
     "build:embed-assets": "node scripts/fetch-embedding-assets.mjs",
     "copy:emoji": "node scripts/copy-emoji-data.mjs",
+    "notes:gen": "node scripts/generate-release-notes.mjs",
     "build:sw": "serwist build serwist.config.mjs",
     "build:entrypoint": "tsc --project tsconfig.entrypoint.json && tsc-alias --project tsconfig.entrypoint.json",
     "start": "node dist/server/entrypoint.js",

@@ -13,14 +13,13 @@ describe('sidebar density tokens (#130)', () => {
   });
 });
 
-const treeSrc = readFileSync(
-  join(process.cwd(), 'src/components/sidebar/virtualized-page-tree.tsx'),
-  'utf8',
-);
-
 describe('sidebar tree row height (C-v3 optional)', () => {
-  it('ROW_HEIGHT_PX is 26 (denser tree)', () => {
-    expect(treeSrc).toMatch(/ROW_HEIGHT_PX\s*=\s*26/);
+  it('ROW_HEIGHT_PX is 26 (denser tree)', async () => {
+    // v0.10.0 H3 — the contract moved to the dependency-free density-tokens
+    // module (so the runtime-px e2e can import it); assert the VALUE, not a
+    // source regex.
+    const { ROW_HEIGHT_PX } = await import('@/components/sidebar/density-tokens');
+    expect(ROW_HEIGHT_PX).toBe(26);
   });
 });
 

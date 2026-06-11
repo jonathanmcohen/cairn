@@ -11,18 +11,7 @@
 // is ./tests/a11y). CI extends testDir/testMatch to include tests/e2e, boots
 // the built/deployed image + seed, and runs these against production-identical
 // surfaces. Reuses the a11y fixtures (real seeded user + credentials sign-in).
-import { expect, test } from '../a11y/fixtures';
-
-async function signIn(
-  page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
-) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
+import { expect, signIn, test } from '../a11y/fixtures';
 
 test.describe('Plan I — nav entries + empty states + matrices', () => {
   test('#202 — Favorites and Inbox are reachable from the main sidebar', async ({
@@ -30,6 +19,7 @@ test.describe('Plan I — nav entries + empty states + matrices', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
+    await page.goto('/');
     const favorites = page.getByRole('link', { name: 'Favorites' });
     const inbox = page.getByRole('link', { name: 'Inbox' });
     await expect(favorites).toBeVisible();
@@ -68,6 +58,7 @@ test.describe('Plan I — nav entries + empty states + matrices', () => {
 
   test('#221 — bell flyout shows an iconed empty state', async ({ page, seeded }) => {
     await signIn(page, seeded);
+    await page.goto('/');
     await page
       .getByRole('button', { name: /notifications/i })
       .first()

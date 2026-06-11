@@ -20,6 +20,7 @@ export function SearchHintButton() {
   return (
     <button
       type="button"
+      data-tour="search"
       onClick={open}
       aria-label={t('searchHint.aria')}
       aria-keyshortcuts="Meta+K"

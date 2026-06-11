@@ -31,6 +31,7 @@ export interface CliArgs {
     | 'reconcile'
     | 'reminders:scan'
     | 'reindex-embeddings'
+    | 'reindex-vector-index'
     | 'connector:sync'
     | 'trash:purge'
     | 'pages:auto-unlock'
@@ -44,6 +45,18 @@ export interface CliArgs {
   fromS3?: string;
   force: boolean;
   retentionDays?: number;
+  /**
+   * v0.10.0 C3 — keep-newest-N bundle pruning (`backup --keep N`). Runs after
+   * the age-based --retention-days sweep when both are given. Undefined =
+   * no keep-N pruning.
+   */
+  keep?: number;
+  /**
+   * v0.10.0 C3 — who started this backup, recorded on the `backup_runs`
+   * history row. The schedule API bakes `--trigger scheduled` into the cron
+   * command string; everything else defaults to 'manual'.
+   */
+  trigger?: 'manual' | 'scheduled';
   target?: 'local' | 's3';
   workspace?: string;
   /**
@@ -73,6 +86,10 @@ const KNOWN_COMMANDS = [
   'reconcile',
   'reminders:scan',
   'reindex-embeddings',
+  // v0.10.0 D8 — REINDEX INDEX CONCURRENTLY on the pgvector HNSW index
+  // (page_embeddings_embedding_hnsw_idx). Index-pass only; pair with
+  // reindex-embeddings when the embedding DATA needs refreshing too.
+  'reindex-vector-index',
   'connector:sync',
   'trash:purge',
   // v0.9.0 G2 P14 — single global cron sweep that auto-unlocks pages whose
@@ -118,6 +135,8 @@ export function parseArgs(argv: string[]): CliArgs {
   let fromS3: string | undefined;
   let force = false;
   let retentionDays: number | undefined;
+  let keep: number | undefined;
+  let trigger: 'manual' | 'scheduled' | undefined;
   let target: 'local' | 's3' | undefined;
   let workspace: string | undefined;
   let source: CliArgs['source'];
@@ -141,6 +160,19 @@ export function parseArgs(argv: string[]): CliArgs {
         throw new Error('--retention-days requires a non-negative integer');
       }
       retentionDays = n;
+    } else if (a === '--keep') {
+      const raw = rest[++i];
+      const n = Number(raw);
+      if (raw === undefined || !Number.isInteger(n) || n < 1) {
+        throw new Error('--keep requires a positive integer');
+      }
+      keep = n;
+    } else if (a === '--trigger') {
+      const t = rest[++i];
+      if (t !== 'manual' && t !== 'scheduled') {
+        throw new Error("--trigger must be 'manual' or 'scheduled'");
+      }
+      trigger = t;
     } else if (a === '--target') {
       const t = rest[++i];
       if (t !== 'local' && t !== 's3') throw new Error("--target must be 'local' or 's3'");
@@ -202,6 +234,10 @@ export function parseArgs(argv: string[]): CliArgs {
     fromS3,
     force,
     retentionDays,
+    keep,
+    // Backups without an explicit --trigger are 'manual' (operator shell,
+    // create-now button); only the cron command string says 'scheduled'.
+    trigger: cmd === 'backup' ? (trigger ?? 'manual') : trigger,
     target: cmd === 'backup' ? (target ?? 'local') : target,
     workspace,
     workspaceId,

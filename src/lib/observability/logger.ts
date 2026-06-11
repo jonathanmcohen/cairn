@@ -93,6 +93,12 @@ export const REDACT_PATHS: string[] = [
   'env.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
   'CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
   '*.CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
+  // v0.10.0 G1 — at-rest encryption key for federated peer secrets. The
+  // decrypt-failure log lines name the VAR on purpose (operator playbook) but
+  // must never carry its VALUE; this guards stray env interpolation too.
+  'env.CAIRN_PEER_SECRET_KEY',
+  'CAIRN_PEER_SECRET_KEY',
+  '*.CAIRN_PEER_SECRET_KEY',
 ];
 
 const level = process.env.CAIRN_LOG_LEVEL ?? 'info';

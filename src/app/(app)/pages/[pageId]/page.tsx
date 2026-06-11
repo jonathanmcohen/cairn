@@ -1,6 +1,7 @@
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { Editor } from '@/components/editor/editor';
+import { EDITOR_TOOLBAR_SLOT_ID } from '@/components/editor/toolbar-slot';
 import { PageIconPicker } from '@/components/page-icon-picker';
 import { PageMenu } from '@/components/page-menu';
 import { PageTitleInput } from '@/components/page-title-input';
@@ -100,7 +101,14 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
         ) : (
           <CoverBanner cover={cover} alt={page.title} />
         )}
-        <div className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
+        {/* v0.10.0 E6 — THE single page toolbar row. Page-level actions render
+            here directly; the editor-owned control group (suggest/bibliography/
+            presence/Live/outline) portals itself into the reserved slot below,
+            so the page no longer stacks a second control strip above the
+            editor body. `flex-wrap` is the narrow-viewport strategy: at 360px
+            the row wraps onto extra lines and every control stays on-screen
+            and clickable (the v0.9.19 workspace-switcher overflow lesson). */}
+        <div data-testid="page-toolbar" className="mb-6 flex flex-wrap items-center gap-2 sm:gap-3">
           <PageIconPicker pageId={page.id} initial={page.icon} />
           <div className="min-w-0 flex-1 basis-full sm:basis-auto">
             <PageTitleInput pageId={page.id} initial={page.title} />
@@ -145,6 +153,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
             initialHasPassword={!!page.linkPasswordHash}
             initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
           />
+          {/* v0.10.0 E6 — reserved slot for the editor's control group.
+              `display: contents` makes the portaled children direct flex items
+              of this bar. Server-rendered empty; <Editor> fills it client-side
+              once it hydrates (the controls were client-only before E6 too). */}
+          <div id={EDITOR_TOOLBAR_SLOT_ID} className="contents" />
         </div>
         {/* v0.9.0 G2 P14 — locked-page banner; null when the page is unlocked. */}
         <LockBanner

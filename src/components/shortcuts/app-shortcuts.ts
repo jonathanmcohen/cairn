@@ -97,12 +97,33 @@ export function ensureAppShortcuts(): void {
     },
   });
 
+  // v0.10.0 Plan E E1 — bare `?` as a second binding for the shortcuts sheet.
+  // A separate id because the registry replaces on id re-use and each entry
+  // carries exactly one `keys` string; the SAME labelKey makes the ⌘/ sheet
+  // render one row showing both triggers. No normalizeKeys collision:
+  // '?' → '?' vs 'Mod+/' → 'mod+/' stay distinct entries. The dispatcher only
+  // lets `?` through when focus is outside inputs/contenteditable.
+  registerShortcut({
+    id: 'shortcuts.sheet.bare',
+    keys: '?',
+    scope: 'global',
+    kind: 'command',
+    labelKey: 'shortcut.openSheet',
+    run: () => {
+      handlers?.openSheet();
+    },
+  });
+
+  // v0.10.0 H4e — the labelKey was 'shortcuts.quickCapture', which exists in
+  // no catalog ('shortcuts.*' is sheet chrome; row labels live under
+  // 'shortcut.*'), so the ⌘/ sheet rendered the raw key string. Aligned with
+  // the sibling rows + keyed in en/es/ar.
   registerShortcut({
     id: 'app.quickCapture',
     keys: 'Mod+Shift+N',
     scope: 'global',
     kind: 'action',
-    labelKey: 'shortcuts.quickCapture',
+    labelKey: 'shortcut.quickCapture',
     run: openQuickCapture,
   });
 

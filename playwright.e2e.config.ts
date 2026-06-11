@@ -1,3 +1,5 @@
+import { existsSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import { config as loadEnv } from 'dotenv';
 
@@ -14,6 +16,21 @@ const PORT = Number(process.env.E2E_PORT ?? 3200);
 const BASE_URL = `http://localhost:${PORT}`;
 const COLLAB_PORT = Number(process.env.E2E_COLLAB_PORT ?? 11334);
 const COLLAB_URL = `ws://localhost:${COLLAB_PORT}`;
+
+// item C1 — the backup snapshot UI spec POSTs /api/admin/backups, which spawns
+// `node dist/server/cli.js backup --out $CAIRN_BACKUP_DIR` from the booted
+// server. Bundles land in a gitignored dir under the repo root; the CLI's
+// uploads tar reads $UPLOAD_DIR (default /data/uploads, absent on dev boxes),
+// so it gets its own pre-created dir too.
+const BACKUP_DIR = path.resolve(process.cwd(), '.e2e-backups');
+const UPLOADS_DIR = path.join(BACKUP_DIR, 'uploads');
+mkdirSync(UPLOADS_DIR, { recursive: true });
+// macOS keeps pg_dump in the unlinked libpq keg; prepend it only when the dir
+// exists so the Linux CI runner (pg_dump natively on PATH) is unaffected.
+const LIBPQ_BIN = '/opt/homebrew/opt/libpq/bin';
+const E2E_PATH = existsSync(LIBPQ_BIN)
+  ? `${LIBPQ_BIN}:${process.env.PATH ?? ''}`
+  : (process.env.PATH ?? '');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -56,6 +73,26 @@ export default defineConfig({
         // AUTH_SECRET (the bearer both sides compare) comes from .env via
         // loadEnv above.
         CAIRN_COLLAB_INTERNAL_URL: `http://localhost:${COLLAB_PORT}`,
+        // item C1 — see BACKUP_DIR/UPLOADS_DIR/E2E_PATH above.
+        CAIRN_BACKUP_DIR: BACKUP_DIR,
+        UPLOAD_DIR: UPLOADS_DIR,
+        // item D6 — real uploads from specs (storage-quota) go through
+        // LocalDiskStorage, which reads CAIRN_UPLOAD_ROOT (default
+        // /data/uploads — absent on dev boxes). Point it at the same dir the
+        // backup tar reads so uploads land where C1's bundle expects them.
+        CAIRN_UPLOAD_ROOT: UPLOADS_DIR,
+        // item G5 — every spec shares one source IP (TRUST_PROXY off → one
+        // 'unknown' bucket key), so the production per-IP ceiling (10/min)
+        // would be drained by the F/G3/G4 registrations before G5's own
+        // tests run. Effectively disable per-IP here (it is unit-covered
+        // with TRUST_PROXY=true) and keep the GLOBAL ceiling at its default
+        // so the burst test still trips a real 429. G5's burst runs LAST
+        // among the registration-using specs (item-F < item-G3 < G4 < G5,
+        // serial single worker), so nothing registers after the bucket is
+        // intentionally exhausted.
+        CAIRN_OAUTH_REGISTER_LIMIT_PER_MIN: '1000',
+        CAIRN_OAUTH_REGISTER_GLOBAL_LIMIT_PER_MIN: '30',
+        PATH: E2E_PATH,
       },
     },
     {

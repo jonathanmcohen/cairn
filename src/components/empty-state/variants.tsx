@@ -1,4 +1,14 @@
-import { BellOff, Clock, GraduationCap, Inbox, Link2, Search, Star, Trash2 } from 'lucide-react';
+import {
+  Archive,
+  BellOff,
+  Clock,
+  GraduationCap,
+  Inbox,
+  Link2,
+  Search,
+  Star,
+  Trash2,
+} from 'lucide-react';
 import { EmptyState } from '@/components/empty-state/empty-state';
 import { copy } from '@/lib/copy/messages';
 
@@ -62,6 +72,16 @@ export function EmptyTrash() {
       icon={<Trash2 aria-hidden="true" />}
       headline={copy('empty.trash.headline')}
       guidance={copy('empty.trash.guidance')}
+    />
+  );
+}
+
+export function EmptyArchived() {
+  return (
+    <EmptyState
+      icon={<Archive aria-hidden="true" />}
+      headline={copy('empty.archived.headline')}
+      guidance={copy('empty.archived.guidance')}
     />
   );
 }

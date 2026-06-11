@@ -116,6 +116,11 @@ export const MentionList = forwardRef<
             <button
               type="button"
               tabIndex={-1}
+              // Keep DOM focus in the host editor: without this, the mousedown
+              // blurs the contenteditable BEFORE onClick inserts the mention,
+              // and any text typed right after the pick goes nowhere (#73/#253
+              // regression on the mouse path; keyboard picks never blur).
+              onMouseDown={(event) => event.preventDefault()}
               onClick={() => command(item)}
               className={`flex w-full items-center gap-2 px-3 py-1.5 text-left text-sm hover:bg-accent ${
                 i === index ? 'bg-accent' : ''

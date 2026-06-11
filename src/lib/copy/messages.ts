@@ -58,6 +58,10 @@ export const MESSAGES = {
   'empty.trash.guidance':
     'Deleted pages land here for 30 days, then are permanently removed. Nothing has been deleted recently.',
 
+  'empty.archived.headline': 'No archived pages',
+  'empty.archived.guidance':
+    'Pages set to the Archived status leave the sidebar and search but stay recoverable here. Un-archiving returns a page to Draft.',
+
   'empty.flashcardsDue.headline': 'No cards due',
   'empty.flashcardsDue.guidance':
     'You are caught up on reviews. Add a flashcard to any page with the /flashcard slash command.',

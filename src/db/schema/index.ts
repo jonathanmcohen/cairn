@@ -7,6 +7,8 @@ export * from './auth-sessions';
 export * from './automation-rule-actions';
 export * from './automation-rules';
 export * from './automation-runs';
+// v0.10.0 C3 — durable backup-run history (one row per CLI `backup` run).
+export * from './backup-runs';
 // v0.9.0 G7 P37 — chat-bridge install + channel-link tables (slash commands
 // + channel↔page sync). Separate from `chat_posted_messages` (P36 outbound
 // log) and from `webhooks` (P36 install metadata).
@@ -64,4 +66,6 @@ export * from './workspace-members';
 export * from './workspace-mfa';
 export * from './workspace-pins';
 export * from './workspace-quotas';
+// v0.10.0 F2 — custom slash commands → templates.
+export * from './workspace-slash-commands';
 export * from './workspaces';

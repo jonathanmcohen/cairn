@@ -180,11 +180,24 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'federation.peer_enabled': 'Federated peer enabled',
   'federation.peer_disabled': 'Federated peer disabled',
   'federation.peer_deleted': 'Federated peer removed',
+  // v0.10.0 G2 — inbound request dropped by the per-peer rate limiter.
+  'federation.peer_rate_limited': 'Federated peer rate limited',
   // v0.9.16 Plan F — MCP OAuth lifecycle.
   'oauth.client_registered': 'OAuth client registered',
   'oauth.consent_granted': 'OAuth consent granted',
   'oauth.token_issued': 'OAuth token issued',
   'oauth.token_revoked': 'OAuth token revoked',
+  // v0.10.0 D3 — admin deleted a registered client app (revokes all its tokens).
+  'oauth.client_deleted': 'OAuth client deleted',
+  // v0.10.0 G3 — refresh-token reuse detected; whole rotation family revoked.
+  'oauth.token_family_revoked': 'OAuth token family revoked (refresh reuse)',
+  // v0.10.0 G5 — admin toggled the registration lock on /api/oauth/register.
+  'oauth.register_lock_changed': 'OAuth registration lock changed',
+  // v0.10.0 F1 — workspace brand (logo + primary color) changed.
+  'workspace.brand_updated': 'Workspace brand updated',
+  // v0.10.0 F2 — custom slash command (trigger word → saved template).
+  'workspace.slash_command_created': 'Slash command created',
+  'workspace.slash_command_deleted': 'Slash command deleted',
 };
 
 export function actionLabel(action: string): string {
@@ -339,6 +352,21 @@ export function AuditViewer() {
           value={filters.to}
           onChange={(iso) => setFilters((f) => ({ ...f, to: iso }))}
         />
+        <div className="ms-auto">
+          {/* v0.10.0 D2 — CSV export honoring the CURRENT filters. Plain anchor
+              (same pattern as the database export menu): the route answers with
+              Content-Disposition: attachment, so the browser downloads. The
+              export streams ALL matching rows — no cursor param. */}
+          <Button asChild variant="outline" size="sm">
+            <a
+              href={`/api/admin/audit/export${buildQuery(filters, null)}`}
+              download
+              data-testid="audit-export-csv"
+            >
+              {t('auditLog.export')}
+            </a>
+          </Button>
+        </div>
       </div>
 
       {error ? <StatusBanner variant="error">{error}</StatusBanner> : null}

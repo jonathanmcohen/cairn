@@ -50,18 +50,34 @@ export function ShortcutSheet() {
           {SCOPES.map(({ scope, titleKey }) => {
             const entries = getShortcuts(scope);
             if (entries.length === 0) return null;
+            // v0.10.0 Plan E E1 — an action can have several bindings (the
+            // sheet itself: Mod+/ AND bare `?`). Group registry entries that
+            // share a labelKey into one row listing every trigger.
+            const rows = new Map<string, { id: string; allKeys: string[] }>();
+            for (const s of entries) {
+              const row = rows.get(s.labelKey);
+              if (row) row.allKeys.push(s.keys);
+              else rows.set(s.labelKey, { id: s.id, allKeys: [s.keys] });
+            }
             return (
               <section key={scope} className="mb-4 last:mb-0">
                 <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   {t(titleKey)}
                 </h3>
                 <ul className="space-y-1">
-                  {entries.map((s) => (
-                    <li key={s.id} className="flex items-center justify-between gap-4 text-sm">
-                      <span>{t(s.labelKey)}</span>
-                      <kbd className="rounded border bg-muted px-2 py-0.5 font-mono text-xs">
-                        {prettyKeys(s.keys)}
-                      </kbd>
+                  {[...rows.entries()].map(([labelKey, row]) => (
+                    <li key={row.id} className="flex items-center justify-between gap-4 text-sm">
+                      <span>{t(labelKey)}</span>
+                      <span className="flex items-center gap-1">
+                        {row.allKeys.map((keys) => (
+                          <kbd
+                            key={keys}
+                            className="rounded border bg-muted px-2 py-0.5 font-mono text-xs"
+                          >
+                            {prettyKeys(keys)}
+                          </kbd>
+                        ))}
+                      </span>
                     </li>
                   ))}
                 </ul>

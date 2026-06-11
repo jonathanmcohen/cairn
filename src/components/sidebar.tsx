@@ -24,6 +24,7 @@ export async function Sidebar({ workspaceId }: { workspaceId: string }) {
     // pre-hydration / never-resized default changes. `relative` anchors the handle.
     <aside
       data-cairn-workspace-sidebar=""
+      data-tour="sidebar"
       aria-label="Workspace sidebar"
       style={{ width: 'var(--cairn-sidebar-w, 15rem)' }}
       className={SIDEBAR_ASIDE_CLASS}

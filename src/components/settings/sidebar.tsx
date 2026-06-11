@@ -83,6 +83,36 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.chatBridge'),
         href: '/settings/admin/chat-bridge' as Route,
       },
+      // Instance backup snapshots (v0.10.0 C1).
+      {
+        id: 'admin-backups',
+        label: t('settings.nav.admin.backups'),
+        href: '/settings/admin/backups' as Route,
+      },
+      // Instance OAuth client-application registry (v0.10.0 D3).
+      {
+        id: 'admin-oauth-clients',
+        label: t('settings.nav.admin.oauthClients'),
+        href: '/settings/admin/oauth-clients' as Route,
+      },
+      // Instance health/readiness panel (v0.10.0 D4).
+      {
+        id: 'admin-health',
+        label: t('settings.nav.admin.health'),
+        href: '/settings/admin/health' as Route,
+      },
+      // Workspace storage usage + quota admin (v0.10.0 D6).
+      {
+        id: 'admin-storage',
+        label: t('settings.nav.admin.storage'),
+        href: '/settings/admin/storage' as Route,
+      },
+      // Read-only schema-migration status panel (v0.10.0 D7).
+      {
+        id: 'admin-migrations',
+        label: t('settings.nav.admin.migrations'),
+        href: '/settings/admin/migrations' as Route,
+      },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
     if (e2eEnabled) {
@@ -129,6 +159,11 @@ export function SettingsSidebar({
             id: 'workspace-pinned',
             label: t('settings.nav.workspace.pinnedPages'),
             href: '/settings/workspace/pinned-pages' as Route,
+          },
+          {
+            id: 'workspace-slash-commands',
+            label: t('settings.nav.workspace.slashCommands'),
+            href: '/settings/workspace/slash-commands' as Route,
           },
           {
             id: 'workspace-trash',
@@ -180,6 +215,15 @@ export function SettingsSidebar({
             id: 'developer-export',
             label: t('settings.nav.developer.export'),
             href: '/settings/developer/export' as Route,
+          },
+          // v0.10.0 H4c — the import page has existed since v0.7 G5 P15 but
+          // never had a nav entry (export did). Same gating as export: the
+          // entry is visible to every member here, and the page itself
+          // requires admin (both pages call requireRole('admin')).
+          {
+            id: 'developer-import',
+            label: t('settings.nav.developer.import'),
+            href: '/settings/developer/import' as Route,
           },
         ],
       },

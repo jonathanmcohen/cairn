@@ -5,6 +5,7 @@ import { AvatarUploader } from '@/components/account/avatar-uploader';
 import { ProfileForm } from '@/components/account/profile-form';
 import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { CopyButton } from '@/components/settings/copy-button';
+import { StorageUsageCard } from '@/components/settings/storage-usage-card';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { getAuthContext } from '@/lib/auth/require-role';
@@ -60,6 +61,14 @@ export default async function AccountProfilePage() {
           </dd>
         </div>
       </dl>
+      {/* v0.10.0 D6 — read-only workspace storage meter. This page is the
+          /settings landing for EVERY member (the whole /settings/workspace
+          group is admin-gated by its layout), so the meter lives here to keep
+          usage visible to editors/viewers; admin controls are on
+          /settings/admin/storage. */}
+      <div className="mt-8 max-w-md">
+        <StorageUsageCard />
+      </div>
     </div>
   );
 }

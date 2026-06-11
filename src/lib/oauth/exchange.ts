@@ -62,6 +62,13 @@ export async function codeToTokens(
       // intercepted. Revoke any tokens descended from this exact grant — same
       // client + user + workspace — so a captured-then-replayed code can never
       // yield (or keep) a live token. Scoped to the grant, not the whole user.
+      //
+      // v0.10.0 G3 SCOPE NOTE (plan-pinned): this code-reuse blanket is
+      // deliberately BROADER than refresh-token-reuse family revocation below.
+      // A replayed code can't tell us which descendant chain the attacker got,
+      // so every sibling grant for user+client+workspace dies. A replayed
+      // refresh token names its exact rotation chain via family_id, so only
+      // that family dies (see revokeTokenFamilyOnReuse). Do not "unify" them.
       const code = consumed.row;
       await tx
         .update(schema.oauthTokens)
@@ -139,13 +146,71 @@ export type RefreshTokensInput = {
 };
 
 /**
+ * v0.10.0 G3 — refresh-token REUSE response: revoke the presented row's entire
+ * rotation family (every non-revoked descendant of the same grant) and record
+ * `oauth.token_family_revoked`. A revoked refresh token can only be presented
+ * by (a) an attacker replaying a captured token after the legitimate client
+ * rotated, or (b) the legitimate client replaying after an attacker rotated —
+ * either way SOMEONE other than the row's holder has the secret, so the whole
+ * chain is burned (RFC 6749 §10.4 / OAuth 2.1 rotation guidance).
+ *
+ * The audit insert runs in a SAVEPOINT (nested transaction) and any failure is
+ * swallowed: an audit hiccup must neither mask the invalid_grant response nor
+ * roll back the family revocation. Metadata carries ids only — never token
+ * material (assertAuditMetadataClean would throw on a `cairn_oart_` leak).
+ */
+async function revokeTokenFamilyOnReuse(
+  tx: PostgresJsDatabase<typeof schema>,
+  old: schema.OauthToken,
+): Promise<ExchangeError> {
+  await tx
+    .update(schema.oauthTokens)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(eq(schema.oauthTokens.familyId, old.familyId), isNull(schema.oauthTokens.revokedAt)),
+    );
+
+  try {
+    await tx.transaction(async (sp) => {
+      await recordAudit(sp, {
+        workspaceId: old.workspaceId,
+        actorUserId: old.userId,
+        action: 'oauth.token_family_revoked',
+        targetType: 'oauth_token',
+        targetId: old.id,
+        metadata: {
+          reason: 'refresh_token_reuse',
+          familyId: old.familyId,
+          clientId: old.clientId,
+        },
+      });
+    });
+  } catch {
+    // Swallowed on purpose: the security response (family revoked +
+    // invalid_grant) must not depend on the audit insert succeeding.
+  }
+
+  // Deliberately descriptive: the legitimate client learns WHY it got logged
+  // out (re-authorize from scratch); an attacker already knows.
+  return {
+    kind: 'invalid_grant',
+    description: 'refresh token reuse detected; token family revoked',
+  };
+}
+
+/**
  * v0.9.16 Plan F — refresh-token grant with ROTATION (Task 7).
  *
- * Look up the active (non-revoked, unexpired) token row by refresh-token hash.
+ * Look up the token row by refresh-token hash (revoked or not — v0.10.0 G3).
  * In one transaction: revoke the old row (`revoked_at = now()`) and insert a
  * fresh row with the SAME scopes (no escalation) + new access/refresh hashes,
  * then record `oauth.token_issued`. The presented (old) refresh token is now
- * single-use — a replay of it finds a revoked row and returns `invalid_grant`.
+ * single-use.
+ *
+ * v0.10.0 G3 — reuse detection: a presented hash that matches a REVOKED row is
+ * a replay of an already-rotated token. That revokes the row's whole rotation
+ * family (see revokeTokenFamilyOnReuse). Only a hash with no row at all keeps
+ * the generic "unknown or revoked refresh token" answer.
  */
 export async function refreshTokens(
   db: PostgresJsDatabase<typeof schema>,
@@ -157,16 +222,17 @@ export async function refreshTokens(
     const [old] = await tx
       .select()
       .from(schema.oauthTokens)
-      .where(
-        and(
-          eq(schema.oauthTokens.refreshTokenHash, refreshHash),
-          isNull(schema.oauthTokens.revokedAt),
-        ),
-      )
+      .where(eq(schema.oauthTokens.refreshTokenHash, refreshHash))
       .limit(1);
 
     if (!old) {
       return { kind: 'invalid_grant', description: 'unknown or revoked refresh token' };
+    }
+    if (old.revokedAt) {
+      // REUSE DETECTED: this exact token was already rotated (or revoked).
+      // Possession of the plaintext is the signal — no client/expiry checks
+      // soften it. Burn the family.
+      return revokeTokenFamilyOnReuse(tx, old);
     }
     if (old.clientId !== input.clientId) {
       return { kind: 'invalid_grant', description: 'client_id mismatch' };
@@ -183,7 +249,14 @@ export async function refreshTokens(
       .where(and(eq(schema.oauthTokens.id, old.id), isNull(schema.oauthTokens.revokedAt)))
       .returning();
     if (revoked.length === 0) {
-      return { kind: 'invalid_grant', description: 'refresh token already used' };
+      // v0.10.0 G3 — concurrent-replay loser: between our SELECT (row active)
+      // and this guarded UPDATE, another request rotated the same token. Two
+      // requests racing one refresh token is ALSO a reuse signal — strictly it
+      // could be the same client double-submitting, but we cannot distinguish
+      // that from an attacker racing the legitimate client, so the
+      // conservative, plan-pinned choice is to treat it as reuse and revoke
+      // the family (including the racing winner's freshly minted pair).
+      return revokeTokenFamilyOnReuse(tx, old);
     }
 
     const accessToken = mintOauthSecret(OAUTH_PREFIX.accessToken);
@@ -200,6 +273,9 @@ export async function refreshTokens(
         workspaceId: old.workspaceId,
         // Same scopes — refresh can NEVER widen the grant.
         scopes: old.scopes,
+        // v0.10.0 G3 — rotation stays in the SAME family; only the auth-code
+        // exchange starts a new one (it omits familyId → DB default).
+        familyId: old.familyId,
         accessExpiresAt: new Date(now + ACCESS_TTL_MS),
         refreshExpiresAt: new Date(now + REFRESH_TTL_MS),
       })
@@ -229,6 +305,8 @@ export type RevokeTokenInput = {
   token: string;
   /** RFC 7009 hint — we match by access OR refresh hash regardless. */
   tokenTypeHint?: string | null;
+  /** The AUTHENTICATED caller — only tokens bound to this client_id revoke. */
+  clientId: string;
 };
 
 /**
@@ -236,8 +314,15 @@ export type RevokeTokenInput = {
  * refresh hash and sets `revoked_at`. Records `oauth.token_revoked` ONLY on a
  * real hit (an unknown token is a silent 200 per RFC 7009, no audit row).
  * Returns true if a row was revoked.
+ *
+ * v0.10.0 G4 — token-bound check: the matched row must belong to the
+ * authenticated `clientId`. A foreign token (row exists but was issued to a
+ * different client) is treated exactly like an unknown token — no revocation,
+ * no audit row — because the route's silent 200 must never let one client
+ * revoke (or probe) another client's tokens. The single SELECT already has
+ * the row's client_id, so the bound check costs no extra round trip.
  */
-export async function revokeToken(
+export async function revokeTokenForClient(
   db: PostgresJsDatabase<typeof schema>,
   input: RevokeTokenInput,
 ): Promise<boolean> {
@@ -261,6 +346,15 @@ export async function revokeToken(
     }
 
     if (!target) return false;
+    if (target.clientId !== input.clientId) {
+      // v0.10.0 G4 no-probe: the token exists but belongs to ANOTHER client.
+      // Behave exactly as if it were unknown — no revocation and deliberately
+      // no audit row either (a "foreign revoke attempted" audit entry keyed to
+      // the real row would itself confirm the token's existence to anyone who
+      // can correlate it; the plan asks for silence here, so we record
+      // nothing token-identifying).
+      return false;
+    }
     if (target.revokedAt) {
       // Already revoked — idempotent, no new audit row.
       return true;

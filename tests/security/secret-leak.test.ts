@@ -83,6 +83,12 @@ const FORBIDDEN_KEYS = [
   // v0.9.0 G8 P43 — encrypted-backup passphrase env var name; no Cairn API
   // surface should ever echo this back.
   'CAIRN_BACKUP_ENCRYPTION_PASSPHRASE',
+  // v0.10.0 G1 — federated peer secret at-rest key env var name + the
+  // secret-bearing column (PeerSummary in peer-admin.ts deliberately omits
+  // it; this pins the contract for every checked surface).
+  'CAIRN_PEER_SECRET_KEY',
+  'shared_secret_hash',
+  'sharedSecretHash',
 ];
 
 // Full-secret prefixes. These MUST never appear in audit metadata or in the
@@ -98,6 +104,8 @@ const FORBIDDEN_SECRET_PREFIXES = [
   'cairn_oart_',
   'cairn_oac_',
   'cairn_ocs_',
+  // v0.10.0 G5 — RFC 7591 §3.1.1 initial access token (registration lock).
+  'cairn_oiat_',
 ];
 
 function assertNoSecrets(body: string) {
@@ -774,6 +782,8 @@ describe('secret-leak: OAuth secret prefixes trip assertAuditMetadataClean', () 
     ['cairn_oart_', 'refresh token'],
     ['cairn_oac_', 'authorization code'],
     ['cairn_ocs_', 'client secret'],
+    // v0.10.0 G5 — registration-lock initial access token.
+    ['cairn_oiat_', 'initial access token'],
   ])('a value containing %s (%s) throws', async (prefix) => {
     const { assertAuditMetadataClean } = await import('@/lib/audit/record');
     expect(() => assertAuditMetadataClean({ note: `${prefix}AbCdEf123456` })).toThrow();

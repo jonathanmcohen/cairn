@@ -38,6 +38,8 @@ coverage/
 .vitest/
 playwright-report/
 test-results/
+# e2e backup-snapshot bundles (item C1; playwright.e2e.config.ts CAIRN_BACKUP_DIR)
+.e2e-backups/
 
 # drizzle local
 drizzle/.snapshot

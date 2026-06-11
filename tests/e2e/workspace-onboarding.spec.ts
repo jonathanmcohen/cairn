@@ -8,18 +8,7 @@
 // ./tests/a11y). CI extends testDir/testMatch to include tests/e2e, boots the
 // built/deployed image + seed, and runs these against production-identical
 // surfaces. We reuse the a11y fixtures (real seeded user + credentials sign-in).
-import { expect, test } from '../a11y/fixtures';
-
-async function signIn(
-  page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
-) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
+import { expect, signIn, test } from '../a11y/fixtures';
 
 test.describe('Plan K workspace onboarding surfaces', () => {
   test('route-reachability — /settings/workspace/invites shows the Invite member trigger', async ({
@@ -51,8 +40,20 @@ test.describe('Plan K workspace onboarding surfaces', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
+    await page.goto('/');
+    // Let hydration + the sidebar tree's initial fetches settle: at
+    // accumulated-page scale the virtualized tree re-measures for a while
+    // after load and Playwright's actionability loop can sit on "element is
+    // not stable" for the full timeout (noted for the H3/H4 sidebar work).
+    await page.waitForLoadState('networkidle');
     // The sidebar "New page" affordance creates a page and routes to it.
-    await page.getByRole('button', { name: 'New page' }).first().click();
+    // Scope to the desktop aside: the mobile drawer renders a hidden copy of
+    // the sidebar, and a bare .first() can resolve to it (click never lands).
+    await page
+      .locator('[data-cairn-workspace-sidebar]')
+      .getByRole('button', { name: 'New page' })
+      .first()
+      .click();
     await page.waitForURL(/\/pages\/[0-9a-f-]+\?new=1/, { timeout: 30_000 });
     // The title input is autofocused and EMPTY — it shows the localized
     // placeholder, never a persisted literal "Untitled".
@@ -66,10 +67,19 @@ test.describe('Plan K workspace onboarding surfaces', () => {
 
   test('#216 — a freshly created page reads Draft (not Published)', async ({ page, seeded }) => {
     await signIn(page, seeded);
-    await page.getByRole('button', { name: 'New page' }).first().click();
-    await page.waitForURL(/\/pages\/[0-9a-f-]+\?new=1/, { timeout: 30_000 });
+    // Create through POST /api/pages — the same route the sidebar button
+    // submits to. The button-click PATH is #215's contract above; this test
+    // pins the lifecycle DEFAULT, and clicking the sidebar here was flaky at
+    // accumulated-page scale (virtualized-tree re-measure churn kept the
+    // button "not stable" — noted for the H3/H4 sidebar work).
+    const created = await page.request.post('/api/pages', {
+      data: { title: `draft-default ${Date.now().toString(36)}` },
+    });
+    expect(created.ok(), `POST /api/pages failed: ${created.status()}`).toBe(true);
+    const { id } = (await created.json()) as { id: string };
+    await page.goto(`/pages/${id}`);
     // The lifecycle status control shows Draft for the new page.
-    await expect(page.getByText(/draft/i).first()).toBeVisible();
+    await expect(page.getByText(/draft/i).first()).toBeVisible({ timeout: 15_000 });
   });
 
   test('#225/#226 — Invite member opens a modal and surfaces a Copy invite link', async ({

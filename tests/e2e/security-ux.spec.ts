@@ -7,18 +7,7 @@
 // the app + seed, so these run against the built/deployed image there. We reuse
 // the a11y fixtures (real seeded user + credentials sign-in) so the surface is
 // identical to production.
-import { expect, test } from '../a11y/fixtures';
-
-async function signIn(
-  page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
-) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
+import { expect, signIn, test } from '../a11y/fixtures';
 
 test.describe('Plan H security-UX surfaces', () => {
   test('H1 — /settings/admin/sso renders both Add buttons with the same variant', async ({

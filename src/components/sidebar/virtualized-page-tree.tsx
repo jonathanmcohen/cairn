@@ -9,6 +9,7 @@ import { EmptyPageTree } from '@/components/empty-state/variants';
 import { InlineIcon } from '@/components/page-icon-inline';
 import { useT } from '@/lib/i18n/provider';
 import type { FlatPageNode } from '@/lib/pages/tree';
+import { DEPTH_INDENT_PX, ROW_HEIGHT_PX } from './density-tokens';
 import { PageRowActionsMenu } from './page-row-actions-menu';
 import { PageRowContextMenu } from './page-row-context-menu';
 import { usePageRowActions } from './use-page-row-actions';
@@ -28,8 +29,10 @@ function renderNodeIcon(stored: string | null): React.ReactNode {
   );
 }
 
-export const ROW_HEIGHT_PX = 26; // Compact dense row (#208).
-const DEPTH_INDENT_PX = 16; // 16px per level; matches the v0.7 visual.
+// Density contract lives in density-tokens.ts (dependency-free) so the H3
+// runtime-px e2e can import it; re-exported here for existing consumers.
+export { ROW_HEIGHT_PX };
+
 const OVERSCAN = 8; // Extra rows above/below the viewport for smooth scroll.
 
 /** v0.9.0 G2 P11 — minimal space descriptor consumed by the sidebar. */

@@ -1,4 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server';
+import { getMaintenance } from '@/lib/backups/maintenance';
 import { observeHttp } from '@/lib/observability/metrics';
 import { routeTemplate } from '@/lib/observability/route-template';
 import { buildCsp } from '@/lib/security/headers';
@@ -10,6 +11,11 @@ const PUBLIC_PATHS = [
   '/invite',
   '/api/auth',
   '/api/health',
+  // v0.10.0 H4d — /healthz is THE readiness probe (503s on db-down). A load
+  // balancer probes it unauthenticated; behind the session gate it answered
+  // 307-to-login, which LBs read as unhealthy. It exposes the same
+  // status/db/version signal /api/health already serves publicly.
+  '/healthz',
   '/p/',
   '/s/',
   '/api/public',
@@ -32,6 +38,12 @@ const PUBLIC_PATHS = [
   '/.well-known/oauth-',
   '/api/oauth',
   '/api/mcp',
+  // v0.10.0 G1 — INBOUND federated search is server-to-server: the calling
+  // Cairn instance carries NO session cookie, it authenticates via the
+  // HMAC-signed envelope which the route verifies itself (401 on failure).
+  // Same lesson as /api/mcp above: a cookieless headless route that is its
+  // own access boundary must not be bounced to /login by the cookie gate.
+  '/api/search/federated/peer',
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
@@ -64,6 +76,31 @@ export function proxy(req: NextRequest) {
   const method = req.method;
   const isPublic = PUBLIC_PATHS.some((p) => pathname.startsWith(p));
   const hasSession = hasSessionCookie(req);
+
+  // v0.10.0 C2 — app-wide read-only mode while a restore job runs. The proxy
+  // shares the routes' Node process in the standalone server and the flag
+  // lives on globalThis (see src/lib/backups/maintenance.ts), so the flag the
+  // restore route set is visible here. Block mutating API requests so
+  // concurrent writes can't race pg_restore's table drops. Exempt:
+  //   - GET/HEAD/OPTIONS everywhere: navigation stays up so the restore
+  //     banner renders and users see read-only content, not an outage;
+  //   - /api/admin/backups/*: the admin must be able to poll job status and
+  //     the restore POST itself must reach its route (a second concurrent
+  //     restore is answered 409 by the route, not 503 here);
+  //   - /api/auth/*: Auth.js session callbacks must keep working or polls
+  //     and navigation could bounce to /login mid-restore.
+  if (
+    pathname.startsWith('/api/') &&
+    method !== 'GET' &&
+    method !== 'HEAD' &&
+    method !== 'OPTIONS' &&
+    !pathname.startsWith('/api/admin/backups') &&
+    !pathname.startsWith('/api/auth') &&
+    getMaintenance().active
+  ) {
+    const res = NextResponse.json({ error: 'maintenance', reason: 'restore' }, { status: 503 });
+    return record(res, start, method, pathname);
+  }
 
   // Per-request CSP nonce. Next/React's inline hydration scripts (the RSC
   // payload pushes + the next-themes bootstrap) would be blocked by a bare

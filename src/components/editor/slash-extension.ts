@@ -60,6 +60,10 @@ import {
   type SlashMenuRef,
   type SlashRange,
 } from './slash-menu';
+import {
+  getWorkspaceSlashCommands,
+  type WorkspaceSlashCommandItem,
+} from './slash-workspace-commands';
 
 /**
  * Ensure a lazy editor extension (math/syncedBlock/embed) is registered on
@@ -84,19 +88,26 @@ function ensureLazyExtension(editor: Editor, name: LazyEditorNodeName): Promise<
  * `[[`/`@@` autocomplete's `fetchPages` + `PageLinkList`. Calls `onPick` with the
  * chosen page, then tears the popup down. Used by the "Page embed" slash item.
  */
-function openPagePicker(editor: Editor, onPick: (item: PageItem) => void): void {
+function openPagePicker(
+  editor: Editor,
+  onPick: (item: PageItem) => void,
+  onCancel?: () => void,
+): void {
   let component: ReactRenderer<
     PageLinkListRef,
     { items: PageItem[]; command: (i: PageItem) => void }
   >;
   let popup: Instance<TippyProps>;
+  let picked = false;
 
   const close = () => {
     document.removeEventListener('keydown', onKeyDown, true);
     popup?.destroy();
     component?.destroy();
+    if (!picked) onCancel?.();
   };
   const choose = (item: PageItem) => {
+    picked = true;
     onPick(item);
     close();
   };
@@ -173,7 +184,10 @@ export const footnoteMenuItem: CitationSlashEntry = {
     void openEditorDialog({ kind: 'footnote', title: 'Footnote' }).then((raw) => {
       const result = asFormResult(raw);
       const content = result?.text;
-      if (!content) return;
+      if (!content) {
+        cancelSlashTrigger(editor, range);
+        return;
+      }
       if (editor.isDestroyed) return;
       if (!editor.extensionManager.extensions.some((e) => e.name === FootnoteMark.name)) {
         editor.setOptions({ extensions: [...editor.extensionManager.extensions, FootnoteMark] });
@@ -198,11 +212,17 @@ export const citationMenuItem: CitationSlashEntry = {
     // lazy-load resolve below, atomically before the insert.
     void openEditorDialog({ kind: 'citation', title: 'Citation' }).then((raw) => {
       const result = asFormResult(raw);
-      if (!result) return;
+      if (!result) {
+        cancelSlashTrigger(editor, range);
+        return;
+      }
       const author = result.author?.trim() ?? '';
       const title = result.title?.trim() ?? '';
       const year = Number.parseInt(result.year ?? '', 10);
-      if (!author || !title || Number.isNaN(year)) return;
+      if (!author || !title || Number.isNaN(year)) {
+        cancelSlashTrigger(editor, range);
+        return;
+      }
       const doi = result.doi?.trim() ? result.doi.trim() : null;
       const pubmed = result.pubmed?.trim() ? result.pubmed.trim() : null;
       const ref = { authors: [author], title, year };
@@ -259,7 +279,10 @@ export const citationLookupMenuItem: CitationSlashEntry = {
       kind: 'citationLookup',
       title: 'Citation (DOI/PubMed lookup)',
     }).then((result) => {
-      if (!result || !('kind' in result) || result.kind !== 'citationLookup') return;
+      if (!result || !('kind' in result) || result.kind !== 'citationLookup') {
+        cancelSlashTrigger(editor, range);
+        return;
+      }
       const { meta } = result as EditorDialogCitationResult;
       void Promise.all([
         import('@/lib/citations/format'),
@@ -374,13 +397,22 @@ export const pdfSlashItem: SlashItem = {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'application/pdf';
+      // B1 (#76 cancel path) — dismissing the OS file dialog fires `cancel`
+      // on the input (Chromium 113+); consume the trigger so `/` can re-fire.
+      input.oncancel = () => cancelSlashTrigger(editor, range);
       input.onchange = async () => {
         const file = input.files?.[0];
-        if (!file) return;
+        if (!file) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const fd = new FormData();
         fd.set('file', file);
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        if (!res.ok) return;
+        if (!res.ok) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const { file: meta } = (await res.json()) as { file: { id: string; name: string } };
         consumeSlashRange(editor, range);
         editor.chain().focus().setPdf({ fileId: meta.id, defaultPage: 1 }).run();
@@ -506,13 +538,20 @@ const items: SlashItem[] = [
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
+      input.oncancel = () => cancelSlashTrigger(editor, range);
       input.onchange = async () => {
         const file = input.files?.[0];
-        if (!file) return;
+        if (!file) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const fd = new FormData();
         fd.set('file', file);
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        if (!res.ok) return;
+        if (!res.ok) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const { signedUrl, file: meta } = (await res.json()) as {
           signedUrl: string;
           file: { id: string; name: string };
@@ -537,13 +576,20 @@ const items: SlashItem[] = [
     command: (editor, range) => {
       const input = document.createElement('input');
       input.type = 'file';
+      input.oncancel = () => cancelSlashTrigger(editor, range);
       input.onchange = async () => {
         const file = input.files?.[0];
-        if (!file) return;
+        if (!file) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const fd = new FormData();
         fd.set('file', file);
         const res = await fetch('/api/upload', { method: 'POST', body: fd });
-        if (!res.ok) return;
+        if (!res.ok) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const { signedUrl, file: meta } = (await res.json()) as {
           signedUrl: string;
           file: { id: string; name: string; mimeType: string; size: number };
@@ -622,13 +668,20 @@ const items: SlashItem[] = [
         const input = document.createElement('input');
         input.type = 'file';
         input.accept = 'audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/aac';
+        input.oncancel = () => cancelSlashTrigger(editor, range);
         input.onchange = async () => {
           const file = input.files?.[0];
-          if (!file) return;
+          if (!file) {
+            cancelSlashTrigger(editor, range);
+            return;
+          }
           const fd = new FormData();
           fd.set('file', file);
           const res = await fetch('/api/upload', { method: 'POST', body: fd });
-          if (!res.ok) return;
+          if (!res.ok) {
+            cancelSlashTrigger(editor, range);
+            return;
+          }
           const { file: meta } = (await res.json()) as {
             signedUrl: string;
             file: { id: string; name: string; mimeType: string };
@@ -657,9 +710,15 @@ const items: SlashItem[] = [
     // once the dialog resolves to a real insert (restore-on-cancel via #38).
     command: (editor, range) => {
       void openEditorDialog({ kind: 'equation', title: 'Insert equation' }).then((raw) => {
-        if (!raw || !('kind' in raw) || raw.kind !== 'equation') return;
+        if (!raw || !('kind' in raw) || raw.kind !== 'equation') {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const { latex, display } = raw as EditorDialogEquationResult;
-        if (!latex.trim()) return;
+        if (!latex.trim()) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         void ensureLazyExtension(editor, 'math').then(() => {
           if (editor.isDestroyed) return;
           consumeSlashRange(editor, range);
@@ -758,9 +817,15 @@ const items: SlashItem[] = [
     command: (editor, range) => {
       void openEditorDialog({ kind: 'flashcard', title: 'Flashcard' }).then((raw) => {
         const result = asFormResult(raw);
-        if (!result) return;
+        if (!result) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const { front, back, deck } = result;
-        if (!front || !back) return;
+        if (!front || !back) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         void ensureLazyExtension(editor, 'flashcard').then(() => {
           if (editor.isDestroyed) return;
           consumeSlashRange(editor, range);
@@ -791,13 +856,19 @@ const items: SlashItem[] = [
     command: (editor, range) => {
       void (async () => {
         const pageId = (editor.storage as { cairn?: { pageId?: string } }).cairn?.pageId;
-        if (!pageId) return;
+        if (!pageId) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const res = await fetch('/api/databases', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
           body: JSON.stringify({ pageId }),
         });
-        if (!res.ok) return;
+        if (!res.ok) {
+          cancelSlashTrigger(editor, range);
+          return;
+        }
         const { id } = (await res.json()) as { id: string };
         if (editor.isDestroyed) return;
         consumeSlashRange(editor, range);
@@ -817,17 +888,21 @@ const items: SlashItem[] = [
     icon: FileSymlink,
     deferred: true,
     command: (editor, range) => {
-      openPagePicker(editor, (item) => {
-        consumeSlashRange(editor, range);
-        editor
-          .chain()
-          .focus()
-          .insertContent({
-            type: 'pageEmbed',
-            attrs: { targetPageId: item.id, label: item.title || 'Untitled' },
-          })
-          .run();
-      });
+      openPagePicker(
+        editor,
+        (item) => {
+          consumeSlashRange(editor, range);
+          editor
+            .chain()
+            .focus()
+            .insertContent({
+              type: 'pageEmbed',
+              attrs: { targetPageId: item.id, label: item.title || 'Untitled' },
+            })
+            .run();
+        },
+        () => cancelSlashTrigger(editor, range),
+      );
     },
     keywords: ['page', 'subpage', 'link', 'mention'],
   },
@@ -848,6 +923,35 @@ export function matchesSlashQuery(item: SlashItem, query: string): boolean {
 
 /** The full, ordered slash-command catalog. Exported for tests + reuse. */
 export const SLASH_ITEMS: SlashItem[] = items;
+
+/**
+ * v0.10.0 F2 — adapt a workspace custom command (trigger → saved template)
+ * into a SlashItem under the 'Workspace' group. Exported for unit tests.
+ *
+ * SYNCHRONOUS (not `deferred`): the insertable content was already resolved
+ * server-side and cached at editor mount (slash-workspace-commands.ts), so
+ * the dispatcher pre-deletes the `/trigger` range and the insert lands in the
+ * SAME user gesture — all through `editor.chain().insertContent(...)`, the
+ * normal transaction pipeline, so y-prosemirror replicates it (the Yjs
+ * lesson: never a doc swap). Commands with no insertable content are filtered
+ * out before they reach the menu (`insertableWorkspaceSlashCommands`), so the
+ * empty-content guard here is belt-and-braces only.
+ */
+export function workspaceSlashItem(cmd: WorkspaceSlashCommandItem): SlashItem {
+  return {
+    title: cmd.label,
+    description: `/${cmd.trigger} · ${cmd.templateName}`,
+    category: 'workspace',
+    icon: FileText,
+    // Trigger + template name as search aliases; the title (label) is matched
+    // by matchesSlashQuery already.
+    keywords: [cmd.trigger, cmd.templateName.toLowerCase()],
+    command: (editor) => {
+      if (!Array.isArray(cmd.content) || cmd.content.length === 0) return;
+      editor.chain().focus().insertContent(cmd.content).run();
+    },
+  };
+}
 
 /**
  * #38 — correct the suggestion-provided range so it ALWAYS spans the leading
@@ -910,9 +1014,11 @@ function dismissSlashPopup(editor: Editor): void {
  *   inserts): do NOT pre-delete. We FIRST tear the slash popup down via
  *   `dismissSlashPopup` (so it can't sit on top of the modal the command is
  *   about to open — B5), WITHOUT consuming the range, then hand the corrected
- *   range to the command, which deletes it itself ONLY when it actually commits
- *   an insert. On cancel/early-return the `/query` text is left intact (no lone
- *   `/`, #76).
+ *   range to the command, which deletes it on commit (`consumeSlashRange`) OR
+ *   on cancel (`cancelSlashTrigger`, B1). Either way the `/query` trigger is
+ *   consumed once the deferred flow terminates — leaving it wedges re-trigger
+ *   (dismissedRange + allowedPrefixes, see cancelSlashTrigger). Only the
+ *   user's pre-trigger body text survives a cancel (#76).
  */
 export function runSlashItem(args: { editor: Editor; range: SlashRange; item: SlashItem }): void {
   const { editor, item } = args;
@@ -941,6 +1047,22 @@ export function consumeSlashRange(editor: Editor, range: SlashRange | undefined)
   editor.chain().focus().deleteRange(range).run();
 }
 
+/**
+ * B1 (#76 cancel path) — consume the `/query` trigger when a deferred flow
+ * terminates WITHOUT inserting (dialog cancelled, picker dismissed, upload
+ * failed). Leaving the trigger wedges re-triggering twice over: the suggestion
+ * plugin pins `dismissedRange` to the still-present `/query`, and the default
+ * `allowedPrefixes: [' ']` rejects a new `/` typed after a word character.
+ * Deleting the range makes the plugin's next `apply` find no match at the
+ * cursor, which clears `dismissedRange` for free. The user's pre-trigger text
+ * is untouched — the original #76 guarantee now covers BODY text only; the
+ * `/query` command input is consumed either way, commit or cancel.
+ */
+export function cancelSlashTrigger(editor: Editor, range: SlashRange | undefined): void {
+  if (editor.isDestroyed) return;
+  consumeSlashRange(editor, range);
+}
+
 export const SlashCommand = Extension.create({
   name: 'slashCommand',
 
@@ -959,7 +1081,15 @@ export const SlashCommand = Extension.create({
         // #122 — return the full filtered catalog (no slice cap). The grouped,
         // scrollable SlashMenu bounds its own height, so every block is now
         // discoverable both by scrolling categories and by typing.
-        items: ({ query }) => items.filter((i) => matchesSlashQuery(i, query)),
+        // F2 — append the workspace's custom template commands (primed into a
+        // module cache at editor mount; workspaceId travels via the editor's
+        // `cairn` storage namespace, same channel as pageId).
+        items: ({ query, editor }) => {
+          const workspaceId = (editor.storage as { cairn?: { workspaceId?: string } }).cairn
+            ?.workspaceId;
+          const workspaceItems = getWorkspaceSlashCommands(workspaceId).map(workspaceSlashItem);
+          return [...items, ...workspaceItems].filter((i) => matchesSlashQuery(i, query));
+        },
         render: () => {
           let component: ReactRenderer<
             SlashMenuRef,

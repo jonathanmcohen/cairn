@@ -43,6 +43,8 @@ describe('Plan F — OAuth discovery', () => {
     expect(body.grant_types_supported).toEqual(['authorization_code', 'refresh_token']);
     expect(body.code_challenge_methods_supported).toEqual(['S256']);
     expect(body.token_endpoint_auth_methods_supported).toContain('none');
+    // v0.10.0 G4 — revoke now authenticates clients like the token endpoint.
+    expect(body.revocation_endpoint_auth_methods_supported).toEqual(['none', 'client_secret_post']);
 
     // The 16 PAT scopes are the OAuth scope vocabulary.
     const scopes = body.scopes_supported as string[];

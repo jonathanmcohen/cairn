@@ -134,13 +134,37 @@ const Schema = z.object({
   // SHOULD use much longer values stored in a secret manager. See
   // docs/operations.md § "Encrypted backup passphrase rotation".
   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE: z.string().min(8).optional(),
-  // v0.9.4 P17 #66 — gate for the workspace "Require 2FA" control. The
-  // `workspaces.require_2fa` column + settings API field exist, but NOTHING
-  // reads the flag at sign-in yet — enforcement is unimplemented. Shipping a
-  // no-op security toggle is misleading, so the UI is hidden until an operator
-  // opts in by setting this true (intended to flip on once sign-in enforcement
-  // lands, with no further code change). Default OFF.
-  CAIRN_ENFORCE_2FA: z.coerce.boolean().default(false),
+  // v0.10.0 G1 — at-rest encryption key for federated peer shared secrets
+  // (`peer_instances.shared_secret_hash`). Optional. When set (≥ 16 chars),
+  // new pairings store an AES-256-GCM `enc-v1:` envelope and existing raw
+  // rows are lazily re-encrypted after their first successful verify. When
+  // unset, behavior is identical to v0.9 (raw at rest) with a once-per-process
+  // operator warning. Rotation = set the new key and re-pair peers — rows
+  // encrypted under the old key fail closed with an error naming this var.
+  // Use sites read process.env directly (the env() cache gotcha), same as
+  // CAIRN_BACKUP_ENCRYPTION_PASSPHRASE. See docs/operations.md.
+  CAIRN_PEER_SECRET_KEY: z.string().min(16).optional(),
+  // v0.10.0 C1 — directory the web snapshot UI (/settings/admin/backups +
+  // /api/admin/backups) lists bundles from and writes new ones into. The CLI's
+  // `backup --out <dir>` should point at the SAME directory so CLI/cron-made
+  // bundles appear in the UI (and UI-made bundles are pruned by the CLI's
+  // --retention-days sweeps).
+  CAIRN_BACKUP_DIR: z.string().default('/data/backups'),
+  // v0.9.4 P17 #66, reconciled v0.10.0 H4b — gate for the workspace "Require
+  // 2FA" control. Enforcement IS implemented: the (app) layout redirects any
+  // member of a require-2fa workspace without enabled TOTP to
+  // /settings/security?enroll=required (userHasWorkspaceRequiring2fa in
+  // src/lib/auth/two-factor.ts). The flag is an operator opt-OUT for the
+  // settings toggle and DEFAULTS ON; set 'false' or '0' to hide the toggle
+  // (existing require_2fa rows keep enforcing either way). Accepted scope
+  // limit: the gate is layout-level, so require_2fa gates the app UI only —
+  // /api/* is proxy-exempt, and API access is governed by token auth
+  // (PATs/OAuth) and is not blocked for un-enrolled session users. See
+  // docs/operations.md § "Two-factor enforcement".
+  CAIRN_ENFORCE_2FA: z
+    .string()
+    .optional()
+    .transform((v) => !(v === 'false' || v === '0')),
 });
 
 export type Env = z.infer<typeof Schema>;

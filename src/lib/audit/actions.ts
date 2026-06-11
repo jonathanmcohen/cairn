@@ -167,6 +167,10 @@ export const AUDIT_ACTIONS = [
   'federation.peer_enabled',
   'federation.peer_disabled',
   'federation.peer_deleted',
+  // v0.10.0 G2 — an inbound federated-search request from an AUTHENTICATED
+  // peer was dropped by the per-peer rate limiter (429). actorUserId is null
+  // (server-to-server). metadata: { peerName, retryAfterMs } — never secrets.
+  'federation.peer_rate_limited',
   // v0.9.16 Plan F — MCP OAuth 2.1 authorization-server lifecycle. Metadata
   // carries ids / counts / scope-names only — NEVER the issued secret (the
   // cairn_oauth_/cairn_oart_/cairn_oac_/cairn_ocs_ prefixes are in
@@ -175,6 +179,31 @@ export const AUDIT_ACTIONS = [
   'oauth.consent_granted',
   'oauth.token_issued',
   'oauth.token_revoked',
+  // v0.10.0 D3 — admin deleted a registered client app from the instance
+  // registry (/settings/admin/oauth-clients). The delete cascade-revokes every
+  // oauth_tokens row issued to the client. Metadata: { clientId, name,
+  // revokedGrants } — ids + counts only, never a secret.
+  'oauth.client_deleted',
+  // v0.10.0 G3 — a revoked (already-rotated) refresh token was presented
+  // again: reuse detected, the whole rotation family revoked. Metadata:
+  // { reason: 'refresh_token_reuse', familyId, clientId } — ids only, never
+  // token material.
+  'oauth.token_family_revoked',
+  // v0.10.0 G5 — admin toggled the RFC 7591 registration lock (while ON,
+  // /api/oauth/register requires an initial access token). Metadata:
+  // { locked } only — NEVER the minted token (the cairn_oiat_ prefix is in
+  // FORBIDDEN_SUBSTRINGS and would trip assertAuditMetadataClean).
+  'oauth.register_lock_changed',
+  // v0.10.0 F1 — admin changed the workspace brand (logo and/or primary
+  // color). Metadata: { hasLogo, primaryColor } — the hex color is operator-
+  // visible styling, not a secret.
+  'workspace.brand_updated',
+  // v0.10.0 F2 — admin created/deleted a custom slash command (trigger word →
+  // saved template, workspace_slash_commands table). Metadata: { trigger,
+  // label, templateId } on create; { trigger, label } on delete — names + ids
+  // only, never the template payload.
+  'workspace.slash_command_created',
+  'workspace.slash_command_deleted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -212,4 +241,6 @@ export type AuditTargetType =
   | 'peer_instance'
   // v0.9.16 Plan F — MCP OAuth client + issued-token rows.
   | 'oauth_client'
-  | 'oauth_token';
+  | 'oauth_token'
+  // v0.10.0 F2 — custom slash-command rows (workspace_slash_commands table).
+  | 'workspace_slash_command';

@@ -61,7 +61,9 @@ describe('Plan B3 #117 — heading collapse (regression)', () => {
     render(<HeadingCollapse editor={editor} />);
     const h2 = editor.view.dom.querySelector('h2') as HTMLElement;
     fireEvent.mouseMove(h2);
-    const btn = screen.getByLabelText('editor.heading.collapse');
+    // v0.10.0 E3 — chevrons are persistent (one per visible heading, CSS-
+    // revealed), so the label matches BOTH h2 buttons; [0] is heading A's.
+    const btn = screen.getAllByLabelText('editor.heading.collapse')[0] as HTMLElement;
     expect(btn).toBeTruthy();
     expect(btn.getAttribute('aria-expanded')).toBe('true');
   });
@@ -75,7 +77,7 @@ describe('Plan B3 #117 — heading collapse (regression)', () => {
     const secondHeading = editor.view.dom.querySelectorAll('h2')[1] as HTMLElement;
     expect(para.hasAttribute('hidden')).toBe(false);
 
-    fireEvent.click(screen.getByLabelText('editor.heading.collapse'));
+    fireEvent.click(screen.getAllByLabelText('editor.heading.collapse')[0] as HTMLElement);
     expect(para.hasAttribute('hidden')).toBe(true);
     // The equal-level sibling heading B bounds the collapse — it stays visible.
     expect(secondHeading.hasAttribute('hidden')).toBe(false);
