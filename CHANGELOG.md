@@ -5,6 +5,88 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-06-11
+
+The audit-driven hardening + net-new release: 33 items across seven plans
+(B carry-forward, C backup/restore, D surface wiring, G security, E UX
+capstone, F net-new, H test-infra), every one shipped behind a RED→GREEN
+e2e gate against the production standalone image with a committed live
+screenshot. **Migrations 0072–0075.** The CI e2e gate now runs the ENTIRE
+tests/e2e/ suite (171 tests) — the filtered-subset rot class is closed.
+
+### Added
+
+- **Backups & restore (C1–C4):** snapshot bundle UI with create-now job,
+  restore flow with app-wide read-only mode, scheduled backups (schedule
+  editor, backup_runs history, keep-N pruning), and selective restore of a
+  page subtree or whole workspace from a snapshot.
+- **Admin surface wiring (D1–D8):** SIEM send-test button, audit CSV export,
+  OAuth registered-clients registry, health/readiness panel, archived-pages
+  browse view, storage usage indicator + quota admin (413 on quota
+  exceeded), migration status panel, and pgvector index rebuild
+  (REINDEX CONCURRENTLY) from the health page and CLI.
+- **Workspace brand (F1, migration 0074):** logo upload + primary color with
+  automatic WCAG 4.5:1 contrast clamping, applied to the sidebar and public
+  sites.
+- **Custom slash commands (F2, migration 0075):** workspaces register
+  /trigger shortcuts bound to saved templates; the slash menu gains a
+  Workspace group; template deletion cascades the command.
+- **Onboarding tour (F3):** element-anchored popover walkthrough (no new
+  dependency) with per-version seen marker, reduced-motion support,
+  keyboard trap/Esc, missing-anchor skip, and Help replay.
+- **What's-new panel (E2):** the sidebar version chip opens an in-app panel
+  rendering the running version's CHANGELOG section (build-time bundled,
+  standalone-safe) with a per-user seen badge; never shows stale notes.
+- **Editor UX (E1, E3–E7):** bare `?` opens the shortcuts sheet; heading
+  collapse chevrons stay discoverable (persistent on touch); suggest mode
+  auto-marks typed text; settings pages render a single sidebar; the editor
+  toolbar consolidates into the page header slot; the search palette honors
+  prefers-reduced-motion.
+- OIDC IdP form exposes the `scopes` field its API already accepted; the
+  workspace import page gains its settings-nav entry (H4).
+
+### Security
+
+- **Federated search (G1, G2, migration 0072):** peer secrets encrypted at
+  rest (AES-GCM envelope over Argon2id-derived keys, plaintext shown once)
+  and per-peer inbound rate limiting with verify-first ordering.
+- **OAuth 2.1 (G3–G5, migration 0073):** refresh-token reuse revokes the
+  whole token family; /api/oauth/revoke requires client authentication
+  (timing-safe, RFC 8414 metadata); dynamic client registration gains
+  per-IP and global flood control with an admin lock.
+- `require_2fa` enforcement documented and reconciled: CAIRN_ENFORCE_2FA
+  now defaults ON (workspace toggle visible; operator opt-out retained);
+  the API-surface gap is an explicit, documented decision (H4).
+- `/healthz` added to the proxy's public paths — the readiness probe
+  answered 307-to-login to unauthenticated load-balancer probes (H4).
+
+### Fixed
+
+- **Suggestion accept/reject over live collaboration** (see 0.9.19 C3 note;
+  regression-guarded this release by the E4 auto-mark spec family).
+- **Public site dead links:** the /p/<slug> route now enforces the published
+  lifecycle gate (the share path bypassed it) (D5).
+- **Mention picks by mouse lost trailing text (#73/#253):** the option button
+  blurred the composer before inserting; typed text after a mouse-pick went
+  nowhere. Found when H1 removed a silent test guard (H1).
+- **Sidebar layout collapse at laptop heights:** unbounded saved-searches
+  and upper sections could push the PAGES tree (and its New-page button) to
+  zero height with no scroll access; the upper sections now cap at 45% of
+  the nav with their own scrollbar (H1, H3).
+- **Audit keyset pagination dropped rows at microsecond-identical
+  timestamps** (D2).
+- The e2e suite itself: 11 rotted legacy tests de-rotted, the auth-signout
+  flake root-caused (soft-nav redirect vs load-lifecycle wait) and made
+  hermetic ×10, the sidebar density guard upgraded from source-grep to
+  runtime pixels, and the axe gate proven falsifiable (H1–H3).
+
+### Operations
+
+- /api/health stays the documented always-200 diagnostic; /healthz is the
+  readiness probe (503 on db-down) — recorded in docs/operations.md (H4d).
+- The CI e2e gate runs all of tests/e2e/; the only exclusion mechanism is
+  an in-spec test.fixme with a written reason (currently none) (H1).
+
 ## [0.9.19] - 2026-06-10
 
 Audit-cleanup + carry-forward release. Every v0.9.18 audit finding closed, every
