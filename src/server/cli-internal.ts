@@ -31,6 +31,7 @@ export interface CliArgs {
     | 'reconcile'
     | 'reminders:scan'
     | 'reindex-embeddings'
+    | 'reindex-vector-index'
     | 'connector:sync'
     | 'trash:purge'
     | 'pages:auto-unlock'
@@ -85,6 +86,10 @@ const KNOWN_COMMANDS = [
   'reconcile',
   'reminders:scan',
   'reindex-embeddings',
+  // v0.10.0 D8 — REINDEX INDEX CONCURRENTLY on the pgvector HNSW index
+  // (page_embeddings_embedding_hnsw_idx). Index-pass only; pair with
+  // reindex-embeddings when the embedding DATA needs refreshing too.
+  'reindex-vector-index',
   'connector:sync',
   'trash:purge',
   // v0.9.0 G2 P14 — single global cron sweep that auto-unlocks pages whose
