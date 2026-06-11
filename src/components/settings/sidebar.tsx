@@ -107,6 +107,12 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.storage'),
         href: '/settings/admin/storage' as Route,
       },
+      // Read-only schema-migration status panel (v0.10.0 D7).
+      {
+        id: 'admin-migrations',
+        label: t('settings.nav.admin.migrations'),
+        href: '/settings/admin/migrations' as Route,
+      },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
     if (e2eEnabled) {
