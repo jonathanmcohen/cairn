@@ -10,11 +10,15 @@ import { workspaces } from './workspaces';
  * side matches the request's signature against this same table to identify
  * the caller.
  *
- * MVP NOTE on `shared_secret_hash`: the column name promises hashing
- * (argon2id/bcrypt) but the v0.9 implementation stores the raw shared secret
- * so the HMAC verifier can recompute the signature. A v1.0 hardening plan
- * should switch to hashed storage + a key-derivation function. See the
- * inbound route comment for details.
+ * NOTE on `shared_secret_hash` (v0.10.0 G1): the column name promises hashing,
+ * but the HMAC protocol needs the raw key at verify/sign time, so one-way
+ * hashing is impossible. Instead the secret is ENCRYPTED AT REST: when the
+ * operator sets `CAIRN_PEER_SECRET_KEY`, the column holds an AES-256-GCM
+ * `enc-v1:` envelope (src/lib/search/peer-secret.ts) and `secret_format` is
+ * 'enc-v1'. Raw storage (`secret_format` 'raw') survives only as the legacy /
+ * keyless mode: rows written before the key was set are lazily re-encrypted
+ * after their first successful verify, and a deployment that never sets the
+ * key keeps raw-at-rest behavior with a once-per-process operator warning.
  */
 export const peerInstances = pgTable(
   'peer_instances',
@@ -26,6 +30,8 @@ export const peerInstances = pgTable(
     name: text('name').notNull(),
     baseUrl: text('base_url').notNull(),
     sharedSecretHash: text('shared_secret_hash').notNull(),
+    /** 'raw' (legacy/keyless) | 'enc-v1' (AES-256-GCM envelope) — see header. */
+    secretFormat: text('secret_format').notNull().default('raw'),
     lastSyncedAt: timestamp('last_synced_at', { withTimezone: true }),
     lastError: text('last_error'),
     enabled: boolean('enabled').notNull().default(false),
