@@ -8,18 +8,7 @@
 // is ./tests/a11y). CI extends testDir/testMatch to include tests/e2e, boots
 // the built/deployed image + seed, and runs these against production-identical
 // surfaces. We reuse the a11y fixtures (real seeded user + credentials sign-in).
-import { expect, test } from '../a11y/fixtures';
-
-async function signIn(
-  page: import('@playwright/test').Page,
-  seeded: { userEmail: string; userPassword: string },
-) {
-  await page.goto('/login');
-  await page.locator('input[name="email"]').fill(seeded.userEmail);
-  await page.locator('input[name="password"]').fill(seeded.userPassword);
-  await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
-}
+import { expect, signIn, test } from '../a11y/fixtures';
 
 test.describe('Plan J theme + light-mode surfaces', () => {
   test('route-reachability — /settings/account/theme renders swatches + live preview + custom hex', async ({
@@ -33,7 +22,9 @@ test.describe('Plan J theme + light-mode surfaces', () => {
     await expect(page.getByRole('button', { name: 'Blue' })).toBeVisible();
     // J3 — scoped live-preview container + its sample primary button.
     await expect(page.getByTestId('theme-preview')).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Primary button' })).toBeVisible();
+    // The preview button is decorative (aria-hidden, tabIndex -1) since the
+    // a11y sweep, so it is NOT in the role tree — anchor on the visible copy.
+    await expect(page.getByTestId('theme-preview')).toContainText('Primary button');
     // J4 — custom-hex input is present (and prefilled, asserted below).
     await expect(page.getByLabel('Custom hex')).toBeVisible();
   });
@@ -43,6 +34,7 @@ test.describe('Plan J theme + light-mode surfaces', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
+    await page.goto('/');
     // next-themes defaultTheme is 'system' → the toggle starts on System theme.
     const toggle = page.getByRole('button', { name: 'System theme' });
     await expect(toggle).toBeVisible();

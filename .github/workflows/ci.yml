@@ -509,15 +509,15 @@ jobs:
           /usr/lib/postgresql/18/bin/pg_dump --version | grep -q " 18\." || { echo "pg_dump 18 not found"; exit 1; }
 
       # The webServer entries in playwright.e2e.config.ts run db:migrate and
-      # boot the standalone server + collab process themselves. Scoped to the
-      # item specs (tests/e2e/item-*) — the legacy specs in the same dir
-      # (auth-signout, slash-ux, theme, onboarding, ...) were authored across
-      # v0.9.9-v0.9.17, ran once locally, and have rotted: 10 red on main
-      # locally AND in CI but a DIFFERENT 10 each run (~30s-timeout flakes).
-      # Tracked as v0.9.19 follow-up; do not widen this glob until they're
-      # de-rotted or they make the gate cry wolf.
-      - name: Item e2e suite
-        run: pnpm test:e2e tests/e2e/item-
+      # boot the standalone server + collab process themselves. v0.10.0 H1
+      # de-rotted the legacy specs (the rot was form-driven sign-ins tripping
+      # the 5/min auth limiter, plus stale anchors) and widened this gate to
+      # the WHOLE e2e dir — every spec in tests/e2e/ now runs on CI, so new
+      # rot fails loudly instead of accumulating unobserved. The only
+      # exclusion is an explicit in-spec `test.fixme` with a documented
+      # reason (auth-signout test 1 → item H2), never a glob filter.
+      - name: e2e suite (item + legacy)
+        run: pnpm test:e2e tests/e2e/
 
       - name: Upload Playwright report
         if: failure()

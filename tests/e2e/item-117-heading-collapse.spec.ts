@@ -121,7 +121,9 @@ async function signIn(page: Page, seeded: { userEmail: string; userPassword: str
   await page.locator('input[name="email"]').fill(seeded.userEmail);
   await page.locator('input[name="password"]').fill(seeded.userPassword);
   await page.getByRole('button', { name: 'Sign in', exact: true }).click();
-  await page.waitForURL('**/', { timeout: 30_000 });
+  // not-'/login' predicate: '/' redirects to the landing page when the
+  // workspace has pages, so a '**/' glob can miss the transient root (H1).
+  await page.waitForURL((url) => !url.pathname.startsWith('/login'), { timeout: 30_000 });
 }
 
 test.describe('item #117 — heading collapse chevron', () => {

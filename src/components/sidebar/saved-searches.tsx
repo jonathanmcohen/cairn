@@ -89,7 +89,12 @@ export function SavedSearches() {
           {t('savedSearches.heading')}
         </p>
       </div>
-      <ul>
+      {/* Bounded height (v0.10.0 H1): this section sits ABOVE the PAGES tree
+          in a nav that does not scroll as a whole (C3 — the tree owns the
+          sole scroll container). Unbounded, enough saved searches push the
+          PAGES header and its New-page affordance below the fold with no way
+          to reach them. The section scrolls internally instead. */}
+      <ul className="max-h-40 overflow-y-auto">
         {items.map((s) => (
           <li
             key={s.id}
