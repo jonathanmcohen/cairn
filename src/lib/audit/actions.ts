@@ -189,6 +189,11 @@ export const AUDIT_ACTIONS = [
   // { reason: 'refresh_token_reuse', familyId, clientId } — ids only, never
   // token material.
   'oauth.token_family_revoked',
+  // v0.10.0 G5 — admin toggled the RFC 7591 registration lock (while ON,
+  // /api/oauth/register requires an initial access token). Metadata:
+  // { locked } only — NEVER the minted token (the cairn_oiat_ prefix is in
+  // FORBIDDEN_SUBSTRINGS and would trip assertAuditMetadataClean).
+  'oauth.register_lock_changed',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

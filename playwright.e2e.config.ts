@@ -81,6 +81,17 @@ export default defineConfig({
         // /data/uploads — absent on dev boxes). Point it at the same dir the
         // backup tar reads so uploads land where C1's bundle expects them.
         CAIRN_UPLOAD_ROOT: UPLOADS_DIR,
+        // item G5 — every spec shares one source IP (TRUST_PROXY off → one
+        // 'unknown' bucket key), so the production per-IP ceiling (10/min)
+        // would be drained by the F/G3/G4 registrations before G5's own
+        // tests run. Effectively disable per-IP here (it is unit-covered
+        // with TRUST_PROXY=true) and keep the GLOBAL ceiling at its default
+        // so the burst test still trips a real 429. G5's burst runs LAST
+        // among the registration-using specs (item-F < item-G3 < G4 < G5,
+        // serial single worker), so nothing registers after the bucket is
+        // intentionally exhausted.
+        CAIRN_OAUTH_REGISTER_LIMIT_PER_MIN: '1000',
+        CAIRN_OAUTH_REGISTER_GLOBAL_LIMIT_PER_MIN: '30',
         PATH: E2E_PATH,
       },
     },

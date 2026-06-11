@@ -14,6 +14,7 @@ import * as schema from '@/db/schema';
  *   cairn_oauth_ access token (1 h)        ← the only one resolveToken dispatches on
  *   cairn_oart_  refresh token (30 d, rotated)
  *   cairn_ocs_   client secret (confidential clients only)
+ *   cairn_oiat_  initial access token (RFC 7591 §3.1.1 registration lock, v0.10.0 G5)
  */
 const SECRET_BYTES = 32; // 32 random bytes → 43-char base64url
 
@@ -22,6 +23,7 @@ export const OAUTH_PREFIX = {
   accessToken: 'cairn_oauth_',
   refreshToken: 'cairn_oart_',
   clientSecret: 'cairn_ocs_',
+  initialAccess: 'cairn_oiat_',
 } as const;
 
 /** Mint a `<prefix><base64url>` plaintext secret. Returned ONCE, never recoverable. */

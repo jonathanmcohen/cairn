@@ -104,6 +104,8 @@ const FORBIDDEN_SECRET_PREFIXES = [
   'cairn_oart_',
   'cairn_oac_',
   'cairn_ocs_',
+  // v0.10.0 G5 — RFC 7591 §3.1.1 initial access token (registration lock).
+  'cairn_oiat_',
 ];
 
 function assertNoSecrets(body: string) {
@@ -780,6 +782,8 @@ describe('secret-leak: OAuth secret prefixes trip assertAuditMetadataClean', () 
     ['cairn_oart_', 'refresh token'],
     ['cairn_oac_', 'authorization code'],
     ['cairn_ocs_', 'client secret'],
+    // v0.10.0 G5 — registration-lock initial access token.
+    ['cairn_oiat_', 'initial access token'],
   ])('a value containing %s (%s) throws', async (prefix) => {
     const { assertAuditMetadataClean } = await import('@/lib/audit/record');
     expect(() => assertAuditMetadataClean({ note: `${prefix}AbCdEf123456` })).toThrow();
