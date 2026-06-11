@@ -218,7 +218,7 @@ export function SearchPalette({
       <Command
         ref={trapRef}
         data-cairn-palette=""
-        className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl animate-in fade-in-0 zoom-in-95 duration-150"
+        className="relative w-full max-w-lg overflow-hidden rounded-lg border bg-popover text-popover-foreground shadow-xl animate-in fade-in-0 zoom-in-95 duration-150 motion-reduce:animate-none"
         shouldFilter={false}
         onKeyDown={(e) => {
           // #114: a single Escape always closes the palette. Stop here so the
