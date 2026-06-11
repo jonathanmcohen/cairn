@@ -11,5 +11,4 @@ tests
 !.env.example
 docs
 README.md
-CHANGELOG.md
 LICENSE
