@@ -22,6 +22,11 @@ export const oauthTokens = pgTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
     scopes: text('scopes').array().notNull(),
+    // v0.10.0 G3 — rotation-chain lineage. Every row descended from one
+    // authorization-code grant shares the family id: the code exchange omits
+    // it (DB default = fresh family), the refresh rotation copies it. Reuse of
+    // a revoked refresh token revokes the whole family in one UPDATE.
+    familyId: uuid('family_id').notNull().defaultRandom(),
     accessExpiresAt: timestamp('access_expires_at', { withTimezone: true }).notNull(),
     refreshExpiresAt: timestamp('refresh_expires_at', { withTimezone: true }),
     lastUsedAt: timestamp('last_used_at', { withTimezone: true }),
@@ -32,6 +37,8 @@ export const oauthTokens = pgTable(
     uniqueIndex('oauth_tokens_access_hash_unique').on(t.accessTokenHash),
     index('oauth_tokens_refresh_hash_idx').on(t.refreshTokenHash),
     index('oauth_tokens_user_idx').on(t.userId, t.workspaceId),
+    // v0.10.0 G3 — family-wide revocation on refresh-token reuse.
+    index('oauth_tokens_family_idx').on(t.familyId),
   ],
 );
 

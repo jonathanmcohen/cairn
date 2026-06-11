@@ -184,6 +184,11 @@ export const AUDIT_ACTIONS = [
   // oauth_tokens row issued to the client. Metadata: { clientId, name,
   // revokedGrants } — ids + counts only, never a secret.
   'oauth.client_deleted',
+  // v0.10.0 G3 — a revoked (already-rotated) refresh token was presented
+  // again: reuse detected, the whole rotation family revoked. Metadata:
+  // { reason: 'refresh_token_reuse', familyId, clientId } — ids only, never
+  // token material.
+  'oauth.token_family_revoked',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
