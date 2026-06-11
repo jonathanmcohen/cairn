@@ -19,6 +19,7 @@ import { SidebarDrawer } from '@/components/sidebar-drawer';
 import { SkipLink } from '@/components/skip-link';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
 import { Toaster } from '@/components/ui/sonner';
+import { WorkspaceNavGate } from '@/components/workspace-nav-gate';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { isTwoFactorEnabled, userHasWorkspaceRequiring2fa } from '@/lib/auth/two-factor';
@@ -66,10 +67,15 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               <ShortcutSheet />
               <QuickCaptureModal />
               <OnboardingWizard workspaceId={ctx.workspaceId} initialState={onboardingState} />
-              <Sidebar workspaceId={ctx.workspaceId} />
-              <SidebarDrawer>
-                <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
-              </SidebarDrawer>
+              {/* v0.10.0 E5 — /settings/* has its own SettingsSidebar; the
+                  client gate unmounts the workspace nav (desktop aside +
+                  mobile drawer) there so two left navs never stack. */}
+              <WorkspaceNavGate>
+                <Sidebar workspaceId={ctx.workspaceId} />
+                <SidebarDrawer>
+                  <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
+                </SidebarDrawer>
+              </WorkspaceNavGate>
               <main id="main-content" className="flex-1 p-8">
                 <div
                   data-cairn-workspace-topbar=""
