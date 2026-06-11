@@ -95,6 +95,12 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.oauthClients'),
         href: '/settings/admin/oauth-clients' as Route,
       },
+      // Instance health/readiness panel (v0.10.0 D4).
+      {
+        id: 'admin-health',
+        label: t('settings.nav.admin.health'),
+        href: '/settings/admin/health' as Route,
+      },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
     if (e2eEnabled) {
