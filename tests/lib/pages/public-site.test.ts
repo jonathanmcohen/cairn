@@ -1,3 +1,4 @@
+import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
@@ -64,5 +65,40 @@ describe('getPublicSitePages', () => {
     const site = await getPublicSitePages(db, 'team');
     expect(site).not.toBeNull();
     expect(site!.pages.map((p) => p.title)).toEqual(['Published']);
+  });
+
+  it('drops archived pages from the index (v0.10.0 D5 dead-link fix)', async () => {
+    const a = await createTestWorkspaceWithUser(db);
+    await setPublicSite(db, { workspaceId: a.workspaceId, slug: 'team', enabled: true });
+
+    // A page that was published (share flag + slug minted) and then archived:
+    // /p/<slug> already 404'd (public.ts gates on status), so without the
+    // status filter the index kept listing a dead link.
+    const [archived] = await db
+      .insert(schema.pages)
+      .values({ workspaceId: a.workspaceId, title: 'Archived', createdBy: a.userId })
+      .returning();
+    await publishPage(db, {
+      pageId: archived!.id,
+      workspaceId: a.workspaceId,
+      actorUserId: a.userId,
+    });
+    await db
+      .update(schema.pages)
+      .set({ status: 'archived' })
+      .where(eq(schema.pages.id, archived!.id));
+
+    const [live] = await db
+      .insert(schema.pages)
+      .values({ workspaceId: a.workspaceId, title: 'Live', createdBy: a.userId })
+      .returning();
+    await publishPage(db, {
+      pageId: live!.id,
+      workspaceId: a.workspaceId,
+      actorUserId: a.userId,
+    });
+
+    const site = await getPublicSitePages(db, 'team');
+    expect(site!.pages.map((p) => p.title)).toEqual(['Live']);
   });
 });

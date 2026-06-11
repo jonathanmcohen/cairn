@@ -1,6 +1,15 @@
 'use client';
 
-import { CheckSquare, Inbox, LayoutTemplate, LogOut, Settings, Star, Trash } from 'lucide-react';
+import {
+  Archive,
+  CheckSquare,
+  Inbox,
+  LayoutTemplate,
+  LogOut,
+  Settings,
+  Star,
+  Trash,
+} from 'lucide-react';
 import Link from 'next/link';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
@@ -45,6 +54,13 @@ export function SidebarFooterNav({ version }: { version: string }) {
       <Link href="/settings" className={NAV_ITEM_CLASS}>
         <Settings aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.settings')}
+      </Link>
+      {/* D5 — archived pages are hidden from the PAGES tree and search, so the
+          only discoverable way back to them is this utility entry (next to
+          Trash, its lifecycle sibling). */}
+      <Link href="/archived" className={NAV_ITEM_CLASS}>
+        <Archive aria-hidden="true" className="h-4 w-4" />
+        {t('sidebar.nav.archived')}
       </Link>
       <Link href="/trash" className={NAV_ITEM_CLASS}>
         <Trash aria-hidden="true" className="h-4 w-4" />
