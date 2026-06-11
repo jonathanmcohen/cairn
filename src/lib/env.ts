@@ -134,6 +134,12 @@ const Schema = z.object({
   // SHOULD use much longer values stored in a secret manager. See
   // docs/operations.md § "Encrypted backup passphrase rotation".
   CAIRN_BACKUP_ENCRYPTION_PASSPHRASE: z.string().min(8).optional(),
+  // v0.10.0 C1 — directory the web snapshot UI (/settings/admin/backups +
+  // /api/admin/backups) lists bundles from and writes new ones into. The CLI's
+  // `backup --out <dir>` should point at the SAME directory so CLI/cron-made
+  // bundles appear in the UI (and UI-made bundles are pruned by the CLI's
+  // --retention-days sweeps).
+  CAIRN_BACKUP_DIR: z.string().default('/data/backups'),
   // v0.9.4 P17 #66 — gate for the workspace "Require 2FA" control. The
   // `workspaces.require_2fa` column + settings API field exist, but NOTHING
   // reads the flag at sign-in yet — enforcement is unimplemented. Shipping a
