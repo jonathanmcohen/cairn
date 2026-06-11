@@ -61,6 +61,33 @@ row to prevent a poison loop.
 and double-fire each due row. Multi-instance deployments should disable this scheduler and use
 external cron / Kubernetes CronJob to invoke the same CLI.
 
+### Scheduled backups (v0.10.0 C3)
+
+Admins can manage THE backup schedule from **Settings → Admin → Backups → Scheduled
+backups** — no SQL needed. The page (and `PUT /api/admin/backups/schedule`) accepts only
+structured fields (cadence, target, retention) and builds the cron command string
+server-side, so the stored row always carries `--out <CAIRN_BACKUP_DIR>` (a hand-authored
+row without `--out` throws on every tick) plus `--trigger scheduled`.
+
+Requirements & semantics:
+
+- **`CAIRN_SCHEDULER_ENABLED=1` is required** — without it the schedule row sits dormant
+  and never fires; the admin page shows a prominent warning when the flag is off.
+- **One schedule per instance.** Backups are instance-level (full `pg_dump`), so the API
+  upserts a single global `cron_schedules` row (matched by the `backup ` command prefix).
+- **Advisory lock prevents double-fire.** Every CLI `backup` run takes
+  `pg_try_advisory_lock` on a fixed key before dumping; a create-now click racing a cron
+  tick (or a second replica's scheduler) yields exactly one real dump. The loser exits 0
+  and records a failed `backup_runs` row with error `another backup is running`.
+- **Run history is durable.** Each run writes a `backup_runs` row
+  (running → done/failed, with duration, trigger, and bundle timestamp); the admin page
+  lists the last 20.
+- **`--retention-days N` vs `--keep N`:** retention-days is age-based — it deletes any
+  bundle older than N days, and can delete *everything* if backups stop being produced
+  for a while. keep-N is count-based — the newest N bundle stamps (dump + uploads tar +
+  manifest) always survive, regardless of age. When both are set, retention-days prunes
+  first, then keep-N; keep-N therefore acts as the floor.
+
 ### Connector sync (`connector:sync`)
 
 `pnpm cli connector:sync [--connector <id>]` runs one round-trip of the v0.7.0 connector engine

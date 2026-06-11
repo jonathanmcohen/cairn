@@ -17,6 +17,21 @@ describe('parseArgs (P21 additions)', () => {
   it('rejects a non-numeric --retention-days', () => {
     expect(() => parseArgs(['backup', '--out', '/b', '--retention-days', 'soon'])).toThrow();
   });
+  // v0.10.0 C3 — keep-N pruning + run-history trigger flags.
+  it('parses backup --keep and --trigger scheduled', () => {
+    const a = parseArgs(['backup', '--out', '/b', '--keep', '5', '--trigger', 'scheduled']);
+    expect(a).toMatchObject({ command: 'backup', out: '/b', keep: 5, trigger: 'scheduled' });
+  });
+  it('defaults backup trigger to manual and keep to undefined', () => {
+    const a = parseArgs(['backup', '--out', '/b']);
+    expect(a.trigger).toBe('manual');
+    expect(a.keep).toBeUndefined();
+  });
+  it('rejects --keep 0 / non-integer and an unknown --trigger', () => {
+    expect(() => parseArgs(['backup', '--out', '/b', '--keep', '0'])).toThrow();
+    expect(() => parseArgs(['backup', '--out', '/b', '--keep', 'lots'])).toThrow();
+    expect(() => parseArgs(['backup', '--out', '/b', '--trigger', 'cron'])).toThrow();
+  });
   it('parses export --workspace --out', () => {
     const a = parseArgs(['export', '--workspace', 'w1', '--out', '/e']);
     expect(a).toMatchObject({ command: 'export', workspace: 'w1', out: '/e' });
