@@ -189,6 +189,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'oauth.token_revoked': 'OAuth token revoked',
   // v0.10.0 D3 — admin deleted a registered client app (revokes all its tokens).
   'oauth.client_deleted': 'OAuth client deleted',
+  // v0.10.0 G3 — refresh-token reuse detected; whole rotation family revoked.
+  'oauth.token_family_revoked': 'OAuth token family revoked (refresh reuse)',
 };
 
 export function actionLabel(action: string): string {
