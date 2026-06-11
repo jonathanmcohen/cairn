@@ -5,12 +5,14 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useT } from '@/lib/i18n/provider';
 
 export type OidcFormValues = {
   name: string;
   issuer: string;
   clientId: string;
   clientSecret: string;
+  scopes: string;
   emailClaim: string;
   nameClaim: string;
   enabled: boolean;
@@ -21,12 +23,14 @@ const DEFAULTS: OidcFormValues = {
   issuer: '',
   clientId: '',
   clientSecret: '',
+  scopes: 'openid profile email',
   emailClaim: 'email',
   nameClaim: 'name',
   enabled: false,
 };
 
 export function OidcForm(props: { initial?: Partial<OidcFormValues>; idpId?: string }) {
+  const t = useT();
   const router = useRouter();
   const [v, setV] = useState<OidcFormValues>({ ...DEFAULTS, ...(props.initial ?? {}) });
   const [busy, setBusy] = useState(false);
@@ -43,6 +47,9 @@ export function OidcForm(props: { initial?: Partial<OidcFormValues>; idpId?: str
       };
       // Only send clientSecret if non-empty (edit form leaves it blank to keep prior).
       if (v.clientSecret) metadata.clientSecret = v.clientSecret;
+      // v0.10.0 H4a — requested OAuth scopes. Only send when non-empty so a
+      // cleared field falls back to the adapter default at init time.
+      if (v.scopes.trim()) metadata.scopes = v.scopes.trim();
       const body = {
         name: v.name,
         metadata,
@@ -112,6 +119,15 @@ export function OidcForm(props: { initial?: Partial<OidcFormValues>; idpId?: str
           required={!props.idpId}
           placeholder={props.idpId ? '(leave blank to keep existing)' : ''}
         />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="oidc-scopes">{t('sso.oidc.scopes.label')}</Label>
+        <Input
+          id="oidc-scopes"
+          value={v.scopes}
+          onChange={(e) => setV({ ...v, scopes: e.target.value })}
+        />
+        <p className="text-xs text-muted-foreground">{t('sso.oidc.scopes.hint')}</p>
       </div>
       <div className="flex gap-4">
         <div className="space-y-1 flex-1">

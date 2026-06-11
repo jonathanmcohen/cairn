@@ -35,6 +35,10 @@ export default async function EditOidcConfigPage(props: { params: Promise<{ idpI
           issuer: meta.issuer ?? '',
           clientId: meta.clientId ?? '',
           clientSecret: '',
+          // v0.10.0 H4a — show the persisted scopes; fall back to the form
+          // default when the row predates the field (init then uses its own
+          // 'openid email profile' default — same set, order is irrelevant).
+          scopes: meta.scopes ?? 'openid profile email',
           emailClaim: attr.email ?? 'email',
           nameClaim: attr.name ?? 'name',
           enabled: row.enabled,

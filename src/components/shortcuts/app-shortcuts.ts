@@ -114,12 +114,16 @@ export function ensureAppShortcuts(): void {
     },
   });
 
+  // v0.10.0 H4e — the labelKey was 'shortcuts.quickCapture', which exists in
+  // no catalog ('shortcuts.*' is sheet chrome; row labels live under
+  // 'shortcut.*'), so the ⌘/ sheet rendered the raw key string. Aligned with
+  // the sibling rows + keyed in en/es/ar.
   registerShortcut({
     id: 'app.quickCapture',
     keys: 'Mod+Shift+N',
     scope: 'global',
     kind: 'action',
-    labelKey: 'shortcuts.quickCapture',
+    labelKey: 'shortcut.quickCapture',
     run: openQuickCapture,
   });
 
