@@ -41,7 +41,14 @@ function hoverFirstHeading() {
   fireEvent.mouseMove(h2);
 }
 
-// The collapse state is now owned by ProseMirror (#117): toggling dispatches a
+// v0.10.0 E3 — chevrons are persistent (one per visible h1/h2/h3; CSS drives
+// the reveal), so label queries can match several buttons. Buttons render in
+// doc order, so [0] is the FIRST heading's chevron.
+function firstCollapseBtn(): HTMLElement {
+  return screen.getAllByLabelText('editor.heading.collapse')[0] as HTMLElement;
+}
+
+// The collapse state is owned by ProseMirror (#117): toggling dispatches a
 // plugin transaction and a `decorations` prop stamps `hidden` +
 // `data-cairn-collapsed` onto the affected blocks. Because the same `<p>` DOM
 // element is re-decorated (not recreated), we re-query it after each toggle to
@@ -54,19 +61,15 @@ function secondHeadingEl(): HTMLElement {
 }
 
 describe('<HeadingCollapse> (#276 / #117)', () => {
-  it('reveals a collapse chevron on heading hover and toggles the section', () => {
+  it('toggles the section via the heading chevron', () => {
     render(<HeadingCollapse editor={editor} />);
-    hoverFirstHeading();
-
-    const collapseBtn = screen.getByLabelText('editor.heading.collapse');
-    expect(collapseBtn).toBeTruthy();
 
     expect(paragraph().hasAttribute('hidden')).toBe(false);
     expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(false);
 
     // Collapse: the following paragraph is hidden via PM decorations, and the
     // collapse STICKS (PM owns the state, so a redraw can't wipe it).
-    fireEvent.click(collapseBtn);
+    fireEvent.click(firstCollapseBtn());
     expect(paragraph().hasAttribute('hidden')).toBe(true);
     expect(paragraph().hasAttribute('data-cairn-collapsed')).toBe(true);
     // The second heading B is NOT hidden (equal level stops the collapse).
@@ -81,8 +84,7 @@ describe('<HeadingCollapse> (#276 / #117)', () => {
 
   it('keeps the collapse after a document redraw (the #117 regression)', () => {
     render(<HeadingCollapse editor={editor} />);
-    hoverFirstHeading();
-    fireEvent.click(screen.getByLabelText('editor.heading.collapse'));
+    fireEvent.click(firstCollapseBtn());
     expect(paragraph().hasAttribute('hidden')).toBe(true);
 
     // Force a doc transaction (the kind of redraw that previously wiped the raw
@@ -129,9 +131,7 @@ describe('<HeadingCollapse> (#276 / #117)', () => {
       ],
     });
     render(<HeadingCollapse editor={editor} />);
-    const nestedHeading = editor.view.dom.querySelector('h2') as HTMLElement;
-    fireEvent.mouseMove(nestedHeading);
-    fireEvent.click(screen.getByLabelText('editor.heading.collapse'));
+    fireEvent.click(firstCollapseBtn());
 
     const byText = (text: string) =>
       Array.from(editor.view.dom.querySelectorAll('p')).find(
@@ -146,9 +146,69 @@ describe('<HeadingCollapse> (#276 / #117)', () => {
     expect(byText('other column stays').hasAttribute('hidden')).toBe(false);
 
     // Expand restores both.
-    fireEvent.mouseMove(nestedHeading);
     fireEvent.click(screen.getByLabelText('editor.heading.expand'));
     expect(byText('nested body one').hasAttribute('hidden')).toBe(false);
     expect(byText('nested body two').hasAttribute('hidden')).toBe(false);
+  });
+
+  // v0.10.0 E3 — discoverability. CSS hover/opacity behavior is e2e territory
+  // (tests/e2e/item-E3-chevron-discoverability.spec.ts); here we assert the
+  // JS-observable contract the CSS hangs off: persistent buttons + the
+  // data-row-hovered / data-collapsed hooks.
+  describe('E3 — chevron discoverability hooks', () => {
+    it('renders a persistent chevron for every visible collapsible heading (no hover needed)', () => {
+      render(<HeadingCollapse editor={editor} />);
+      // Both h2 headings have a chevron without any mouse interaction (the old
+      // overlay mounted ONE button only while a heading was hovered).
+      expect(screen.getAllByLabelText('editor.heading.collapse')).toHaveLength(2);
+    });
+
+    it('sets data-row-hovered on the hovered heading chevron only, and clears it off-row', () => {
+      render(<HeadingCollapse editor={editor} />);
+      const [first, second] = screen.getAllByLabelText('editor.heading.collapse');
+
+      hoverFirstHeading();
+      expect(first?.hasAttribute('data-row-hovered')).toBe(true);
+      expect(second?.hasAttribute('data-row-hovered')).toBe(false);
+
+      // Mousemove on the editor root far from the heading row + gutter band
+      // (jsdom rects are all 0, so coordinates well outside the band).
+      fireEvent.mouseMove(editor.view.dom, { clientX: 500, clientY: 500 });
+      expect(first?.hasAttribute('data-row-hovered')).toBe(false);
+    });
+
+    it('marks a collapsed heading chevron with data-collapsed (CSS keeps it visible without hover)', () => {
+      render(<HeadingCollapse editor={editor} />);
+      const first = firstCollapseBtn();
+      expect(first.hasAttribute('data-collapsed')).toBe(false);
+
+      fireEvent.click(first);
+      const expandBtn = screen.getByLabelText('editor.heading.expand');
+      expect(expandBtn.hasAttribute('data-collapsed')).toBe(true);
+      expect(expandBtn.getAttribute('aria-expanded')).toBe('false');
+      // The sibling (uncollapsed) heading chevron stays unmarked.
+      const stillExpanded = screen.getByLabelText('editor.heading.collapse');
+      expect(stillExpanded.hasAttribute('data-collapsed')).toBe(false);
+    });
+
+    it('drops chevrons for headings hidden inside a collapsed section', () => {
+      editor.commands.setContent({
+        type: 'doc',
+        content: [
+          { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Outer' }] },
+          { type: 'heading', attrs: { level: 3 }, content: [{ type: 'text', text: 'Inner' }] },
+          { type: 'paragraph', content: [{ type: 'text', text: 'deep body' }] },
+        ],
+      });
+      render(<HeadingCollapse editor={editor} />);
+      // h2 + h3 both get chevrons while everything is visible.
+      expect(screen.getAllByLabelText('editor.heading.collapse')).toHaveLength(2);
+
+      // Collapse the h2: the h3 is hidden with the section, so its chevron has
+      // no visible row to anchor to and must disappear from the overlay.
+      fireEvent.click(firstCollapseBtn());
+      expect(screen.getByLabelText('editor.heading.expand')).toBeTruthy();
+      expect(screen.queryAllByLabelText('editor.heading.collapse')).toHaveLength(0);
+    });
   });
 });
