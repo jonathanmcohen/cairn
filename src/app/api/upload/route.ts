@@ -4,6 +4,8 @@ import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { getStorage } from '@/lib/files/get-storage';
 import { storeUpload } from '@/lib/files/upload';
+import { QuotaExceededError } from '@/lib/quotas/errors';
+import { formatBytes } from '@/lib/quotas/format';
 
 function maxUploadBytes(): number {
   // Read process.env directly so the limit can be toggled per request in tests
@@ -40,6 +42,20 @@ export async function POST(req: Request): Promise<Response> {
       });
       return NextResponse.json(result, { status: 201 });
     } catch (err) {
+      // v0.10.0 D6 — quota breaches were falling through to the generic 500
+      // branch, so users hit the cap blind. Surface a 413 with the remaining
+      // headroom in human units (shared formatter, src/lib/quotas/format.ts);
+      // `remainingBytes` rides along for programmatic clients.
+      if (err instanceof QuotaExceededError) {
+        const remainingBytes = Math.max(0, err.limit - err.used);
+        return NextResponse.json(
+          {
+            error: `Storage quota exceeded — ${formatBytes(remainingBytes)} remaining, file is ${formatBytes(err.incoming)}`,
+            remainingBytes,
+          },
+          { status: 413 },
+        );
+      }
       const message = err instanceof Error ? err.message : 'unknown';
       if (/mime/i.test(message)) {
         return NextResponse.json({ error: message }, { status: 415 });

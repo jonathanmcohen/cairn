@@ -101,6 +101,12 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.health'),
         href: '/settings/admin/health' as Route,
       },
+      // Workspace storage usage + quota admin (v0.10.0 D6).
+      {
+        id: 'admin-storage',
+        label: t('settings.nav.admin.storage'),
+        href: '/settings/admin/storage' as Route,
+      },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
     if (e2eEnabled) {
