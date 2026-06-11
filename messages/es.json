@@ -955,6 +955,7 @@
   "auditLog.loading": "Cargando…",
   "auditLog.error.load": "No se pudo cargar el registro de auditoría ({status})",
   "auditLog.error.loadMore": "No se pudieron cargar más entradas ({status})",
+  "auditLog.export": "Exportar CSV",
   "devTokens.scope.pages:read.tip": "pages:read — Leer páginas y su contenido (títulos, cuerpo, bloques). Sin cambios.",
   "devTokens.scope.pages:write.tip": "pages:write — Crear y editar páginas y su contenido. No puede eliminar.",
   "devTokens.scope.pages:destructive.tip": "pages:destructive — Eliminar páginas y sus subpáginas (irreversible).",

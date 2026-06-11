@@ -339,6 +339,21 @@ export function AuditViewer() {
           value={filters.to}
           onChange={(iso) => setFilters((f) => ({ ...f, to: iso }))}
         />
+        <div className="ms-auto">
+          {/* v0.10.0 D2 — CSV export honoring the CURRENT filters. Plain anchor
+              (same pattern as the database export menu): the route answers with
+              Content-Disposition: attachment, so the browser downloads. The
+              export streams ALL matching rows — no cursor param. */}
+          <Button asChild variant="outline" size="sm">
+            <a
+              href={`/api/admin/audit/export${buildQuery(filters, null)}`}
+              download
+              data-testid="audit-export-csv"
+            >
+              {t('auditLog.export')}
+            </a>
+          </Button>
+        </div>
       </div>
 
       {error ? <StatusBanner variant="error">{error}</StatusBanner> : null}

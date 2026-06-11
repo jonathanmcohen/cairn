@@ -1,18 +1,14 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { getDb } from '@/db/client';
-import { AUDIT_ACTIONS } from '@/lib/audit/actions';
 import { enrichAuditEntries } from '@/lib/audit/enrich';
+import { AuditFilterQuery, toAuditFilters } from '@/lib/audit/filters';
 import { listAuditLog } from '@/lib/audit/query';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 
-const Query = z.object({
-  action: z.enum(AUDIT_ACTIONS).optional(),
-  actorId: z.uuid().optional(),
-  targetType: z.string().optional(),
-  targetId: z.uuid().optional(),
-  from: z.string().datetime().optional(),
-  to: z.string().datetime().optional(),
+// Filter params live in @/lib/audit/filters so the /export sibling (v0.10.0
+// D2) accepts the exact same set; only the pagination params are local here.
+const Query = AuditFilterQuery.extend({
   limit: z.coerce.number().int().positive().max(100).optional(),
   cursor: z.string().optional(),
 });
@@ -24,14 +20,7 @@ export async function GET(req: NextRequest): Promise<Response> {
     const parsed = Query.parse(Object.fromEntries(url.searchParams));
     const result = await listAuditLog(getDb(), {
       workspaceId: ctx.workspaceId,
-      filters: {
-        action: parsed.action,
-        actorId: parsed.actorId,
-        targetType: parsed.targetType,
-        targetId: parsed.targetId,
-        from: parsed.from ? new Date(parsed.from) : undefined,
-        to: parsed.to ? new Date(parsed.to) : undefined,
-      },
+      filters: toAuditFilters(parsed),
       limit: parsed.limit,
       cursor: parsed.cursor,
     });
