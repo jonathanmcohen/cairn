@@ -12,6 +12,7 @@
  */
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PAGE_STATUSES, type PageStatus } from '@/db/schema';
 import { useT } from '@/lib/i18n/provider';
@@ -35,6 +36,7 @@ export function StatusPicker({
 }) {
   const t = useT();
   const router = useRouter();
+  const confirm = useConfirm();
   const [status, setStatus] = useState<PageStatus>(initialStatus);
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -54,6 +56,21 @@ export function StatusPicker({
   const targets = PAGE_STATUSES.filter((s) => canTransition(status, s));
 
   async function change(to: PageStatus): Promise<void> {
+    // v0.10.0 D5 — archiving a published page silently kills its public
+    // `/p/<slug>` render (public.ts gates on status='published') and drops it
+    // from the `/s/<slug>` site index, so surface that side effect before
+    // committing instead of letting the link die quietly.
+    if (to === 'archived' && status === 'published') {
+      const ok = await confirm({
+        title: t('pages.status.archiveConfirmTitle'),
+        description: t('pages.status.archiveConfirmPublished'),
+        confirmLabel: t('pages.status.archiveConfirmAction'),
+      });
+      if (!ok) {
+        setOpen(false);
+        return;
+      }
+    }
     setBusy(true);
     setError(null);
     try {

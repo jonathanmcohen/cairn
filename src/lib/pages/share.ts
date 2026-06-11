@@ -105,6 +105,10 @@ export type PublicAccess =
  * non-deleted, non-expired page. Expired/unpublished/deleted/unknown → { ok: false }
  * (the route maps ALL of these to notFound() — never 403). A password-protected page
  * without a valid access cookie → { ok: 'gate' }. Otherwise { ok: true }.
+ *
+ * Lifecycle: `status='published'` is required in addition to the `published`
+ * share flag — archiving (or demoting) a page kills its public render even
+ * when the share slug/flag are left in place.
  */
 export async function requirePublicPageAccess(
   db: PostgresJsDatabase<typeof schema>,
@@ -118,6 +122,7 @@ export async function requirePublicPageAccess(
       and(
         eq(schema.pages.publicSlug, slug),
         eq(schema.pages.published, true),
+        eq(schema.pages.status, 'published'),
         isNull(schema.pages.deletedAt),
       ),
     )
