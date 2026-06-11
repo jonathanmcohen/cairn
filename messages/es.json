@@ -1174,5 +1174,6 @@
   "tour.step.pageMenu.title": "Comparte tu trabajo",
   "tour.step.pageMenu.body": "Abre una página y usa este menú para publicar, exportar o gestionar permisos.",
   "tour.step.help.title": "Repite el recorrido",
-  "tour.step.help.body": "Puedes volver a ver esta guía cuando quieras desde aquí."
+  "tour.step.help.body": "Puedes volver a ver esta guía cuando quieras desde aquí.",
+  "settings.nav.backToWorkspace": "Volver al espacio de trabajo"
 }

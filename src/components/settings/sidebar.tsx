@@ -1,5 +1,6 @@
 'use client';
 
+import { ArrowLeft } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -276,6 +277,18 @@ export function SettingsSidebar({
       aria-label="Settings sections"
       className="sticky top-4 w-48 shrink-0 space-y-1"
     >
+      {/* The E5 settings refactor unmounts the workspace sidebar on
+          /settings/*, which left these pages with NO route back to the app —
+          every nav target here stays inside /settings. */}
+      <Link
+        href="/"
+        data-settings-nav
+        data-testid="settings-back-to-workspace"
+        className="mb-2 flex min-h-11 items-center gap-2 rounded px-3 py-2 text-sm text-muted-foreground outline-none hover:bg-accent/50 hover:text-foreground focus:ring-2 focus:ring-ring"
+      >
+        <ArrowLeft aria-hidden="true" className="h-4 w-4 shrink-0" />
+        {t('settings.nav.backToWorkspace')}
+      </Link>
       {visible.map((s) => {
         const active =
           s.id === 'admin'

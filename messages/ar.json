@@ -1178,5 +1178,6 @@
   "tour.step.pageMenu.title": "شارك عملك",
   "tour.step.pageMenu.body": "افتح صفحة واستخدم هذه القائمة للنشر أو التصدير أو إدارة الأذونات.",
   "tour.step.help.title": "أعد الجولة",
-  "tour.step.help.body": "يمكنك إعادة تشغيل هذه الجولة في أي وقت من هنا."
+  "tour.step.help.body": "يمكنك إعادة تشغيل هذه الجولة في أي وقت من هنا.",
+  "settings.nav.backToWorkspace": "العودة إلى مساحة العمل"
 }
