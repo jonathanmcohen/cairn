@@ -109,14 +109,16 @@ describe('slash-command range + trigger consumption (#38)', () => {
   }
 });
 
-describe('restore-on-cancel: deferred item that never inserts leaves text intact (#76/#77/#111/#112)', () => {
+describe('no pre-delete on dispatch: deferred item keeps text until its flow resolves (#76/#77/#111/#112 → B1)', () => {
   for (const block of BLOCKS) {
-    it(`[${block}] a cancelled deferred command does NOT delete the /trigger`, () => {
+    it(`[${block}] dispatching a deferred command does NOT pre-delete the /trigger`, () => {
       const editor = track(makeEditor(blockDoc(block, '/cancelme')));
       const range = rangeOfTrigger(editor, '/cancelme');
       editor.commands.setTextSelection(range.to);
-      // A deferred item whose async work resolves to "cancelled" (never calls
-      // back into the editor). The dispatch must NOT have pre-deleted the range.
+      // A deferred item whose async work is still PENDING (dialog open, picker
+      // up). The dispatch must NOT have pre-deleted the range — under B1 the
+      // command itself consumes it later, on commit (consumeSlashRange) or on
+      // cancel (cancelSlashTrigger); this stub models neither having happened.
       const deferred: SlashItem = {
         title: 'X',
         description: '',
@@ -124,11 +126,12 @@ describe('restore-on-cancel: deferred item that never inserts leaves text intact
         keywords: [],
         deferred: true,
         command: () => {
-          /* user cancelled the dialog → no insert, no delete */
+          /* flow still pending → no insert, no cancel yet */
         },
       };
       runSlashItem({ editor, range, item: deferred });
-      // Text must be fully intact: a lone "/" or partial deletion is the bug.
+      // Text must be fully intact while the flow is pending: a lone "/" or
+      // partial deletion at dispatch time is the bug.
       expect(editor.state.doc.textContent).toContain('/cancelme');
     });
   }
