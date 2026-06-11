@@ -955,6 +955,7 @@
   "auditLog.loading": "Loading…",
   "auditLog.error.load": "Failed to load audit log ({status})",
   "auditLog.error.loadMore": "Failed to load more ({status})",
+  "auditLog.export": "Export CSV",
   "devTokens.scope.pages:read.tip": "pages:read — Read pages and their content (titles, body, blocks). No changes.",
   "devTokens.scope.pages:write.tip": "pages:write — Create and edit pages and their content. Cannot delete.",
   "devTokens.scope.pages:destructive.tip": "pages:destructive — Delete pages and their children (irreversible).",

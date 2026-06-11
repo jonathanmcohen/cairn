@@ -959,6 +959,7 @@
   "auditLog.loading": "جارٍ التحميل…",
   "auditLog.error.load": "تعذّر تحميل سجل التدقيق ({status})",
   "auditLog.error.loadMore": "تعذّر تحميل المزيد من الإدخالات ({status})",
+  "auditLog.export": "تصدير CSV",
   "devTokens.scope.pages:read.tip": "pages:read — قراءة الصفحات ومحتواها (العناوين والنص والكتل). دون أي تغييرات.",
   "devTokens.scope.pages:write.tip": "pages:write — إنشاء الصفحات ومحتواها وتعديلها. لا يمكن الحذف.",
   "devTokens.scope.pages:destructive.tip": "pages:destructive — حذف الصفحات وصفحاتها الفرعية (لا يمكن التراجع).",

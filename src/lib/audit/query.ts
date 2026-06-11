@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, lt, or, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gte, lt, type SQL, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import type { AuditAction, AuditTargetType } from './actions';
@@ -61,12 +61,17 @@ export async function listAuditLog(db: Db, input: AuditListInput): Promise<Audit
   if (input.cursor) {
     const cur = decodeCursor(input.cursor);
     if (cur) {
-      // keyset: (createdAt, id) strictly less than (cursor.createdAt, cursor.id) under desc, desc.
-      const keyset = or(
-        lt(schema.auditLog.createdAt, cur.createdAt),
-        and(eq(schema.auditLog.createdAt, cur.createdAt), lt(schema.auditLog.id, cur.id)),
+      // Keyset: (createdAt, id) strictly less than the CURSOR ROW's values
+      // under (desc, desc), resolved via subselect so the comparison uses the
+      // column's full µs precision. The previous JS-side comparison rebuilt
+      // createdAt from the cursor's ISO string, which truncates to ms —
+      // same-millisecond rows at a page boundary were silently skipped
+      // (caught by the D2 export spec: 120 seeded rows, only 100 exported).
+      // A deleted cursor row makes the subselect NULL → comparison NULL →
+      // pagination ends gracefully.
+      conds.push(
+        sql`(${schema.auditLog.createdAt}, ${schema.auditLog.id}) < (select created_at, id from audit_log where id = ${cur.id})`,
       );
-      if (keyset) conds.push(keyset);
     }
   }
   const where = and(...conds);
