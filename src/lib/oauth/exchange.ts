@@ -305,6 +305,8 @@ export type RevokeTokenInput = {
   token: string;
   /** RFC 7009 hint — we match by access OR refresh hash regardless. */
   tokenTypeHint?: string | null;
+  /** The AUTHENTICATED caller — only tokens bound to this client_id revoke. */
+  clientId: string;
 };
 
 /**
@@ -312,8 +314,15 @@ export type RevokeTokenInput = {
  * refresh hash and sets `revoked_at`. Records `oauth.token_revoked` ONLY on a
  * real hit (an unknown token is a silent 200 per RFC 7009, no audit row).
  * Returns true if a row was revoked.
+ *
+ * v0.10.0 G4 — token-bound check: the matched row must belong to the
+ * authenticated `clientId`. A foreign token (row exists but was issued to a
+ * different client) is treated exactly like an unknown token — no revocation,
+ * no audit row — because the route's silent 200 must never let one client
+ * revoke (or probe) another client's tokens. The single SELECT already has
+ * the row's client_id, so the bound check costs no extra round trip.
  */
-export async function revokeToken(
+export async function revokeTokenForClient(
   db: PostgresJsDatabase<typeof schema>,
   input: RevokeTokenInput,
 ): Promise<boolean> {
@@ -337,6 +346,15 @@ export async function revokeToken(
     }
 
     if (!target) return false;
+    if (target.clientId !== input.clientId) {
+      // v0.10.0 G4 no-probe: the token exists but belongs to ANOTHER client.
+      // Behave exactly as if it were unknown — no revocation and deliberately
+      // no audit row either (a "foreign revoke attempted" audit entry keyed to
+      // the real row would itself confirm the token's existence to anyone who
+      // can correlate it; the plan asks for silence here, so we record
+      // nothing token-identifying).
+      return false;
+    }
     if (target.revokedAt) {
       // Already revoked — idempotent, no new audit row.
       return true;

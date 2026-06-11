@@ -26,6 +26,9 @@ export function buildAsMetadata(origin: string): Record<string, unknown> {
     // Public PKCE clients (`none`) + confidential clients posting their secret in
     // the body (`client_secret_post`).
     token_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
+    // v0.10.0 G4 — /api/oauth/revoke authenticates clients the same way the
+    // token endpoint does (RFC 7009 §2.1; anonymous revocation is rejected).
+    revocation_endpoint_auth_methods_supported: ['none', 'client_secret_post'],
   };
 }
 

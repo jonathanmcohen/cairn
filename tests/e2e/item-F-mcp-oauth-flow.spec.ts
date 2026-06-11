@@ -165,9 +165,11 @@ test.describe('item F — MCP OAuth 2.1 full flow (runtime, through the proxy)',
     expect(afterReuse.status(), 'refresh reuse revokes the rotated descendant').toBe(401);
 
     // 7. Revoke (RFC 7009) — silent 200 even for the already-revoked token,
-    // and the MCP call stays 401.
+    // and the MCP call stays 401. Since v0.10.0 G4 the endpoint authenticates
+    // the caller: this public client presents its client_id (no secret), and
+    // the token-bound check passes because the token was issued to it.
     const revokeRes = await request.post('/api/oauth/revoke', {
-      form: { token: tok2.access_token },
+      form: { token: tok2.access_token, client_id: clientId },
     });
     expect(revokeRes.status(), 'revoke 200').toBe(200);
     const afterRevoke = await mcpCall(tok2.access_token, 6, 'tools/list');
