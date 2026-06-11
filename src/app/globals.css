@@ -447,3 +447,37 @@ html.cairn-focus-mode[data-reveal-sidebar="true"] [data-cairn-workspace-sidebar]
   background: hsl(var(--warning) / 0.1);
   border-color: hsl(var(--warning) / 0.45);
 }
+
+/* v0.10.0 E3 (#117 sweep) — heading-collapse chevron discoverability.
+   A chevron button is now rendered for EVERY visible h1/h2/h3 (see
+   heading-collapse.tsx); these rules drive the reveal. Opacity-only — the
+   button stays absolutely positioned in the gutter, so revealing it never
+   shifts the heading text. The 120ms transition keeps the reveal under the
+   150ms budget. Hidden chevrons get pointer-events: none so they never block
+   the drag handle that shares the gutter. Color comes from the
+   text-muted-foreground/hover:text-foreground theme tokens on the button. */
+.heading-collapse-chevron {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+}
+/* Pointer anywhere over the heading row → subdued reveal. */
+.heading-collapse-chevron[data-row-hovered] {
+  opacity: 0.5;
+  pointer-events: auto;
+}
+/* Direct hover / keyboard focus / collapsed state → full opacity. A COLLAPSED
+   heading keeps its chevron visible with NO hover: the state must be visible. */
+.heading-collapse-chevron:hover,
+.heading-collapse-chevron:focus-visible,
+.heading-collapse-chevron[data-collapsed] {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* Touch devices have no hover — keep every chevron visible. */
+@media (pointer: coarse) {
+  .heading-collapse-chevron {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
