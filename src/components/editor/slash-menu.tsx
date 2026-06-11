@@ -12,7 +12,7 @@ import {
   useState,
 } from 'react';
 
-export type SlashCategory = 'basic' | 'media' | 'database' | 'advanced';
+export type SlashCategory = 'basic' | 'media' | 'database' | 'advanced' | 'workspace';
 
 /** A trigger range `{from, to}` spanning the `/query` text (incl. the `/`). */
 export type SlashRange = { from: number; to: number };
@@ -52,8 +52,15 @@ export type SlashMenuRef = {
   onKeyDown: (event: KeyboardEvent) => boolean;
 };
 
-/** Fixed display order for grouped slash-menu sections (#122). */
-export const SLASH_CATEGORY_ORDER: SlashCategory[] = ['basic', 'media', 'database', 'advanced'];
+/** Fixed display order for grouped slash-menu sections (#122). The F2
+ *  'workspace' group (custom template commands) renders last. */
+export const SLASH_CATEGORY_ORDER: SlashCategory[] = [
+  'basic',
+  'media',
+  'database',
+  'advanced',
+  'workspace',
+];
 
 export type SlashGroup = { category: SlashCategory; items: SlashItem[] };
 
@@ -81,6 +88,7 @@ const CATEGORY_LABEL: Record<SlashCategory, string> = {
   media: 'Media',
   database: 'Database',
   advanced: 'Advanced',
+  workspace: 'Workspace',
 };
 
 /**

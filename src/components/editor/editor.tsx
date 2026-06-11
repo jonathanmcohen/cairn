@@ -29,6 +29,7 @@ import { composeGalleryInsert } from './image-extension';
 import { LockBadge } from './lock-badge';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
+import { primeWorkspaceSlashCommands } from './slash-workspace-commands';
 import type { SuggestionAutoMarkStorage } from './suggestion-auto-mark';
 import { SuggestionToolbar } from './suggestion-toolbar';
 import { type OpenSuggestion, SuggestionsDrawer } from './suggestions-drawer';
@@ -376,12 +377,26 @@ export function Editor({
 
   useEffect(() => {
     if (editor) {
-      (editor.storage as { cairn?: { pageId: string; encrypted: boolean } }).cairn = {
+      (
+        editor.storage as {
+          cairn?: { pageId: string; encrypted: boolean; workspaceId: string };
+        }
+      ).cairn = {
         pageId,
         encrypted,
+        // F2 — the slash extension's items() reads this to look up the
+        // workspace's custom template commands in the primed module cache.
+        workspaceId,
       };
     }
-  }, [editor, pageId, encrypted]);
+  }, [editor, pageId, encrypted, workspaceId]);
+
+  // v0.10.0 F2 — fetch the workspace's custom slash commands once per mount
+  // into the module-level cache the slash menu reads synchronously. Staleness
+  // contract: settings changes show up on the next editor mount.
+  useEffect(() => {
+    void primeWorkspaceSlashCommands(workspaceId);
+  }, [workspaceId]);
 
   // Lazy-load heavy editor extensions (math/syncedBlock/embed) only when the
   // initial doc actually contains them. The static `baseExtensions()` carries

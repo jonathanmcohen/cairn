@@ -195,6 +195,9 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'oauth.register_lock_changed': 'OAuth registration lock changed',
   // v0.10.0 F1 — workspace brand (logo + primary color) changed.
   'workspace.brand_updated': 'Workspace brand updated',
+  // v0.10.0 F2 — custom slash command (trigger word → saved template).
+  'workspace.slash_command_created': 'Slash command created',
+  'workspace.slash_command_deleted': 'Slash command deleted',
 };
 
 export function actionLabel(action: string): string {

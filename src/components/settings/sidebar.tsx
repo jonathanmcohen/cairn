@@ -161,6 +161,11 @@ export function SettingsSidebar({
             href: '/settings/workspace/pinned-pages' as Route,
           },
           {
+            id: 'workspace-slash-commands',
+            label: t('settings.nav.workspace.slashCommands'),
+            href: '/settings/workspace/slash-commands' as Route,
+          },
+          {
             id: 'workspace-trash',
             label: t('settings.nav.workspace.trash'),
             href: '/settings/workspace/trash' as Route,

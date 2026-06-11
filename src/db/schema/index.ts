@@ -66,4 +66,6 @@ export * from './workspace-members';
 export * from './workspace-mfa';
 export * from './workspace-pins';
 export * from './workspace-quotas';
+// v0.10.0 F2 — custom slash commands → templates.
+export * from './workspace-slash-commands';
 export * from './workspaces';
