@@ -33,14 +33,22 @@ test.describe('item H1 — e2e gate integrity', () => {
       btn.id = 'h1-contrived-violation';
       btn.type = 'button';
       btn.style.cssText = 'width:24px;height:24px;';
-      document.querySelector('main')?.appendChild(btn);
+      (document.querySelector('main') ?? document.body).appendChild(btn);
     });
+    // The injection must actually land and be visible — if this fails, the
+    // detector below was never exercised (don't let the meta-test pass or
+    // fail for the wrong reason).
+    await expect(page.locator('#h1-contrived-violation')).toBeVisible();
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA_TAGS).analyze();
     const buttonName = results.violations.find((v) => v.id === 'button-name');
     expect(
       buttonName,
-      'the axe gate failed to flag a nameless button — the zero-violation assertion has decayed',
+      `the axe gate failed to flag a nameless button — the zero-violation assertion has decayed. Violations seen: ${JSON.stringify(
+        results.violations.map((v) => v.id),
+      )}; passes included button-name: ${results.passes.some((p) => p.id === 'button-name')}; incomplete: ${JSON.stringify(
+        results.incomplete.map((v) => v.id),
+      )}`,
     ).toBeTruthy();
   });
 
