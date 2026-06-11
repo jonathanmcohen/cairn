@@ -1,8 +1,10 @@
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
+import { env } from '@/lib/env';
 import { flattenedPageTree } from '@/lib/pages/tree';
 import { listFavorites, listRecents } from '@/lib/prefs/user-page-prefs';
 import { appVersion } from '@/lib/version';
+import { getWorkspaceBrand } from '@/lib/workspaces/brand';
 import type { UserWorkspace } from '@/lib/workspaces/list';
 import { SearchHintButton } from './search-hint-button';
 import { PagesSection } from './sidebar/pages-section';
@@ -33,9 +35,23 @@ export async function SidebarContent({
   // v0.9.0 G4 P26 — pass viewer so the lister can show drafts to their author
   // and hide archived from everyone.
   const tree = await flattenedPageTree(getDb(), workspaceId, ctx?.userId);
+  // v0.10.0 F1 — brand logo (larger than the icon) above the switcher. Signed
+  // URL, 1 h TTL; absent → nothing renders, the header keeps today's layout.
+  const brand = await getWorkspaceBrand(getDb(), workspaceId, { secret: env().AUTH_SECRET });
+  const activeName =
+    workspaces.find((w) => w.id === workspaceId)?.name ?? workspaces[0]?.name ?? '';
   return (
     <div className="flex h-full min-h-0 flex-col">
       <div className="border-b p-1">
+        {brand.logoUrl ? (
+          // biome-ignore lint/performance/noImgElement: HMAC-signed expiring URL — bypasses next/image loader
+          <img
+            data-cairn-brand-logo=""
+            src={brand.logoUrl}
+            alt={activeName}
+            className="mx-2 mt-1 max-h-10 w-auto max-w-[85%] object-contain"
+          />
+        ) : null}
         <WorkspaceSwitcher workspaces={workspaces} activeId={workspaceId} />
       </div>
       {/*

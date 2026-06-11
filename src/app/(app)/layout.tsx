@@ -23,8 +23,11 @@ import { WorkspaceNavGate } from '@/components/workspace-nav-gate';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { isTwoFactorEnabled, userHasWorkspaceRequiring2fa } from '@/lib/auth/two-factor';
+import { env } from '@/lib/env';
 import { getOnboardingState } from '@/lib/onboarding/state';
 import { getThemePrefs } from '@/lib/themes/prefs';
+import { getWorkspaceBrand } from '@/lib/workspaces/brand';
+import { brandPrimaryStyle } from '@/lib/workspaces/brand-style';
 import { listUserWorkspaces } from '@/lib/workspaces/list';
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
@@ -55,13 +58,23 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     userId: ctx.userId,
   });
   const themePrefs = await getThemePrefs(getDb(), ctx.userId);
+  // v0.10.0 F1 — per-workspace brand primary. When set, the shell wrapper
+  // carries inline `--primary`/`--primary-foreground`/`--ring` overrides
+  // (contrast-clamped at read time); null → no inline style → theme default.
+  const brand = await getWorkspaceBrand(getDb(), ctx.workspaceId, {
+    secret: env().AUTH_SECRET,
+  });
   return (
     <UserThemeProvider initialPrefs={themePrefs}>
       <OfflineProvider>
         <LiveRegionProvider>
           <ShortcutDispatcher>
             <SkipLink />
-            <div className="flex min-h-screen flex-col md:flex-row">
+            <div
+              data-cairn-brand-scope=""
+              style={brandPrimaryStyle(brand.appliedPrimary)}
+              className="flex min-h-screen flex-col md:flex-row"
+            >
               <RegisterSw />
               <SearchPalette currentUserId={ctx.userId} />
               <ShortcutSheet />

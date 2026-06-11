@@ -38,6 +38,15 @@ export const workspaces = pgTable('workspaces', {
   // v0.9.0 G2 P13 — forward-declared for P30 (federated search). When true,
   // this workspace participates in peer-instance search routing.
   enableFederatedSearch: boolean('enable_federated_search').notNull().default(false),
+  // v0.10.0 F1 — workspace brand. Both nullable; NULL = default look.
+  // brand_logo_file_id → files(id) ON DELETE SET NULL. Declared WITHOUT
+  // `.references(...)` because files.workspace_id already references
+  // workspaces.id — the same circular-FK situation as homePageId/inboxPageId;
+  // the FK constraint lives in migration 0074's hand-written SQL.
+  brandLogoFileId: uuid('brand_logo_file_id'),
+  // Normalized '#rrggbb' hex written by setWorkspaceBrand; readers clamp for
+  // WCAG contrast at render time (src/lib/workspaces/brand-color.ts).
+  brandPrimaryColor: text('brand_primary_color'),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 

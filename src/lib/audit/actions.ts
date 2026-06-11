@@ -194,6 +194,10 @@ export const AUDIT_ACTIONS = [
   // { locked } only — NEVER the minted token (the cairn_oiat_ prefix is in
   // FORBIDDEN_SUBSTRINGS and would trip assertAuditMetadataClean).
   'oauth.register_lock_changed',
+  // v0.10.0 F1 — admin changed the workspace brand (logo and/or primary
+  // color). Metadata: { hasLogo, primaryColor } — the hex color is operator-
+  // visible styling, not a secret.
+  'workspace.brand_updated',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
