@@ -3,6 +3,7 @@
 import type { Content, Editor as TiptapEditor } from '@tiptap/react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useAnnounce } from '@/components/a11y/live-region';
@@ -31,6 +32,7 @@ import { PresenceAvatars } from './presence-avatars';
 import type { SuggestionAutoMarkStorage } from './suggestion-auto-mark';
 import { SuggestionToolbar } from './suggestion-toolbar';
 import { type OpenSuggestion, SuggestionsDrawer } from './suggestions-drawer';
+import { EDITOR_TOOLBAR_SLOT_ID } from './toolbar-slot';
 import { useBulkDropHandler } from './use-bulk-drop-handler';
 import { useCollabDoc } from './use-collab-doc';
 
@@ -142,6 +144,19 @@ export function Editor({
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
+  // v0.10.0 E6 — the page-detail route reserves a slot inside its action bar
+  // (see pages/[pageId]/page.tsx) and the editor portals its control group
+  // there, so the page renders ONE toolbar row instead of two stacked strips.
+  // `undefined` = lookup pending (SSR + first client render: render nothing,
+  // so server and client markup agree); `null` = no slot in this mount (e.g.
+  // <Editor> hosted outside the page-detail route) → fall back to the old
+  // inline strip. Mount-only lookup is safe: on soft `/pages/[id]` navigation
+  // the App Router reconciles the action bar in place (same position/type),
+  // so the slot's DOM node — and this Editor instance — both persist.
+  const [toolbarHost, setToolbarHost] = useState<HTMLElement | null | undefined>(undefined);
+  useEffect(() => {
+    setToolbarHost(document.getElementById(EDITOR_TOOLBAR_SLOT_ID));
+  }, []);
   // #271 — doc position of the block under the last right-click, resolved by the
   // BlockContextMenu trigger's capture handler.
   const [contextTargetPos, setContextTargetPos] = useState<number | null>(null);
@@ -596,81 +611,110 @@ export function Editor({
     [pageId, ydoc],
   );
 
+  // a30 #39 (round-2 styling) — the editor control group. Thin `h-4 w-px
+  // bg-border` separators divide the logical groups (suggest-edits /
+  // presence+status / outline) and the toggles carry explicit active states
+  // (aria-pressed + bg-primary fill) so the cluster reads as distinct,
+  // structured controls rather than a row of bare labels — IN EVERY ROLE. The
+  // presence+status+outline group always renders (editor AND viewer); the
+  // suggest-edits + bibliography group is gated on `mountableEditable` (#188 —
+  // it stays mounted-but-disabled under lock instead of vanishing, and E6
+  // extends the same `editLocked` disable to the bibliography toggle), and its
+  // trailing separator lives INSIDE that gate so it never dangles when a
+  // viewer omits the group. The status pill rests as a hairline-bordered chip
+  // (no `bg-muted` fill, which read as an active/selected state at rest).
+  // v0.10.0 E6 — this group no longer renders as its own strip above the
+  // editor body: it portals into the page action bar's reserved slot (one
+  // toolbar row). Handlers/state are unchanged and stay in this component.
+  const toolbarControls = (
+    <>
+      {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
+      {mountableEditable && (
+        <>
+          <SuggestionToolbar
+            editor={editor}
+            active={suggestionMode}
+            onToggle={() => void toggleSuggestion()}
+            openCount={openCount}
+            onMarkInsert={() => markSelection('insert')}
+            onMarkDelete={() => markSelection('delete')}
+            resolvable={resolvable}
+            onAccept={(id) => void resolve('accept', id)}
+            onReject={(id) => void resolve('reject', id)}
+            onOpenDrawer={() => setDrawerOpen(true)}
+            disabled={editLocked}
+          />
+          <BibliographyToggle
+            pageId={pageId}
+            initialDisabled={initialDisableBibliography}
+            citationCount={editor ? aggregateCitations(editor.getJSON(), citationStyle).length : 0}
+            onChange={setBibDisabled}
+            disabled={editLocked}
+          />
+          <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+        </>
+      )}
+      <PresenceAvatars users={presentUsers} />
+      <span
+        className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
+        title={STATUS_LABEL[status]}
+      >
+        <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
+        {STATUS_LABEL[status]}
+      </span>
+      <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+      <button
+        type="button"
+        onClick={() => setOutlineOpen((v) => !v)}
+        aria-pressed={outlineOpen}
+        className={
+          outlineOpen
+            ? 'rounded bg-primary px-2 py-1 text-primary-foreground text-xs'
+            : 'rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent'
+        }
+      >
+        Outline
+      </button>
+    </>
+  );
+
   return (
     <div className="relative">
       <EditorDialogs editor={editor} />
       <CollabOfflineBanner status={status} />
-      {/* a30 #39 (round-2 styling) — top control strip. Thin `h-4 w-px bg-border`
-          separators divide the logical groups (suggest-edits / presence+status /
-          outline) and the toggles carry explicit active states (aria-pressed +
-          bg-primary fill) so the bar reads as distinct, structured controls
-          rather than a row of bare labels — IN EVERY ROLE. The
-          presence+status+outline group always renders (editor AND viewer); the
-          suggest-edits + bibliography group is gated on `mountableEditable`
-          (#188 — it stays mounted-but-disabled under lock instead of vanishing),
-          and its trailing separator lives INSIDE that gate so it never dangles
-          when a viewer omits the group. The status pill rests as a hairline-bordered
-          chip (no `bg-muted` fill, which read as an active/selected state at
-          rest). Styling only — handlers/state are unchanged, and the
-          interactivity changes for these controls are owned by the -23- plan. */}
-      <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
-        {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
-        {mountableEditable && (
-          <>
-            <SuggestionToolbar
-              editor={editor}
-              active={suggestionMode}
-              onToggle={() => void toggleSuggestion()}
-              openCount={openCount}
-              onMarkInsert={() => markSelection('insert')}
-              onMarkDelete={() => markSelection('delete')}
-              resolvable={resolvable}
-              onAccept={(id) => void resolve('accept', id)}
-              onReject={(id) => void resolve('reject', id)}
-              onOpenDrawer={() => setDrawerOpen(true)}
-              disabled={editLocked}
-            />
-            <SuggestionsDrawer
-              open={drawerOpen}
-              onOpenChange={setDrawerOpen}
-              suggestions={openSuggestions}
-              onAccept={(id) => void resolve('accept', id)}
-              onReject={(id) => void resolve('reject', id)}
-              onView={viewSuggestion}
-            />
-            <BibliographyToggle
-              pageId={pageId}
-              initialDisabled={initialDisableBibliography}
-              citationCount={
-                editor ? aggregateCitations(editor.getJSON(), citationStyle).length : 0
-              }
-              onChange={setBibDisabled}
-            />
-            <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
-          </>
-        )}
-        <PresenceAvatars users={presentUsers} />
-        <span
-          className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
-          title={STATUS_LABEL[status]}
-        >
-          <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
-          {STATUS_LABEL[status]}
-        </span>
-        <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
-        <button
-          type="button"
-          onClick={() => setOutlineOpen((v) => !v)}
-          aria-pressed={outlineOpen}
-          className={
-            outlineOpen
-              ? 'rounded bg-primary px-2 py-1 text-primary-foreground text-xs'
-              : 'rounded px-2 py-1 text-muted-foreground text-xs hover:bg-accent'
-          }
-        >
-          Outline
-        </button>
-      </div>
+      {/* v0.10.0 E6 — one toolbar row. When the page-detail route reserved a
+          slot in its action bar, portal the control group there (a leading
+          separator divides it from the page-level actions). Until the mount
+          effect resolves the slot, render nothing — the SSR markup carried no
+          strip either, so hydration agrees. Only a slot-less host (an <Editor>
+          mounted outside the page-detail route) gets the legacy inline strip,
+          so the editor body itself keeps no dead second-strip spacer. */}
+      {toolbarHost
+        ? createPortal(
+            <>
+              <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
+              {toolbarControls}
+            </>,
+            toolbarHost,
+          )
+        : toolbarHost === null && (
+            <div className="mb-1 flex flex-wrap items-center justify-end gap-2 sm:gap-3">
+              {toolbarControls}
+            </div>
+          )}
+      {/* #85/#145 — the open-suggestions drawer is a fixed overlay (Radix
+          Dialog); it mounts here in the editor body (not in the toolbar
+          portal) and opens via the toolbar's open-count chip. */}
+      {mountableEditable && (
+        <SuggestionsDrawer
+          open={drawerOpen}
+          onOpenChange={setDrawerOpen}
+          suggestions={openSuggestions}
+          onAccept={(id) => void resolve('accept', id)}
+          onReject={(id) => void resolve('reject', id)}
+          onView={viewSuggestion}
+        />
+      )}
       <div className="flex gap-4">
         <div className="relative min-w-0 flex-1">
           {editor && <DragHandle editor={editor} />}

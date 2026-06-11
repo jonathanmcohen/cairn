@@ -71,6 +71,27 @@ describe('lock-mode editor controls (#188)', () => {
         />,
       ),
     );
-    expect(screen.getByRole('button', { name: /bibliography/i })).not.toBeNull();
+    const btn = screen.getByRole('button', { name: /bibliography/i });
+    expect(btn).not.toBeNull();
+    expect((btn as HTMLButtonElement).disabled).toBe(false);
+  });
+
+  // v0.10.0 E6 — the consolidated toolbar extends the #188 contract to the
+  // bibliography toggle explicitly: mounted but disabled while locked.
+  it('keeps the bibliography toggle present but disabled when locked', () => {
+    render(
+      wrap(
+        <BibliographyToggle
+          pageId="p1"
+          initialDisabled={false}
+          citationCount={2}
+          onChange={noop}
+          disabled
+        />,
+      ),
+    );
+    const btn = screen.getByRole('button', { name: /bibliography/i });
+    expect(btn).not.toBeNull();
+    expect((btn as HTMLButtonElement).disabled).toBe(true);
   });
 });
