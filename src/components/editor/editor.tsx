@@ -28,6 +28,7 @@ import { composeGalleryInsert } from './image-extension';
 import { LockBadge } from './lock-badge';
 import { OutlinePanel } from './outline-panel';
 import { PresenceAvatars } from './presence-avatars';
+import type { SuggestionAutoMarkStorage } from './suggestion-auto-mark';
 import { SuggestionToolbar } from './suggestion-toolbar';
 import { type OpenSuggestion, SuggestionsDrawer } from './suggestions-drawer';
 import { useBulkDropHandler } from './use-bulk-drop-handler';
@@ -470,6 +471,23 @@ export function Editor({
       cancelled = true;
     };
   }, [effectiveEditable, pageId]);
+
+  // v0.10.0 E4 — feed the live suggest-mode state into the SuggestionAutoMark
+  // extension through its storage (the same channel the `cairn` namespace uses
+  // for pageId/encrypted). The ProseMirror plugin reads these fields per
+  // transaction, so flipping them is enough to start/stop auto-marking —
+  // toggling Suggesting OFF mid-paragraph stops wrapping on the very next
+  // keystroke. `activeSuggestionRef.current` is assigned BEFORE
+  // setSuggestionMode fires, so the id is always current when this runs.
+  useEffect(() => {
+    if (!editor) return;
+    const storage = (editor.storage as { suggestionAutoMark?: SuggestionAutoMarkStorage })
+      .suggestionAutoMark;
+    if (!storage) return;
+    storage.active = suggestionMode && effectiveEditable;
+    storage.suggestionId = activeSuggestionRef.current;
+    storage.authorId = currentUser.id;
+  }, [editor, suggestionMode, effectiveEditable, currentUser.id]);
 
   // Track the suggestionId under the selection so Accept/Reject can target it.
   useEffect(() => {

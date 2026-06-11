@@ -47,6 +47,7 @@ import { MentionExtension } from './mention-extension';
 import { PageEmbed, PageLink, PageLinkHover, PageMention } from './page-link-extension';
 import { PageLinkSuggestion } from './page-link-suggestion';
 import { SlashCommand } from './slash-extension';
+import { SuggestionAutoMark } from './suggestion-auto-mark';
 import { SuggestionBlock } from './suggestion-block';
 import { TableOfContents } from './toc-extension';
 
@@ -139,6 +140,11 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     SuggestionInsert,
     SuggestionDelete,
     SuggestionBlock,
+    // v0.10.0 E4 — auto-tracking while suggest mode is ON: typed text gains
+    // suggestionInsert, deletions become suggestionDelete tombstones. Plain
+    // Extension (no node/mark/schema, no node-local state); every rewrite is
+    // an ordinary appended transaction, so y-prosemirror replicates it. SAFE.
+    SuggestionAutoMark,
     SlashCommand,
     // v0.9.4 P29 #117 — keymap-only extension: Mod+Shift+K always opens the
     // link input; Mod+K opens it only with a ranged selection (else bubbles to
