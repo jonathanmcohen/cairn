@@ -12,12 +12,15 @@ import {
   Trash,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
+import { WhatsNewPanel } from './whats-new/panel';
+import { hasSeenWhatsNew, markWhatsNewSeen } from './whats-new/storage';
 
 /**
  * Lower sidebar navigation: account-level destinations (My tasks, Templates,
@@ -32,6 +35,22 @@ const NAV_ITEM_CLASS =
 
 export function SidebarFooterNav({ version }: { version: string }) {
   const t = useT();
+  // v0.10.0 E2 — What's-new panel + per-user seen-marker badge. The badge is
+  // computed in an effect (not at render) so SSR/hydration markup match; it
+  // shows until the localStorage marker equals the RUNNING version and is
+  // cleared when the panel closes (any dismissal: X, Escape, overlay).
+  const [whatsNewOpen, setWhatsNewOpen] = useState(false);
+  const [whatsNewUnseen, setWhatsNewUnseen] = useState(false);
+  useEffect(() => {
+    setWhatsNewUnseen(!hasSeenWhatsNew(version));
+  }, [version]);
+  const handleWhatsNewOpenChange = (open: boolean) => {
+    setWhatsNewOpen(open);
+    if (!open) {
+      markWhatsNewSeen(version);
+      setWhatsNewUnseen(false);
+    }
+  };
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
       <ReviewDueCounter />
@@ -100,17 +119,32 @@ export function SidebarFooterNav({ version }: { version: string }) {
         </form>
         <ThemeToggle />
       </div>
+      {/* E2 — the version chip opens the in-app What's-new panel (the external
+          GitHub release link moved into the panel footer, so that affordance
+          isn't lost). The dot badge marks an unseen version; it is decorative
+          (aria-hidden) with an sr-only i18n twin for screen readers. */}
       <div className="mt-2 text-center text-xs text-muted-foreground">
-        <a
-          href={`https://github.com/jonathanmcohen/cairn/releases/tag/v${version}`}
-          target="_blank"
-          rel="noreferrer"
+        <button
+          type="button"
+          data-testid="whats-new-chip"
           aria-label={t('sidebar.releaseNotes', { version })}
-          className="inline-flex min-h-11 items-center justify-center rounded px-2 underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          onClick={() => setWhatsNewOpen(true)}
+          className="relative inline-flex min-h-11 items-center justify-center rounded px-2 underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
         >
           v{version}
-        </a>
+          {whatsNewUnseen && (
+            <span data-testid="whats-new-badge" className="absolute right-0 top-2.5">
+              <span aria-hidden="true" className="block h-2 w-2 rounded-full bg-primary" />
+              <span className="sr-only">{t('whatsNew.badge')}</span>
+            </span>
+          )}
+        </button>
       </div>
+      <WhatsNewPanel
+        version={version}
+        open={whatsNewOpen}
+        onOpenChange={handleWhatsNewOpenChange}
+      />
     </div>
   );
 }
