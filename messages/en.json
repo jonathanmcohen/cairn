@@ -1196,5 +1196,6 @@
   "tour.step.pageMenu.title": "Share your work",
   "tour.step.pageMenu.body": "Open a page and use this menu to publish, export or manage permissions.",
   "tour.step.help.title": "Take the tour again",
-  "tour.step.help.body": "You can replay this walkthrough anytime from here."
+  "tour.step.help.body": "You can replay this walkthrough anytime from here.",
+  "settings.nav.backToWorkspace": "Back to workspace"
 }
