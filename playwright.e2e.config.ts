@@ -76,6 +76,11 @@ export default defineConfig({
         // item C1 — see BACKUP_DIR/UPLOADS_DIR/E2E_PATH above.
         CAIRN_BACKUP_DIR: BACKUP_DIR,
         UPLOAD_DIR: UPLOADS_DIR,
+        // item D6 — real uploads from specs (storage-quota) go through
+        // LocalDiskStorage, which reads CAIRN_UPLOAD_ROOT (default
+        // /data/uploads — absent on dev boxes). Point it at the same dir the
+        // backup tar reads so uploads land where C1's bundle expects them.
+        CAIRN_UPLOAD_ROOT: UPLOADS_DIR,
         PATH: E2E_PATH,
       },
     },
