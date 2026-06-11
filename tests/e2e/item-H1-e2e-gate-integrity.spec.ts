@@ -15,7 +15,7 @@ import { expect, signIn, test } from '../a11y/fixtures';
 const WCAG_21_AA_TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'];
 
 test.describe('item H1 — e2e gate integrity', () => {
-  test('(a) the axe gate detects a contrived violation (image without alt)', async ({
+  test('(a) the axe gate detects a contrived violation (button without a name)', async ({
     page,
     seeded,
   }) => {
@@ -23,20 +23,24 @@ test.describe('item H1 — e2e gate integrity', () => {
     await page.goto('/inbox');
     await expect(page.locator('[data-tour="sidebar"]')).toBeVisible({ timeout: 15_000 });
 
-    // Inject a deliberate WCAG failure: an informative <img> with no alt.
+    // Inject a deliberate WCAG failure: a visible button with NO accessible
+    // name. Pure-DOM on purpose — an earlier missing-alt <img> variant used a
+    // data: URI that CI's CSP blocked, and axe excludes the unloaded
+    // (effectively invisible) element, so the meta-test passed locally and
+    // failed on the runner.
     await page.evaluate(() => {
-      const img = document.createElement('img');
-      img.src =
-        'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
-      img.id = 'h1-contrived-violation';
-      document.querySelector('main')?.appendChild(img);
+      const btn = document.createElement('button');
+      btn.id = 'h1-contrived-violation';
+      btn.type = 'button';
+      btn.style.cssText = 'width:24px;height:24px;';
+      document.querySelector('main')?.appendChild(btn);
     });
 
     const results = await new AxeBuilder({ page }).withTags(WCAG_21_AA_TAGS).analyze();
-    const imageAlt = results.violations.find((v) => v.id === 'image-alt');
+    const buttonName = results.violations.find((v) => v.id === 'button-name');
     expect(
-      imageAlt,
-      'the axe gate failed to flag a missing-alt image — the zero-violation assertion has decayed',
+      buttonName,
+      'the axe gate failed to flag a nameless button — the zero-violation assertion has decayed',
     ).toBeTruthy();
   });
 
