@@ -68,14 +68,15 @@ test.describe('item B5 — deferred slash item dismisses the popup before its mo
     // Belt-and-suspenders: it must not be a visible box parked over the dialog.
     await expect(page.locator('.tippy-box.cairn-slash-popup[data-state="visible"]')).toHaveCount(0);
 
-    // Cancel with Escape (resolves null on the editor dialog bus) — the deferred
-    // command never consumed the trigger range, so the typed text survives.
+    // Cancel with Escape (resolves null on the editor dialog bus) — B1: the
+    // deferred command consumes the trigger range on cancel (leaving it wedged
+    // re-triggering), so the `/citation` query is removed…
     await page.keyboard.press('Escape');
     await expect(dialog).toBeHidden({ timeout: 10_000 });
 
-    // #76 invariant carried here: the typed query is preserved in its own
-    // paragraph (no consumed range, no lone "/")…
-    await expect(editor.locator('p', { hasText: '/citation' })).toHaveText('/citation');
+    await expect(editor.locator('p', { hasText: '/citation' })).toHaveCount(0, {
+      timeout: 10_000,
+    });
     // …and the previous block is untouched (no leak into the anchor).
     await expect(editor.locator('p', { hasText: anchor })).toHaveText(anchor);
     // No citation node was inserted by the cancelled dialog (the node renders
