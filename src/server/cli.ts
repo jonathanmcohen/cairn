@@ -322,6 +322,7 @@ async function main(): Promise<void> {
         `  cli reconcile [--workspace <id>]\n` +
         `  cli reminders:scan\n` +
         `  cli reindex-embeddings [--workspace <id>] [--batch-size N]\n` +
+        `  cli reindex-vector-index\n` +
         `  cli connector:sync [--connector <id>]\n` +
         `  cli trash:purge --workspace-id=<id>\n` +
         `  cli pages:auto-unlock\n` +
@@ -437,6 +438,17 @@ async function main(): Promise<void> {
       workspaceId: args.workspace,
       ...summary,
     });
+  } else if (args.command === 'reindex-vector-index') {
+    // v0.10.0 D8 — index pass only: REINDEX INDEX CONCURRENTLY on the HNSW
+    // index (bloat/corruption recovery). The embedding DATA pass stays a
+    // separate verb (reindex-embeddings) so operators can run either alone.
+    const { HNSW_INDEX_NAME, runRebuildVectorIndexCli } = await import(
+      '../lib/search/rebuild-index.js'
+    );
+    await runRebuildVectorIndexCli();
+    // biome-ignore lint/suspicious/noConsole: cli progress
+    console.log(`REINDEX of ${HNSW_INDEX_NAME} complete.`);
+    await recordCliAudit(conn, 'embedding.index_rebuilt', { index: HNSW_INDEX_NAME });
   } else if (args.command === 'connector:sync') {
     const { runConnectorSync } = await import('../lib/connectors/cli.js');
     await runConnectorSync({ connectorId: args.connectorId });

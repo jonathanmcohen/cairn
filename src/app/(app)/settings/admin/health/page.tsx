@@ -3,6 +3,7 @@ import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { requireRole } from '@/lib/auth/require-role';
 import { getHealthSnapshot } from '@/lib/health/panel';
 import { HealthView } from './health-view';
+import { ReindexCard } from './reindex-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,6 +28,9 @@ export default async function HealthSettingsPage() {
         page="Health"
       />
       <HealthView snapshot={snapshot} />
+      {/* v0.10.0 D8 — semantic-index rebuild lives on the health page (it's
+          an instance-recovery operation, same audience as the probes above). */}
+      <ReindexCard />
     </section>
   );
 }
