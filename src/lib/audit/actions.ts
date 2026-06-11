@@ -167,6 +167,10 @@ export const AUDIT_ACTIONS = [
   'federation.peer_enabled',
   'federation.peer_disabled',
   'federation.peer_deleted',
+  // v0.10.0 G2 — an inbound federated-search request from an AUTHENTICATED
+  // peer was dropped by the per-peer rate limiter (429). actorUserId is null
+  // (server-to-server). metadata: { peerName, retryAfterMs } — never secrets.
+  'federation.peer_rate_limited',
   // v0.9.16 Plan F — MCP OAuth 2.1 authorization-server lifecycle. Metadata
   // carries ids / counts / scope-names only — NEVER the issued secret (the
   // cairn_oauth_/cairn_oart_/cairn_oac_/cairn_ocs_ prefixes are in

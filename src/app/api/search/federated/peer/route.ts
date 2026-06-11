@@ -2,9 +2,11 @@ import { eq } from 'drizzle-orm';
 import { NextResponse } from 'next/server';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
+import { recordAudit } from '@/lib/audit/record';
 import { logger } from '@/lib/observability/logger';
 import { searchPages } from '@/lib/pages/search';
 import { verifyEnvelopeWithBody } from '@/lib/search/peer-hmac';
+import { checkPeerRateLimit } from '@/lib/search/peer-rate-limit';
 import {
   encryptPeerSecret,
   isEncryptedSecret,
@@ -33,11 +35,20 @@ import {
  *     a raw row is lazily re-encrypted after its first SUCCESSFUL verify —
  *     never on an unverified request, so an attacker can't trigger writes.
  *
+ * v0.10.0 G2 — per-peer inbound rate limit (peer-rate-limit.ts). Order of
+ * operations is load-bearing:
+ *   1. verify the envelope (so unauthenticated junk can't burn a peer's
+ *      budget — same logic as the replay-after-signature ordering in
+ *      peer-hmac.ts);
+ *   2. rate-limit the MATCHED peer by row id → 429 + Retry-After + audit row
+ *      ('federation.peer_rate_limited'); a broken limiter FAILS CLOSED → 503;
+ *   3. only then the lazy secret upgrade (a throttled request must not write)
+ *      and the FTS query (the expensive work being protected).
+ *
  * REMAINING CAVEATS:
- *   - The receiving side does NOT enforce per-peer rate limits or
- *     `enable_federated_search` at the workspace level beyond peer-list
- *     membership. Add both before opening the federation surface to public
- *     mesh deployments (tracked as G2).
+ *   - The receiving side does NOT enforce `enable_federated_search` at the
+ *     workspace level beyond peer-list membership. Add it before opening the
+ *     federation surface to public mesh deployments.
  *   - Encrypted pages (`pages.encrypted = true`) are filtered defense-in-depth
  *     even though `searchPages` already excludes them. Federation must NEVER
  *     leak ciphertext.
@@ -107,6 +118,42 @@ export async function POST(req: Request): Promise<Response> {
   const matched = peerList.find((p) => p.name === verify.peerName);
   if (!matched) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  // v0.10.0 G2 — per-peer rate limit, AFTER verify (unauthenticated junk
+  // can't burn the peer's budget), BEFORE the lazy upgrade + FTS query (a
+  // throttled request neither writes nor does the expensive work). Keyed by
+  // peer row id, not IP — peers can share egress. See peer-rate-limit.ts.
+  const rate = checkPeerRateLimit(matched.id);
+  if (rate.unavailable) {
+    // FAIL CLOSED: a broken limiter must not turn federation into an open
+    // relay (deliberately stricter than the soft-fail login limiter path).
+    return NextResponse.json({ error: 'rate limiter unavailable' }, { status: 503 });
+  }
+  if (!rate.allowed) {
+    const retryAfterSeconds = Math.max(1, Math.ceil(rate.retryAfterMs / 1000));
+    try {
+      await recordAudit(db, {
+        workspaceId: matched.workspaceId,
+        actorUserId: null, // server-to-server: no user behind the request
+        action: 'federation.peer_rate_limited',
+        targetType: 'peer_instance',
+        targetId: matched.id,
+        metadata: { peerName: matched.name, retryAfterMs: rate.retryAfterMs },
+      });
+    } catch (err) {
+      // Audit is best-effort here — a failed insert must not mask the 429.
+      logger.error(
+        { peerName: matched.name },
+        `failed to record federation.peer_rate_limited audit row: ${
+          err instanceof Error ? err.message : 'unknown error'
+        }`,
+      );
+    }
+    return NextResponse.json(
+      { error: 'rate limited' },
+      { status: 429, headers: { 'Retry-After': String(retryAfterSeconds) } },
+    );
   }
 
   // Lazy at-rest migration: the request VERIFIED under this row's raw secret

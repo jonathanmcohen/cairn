@@ -180,6 +180,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'federation.peer_enabled': 'Federated peer enabled',
   'federation.peer_disabled': 'Federated peer disabled',
   'federation.peer_deleted': 'Federated peer removed',
+  // v0.10.0 G2 — inbound request dropped by the per-peer rate limiter.
+  'federation.peer_rate_limited': 'Federated peer rate limited',
   // v0.9.16 Plan F — MCP OAuth lifecycle.
   'oauth.client_registered': 'OAuth client registered',
   'oauth.consent_granted': 'OAuth consent granted',
