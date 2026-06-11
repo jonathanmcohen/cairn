@@ -185,6 +185,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'oauth.consent_granted': 'OAuth consent granted',
   'oauth.token_issued': 'OAuth token issued',
   'oauth.token_revoked': 'OAuth token revoked',
+  // v0.10.0 D3 — admin deleted a registered client app (revokes all its tokens).
+  'oauth.client_deleted': 'OAuth client deleted',
 };
 
 export function actionLabel(action: string): string {
