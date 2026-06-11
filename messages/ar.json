@@ -645,6 +645,7 @@
   "workspaceSettings.brand.colorLabel": "اللون الأساسي",
   "workspaceSettings.brand.colorHint": "يستبدل لون التمييز للجميع في مساحة العمل هذه. اتركه فارغًا لاستخدام السمة الافتراضية.",
   "workspaceSettings.brand.hexLabel": "اللون السداسي",
+  "workspaceSettings.brand.hexPlaceholder": "#2563eb",
   "workspaceSettings.brand.clearColor": "استخدام الافتراضي",
   "workspaceSettings.brand.contrastAdjusted": "تم التعديل لسهولة القراءة — سيتم تعتيم هذا اللون حتى يظل نص الأزرار مقروءًا.",
   "workspaceSettings.brand.invalidHex": "أدخل لونًا بصيغة ‎#rrggbb.",

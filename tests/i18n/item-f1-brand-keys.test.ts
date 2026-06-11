@@ -16,6 +16,7 @@ const KEYS = [
   'workspaceSettings.brand.colorLabel',
   'workspaceSettings.brand.colorHint',
   'workspaceSettings.brand.hexLabel',
+  'workspaceSettings.brand.hexPlaceholder',
   'workspaceSettings.brand.clearColor',
   'workspaceSettings.brand.contrastAdjusted',
   'workspaceSettings.brand.invalidHex',

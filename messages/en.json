@@ -641,6 +641,7 @@
   "workspaceSettings.brand.colorLabel": "Primary color",
   "workspaceSettings.brand.colorHint": "Overrides the accent color for everyone in this workspace. Leave empty to use the default theme.",
   "workspaceSettings.brand.hexLabel": "Hex color",
+  "workspaceSettings.brand.hexPlaceholder": "#2563eb",
   "workspaceSettings.brand.clearColor": "Use default",
   "workspaceSettings.brand.contrastAdjusted": "Adjusted for readability — this color will be darkened so button text stays legible.",
   "workspaceSettings.brand.invalidHex": "Enter a color as #rrggbb.",

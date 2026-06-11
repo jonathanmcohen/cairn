@@ -191,7 +191,7 @@ export function BrandSettings({
             type="text"
             data-testid="brand-color-hex"
             value={colorEnabled ? hexText : ''}
-            placeholder="#2563eb"
+            placeholder={t('workspaceSettings.brand.hexPlaceholder')}
             maxLength={7}
             onChange={(e) => {
               setColorEnabled(e.target.value.trim().length > 0);
