@@ -1,3 +1,5 @@
+import { existsSync, mkdirSync } from 'node:fs';
+import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
 import { config as loadEnv } from 'dotenv';
 
@@ -14,6 +16,21 @@ const PORT = Number(process.env.E2E_PORT ?? 3200);
 const BASE_URL = `http://localhost:${PORT}`;
 const COLLAB_PORT = Number(process.env.E2E_COLLAB_PORT ?? 11334);
 const COLLAB_URL = `ws://localhost:${COLLAB_PORT}`;
+
+// item C1 — the backup snapshot UI spec POSTs /api/admin/backups, which spawns
+// `node dist/server/cli.js backup --out $CAIRN_BACKUP_DIR` from the booted
+// server. Bundles land in a gitignored dir under the repo root; the CLI's
+// uploads tar reads $UPLOAD_DIR (default /data/uploads, absent on dev boxes),
+// so it gets its own pre-created dir too.
+const BACKUP_DIR = path.resolve(process.cwd(), '.e2e-backups');
+const UPLOADS_DIR = path.join(BACKUP_DIR, 'uploads');
+mkdirSync(UPLOADS_DIR, { recursive: true });
+// macOS keeps pg_dump in the unlinked libpq keg; prepend it only when the dir
+// exists so the Linux CI runner (pg_dump natively on PATH) is unaffected.
+const LIBPQ_BIN = '/opt/homebrew/opt/libpq/bin';
+const E2E_PATH = existsSync(LIBPQ_BIN)
+  ? `${LIBPQ_BIN}:${process.env.PATH ?? ''}`
+  : (process.env.PATH ?? '');
 
 export default defineConfig({
   testDir: './tests/e2e',
@@ -56,6 +73,10 @@ export default defineConfig({
         // AUTH_SECRET (the bearer both sides compare) comes from .env via
         // loadEnv above.
         CAIRN_COLLAB_INTERNAL_URL: `http://localhost:${COLLAB_PORT}`,
+        // item C1 — see BACKUP_DIR/UPLOADS_DIR/E2E_PATH above.
+        CAIRN_BACKUP_DIR: BACKUP_DIR,
+        UPLOAD_DIR: UPLOADS_DIR,
+        PATH: E2E_PATH,
       },
     },
     {

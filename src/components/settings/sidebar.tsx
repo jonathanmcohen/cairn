@@ -83,6 +83,12 @@ export function SettingsSidebar({
         label: t('settings.nav.admin.chatBridge'),
         href: '/settings/admin/chat-bridge' as Route,
       },
+      // Instance backup snapshots (v0.10.0 C1).
+      {
+        id: 'admin-backups',
+        label: t('settings.nav.admin.backups'),
+        href: '/settings/admin/backups' as Route,
+      },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
     if (e2eEnabled) {
