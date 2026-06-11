@@ -554,6 +554,37 @@ rather than becoming an open relay. The limiter is in-process per replica
 to R × the configured limit — fine for the single-replica homelab target,
 worth noting before scaling out.
 
+## OAuth registration flood control (v0.10.0 G5)
+
+RFC 7591 dynamic client registration (`POST /api/oauth/register`) is
+unauthenticated **by design** — MCP clients self-register before any user
+signs in — which previously made it an unbounded write surface. Two layers of
+flood control now apply, and the **default posture stays open** (zero-setup
+self-registration keeps working):
+
+- **Rate limiting** (always on): two token buckets are checked before any
+  other work — per client IP (`CAIRN_OAUTH_REGISTER_LIMIT_PER_MIN`, default
+  **10**/min) and instance-wide
+  (`CAIRN_OAUTH_REGISTER_GLOBAL_LIMIT_PER_MIN`, default **30**/min). Unset,
+  unparseable, or non-positive values fall back to the defaults — never to
+  "unlimited". Over-limit requests get `429` with a `Retry-After` header
+  (whole seconds) and an `error_description` naming the tripped bucket; if
+  the limiter itself fails the route fails **closed** with `503`. Per-IP
+  keying honors `x-forwarded-for` only when `TRUST_PROXY=true` (same flag as
+  the login limiter); without a trusted proxy all callers share one bucket
+  and the global ceiling is the effective backstop. In-process per replica,
+  like the other limiters.
+- **Registration lock** (opt-in): Settings → Admin → OAuth clients has a
+  "Registration lock" card. Locking mints an RFC 7591 §3.1.1 **initial
+  access token** (`cairn_oiat_…`) shown **exactly once** — only its SHA-256
+  hash is stored (`system_meta` keys `oauth.register_lock` /
+  `oauth.register_iat_hash`). While locked, registration requires
+  `Authorization: Bearer <token>`; anything else gets `401 invalid_token`.
+  "Regenerate token" replaces the token (the old one stops working);
+  unlocking deletes the lock state. Both transitions write an
+  `oauth.register_lock_changed` audit row. Throttled or locked-out requests
+  write nothing.
+
 ## Collaboration auth (shared AUTH_SECRET)
 
 The `cairn` app and the `cairn-collab` real-time service form a single trust

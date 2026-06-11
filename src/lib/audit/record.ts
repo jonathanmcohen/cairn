@@ -32,6 +32,8 @@ const FORBIDDEN_SUBSTRINGS = [
   'cairn_oart_',
   'cairn_oac_',
   'cairn_ocs_',
+  // v0.10.0 G5 — RFC 7591 §3.1.1 initial access token (registration lock).
+  'cairn_oiat_',
   'token_hash',
   'password_hash',
   'secret_encrypted',

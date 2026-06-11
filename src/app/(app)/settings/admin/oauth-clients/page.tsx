@@ -3,7 +3,9 @@ import { SettingsBreadcrumb } from '@/components/settings/breadcrumb';
 import { getDb } from '@/db/client';
 import { requireRole } from '@/lib/auth/require-role';
 import { listRegisteredClients } from '@/lib/oauth/admin-clients';
+import { getRegisterLock } from '@/lib/oauth/register-lock';
 import { OauthClientsView } from './oauth-clients-view';
+import { RegisterLockCard } from './register-lock-card';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +18,8 @@ export const dynamic = 'force-dynamic';
 // connections (oauth_tokens rows), not the registered apps.
 export default async function OauthClientsSettingsPage() {
   await requireRole('admin');
-  const clients = await listRegisteredClients(getDb());
+  const db = getDb();
+  const [clients, lock] = await Promise.all([listRegisteredClients(db), getRegisterLock(db)]);
 
   return (
     <section className="space-y-6">
@@ -24,6 +27,8 @@ export default async function OauthClientsSettingsPage() {
         section={{ label: 'Admin', href: '/settings/admin' as Route }}
         page="OAuth clients"
       />
+      {/* v0.10.0 G5 — registration flood control: lock card above the registry. */}
+      <RegisterLockCard locked={lock.locked} />
       <OauthClientsView
         clients={clients.map((c) => ({
           id: c.id,
