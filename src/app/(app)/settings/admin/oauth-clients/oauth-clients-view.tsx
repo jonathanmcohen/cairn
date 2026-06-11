@@ -24,6 +24,11 @@ export type OauthClientRow = {
  * confirm copy carries that destructive consequence. The subtitle pins the
  * operator-confusion trap: these rows are registered client APPLICATIONS,
  * distinct from the per-user grant connections under Developer settings.
+ *
+ * Post-v0.10.0 — confidential rows also get "Rotate secret": mints a fresh
+ * client secret (the old one stops working at the token endpoint immediately)
+ * and shows the new plaintext in a SHOW-ONCE panel inside the row. The
+ * plaintext lives only in component state — never logged, never re-fetchable.
  */
 export function OauthClientsView({ clients }: { clients: OauthClientRow[] }) {
   const t = useT();
@@ -31,6 +36,8 @@ export function OauthClientsView({ clients }: { clients: OauthClientRow[] }) {
   const confirm = useConfirm();
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // One-time plaintext from the last rotation, keyed to its row.
+  const [rotated, setRotated] = useState<{ id: string; secret: string } | null>(null);
 
   async function onDelete(client: OauthClientRow): Promise<void> {
     const ok = await confirm({
@@ -50,6 +57,31 @@ export function OauthClientsView({ clients }: { clients: OauthClientRow[] }) {
         return;
       }
       router.refresh();
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  async function onRotate(client: OauthClientRow): Promise<void> {
+    const ok = await confirm({
+      title: t('admin.oauthClients.rotateConfirmTitle'),
+      description: t('admin.oauthClients.rotateConfirmBody', { name: client.name }),
+      confirmLabel: t('admin.oauthClients.rotateConfirm'),
+      cancelLabel: t('admin.oauthClients.rotateCancel'),
+      variant: 'danger',
+    });
+    if (!ok) return;
+    setError(null);
+    setRotated(null);
+    setBusyId(client.id);
+    try {
+      const res = await fetch(`/api/admin/oauth-clients/${client.id}/rotate`, { method: 'POST' });
+      if (!res.ok) {
+        setError(t('admin.oauthClients.error'));
+        return;
+      }
+      const body = (await res.json()) as { clientSecret: string };
+      setRotated({ id: client.id, secret: body.clientSecret });
     } finally {
       setBusyId(null);
     }
@@ -110,7 +142,40 @@ export function OauthClientsView({ clients }: { clients: OauthClientRow[] }) {
                   </span>{' '}
                   ({t('admin.oauthClients.totalGrants', { total: c.totalGrants })})
                 </div>
+                {rotated?.id === c.id ? (
+                  <div
+                    data-testid="oauth-rotated-panel"
+                    className="space-y-2 rounded border bg-muted/50 p-3"
+                  >
+                    <p className="text-sm font-medium">{t('admin.oauthClients.rotated.note')}</p>
+                    <div className="flex items-center gap-1">
+                      <code
+                        data-testid="oauth-rotated-secret"
+                        className="min-w-0 break-all font-mono text-xs"
+                      >
+                        {rotated.secret}
+                      </code>
+                      <CopyButton
+                        value={rotated.secret}
+                        label={t('admin.oauthClients.showOnce.copySecret')}
+                      />
+                    </div>
+                  </div>
+                ) : null}
               </div>
+              {c.confidential ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  data-testid="oauth-client-rotate"
+                  disabled={busyId === c.id}
+                  aria-label={`${t('admin.oauthClients.rotate')} ${c.name}`}
+                  onClick={() => void onRotate(c)}
+                >
+                  {t('admin.oauthClients.rotate')}
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 size="sm"

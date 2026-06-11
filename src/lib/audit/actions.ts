@@ -184,6 +184,16 @@ export const AUDIT_ACTIONS = [
   // oauth_tokens row issued to the client. Metadata: { clientId, name,
   // revokedGrants } — ids + counts only, never a secret.
   'oauth.client_deleted',
+  // Post-v0.10.0 — admin manually provisioned an OAuth client from
+  // /settings/admin/oauth-clients (for MCP clients that can't use RFC 7591
+  // dynamic registration). Metadata: { clientId, name, confidential } — ids
+  // and flags only, NEVER the minted secret (cairn_ocs_ is in
+  // FORBIDDEN_SUBSTRINGS and would trip assertAuditMetadataClean).
+  'oauth.client_created_manual',
+  // Post-v0.10.0 — admin rotated a confidential client's secret; the old
+  // secret stops verifying at the token endpoint immediately. Metadata:
+  // { clientId, name } only — never the new secret.
+  'oauth.client_secret_rotated',
   // v0.10.0 G3 — a revoked (already-rotated) refresh token was presented
   // again: reuse detected, the whole rotation family revoked. Metadata:
   // { reason: 'refresh_token_reuse', familyId, clientId } — ids only, never
