@@ -469,3 +469,36 @@ Operational consequences:
   mismatch. Since v0.9.8 the client retries the token fetch with exponential
   backoff and shows a dismissible "Collab offline — reconnecting…" banner, so
   the editor recovers automatically once resolution is restored.
+
+## Verifying hover-gated / click-gated editor UI (v0.10.0 B2 / #117)
+
+The v0.9.19 live-deploy sweep flagged heading collapse as "not in the runtime
+DOM" — a false alarm caused by the verification method, not the feature. Some
+editor surfaces intentionally mount NOTHING until an interaction happens, so a
+static DOM grep (view-source, `querySelector` on a freshly loaded page,
+crawler snapshots) cannot see them:
+
+- **Hover-gated overlays** — e.g. the heading-collapse chevron
+  (`[data-heading-collapse-toggle]`) mounts only on heading `mousemove`
+  (`src/components/editor/heading-collapse.tsx`). Before the hover there is no
+  chevron element at all.
+- **Click-gated decorations** — the collapse state itself is ProseMirror
+  decorations (`data-cairn-collapsed` + native `hidden` on the child blocks,
+  `heading-collapse-extension.ts`). Before the click there are no collapsed
+  attributes to find.
+
+To verify these surfaces, drive the interaction in a real browser (or
+Playwright) in order:
+
+1. Hover the heading **row** (`page.mouse.move` into the heading's bounding
+   box) → assert `[data-heading-collapse-toggle]` mounts.
+2. Click the toggle → assert `data-cairn-collapsed` appears on the heading and
+   the child blocks gain `hidden`.
+3. Click again → assert both attributes clear.
+
+A no-hover, no-click DOM inspection seeing neither layer is the EXPECTED
+state, not a regression. The `tests/e2e/item-117-heading-collapse.spec.ts`
+spec encodes this exact sequence; reuse it as the template for any future
+hover- or click-gated editor feature. (Chevron *discoverability* — making the
+affordance findable without knowing the gutter hover — is tracked separately
+as v0.10.0 item E3.)
