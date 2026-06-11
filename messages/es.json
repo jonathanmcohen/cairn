@@ -1149,5 +1149,21 @@
   "workspaceSettings.slashCommands.errorInvalidTrigger": "Los disparadores deben tener de 2 a 32 caracteres: letras minúsculas, números y guiones.",
   "workspaceSettings.slashCommands.errorTemplateNotFound": "Esa plantilla ya no existe en este espacio de trabajo.",
   "workspaceSettings.slashCommands.errorTemplateNotInsertable": "Solo las plantillas de página con contenido pueden respaldar un comando de barra.",
-  "workspaceSettings.slashCommands.errorGeneric": "Algo salió mal. Inténtalo de nuevo."
+  "workspaceSettings.slashCommands.errorGeneric": "Algo salió mal. Inténtalo de nuevo.",
+  "tour.replay": "Repetir el recorrido",
+  "tour.skip": "Omitir el recorrido",
+  "tour.back": "Atrás",
+  "tour.next": "Siguiente",
+  "tour.done": "Listo",
+  "tour.progress": "{current} / {total}",
+  "tour.step.sidebar.title": "Tu espacio de trabajo",
+  "tour.step.sidebar.body": "Aquí viven tus páginas, favoritos y bases de datos. Arrastra para reordenar y haz clic derecho para ver acciones.",
+  "tour.step.search.title": "Encuentra todo al instante",
+  "tour.step.search.body": "Abre la paleta de comandos con ⌘K para ir a páginas, ejecutar comandos y buscar en tu espacio de trabajo.",
+  "tour.step.topbar.title": "Notificaciones y más",
+  "tour.step.topbar.body": "Las menciones, comentarios y recordatorios llegan aquí. También puedes cambiar el idioma o ver el estado de conexión.",
+  "tour.step.pageMenu.title": "Comparte tu trabajo",
+  "tour.step.pageMenu.body": "Abre una página y usa este menú para publicar, exportar o gestionar permisos.",
+  "tour.step.help.title": "Repite el recorrido",
+  "tour.step.help.body": "Puedes volver a ver esta guía cuando quieras desde aquí."
 }

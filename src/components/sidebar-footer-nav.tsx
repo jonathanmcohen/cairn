@@ -3,6 +3,7 @@
 import {
   Archive,
   CheckSquare,
+  HelpCircle,
   Inbox,
   LayoutTemplate,
   LogOut,
@@ -66,6 +67,18 @@ export function SidebarFooterNav({ version }: { version: string }) {
         <Trash aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.trash')}
       </Link>
+      {/* v0.10.0 F3 — replays the onboarding tour regardless of the seen-marker.
+          The `data-tour="help"` hook doubles as the tour's own last-step anchor. */}
+      <button
+        type="button"
+        data-tour="help"
+        aria-label={t('tour.replay')}
+        onClick={() => window.dispatchEvent(new CustomEvent('cairn:start-tour'))}
+        className={`${NAV_ITEM_CLASS} w-full`}
+      >
+        <HelpCircle aria-hidden="true" className="h-4 w-4" />
+        {t('tour.replay')}
+      </button>
       {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
           account/destructive Sign out group reads as a distinct boundary, not
           another same-looking nav-row gap. Sign out carries a leading LogOut

@@ -18,6 +18,7 @@ import { SidebarContent } from '@/components/sidebar-content';
 import { SidebarDrawer } from '@/components/sidebar-drawer';
 import { SkipLink } from '@/components/skip-link';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
+import { OnboardingTour } from '@/components/tour/tour';
 import { Toaster } from '@/components/ui/sonner';
 import { WorkspaceNavGate } from '@/components/workspace-nav-gate';
 import { getDb } from '@/db/client';
@@ -80,6 +81,13 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               <ShortcutSheet />
               <QuickCaptureModal />
               <OnboardingWizard workspaceId={ctx.workspaceId} initialState={onboardingState} />
+              {/* v0.10.0 F3 — element-anchored tour. `hasAnyUserPages` lets the
+                  tour mirror-invert the wizard's show condition so the two
+                  first-run surfaces never stack. */}
+              <OnboardingTour
+                workspaceId={ctx.workspaceId}
+                hasAnyUserPages={onboardingState.hasAnyUserPages}
+              />
               {/* v0.10.0 E5 — /settings/* has its own SettingsSidebar; the
                   client gate unmounts the workspace nav (desktop aside +
                   mobile drawer) there so two left navs never stack. */}
@@ -92,6 +100,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
               <main id="main-content" className="flex-1 p-8">
                 <div
                   data-cairn-workspace-topbar=""
+                  data-tour="topbar"
                   className="mb-2 flex items-center justify-end gap-4"
                 >
                   <NotificationBell />

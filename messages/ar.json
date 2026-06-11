@@ -1153,5 +1153,21 @@
   "workspaceSettings.slashCommands.errorInvalidTrigger": "يجب أن يتكوّن المشغّل من 2 إلى 32 حرفًا: أحرف لاتينية صغيرة وأرقام وشرطات.",
   "workspaceSettings.slashCommands.errorTemplateNotFound": "هذا القالب لم يعد موجودًا في مساحة العمل هذه.",
   "workspaceSettings.slashCommands.errorTemplateNotInsertable": "فقط قوالب الصفحات ذات المحتوى يمكنها دعم أمر شرطة مائلة.",
-  "workspaceSettings.slashCommands.errorGeneric": "حدث خطأ ما. حاول مرة أخرى."
+  "workspaceSettings.slashCommands.errorGeneric": "حدث خطأ ما. حاول مرة أخرى.",
+  "tour.replay": "إعادة الجولة",
+  "tour.skip": "تخطي الجولة",
+  "tour.back": "رجوع",
+  "tour.next": "التالي",
+  "tour.done": "تم",
+  "tour.progress": "{current} / {total}",
+  "tour.step.sidebar.title": "مساحة عملك",
+  "tour.step.sidebar.body": "هنا تجد الصفحات والمفضلة وقواعد البيانات. اسحب لإعادة الترتيب وانقر بالزر الأيمن لعرض الإجراءات.",
+  "tour.step.search.title": "اعثر على أي شيء بسرعة",
+  "tour.step.search.body": "افتح لوحة الأوامر بالاختصار ⌘K للانتقال إلى الصفحات وتنفيذ الأوامر والبحث في مساحة عملك.",
+  "tour.step.topbar.title": "الإشعارات والمزيد",
+  "tour.step.topbar.body": "تصل الإشارات والتعليقات والتذكيرات هنا. يمكنك أيضًا تغيير اللغة أو التحقق من حالة الاتصال.",
+  "tour.step.pageMenu.title": "شارك عملك",
+  "tour.step.pageMenu.body": "افتح صفحة واستخدم هذه القائمة للنشر أو التصدير أو إدارة الأذونات.",
+  "tour.step.help.title": "أعد الجولة",
+  "tour.step.help.body": "يمكنك إعادة تشغيل هذه الجولة في أي وقت من هنا."
 }

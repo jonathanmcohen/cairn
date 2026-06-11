@@ -1149,5 +1149,21 @@
   "workspaceSettings.slashCommands.errorInvalidTrigger": "Triggers must be 2-32 characters: lowercase letters, numbers, and hyphens.",
   "workspaceSettings.slashCommands.errorTemplateNotFound": "That template no longer exists in this workspace.",
   "workspaceSettings.slashCommands.errorTemplateNotInsertable": "Only page templates with content can back a slash command.",
-  "workspaceSettings.slashCommands.errorGeneric": "Something went wrong. Try again."
+  "workspaceSettings.slashCommands.errorGeneric": "Something went wrong. Try again.",
+  "tour.replay": "Replay tour",
+  "tour.skip": "Skip tour",
+  "tour.back": "Back",
+  "tour.next": "Next",
+  "tour.done": "Done",
+  "tour.progress": "{current} / {total}",
+  "tour.step.sidebar.title": "Your workspace",
+  "tour.step.sidebar.body": "Pages, favorites and databases live here. Drag to reorder, right-click for actions.",
+  "tour.step.search.title": "Find anything fast",
+  "tour.step.search.body": "Open the command palette with ⌘K to jump to pages, run commands and search your workspace.",
+  "tour.step.topbar.title": "Notifications and more",
+  "tour.step.topbar.body": "Mentions, comments and reminders arrive here. You can also switch language or check your connection status.",
+  "tour.step.pageMenu.title": "Share your work",
+  "tour.step.pageMenu.body": "Open a page and use this menu to publish, export or manage permissions.",
+  "tour.step.help.title": "Take the tour again",
+  "tour.step.help.body": "You can replay this walkthrough anytime from here."
 }
