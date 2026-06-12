@@ -35,6 +35,7 @@
   "shortcut.focusMode": "Toggle focus mode",
   "shortcut.readerMode": "Toggle reader mode",
   "shortcut.quickCapture": "Quick capture",
+  "shortcut.toggleSidebar": "Toggle sidebar",
   "editor.bubble.bold": "Bold",
   "editor.bubble.italic": "Italic",
   "editor.bubble.strike": "Strikethrough",
