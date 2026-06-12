@@ -46,4 +46,30 @@ describe('<SidebarResizeHandle>', () => {
     render(<SidebarResizeHandle storageKey="cairn:sidebar-width" />);
     expect(document.documentElement.style.getPropertyValue('--cairn-sidebar-w')).toBe('320px');
   });
+
+  // v0.10.2 S1 — bounds widened from [200, 480] to [56, 400]. MIN matches the
+  // collapsed icon-rail width; DEFAULT stays 240 (pinned above + SSR fallback).
+  it('pins MIN=56 / MAX=400 via the separator value range (S1)', () => {
+    render(<SidebarResizeHandle storageKey="cairn:sidebar-width" />);
+    const handle = screen.getByRole('separator', { name: /resize sidebar/i });
+    expect(handle.getAttribute('aria-valuemin')).toBe('56');
+    expect(handle.getAttribute('aria-valuemax')).toBe('400');
+  });
+
+  it('Home snaps to MIN (56) and End snaps to MAX (400), both persisted (S1)', () => {
+    render(<SidebarResizeHandle storageKey="cairn:sidebar-width" />);
+    const handle = screen.getByRole('separator', { name: /resize sidebar/i });
+    fireEvent.keyDown(handle, { key: 'Home' });
+    expect(localStorage.getItem('cairn:sidebar-width')).toBe('56');
+    expect(document.documentElement.style.getPropertyValue('--cairn-sidebar-w')).toBe('56px');
+    fireEvent.keyDown(handle, { key: 'End' });
+    expect(localStorage.getItem('cairn:sidebar-width')).toBe('400');
+    expect(document.documentElement.style.getPropertyValue('--cairn-sidebar-w')).toBe('400px');
+  });
+
+  it('clamps persisted widths outside [56, 400] on mount (S1)', () => {
+    localStorage.setItem('cairn:sidebar-width', '480');
+    render(<SidebarResizeHandle storageKey="cairn:sidebar-width" />);
+    expect(document.documentElement.style.getPropertyValue('--cairn-sidebar-w')).toBe('400px');
+  });
 });

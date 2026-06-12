@@ -406,6 +406,36 @@ html.cairn-focus-mode[data-reveal-sidebar="true"] [data-cairn-workspace-sidebar]
 }
 
 /*
+ * v0.10.2 S1 — sidebar collapse (Mod+\). `cairn-sidebar-collapsed` on the html
+ * root (toggled by src/components/sidebar-collapse.ts) forces the desktop
+ * aside down to a 56px icon rail. `width: 56px !important` is required because
+ * the aside carries an inline `width: var(--cairn-sidebar-w, 15rem)`; the CSS
+ * var and the persisted `cairn:sidebar-width` value are left untouched, so
+ * removing the class restores the user's prior custom width. The v1 rail is
+ * non-interactive: content is clipped + visibility-hidden, and the resize
+ * handle is display:none so a collapsed rail cannot be dragged.
+ *
+ * Focus-mode interaction: `html.cairn-focus-mode [data-cairn-workspace-sidebar]`
+ * (above) sets `display: none !important`, which removes the aside from layout
+ * entirely regardless of any width rule here — focus mode wins while active.
+ * The two root classes are toggled by independent code paths, so entering or
+ * leaving focus mode while collapsed never desyncs the collapse state.
+ */
+html.cairn-sidebar-collapsed [data-cairn-workspace-sidebar] {
+  width: 56px !important;
+  min-width: 56px;
+  overflow: hidden;
+}
+
+html.cairn-sidebar-collapsed [data-cairn-workspace-sidebar] > * {
+  visibility: hidden;
+}
+
+html.cairn-sidebar-collapsed [data-cairn-workspace-sidebar] [data-cairn-sidebar-resize-handle] {
+  display: none !important;
+}
+
+/*
  * v0.9.0 G6 P33 — reader mode bumps the editor surface into typography-prose
  * styling so the read-only view has comfortable line-length + spacing.
  */
