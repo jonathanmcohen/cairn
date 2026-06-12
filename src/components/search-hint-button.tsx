@@ -27,7 +27,7 @@ export function SearchHintButton() {
       className="mb-1 flex min-h-[36px] w-full items-center gap-2 rounded-md border border-input bg-background px-2 py-0.5 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-muted-foreground hover:bg-accent pointer-coarse:min-h-11 pointer-coarse:py-1.5"
     >
       <Search aria-hidden="true" className="h-4 w-4" />
-      <span className="flex-1 text-left">{t('searchHint.label')}</span>
+      <span className="flex-1 truncate text-left">{t('searchHint.label')}</span>
       <kbd className="rounded border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-foreground">
         ⌘K
       </kbd>
