@@ -30,6 +30,18 @@
   --success-foreground: 0 0% 98%;
   --warning: 32 90% 34%;
   --warning-foreground: 0 0% 98%;
+  /* v0.10.2 P4 — lifecycle status pill pairs (Draft / In review / Published /
+     Archived). Light mode: soft tinted bg + dark readable fg (≥4.5:1). Review
+     leans on the --warning hue family, published on --success; draft is
+     neutral gray and archived a dimmer gray than draft. */
+  --status-draft-bg: 240 5% 92%;
+  --status-draft-fg: 240 6% 25%;
+  --status-review-bg: 38 92% 90%;
+  --status-review-fg: 30 90% 28%;
+  --status-published-bg: 142 70% 91%;
+  --status-published-fg: 142 72% 22%;
+  --status-archived-bg: 240 5% 96%;
+  --status-archived-fg: 240 4% 40%;
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
   --ring: 240 5.9% 10%;
@@ -57,6 +69,15 @@
   --success-foreground: 240 10% 3.9%;
   --warning: 38 92% 60%;
   --warning-foreground: 240 10% 3.9%;
+  /* v0.10.2 P4 — dark-mode status pill pairs: desaturated dark bg + light fg. */
+  --status-draft-bg: 240 4% 16%;
+  --status-draft-fg: 240 5% 84%;
+  --status-review-bg: 36 45% 16%;
+  --status-review-fg: 38 90% 70%;
+  --status-published-bg: 142 40% 14%;
+  --status-published-fg: 142 60% 70%;
+  --status-archived-bg: 240 4% 12%;
+  --status-archived-fg: 240 4% 60%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
   --ring: 240 4.9% 83.9%;
@@ -83,6 +104,15 @@
   --color-success-foreground: hsl(var(--success-foreground));
   --color-warning: hsl(var(--warning));
   --color-warning-foreground: hsl(var(--warning-foreground));
+  /* v0.10.2 P4 — status pill utilities (bg-status-*-bg / text-status-*-fg). */
+  --color-status-draft-bg: hsl(var(--status-draft-bg));
+  --color-status-draft-fg: hsl(var(--status-draft-fg));
+  --color-status-review-bg: hsl(var(--status-review-bg));
+  --color-status-review-fg: hsl(var(--status-review-fg));
+  --color-status-published-bg: hsl(var(--status-published-bg));
+  --color-status-published-fg: hsl(var(--status-published-fg));
+  --color-status-archived-bg: hsl(var(--status-archived-bg));
+  --color-status-archived-fg: hsl(var(--status-archived-fg));
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
