@@ -30,3 +30,36 @@ export function numberFootnotes(doc: PMNode): {
   walk(doc);
   return { map, ordered };
 }
+
+export type CitationNumberEntry = { number: number; id: string };
+
+/**
+ * v0.10.2 P5 — 1-based citation numbering: dedup by `id`, first-appearance
+ * document order. MUST stay aligned with `aggregateCitations()`
+ * (lib/citations/aggregate.ts) — the bibliography `<ol>` renders entries in
+ * the same dedup'd id order, so chip `[n]` always points at bibliography
+ * entry n. Citations without an id are skipped (they have no bibliography
+ * entry either).
+ */
+export function numberCitations(doc: PMNode): {
+  map: Record<string, number>;
+  ordered: CitationNumberEntry[];
+} {
+  const map: Record<string, number> = {};
+  const ordered: CitationNumberEntry[] = [];
+
+  function walk(node: PMNode): void {
+    if (node.type === 'citation') {
+      const id = String(node.attrs?.id ?? '');
+      if (id && !(id in map)) {
+        const number = ordered.length + 1;
+        map[id] = number;
+        ordered.push({ number, id });
+      }
+    }
+    for (const child of node.content ?? []) walk(child);
+  }
+
+  walk(doc);
+  return { map, ordered };
+}

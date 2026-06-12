@@ -312,6 +312,13 @@ export const citationLookupMenuItem: CitationSlashEntry = {
               ),
               raw_title: meta.title,
               raw_year: meta.year ?? null,
+              // v0.10.2 P5 — persist the full CitationMeta on the node so the
+              // superscript chip's popover reads attrs only (no re-lookup).
+              journal: meta.journal ?? null,
+              volume: meta.volume ?? null,
+              issue: meta.issue ?? null,
+              pages: meta.pages ?? null,
+              url: meta.url ?? null,
             },
           })
           .run();

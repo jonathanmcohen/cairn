@@ -62,6 +62,8 @@
   "editor.citation.fetching": "جارٍ البحث…",
   "editor.citation.fetchFailed": "فشل البحث. أدخل التفاصيل يدويًا.",
   "editor.citation.insert": "إدراج",
+  "editor.citation.addLabel": "إضافة اقتباس",
+  "editor.citation.refLabel": "اقتباس {number}",
   "editor.footnote.textLabel": "نص الحاشية",
   "editor.flashcard.front": "الوجه (سؤال)",
   "editor.flashcard.back": "الظهر (إجابة)",

@@ -291,6 +291,9 @@ export function Editor({
             user: currentUser,
             // viewers + reader-mode users: no CollaborationCursor → no awareness writes
             withCursor: effectiveEditable,
+            // v0.10.2 P5 — page-level style for the citation chip popover's
+            // full formatted line (matches the Bibliography below).
+            citationStyle,
           }),
           immediatelyRender: false,
           editorProps: {
@@ -366,7 +369,11 @@ export function Editor({
           // server materializes to pages.content. Title/icon/cover still PATCH
           // from their sibling components.
         }
-      : { extensions: baseExtensions(), editable: false, immediatelyRender: false },
+      : {
+          extensions: baseExtensions({ citationStyle }),
+          editable: false,
+          immediatelyRender: false,
+        },
     [provider, effectiveEditable],
   );
 

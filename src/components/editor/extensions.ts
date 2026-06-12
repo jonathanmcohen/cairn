@@ -13,11 +13,11 @@ import { CharacterCount, Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 import { common, createLowlight } from 'lowlight';
 import type * as Y from 'yjs';
+import type { CitationStyle } from '@/lib/citations/format';
 import { AudioNode } from './blocks/audio-node';
 import { Bookmark } from './blocks/bookmark';
 import { ButtonBlock } from './blocks/button';
 import { CalloutWithView } from './blocks/callout';
-import { CitationNode } from './blocks/citation-node';
 import { createCairnCodeBlock } from './blocks/code-block';
 import { Column, ColumnList } from './blocks/columns';
 import { DateTimeNode } from './blocks/datetime-node';
@@ -37,6 +37,7 @@ import { Toggle } from './blocks/toggle';
 import { VideoBlock } from './blocks/video';
 import { DatabaseNode } from './database-extension';
 import { EditorLinkShortcut } from './editor-link-shortcut';
+import { CitationExtension } from './extensions/citation';
 import { FileAttachmentWithView } from './file-view-extension';
 import { HeadingCollapseExtension } from './heading-collapse-extension';
 import { CairnImageWithView } from './image-view-extension';
@@ -56,10 +57,12 @@ const lowlight = createLowlight(common);
 /**
  * Shared node/mark set. Pass `undoRedo: false` to disable StarterKit's local
  * undo/redo (renamed from `history` in TipTap 3) — required under collaboration,
- * where Yjs owns the undo stack.
+ * where Yjs owns the undo stack. `citationStyle` configures the citation
+ * node-view's formatted-string variant (popover full-entry line); defaults to
+ * 'apa' to match the page-metadata default.
  */
-export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
-  const { undoRedo = true } = opts;
+export function baseExtensions(opts: { undoRedo?: boolean; citationStyle?: CitationStyle } = {}) {
+  const { undoRedo = true, citationStyle = 'apa' } = opts;
   return [
     StarterKit.configure({
       codeBlock: false,
@@ -126,11 +129,16 @@ export function baseExtensions(opts: { undoRedo?: boolean } = {}) {
     // view loads lazily via `extensions-lazy.ts#audio` so the bundle stays
     // slim until a doc actually contains audio (or the user types `/audio`).
     AudioNode,
-    // v0.9.0 G3 P18 — citation block + inline footnote mark. Both are schema-
-    // pure (no React node-view in this list; the style-aware `CitationView`
-    // lives in `extensions/citation.tsx` and is wired by editor.tsx when a
-    // page-level `citationStyle` prop is provided).
-    CitationNode,
+    // v0.9.0 G3 P18 citation block, upgraded v0.10.2 P5: the React node-view
+    // variant (superscript chip `[n]` + attrs-only hover popover) registers
+    // STATICALLY so docs that already contain citations render the chip on
+    // first mount in the editor, the pre-provider placeholder AND the public
+    // read-only view (the slash commands' lazy registration of the same
+    // extension dedupes by name). The node view is light — no KaTeX-class
+    // payload — so it doesn't belong in extensions-lazy. Server-side parsing
+    // still uses the schema-only `CitationNode` via schema.ts.
+    CitationExtension.configure({ style: citationStyle }),
+    // v0.9.0 G3 P18 — inline footnote mark (schema-pure).
     FootnoteMark,
     // v0.9.0 G3 P19 + P20 — schema-only static reg so server-side document
     // parsers don't silently drop these nodes when loading content. The
@@ -261,6 +269,14 @@ export type CollabUser = { id: string; name: string; color: string; image?: stri
  *                     time. No node-local mutable state. v0.8.0 P24.            SAFE
  *  - cairnLinkShortcut — keymap-only Extension (no node/mark, no schema, no
  *                        node-local state); dispatches a window CustomEvent. SAFE
+ *  - Citation       — block atom, attrs `{ id, doi, pubmed_id, formatted_*,
+ *                     raw_*, journal, volume, issue, pages, url }` only. The
+ *                     P5 node-view renders a `[n]` chip whose number is
+ *                     DERIVED from the shared doc at render time
+ *                     (numberCitations) and whose popover open/closed flag is
+ *                     per-viewer presentation state — neither is persisted
+ *                     node-local doc state. Attr writes go through
+ *                     updateAttributes only.                                  SAFE
  * No custom node holds non-attr NodeView state.
  */
 export function collabExtensions(opts: {
@@ -268,9 +284,10 @@ export function collabExtensions(opts: {
   provider: HocuspocusProvider;
   user: CollabUser;
   withCursor: boolean;
+  citationStyle?: CitationStyle;
 }) {
   const ext: AnyExtension[] = [
-    ...baseExtensions({ undoRedo: false }),
+    ...baseExtensions({ undoRedo: false, citationStyle: opts.citationStyle }),
     Collaboration.configure({ document: opts.ydoc }),
   ];
   if (opts.withCursor) {
