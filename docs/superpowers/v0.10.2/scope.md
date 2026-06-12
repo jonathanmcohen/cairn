@@ -4,7 +4,9 @@
 
 Single release, single tag, single image (user decision 2026-06-12: **no
 deferrals** — flashcards phases F2 and F3 land in v0.10.2 itself, not
-v0.10.3/v0.10.4). **35 items locked across 4 plans. Zero deferred.**
+v0.10.3/v0.10.4). **35 items locked across 4 plans. Zero deferred.** (P6 later closed
+mid-release — superseded by P1 deleting its target surface; 34 build items
+remain. Recorded in plan-P.)
 
 ## Re-audit outcome (2026-06-12)
 
@@ -29,7 +31,7 @@ docs so no item rebuilds something that exists.
 | Plan | Items | Theme |
 |------|-------|-------|
 | **B** (2) | B1 template-clone stranded button (root-caused: database-kind `instantiateTemplate` never returns the minted host-page id → gallery `busy` never resets; NOT an 8s hang — sticks forever) · B2 trash "Untitled" fallback (no fallback anywhere in the chain; icon claim corrected in plan) | Carry-forward bugs |
-| **P** (16) | P1 header de-clutter · P2 block spacing (audit-corrected actual values in plan) · P4 status pill colors · P5 citation chip · P6 zero-count chip dim · P7 collapse chevron rest-opacity · P9 slash category rail · P10 admin nav grouping (15 actual entries — bucket map for ALL in plan, unlisted ones flagged for GO) · P11 settings nav icons · P12 sync-warning surfacing · P13 encryption banner tone · P14 gallery polish (depends B1) · P15 notification footer empty state · P16 switcher dropdown width · P17 404 search · P18 indexing indicator | UI polish |
+| **P** (15 after the P6 supersession) | P1 header de-clutter · P2 block spacing (audit-corrected actual values in plan) · P4 status pill colors · P5 citation chip · P6 zero-count chip dim (CLOSED mid-release: superseded by P1) · P7 collapse chevron rest-opacity · P9 slash category rail · P10 admin nav grouping (15 actual entries — bucket map for ALL in plan, unlisted ones flagged for GO) · P11 settings nav icons · P12 sync-warning surfacing · P13 encryption banner tone · P14 gallery polish (depends B1) · P15 notification footer empty state · P16 switcher dropdown width · P17 404 search · P18 indexing indicator | UI polish |
 | **S** (14) | S1 collapse+resize (resize partially exists) · S2 density pref (actual current row 26px — plan corrects) · S3 dividers · S4 section headers · S5 hover action icons · S6 switcher chip letter fallback · S7 search pill label · S8 tree polish (6 sub-items) · S9 hub badges · S10 slot diet · S11 sign-out confirm (#80) · S14 footer Live indicator · S15 empty states · S17 slot reorder | Sidebar overhaul |
 | **F** (3) | F1 manage + orphans + migration 0076 + sidebar Flashcards parent + backup integration · F2 decks (migration 0077, tree, per-deck options, block deck picker + canonical-card inversion) · F3 stats + heatmap + .apkg export + Settings → Workspace → Flashcards (migration 0078) | Flashcards management |
 

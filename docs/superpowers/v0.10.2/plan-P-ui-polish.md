@@ -254,46 +254,26 @@ check could false-green a popover that silently refetches on every hover.
 - Read-only/public view renders the superscript path, not the raw block
   string (`read-only-view.tsx` wiring).
 
-## P6 — Chips dim at zero
+## P6 — Chips dim at zero — CLOSED (superseded by P1, 2026-06-12)
 
-**Audit verdict: PARTIAL.**
+**Closed during execution — no work remains.** The audit had already narrowed
+P6 to a single offender: the toolbar **BibliographyToggle** chip
+(`bg-primary` fill at zero citations). Plan P1 (merged in this release)
+**deleted that component entirely** — `src/components/editor/
+bibliography-toggle.tsx` no longer exists (zero references; verified by ls +
+grep post-merge). Bibliography toggling now lives in the page overflow menu
+as a plain action row with no fill and no count badge, so there is no chip
+left to dim. The other two surfaces named by the seed were premise-corrected
+at audit time and re-verified post-P1:
 
-**Premise correction:** the named chips already behave. (a) The "N open"
-badge (`suggestion-toolbar.tsx:136-153`) is gated by `openCount > 0` — at zero
-it does NOT render at all, and when shown it is a muted hairline chip
-(`:149`), never blue. (b) The Suggest toggle chip
-(`suggestion-toolbar.tsx:44-65`) is `bg-primary` only while suggestion mode is
-actively on (`:55-59`); at rest it is dim. (c) The chip that IS lit blue at
-zero is the adjacent **BibliographyToggle** (`editor.tsx:662-668`):
-`bibliography-toggle.tsx:72-76` applies `bg-primary` whenever the bibliography
-is shown — the DEFAULT state (`initialDisableBibliography` defaults false,
-`editor.tsx:118`) — with a "0" count badge dimmed only via `opacity-50`
-(`:82-89`) while the chip body stays filled. That is almost certainly the chip
-the proposal observed.
+- "N open" badge: gated by `openCount > 0` (`suggestion-toolbar.tsx:136`) —
+  absent at zero, muted hairline when shown.
+- Suggest toggle: `bg-primary` only while suggestion mode is actively on
+  (`suggestion-toolbar.tsx:57` ternary) — dim at rest.
 
-**Gap to build:** one-file change — add a zero-citation style branch in
-`bibliography-toggle.tsx:72-76` so the chip does not render `bg-primary` when
-`citationCount === 0` (fall back to the muted hairline style at `:75`), or
-decouple the shown-state fill from the resting state. Preserve `aria-pressed`
-semantics (`:70`).
-
-**Files:** `src/components/editor/bibliography-toggle.tsx`.
-
-**Spec:** `tests/e2e/item-p6-bibliography-chip-zero-dim.spec.ts`.
-
-**Coverage check:** real editor with 0 citations → asserts the chip's
-**computed** background is not the `--primary` fill; inserts a citation → chip
-lights; removes it → dims again. Computed-color + state-transition assertions
-can't false-green on class shuffles.
-
-**Failure modes verified:**
-
-- Zero citations, bibliography shown: chip computed bg ≠ primary token; count
-  badge legible.
-- ≥1 citation: chip filled blue, count correct.
-- `aria-pressed` still reflects shown-state in both visual states.
-- Regression guards on the premise: suggest chip dim at rest; "N open" badge
-  absent at zero count.
+No spec ships for a deleted surface; the P1 spec
+(`tests/e2e/item-p1-toolbar-overflow.spec.ts`) already pins the bibliography
+control's new home and behavior.
 
 ## P7 — Heading collapse chevron visibility at rest
 
