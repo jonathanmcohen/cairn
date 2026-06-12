@@ -74,7 +74,11 @@ export function WorkspaceSwitcher({
           <DropdownMenu.Content
             align="start"
             sideOffset={4}
-            className="z-50 flex max-h-[min(24rem,70vh)] w-56 flex-col rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
+            // v0.10.2 P16 — track the trigger (and therefore the user-resized
+            // sidebar / mobile drawer) instead of a fixed 224px; Radix sets the
+            // trigger-width var on portalled Content. min-w-56 floors very
+            // narrow sidebars so menu items stay readable.
+            className="z-50 flex max-h-[min(24rem,70vh)] w-[var(--radix-dropdown-menu-trigger-width)] min-w-56 flex-col rounded-md border bg-popover p-1 text-popover-foreground shadow-md"
           >
             <DropdownMenu.Label className="px-2 py-1.5 text-sm font-semibold">
               {t('workspaceSwitcher.heading')}
