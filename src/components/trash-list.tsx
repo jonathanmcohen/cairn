@@ -6,6 +6,7 @@ import { EmptyTrash } from '@/components/empty-state/variants';
 import { InlineIcon } from '@/components/page-icon-inline';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { useT } from '@/lib/i18n/provider';
 
 export type TrashItem = {
   id: string;
@@ -17,6 +18,7 @@ export type TrashItem = {
 export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
   const router = useRouter();
   const confirm = useConfirm();
+  const t = useT();
   const [items, setItems] = useState(initialItems);
   const [busy, setBusy] = useState<string | null>(null);
 
@@ -54,12 +56,14 @@ export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
     <ul className="space-y-2">
       {items.map((item) => (
         <li key={item.id} className="flex items-center justify-between rounded border px-3 py-2">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3" data-trash-id={item.id}>
             <span className="text-lg">
               <InlineIcon value={item.icon} />
             </span>
             <div>
-              <div className="font-medium">{item.title}</div>
+              {/* B2: pages born title-less store '' — render the i18n fallback.
+                  Display-only; the stored title is untouched. */}
+              <div className="font-medium">{item.title.trim() || t('trash.untitled')}</div>
               <div className="text-xs text-muted-foreground">
                 Deleted {new Date(item.deletedAt).toLocaleString()}
               </div>

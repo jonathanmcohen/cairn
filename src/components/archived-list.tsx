@@ -79,7 +79,10 @@ export function ArchivedList({
                   <InlineIcon value={item.icon} />
                 </span>
                 <div className="min-w-0">
-                  <div className="truncate font-medium">{item.title}</div>
+                  {/* B2 mirror: same untitled fallback as TrashList. */}
+                  <div className="truncate font-medium">
+                    {item.title.trim() || t('trash.untitled')}
+                  </div>
                   <div className="truncate text-xs text-muted-foreground">
                     {item.parents.length > 0 && <span>{item.parents.join(' / ')} · </span>}
                     {t('archived.archivedAt', {
