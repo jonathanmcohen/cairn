@@ -2,21 +2,28 @@
 
 import {
   Activity,
+  BookMarked,
   Copy,
   CopyPlus,
   Download,
   FilePlus2,
   FileUp,
+  FolderInput,
   Globe,
   Link as LinkIcon,
+  Lock,
+  LockOpen,
   MoreHorizontal,
   Trash2,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { PageActivityFeed } from '@/components/pages/activity-feed';
+import { deleteLock, LockOptions } from '@/components/pages/lock-toggle';
 import { SaveAsTemplateDialog } from '@/components/pages/save-as-template-dialog';
 import { ShareDialog } from '@/components/pages/share-dialog';
 import { useActionAllowed } from '@/components/pwa/offline-context';
+import { MoveToPicker } from '@/components/sidebar/move-to-picker';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
 import {
@@ -45,6 +52,18 @@ type PageMenuProps = {
   initialAllowDuplication?: boolean;
   initialHasPassword?: boolean;
   initialExpiresAt?: string | null;
+  // v0.10.2 P1 — Lock and Move-To moved here from the page toolbar. Both are
+  // editor+ capabilities (same gating the toolbar applied); viewers see
+  // neither item. The lock-state trio is server-rendered and stays fresh via
+  // router.refresh() after each lock/unlock.
+  canLock?: boolean;
+  canMove?: boolean;
+  /** Current lock state (server-rendered). */
+  locked?: boolean;
+  /** Whether the viewer may clear the current lock (locker self or admin). */
+  canUnlock?: boolean;
+  /** True when unlocking someone else's lock as an admin override. */
+  unlockAsAdmin?: boolean;
 };
 
 export function PageMenu({
@@ -55,10 +74,18 @@ export function PageMenu({
   initialAllowDuplication = false,
   initialHasPassword = false,
   initialExpiresAt = null,
+  canLock = false,
+  canMove = false,
+  locked = false,
+  canUnlock = false,
+  unlockAsAdmin = false,
 }: PageMenuProps) {
   const t = useT();
+  const router = useRouter();
   const confirm = useConfirm();
   const [open, setOpen] = useState(false);
+  const [lockOpen, setLockOpen] = useState(false);
+  const [moveOpen, setMoveOpen] = useState(false);
   const shareAllowed = useActionAllowed('share');
   const [published, setPublished] = useState(initialPublished);
   const [slug, setSlug] = useState<string | null>(initialSlug);
@@ -91,6 +118,12 @@ export function PageMenu({
     };
     document.addEventListener('keydown', onKeyDown);
     return () => document.removeEventListener('keydown', onKeyDown);
+  }, [open]);
+
+  // Collapse the inline lock-options submenu whenever the popover closes so a
+  // re-open starts from the plain item list.
+  useEffect(() => {
+    if (!open) setLockOpen(false);
   }, [open]);
 
   // When the publish-confirm dialog opens, fetch the non-mutating preview so the
@@ -153,6 +186,17 @@ export function PageMenu({
     if (!res.ok) return;
     const { id } = (await res.json()) as { id: string };
     window.location.href = `/pages/${id}`;
+  }
+
+  async function unlockPage() {
+    try {
+      await deleteLock(pageId, unlockAsAdmin);
+    } catch (err) {
+      console.error(err);
+      return;
+    }
+    setOpen(false);
+    router.refresh();
   }
 
   async function moveToTrash() {
@@ -233,6 +277,39 @@ export function PageMenu({
             <LinkIcon aria-hidden="true" className="h-4 w-4 shrink-0" />
             {t('share.menuLabel')}
           </button>
+          {/* v0.10.2 P1 — Lock moved here from the page toolbar. Unlocked:
+              "Lock page" expands the duration options inline (the same
+              LockOptions surface the old toolbar popover wrapped — indefinite /
+              1h / 24h / custom). Locked: the locker or an admin gets "Unlock
+              page"; other editors see neither (the lock banner explains who
+              holds the lock). */}
+          {canLock && !locked && (
+            <>
+              <button
+                type="button"
+                className={ITEM_CLASS}
+                aria-expanded={lockOpen}
+                aria-haspopup="menu"
+                onClick={() => setLockOpen((v) => !v)}
+              >
+                <Lock aria-hidden="true" className="h-4 w-4 shrink-0" />
+                {t('pageActions.lock.trigger')}
+              </button>
+              {lockOpen && (
+                <LockOptions
+                  pageId={pageId}
+                  className="border-t text-sm"
+                  onLocked={() => setOpen(false)}
+                />
+              )}
+            </>
+          )}
+          {locked && canUnlock && (
+            <button type="button" className={ITEM_CLASS} onClick={() => void unlockPage()}>
+              <LockOpen aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {t('pageMenu.unlock')}
+            </button>
+          )}
           <div className="my-1 border-t" />
           {/* Export lives in the single action-bar Export menu (PageExportMenu)
               — the lone export surface (#56/#235). This hint row fires the same
@@ -260,6 +337,25 @@ export function PageMenu({
           >
             <FileUp aria-hidden="true" className="h-4 w-4 shrink-0" />
             {t('pageMenu.importMd')}
+          </button>
+          {/* v0.10.2 P1 — Bibliography visibility moved here from the editor
+              toolbar. The live `bibDisabled` state lives in the (client)
+              editor while this menu is server-rendered, so — mirroring the
+              `cairn:export:open` wiring above — the item dispatches a window
+              CustomEvent the editor listens for. The editor no-ops the event
+              while a lock suppresses editing (the D3/#188 contract), so the
+              item itself stays enabled. */}
+          <button
+            type="button"
+            className={ITEM_CLASS}
+            title={t('editor.bibliography.toggleHint')}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent('cairn:bibliography:toggle'));
+              setOpen(false);
+            }}
+          >
+            <BookMarked aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('editor.bibliography.toggle')}
           </button>
           <div className="my-1 border-t" />
           <button
@@ -294,11 +390,21 @@ export function PageMenu({
             <CopyPlus aria-hidden="true" className="h-4 w-4 shrink-0" />
             {t('pageMenu.duplicate')}
           </button>
-          {/* TODO(move-to): follow-up — the "Move to…" (reparent) action needs a
-              self-contained page-picker popover (reuse PageLinkList + fetchPages +
-              a "Move to top level" option). That picker UX exceeds the ~30-line
-              off-ramp threshold in the P19 plan, so it ships as a follow-up. The
-              backend (POST /api/pages/[id]/move { newParentId }) already exists. */}
+          {/* v0.10.2 P1 — "Move to…" (reparent), moved here from the page
+              toolbar; opens the shared MoveToPicker dialog mounted below. */}
+          {canMove && (
+            <button
+              type="button"
+              className={ITEM_CLASS}
+              onClick={() => {
+                setMoveOpen(true);
+                setOpen(false);
+              }}
+            >
+              <FolderInput aria-hidden="true" className="h-4 w-4 shrink-0" />
+              {t('pageMenu.moveTo')}
+            </button>
+          )}
           <button
             type="button"
             className={ITEM_CLASS}
@@ -394,6 +500,14 @@ export function PageMenu({
         initialHasPassword={initialHasPassword}
         initialExpiresAt={initialExpiresAt}
       />
+      {canMove && (
+        <MoveToPicker
+          open={moveOpen}
+          sourceId={pageId}
+          onOpenChange={setMoveOpen}
+          onMoved={() => router.refresh()}
+        />
+      )}
     </div>
   );
 }

@@ -150,6 +150,7 @@
   "pageMenu.confirmTrash": "Move this page to trash?",
   "pageMenu.moveTo": "Move to…",
   "pageMenu.moveToTopLevel": "Move to top level",
+  "pageMenu.unlock": "Unlock page",
   "moveTo.title": "Move page to…",
   "moveTo.description": "Choose a destination page or move to the top level.",
   "moveTo.searchPlaceholder": "Search pages…",

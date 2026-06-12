@@ -86,8 +86,9 @@ test.describe('item E6 — one consolidated page/editor toolbar row', () => {
       // THE RED ASSERTIONS on the old build: the editor-owned controls used to
       // render in a second stacked strip inside the editor body — none of
       // these locators (scoped to the page action bar) resolved.
+      // (v0.10.2 P1 — Bibliography left the bar for the "…" page menu; its
+      // coverage lives in item-p1-toolbar-overflow.spec.ts.)
       await expect(bar.getByTestId('suggest-toggle-chip')).toBeVisible();
-      await expect(bar.getByRole('button', { name: /bibliography/i })).toBeVisible();
       await expect(bar.getByTitle('Live')).toBeVisible();
       await expect(bar.getByRole('button', { name: 'Outline', exact: true })).toBeVisible();
 
@@ -139,7 +140,7 @@ test.describe('item E6 — one consolidated page/editor toolbar row', () => {
     }
   });
 
-  test('(c) lock contract (#188): Suggesting + Bibliography stay visible but disabled', async ({
+  test('(c) lock contract (#188): Suggesting stays visible but disabled', async ({
     page,
     seeded,
   }) => {
@@ -157,14 +158,14 @@ test.describe('item E6 — one consolidated page/editor toolbar row', () => {
 
       const bar = page.getByTestId('page-toolbar');
       const suggestToggle = bar.getByTestId('suggest-toggle-chip');
-      const bibliography = bar.getByRole('button', { name: /bibliography/i });
 
       // Mounted-but-disabled: present in the merged bar, not removed…
       await expect(suggestToggle).toBeVisible();
-      await expect(bibliography).toBeVisible();
-      // …and disabled while the lock holds.
+      // …and disabled while the lock holds. (v0.10.2 P1 — the bibliography
+      // half of this contract moved to the "…" page menu and is asserted in
+      // item-p1-toolbar-overflow.spec.ts: the menu item stays enabled and the
+      // editor no-ops its toggle event under lock.)
       await expect(suggestToggle).toBeDisabled();
-      await expect(bibliography).toBeDisabled();
     } finally {
       await cleanupPage(pageId);
     }
@@ -181,9 +182,9 @@ test.describe('item E6 — one consolidated page/editor toolbar row', () => {
       pageId = await openToolbarPage(page, stamp());
       const bar = page.getByTestId('page-toolbar');
 
+      // (v0.10.2 P1 — Bibliography left the bar for the "…" page menu.)
       const controls = [
         ['Suggesting chip', bar.getByTestId('suggest-toggle-chip')],
-        ['Bibliography', bar.getByRole('button', { name: /bibliography/i })],
         ['Outline', bar.getByRole('button', { name: 'Outline', exact: true })],
         ['Status', bar.getByRole('button', { name: 'Change status' })],
       ] as const;
