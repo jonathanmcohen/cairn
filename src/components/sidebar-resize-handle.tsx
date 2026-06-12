@@ -1,8 +1,8 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { applySidebarCollapsedOnMount } from '@/components/sidebar-collapse';
 import { applySidebarDensity, getSidebarDensity } from '@/components/sidebar/density-tokens';
+import { applySidebarCollapsedOnMount } from '@/components/sidebar-collapse';
 import { useT } from '@/lib/i18n/provider';
 
 // v0.10.2 S1 — bounds widened from [200, 480] to [56, 400]: 56px matches the
