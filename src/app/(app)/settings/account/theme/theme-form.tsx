@@ -1,7 +1,13 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useEffect, useMemo, useState, useTransition } from 'react';
 import { toast } from 'sonner';
+import {
+  applySidebarDensity,
+  getSidebarDensity,
+  type SidebarDensity,
+  setSidebarDensity,
+} from '@/components/sidebar/density-tokens';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,6 +38,15 @@ export function ThemeForm({ initial }: ThemeFormProps) {
   const [hexEdited, setHexEdited] = useState<boolean>(initial.accent.startsWith('#'));
   const [fontFamily, setFontFamily] = useState<FontFamily>(initial.fontFamily);
   const [pageWidth, setPageWidth] = useState<PageWidth>(initial.pageWidth);
+  // S2 — sidebar density is a PER-DEVICE preference (localStorage, mirroring
+  // the S1 sidebar-width precedent), unlike accent/font/width which persist
+  // server-side via /api/settings/theme. It applies immediately on selection —
+  // no Save round-trip — so it deliberately stays out of save() below.
+  // SSR renders 'comfortable'; the mount effect syncs the persisted value.
+  const [density, setDensityState] = useState<SidebarDensity>('comfortable');
+  useEffect(() => {
+    setDensityState(getSidebarDensity());
+  }, []);
   const [pending, startTransition] = useTransition();
 
   const activePresetHex = ACCENT_PRESETS.find((p) => p.id === accent)?.hex ?? '';
@@ -159,6 +174,27 @@ export function ThemeForm({ initial }: ThemeFormProps) {
               onClick={() => setPageWidth(w)}
             >
               {w}
+            </Button>
+          ))}
+        </div>
+      </fieldset>
+
+      <fieldset className="space-y-2">
+        <Label>{t('theme.density.label')}</Label>
+        <div className="flex gap-2">
+          {(['comfortable', 'compact'] as const).map((d) => (
+            <Button
+              key={d}
+              type="button"
+              data-testid={`density-${d}`}
+              variant={density === d ? 'default' : 'outline'}
+              onClick={() => {
+                setDensityState(d);
+                setSidebarDensity(d);
+                applySidebarDensity(d);
+              }}
+            >
+              {t(`theme.density.${d}`)}
             </Button>
           ))}
         </div>
