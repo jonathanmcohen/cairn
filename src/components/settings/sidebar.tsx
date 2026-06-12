@@ -1,18 +1,22 @@
 'use client';
 
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useT } from '@/lib/i18n/provider';
 
-type SubPage = { id: string; label: string; href: Route };
+type SubPage = { id: string; label: string; href: Route; group?: string };
+/** Collapsible sub-group header inside a section (v0.10.2 P10 — Admin only). */
+type SubGroup = { id: string; label: string };
 type Section = {
   id: string;
   label: string;
   href: Route;
   children?: SubPage[];
+  /** When present, children render under collapsible group headers (by `group`). */
+  groups?: SubGroup[];
 };
 
 export function SettingsSidebar({
@@ -33,86 +37,114 @@ export function SettingsSidebar({
   // Developer entries are gone; the Developer connectors panel still cross-links
   // the chat-bridge form as a rail).
   const sections = useMemo<Section[]>(() => {
+    // v0.10.2 P10 — the Admin section grew to 16 flat entries; they now render
+    // under six collapsible sub-groups. `group` keys an entry into a SubGroup
+    // below; array order within a group is the render order.
     const adminChildren: SubPage[] = [
-      {
-        id: 'admin-audit',
-        label: t('settings.nav.admin.audit'),
-        href: '/settings/admin/audit' as Route,
-      },
+      // --- Identity ---
       // Dedicated workspace user-management surface (audit item A). Replaces
       // the old cross-link into Workspace > Members.
       {
         id: 'admin-members',
         label: t('settings.nav.admin.members'),
         href: '/settings/admin/users' as Route,
+        group: 'identity',
       },
+      // SSO console now lives inside the settings hub (audit item B).
       {
-        id: 'admin-siem',
-        label: t('settings.nav.admin.siem'),
-        href: '/settings/admin/siem' as Route,
-      },
-      {
-        id: 'admin-federated',
-        label: t('settings.nav.admin.federated'),
-        href: '/settings/admin/federated' as Route,
-      },
-      {
-        id: 'admin-webhooks',
-        label: t('settings.nav.admin.webhooks'),
-        href: '/settings/admin/webhooks' as Route,
+        id: 'admin-sso',
+        label: t('settings.nav.admin.sso'),
+        href: '/settings/admin/sso' as Route,
+        group: 'identity',
       },
       {
         id: 'admin-mfa',
         label: t('settings.nav.admin.mfa'),
         href: '/settings/admin/mfa' as Route,
+        group: 'identity',
+      },
+      // --- Audit & Compliance ---
+      {
+        id: 'admin-audit',
+        label: t('settings.nav.admin.audit'),
+        href: '/settings/admin/audit' as Route,
+        group: 'audit',
       },
       {
-        id: 'admin-upgrade',
-        label: t('settings.nav.admin.upgrade'),
-        href: '/settings/admin/upgrade' as Route,
+        id: 'admin-siem',
+        label: t('settings.nav.admin.siem'),
+        href: '/settings/admin/siem' as Route,
+        group: 'audit',
       },
+      // --- Integrations ---
       {
-        id: 'admin-api-keys',
-        label: t('settings.nav.admin.apiKeys'),
-        href: '/settings/admin/api-keys' as Route,
+        id: 'admin-webhooks',
+        label: t('settings.nav.admin.webhooks'),
+        href: '/settings/admin/webhooks' as Route,
+        group: 'integrations',
       },
-      // SSO console now lives inside the settings hub (audit item B).
-      { id: 'admin-sso', label: t('settings.nav.admin.sso'), href: '/settings/admin/sso' as Route },
       // Chat-bridge console — canonical home inside the hub (v0.9.9 C5 #186).
       {
         id: 'admin-chat-bridge',
         label: t('settings.nav.admin.chatBridge'),
         href: '/settings/admin/chat-bridge' as Route,
+        group: 'integrations',
       },
-      // Instance backup snapshots (v0.10.0 C1).
       {
-        id: 'admin-backups',
-        label: t('settings.nav.admin.backups'),
-        href: '/settings/admin/backups' as Route,
+        id: 'admin-federated',
+        label: t('settings.nav.admin.federated'),
+        href: '/settings/admin/federated' as Route,
+        group: 'integrations',
       },
       // Instance OAuth client-application registry (v0.10.0 D3).
       {
         id: 'admin-oauth-clients',
         label: t('settings.nav.admin.oauthClients'),
         href: '/settings/admin/oauth-clients' as Route,
+        group: 'integrations',
       },
-      // Instance health/readiness panel (v0.10.0 D4).
+      // --- Quotas ---
       {
-        id: 'admin-health',
-        label: t('settings.nav.admin.health'),
-        href: '/settings/admin/health' as Route,
+        id: 'admin-api-keys',
+        label: t('settings.nav.admin.apiKeys'),
+        href: '/settings/admin/api-keys' as Route,
+        group: 'quotas',
       },
       // Workspace storage usage + quota admin (v0.10.0 D6).
       {
         id: 'admin-storage',
         label: t('settings.nav.admin.storage'),
         href: '/settings/admin/storage' as Route,
+        group: 'quotas',
+      },
+      // --- Operations ---
+      // Instance backup snapshots (v0.10.0 C1).
+      {
+        id: 'admin-backups',
+        label: t('settings.nav.admin.backups'),
+        href: '/settings/admin/backups' as Route,
+        group: 'operations',
+      },
+      // Instance health/readiness panel (v0.10.0 D4).
+      {
+        id: 'admin-health',
+        label: t('settings.nav.admin.health'),
+        href: '/settings/admin/health' as Route,
+        group: 'operations',
       },
       // Read-only schema-migration status panel (v0.10.0 D7).
       {
         id: 'admin-migrations',
         label: t('settings.nav.admin.migrations'),
         href: '/settings/admin/migrations' as Route,
+        group: 'operations',
+      },
+      // --- Billing ---
+      {
+        id: 'admin-upgrade',
+        label: t('settings.nav.admin.upgrade'),
+        href: '/settings/admin/upgrade' as Route,
+        group: 'billing',
       },
     ];
     // E2E toggle is gated behind the build-time flag; only surface it when on.
@@ -121,8 +153,18 @@ export function SettingsSidebar({
         id: 'admin-encryption',
         label: t('settings.nav.admin.encryption'),
         href: '/settings/admin/encryption' as Route,
+        group: 'identity',
       });
     }
+    // Collapsible Admin sub-group headers, in render order (v0.10.2 P10).
+    const adminGroups: SubGroup[] = [
+      { id: 'identity', label: t('settings.nav.admin.group.identity') },
+      { id: 'audit', label: t('settings.nav.admin.group.audit') },
+      { id: 'integrations', label: t('settings.nav.admin.group.integrations') },
+      { id: 'quotas', label: t('settings.nav.admin.group.quotas') },
+      { id: 'operations', label: t('settings.nav.admin.group.operations') },
+      { id: 'billing', label: t('settings.nav.admin.group.billing') },
+    ];
 
     return [
       // G17 (#164) — full-page search lives outside the settings hub at /search;
@@ -187,6 +229,7 @@ export function SettingsSidebar({
         // it; the nav targets the leaf directly regardless.
         href: '/settings/admin/audit' as Route,
         children: adminChildren,
+        groups: adminGroups,
       },
       {
         id: 'developer',
@@ -251,6 +294,17 @@ export function SettingsSidebar({
   // Role-gate the Admin entry: /settings/admin pages 403 for non-admins.
   const visible = sections.filter((s) => s.id !== 'admin' || isAdmin);
 
+  // v0.10.2 P10 — per-mount expand/collapse overrides for the Admin sub-groups
+  // (no persistence). The default state is derived from the route: the group
+  // containing the ACTIVE admin page is expanded (deep-link auto-expand), the
+  // rest start collapsed. A user toggle wins over the derived default.
+  const [groupOverrides, setGroupOverrides] = useState<Record<string, boolean>>({});
+  const adminChildren = sections.find((s) => s.id === 'admin')?.children;
+  const activeAdminGroup = adminChildren?.find(
+    (c) => pathname === c.href || pathname.startsWith(`${c.href}/`),
+  )?.group;
+  const isGroupExpanded = (id: string) => groupOverrides[id] ?? id === activeAdminGroup;
+
   // Arrow-up/down navigation. Listens on the nav container; wraps at edges.
   useEffect(() => {
     const root = containerRef.current;
@@ -294,6 +348,24 @@ export function SettingsSidebar({
           s.id === 'admin'
             ? pathname.startsWith('/settings/admin')
             : pathname === s.href || pathname.startsWith(`${s.href}/`);
+        const renderChild = (c: SubPage) => {
+          const childActive = pathname === c.href || pathname.startsWith(`${c.href}/`);
+          return (
+            <Link
+              key={c.id}
+              href={c.href}
+              data-settings-nav
+              aria-current={childActive ? 'page' : undefined}
+              className={`flex min-h-11 items-center rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring ${
+                childActive
+                  ? 'bg-accent font-medium text-accent-foreground'
+                  : 'text-muted-foreground hover:bg-accent/50'
+              }`}
+            >
+              {c.label}
+            </Link>
+          );
+        };
         return (
           <div key={s.id}>
             <Link
@@ -309,27 +381,50 @@ export function SettingsSidebar({
             >
               {s.label}
             </Link>
-            {active && s.children ? (
+            {active && s.children && s.groups ? (
+              // v0.10.2 P10 — collapsible sub-groups (Admin). A collapsed
+              // group UNMOUNTS its links so both the arrow-key ring
+              // (a[data-settings-nav] querySelectorAll) and the tab order
+              // skip them. Header buttons are tab-reachable but deliberately
+              // NOT part of the arrow ring.
               <div className="mt-1 ml-3 space-y-1 border-l pl-2">
-                {s.children.map((c) => {
-                  const childActive = pathname === c.href || pathname.startsWith(`${c.href}/`);
+                {s.groups.map((g) => {
+                  const groupChildren = s.children?.filter((c) => c.group === g.id) ?? [];
+                  if (groupChildren.length === 0) return null;
+                  const expanded = isGroupExpanded(g.id);
+                  const panelId = `settings-admin-group-panel-${g.id}`;
                   return (
-                    <Link
-                      key={c.id}
-                      href={c.href}
-                      data-settings-nav
-                      aria-current={childActive ? 'page' : undefined}
-                      className={`flex min-h-11 items-center rounded px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring ${
-                        childActive
-                          ? 'bg-accent font-medium text-accent-foreground'
-                          : 'text-muted-foreground hover:bg-accent/50'
-                      }`}
-                    >
-                      {c.label}
-                    </Link>
+                    <div key={g.id}>
+                      <button
+                        type="button"
+                        data-testid={`admin-group-${g.id}`}
+                        aria-expanded={expanded}
+                        // Collapsed → the panel is unmounted; axe allows the
+                        // dangling idref while aria-expanded="false".
+                        aria-controls={panelId}
+                        onClick={() =>
+                          setGroupOverrides((prev) => ({ ...prev, [g.id]: !expanded }))
+                        }
+                        className="flex min-h-11 w-full items-center gap-1.5 rounded px-2 py-2 text-left font-medium text-muted-foreground text-xs uppercase tracking-wide outline-none hover:bg-accent/50 hover:text-foreground focus:ring-2 focus:ring-ring"
+                      >
+                        {expanded ? (
+                          <ChevronDown aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                        ) : (
+                          <ChevronRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />
+                        )}
+                        {g.label}
+                      </button>
+                      {expanded ? (
+                        <div id={panelId} className="space-y-1">
+                          {groupChildren.map(renderChild)}
+                        </div>
+                      ) : null}
+                    </div>
                   );
                 })}
               </div>
+            ) : active && s.children ? (
+              <div className="mt-1 ml-3 space-y-1 border-l pl-2">{s.children.map(renderChild)}</div>
             ) : null}
           </div>
         );
