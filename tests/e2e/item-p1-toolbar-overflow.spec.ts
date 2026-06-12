@@ -103,7 +103,9 @@ async function findTreeRow(page: PwPage, title: string) {
   // time until the row mounts.
   for (let i = 0; i < 80; i++) {
     if ((await row.count()) > 0) {
-      await row.scrollIntoViewIfNeeded();
+      // No scrollIntoViewIfNeeded: the virtualizer re-keys rows and a handle
+      // can detach between count() and the scroll (the H3 lesson). Attribute
+      // assertions don't need visibility.
       return row;
     }
     const atTop = await page.evaluate((iteration) => {
