@@ -529,11 +529,13 @@ surface (grep). No semantic info-blue token exists (`globals.css:276` is only
 the `data-accent="blue"` theme).
 
 **Gap to build:** the substantive goal (non-alarming tone) is already shipped
-— arguably zero work. **GO-time decision: drop this item, or** do the literal
-info-blue restyle: add a semantic `--info` token pair to the `@theme` block of
-`globals.css` (follow the `--success`/`--warning` pattern at `:29-32`/`:56-59`)
-rather than hard-coding `blue-*` classes, restyle the one shared component
-(covers both pages), optionally add an Info icon. No new strings.
+— arguably zero work. **GO decision (taken): literal info-blue restyle.** The
+item text explicitly asks for info-blue, the gray-vs-blue distinction is a
+real visible delta, and the `--info` token pair is reusable. Added `--info`/
+`--info-foreground` to `globals.css` (`:root`, `.dark`, `@theme inline`
+mappings — the `--success`/`--warning` pattern), restyled the one shared
+component (covers both pages) with `border-info/40 bg-info/10` + lucide Info
+icon (aria-hidden). No new strings.
 
 **Files:** `src/components/admin/encryption-disabled-notice.tsx`,
 `src/app/globals.css`.
