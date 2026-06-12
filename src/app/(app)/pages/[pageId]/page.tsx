@@ -26,6 +26,7 @@ import type * as schema from '@/db/schema';
 import type { PageStatus } from '@/db/schema';
 import { auth } from '@/lib/auth/config';
 import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
+import { isCollabBridgeConfigured } from '@/lib/collab/publish-client';
 import { userColor } from '@/lib/collab/user-color';
 import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
@@ -200,6 +201,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           lockedUntilIso={lockState.lockedUntil ? lockState.lockedUntil.toISOString() : null}
           initialDisableBibliography={pageMeta.disable_bibliography ?? false}
           citationStyle={pageMeta.citation_style ?? 'apa'}
+          collabBridgeConfigured={isCollabBridgeConfigured()}
         />
       </PageModeShell>
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the

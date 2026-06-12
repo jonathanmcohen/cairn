@@ -1207,5 +1207,7 @@
   "tour.step.help.title": "Take the tour again",
   "tour.step.help.body": "You can replay this walkthrough anytime from here.",
   "settings.nav.backToWorkspace": "Back to workspace",
-  "trash.untitled": "Untitled"
+  "trash.untitled": "Untitled",
+  "editor.bridgeWarning.label": "API writes need reload",
+  "editor.bridgeWarning.title": "The collab bridge is not configured: page edits made through the REST API are saved but will not appear in open editors until they reload."
 }
