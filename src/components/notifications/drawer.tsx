@@ -257,29 +257,38 @@ export function NotificationDrawer({
           )}
         </div>
 
-        <div className="flex items-center justify-between border-t p-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            disabled={markingAll}
-            onClick={() => void onMarkAllRead()}
+        {/* v0.10.2 P15 — no footer in the empty state: Mark-all-read has
+            nothing to act on and See-all leads to the same caught-up copy.
+            Conditioned on items.length (not unread count) so the footer stays
+            once read items exist. */}
+        {items.length > 0 ? (
+          <div
+            data-testid="notification-drawer-footer"
+            className="flex items-center justify-between border-t p-3"
           >
-            {markingAll ? (
-              <Loader2
-                aria-hidden="true"
-                className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
-              />
-            ) : null}
-            Mark all read
-          </Button>
-          <Link
-            href={'/notifications' as Route}
-            className="text-primary text-sm underline-offset-4 hover:underline"
-            onClick={() => onOpenChange(false)}
-          >
-            See all
-          </Link>
-        </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={markingAll}
+              onClick={() => void onMarkAllRead()}
+            >
+              {markingAll ? (
+                <Loader2
+                  aria-hidden="true"
+                  className="mr-2 h-4 w-4 animate-spin motion-reduce:animate-none"
+                />
+              ) : null}
+              Mark all read
+            </Button>
+            <Link
+              href={'/notifications' as Route}
+              className="text-primary text-sm underline-offset-4 hover:underline"
+              onClick={() => onOpenChange(false)}
+            >
+              See all
+            </Link>
+          </div>
+        ) : null}
       </div>
     </>
   );

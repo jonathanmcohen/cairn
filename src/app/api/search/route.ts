@@ -5,6 +5,7 @@ import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { type SearchFilters, searchPages } from '@/lib/pages/search';
+import { countPendingEmbeddings } from '@/lib/search/embedding-status';
 import { federatedSearch } from '@/lib/search/federated';
 import { filtersFromOperators, parseQuery } from '@/lib/search/operators';
 import { expandTemplates } from '@/lib/search/operators-template';
@@ -93,6 +94,15 @@ export async function GET(req: Request): Promise<Response> {
     // when configured.
     const includeAll = url.searchParams.get('include_all_workspaces') === 'true';
 
+    // v0.10.2 P18 — "still indexing" indicator. Fail-open: the search itself
+    // must never fail because the pending-embeddings count query failed.
+    let pendingEmbeddings = 0;
+    try {
+      pendingEmbeddings = await countPendingEmbeddings(getDb(), ctx.workspaceId);
+    } catch (err) {
+      console.warn('search: pending-embeddings count failed (returning 0):', err);
+    }
+
     try {
       // Federated path: used when the user explicitly opts in (admin
       // cross-workspace) OR when this instance is configured with a
@@ -113,6 +123,7 @@ export async function GET(req: Request): Promise<Response> {
           results: fed.local,
           peer_results: fed.peer,
           warnings: [...result.warnings, ...expanded.warnings],
+          pending_embeddings: pendingEmbeddings,
         });
       }
 
@@ -126,6 +137,7 @@ export async function GET(req: Request): Promise<Response> {
       return NextResponse.json({
         results,
         warnings: [...result.warnings, ...expanded.warnings],
+        pending_embeddings: pendingEmbeddings,
       });
     } catch (err) {
       return NextResponse.json(
