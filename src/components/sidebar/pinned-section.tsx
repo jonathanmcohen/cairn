@@ -46,7 +46,10 @@ export function PinnedSection() {
 
   return (
     <section data-testid="pinned-section" className="mb-3 px-2">
-      <div className="mb-1 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {/* v0.10.2 S4 — font-semibold dropped: Pinned was the lone semibold
+          outlier among the five section headers; all now share 10px/60%
+          regular weight. */}
+      <div className="mb-1 px-2 text-[length:var(--cairn-sidebar-heading)] uppercase tracking-wide text-muted-foreground/60">
         Pinned
       </div>
       <ul>

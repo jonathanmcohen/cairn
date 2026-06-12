@@ -132,12 +132,14 @@
 
   /* v0.9.11 #130 — sidebar density. Body links/titles drop from text-sm
      (14px/20px) to 13px/18px with 0.1px tracking for legibility at the smaller
-     size. Tokenized here so the size lives in one place. Section labels stay at
-     12px (text-xs) and the kbd/badge at 10px — only BODY text shrinks. These
-     change font only; interactive rows keep min-h-11 (44px touch floor), so the
-     a11y touch-target gate is unaffected. */
+     size. Tokenized here so the size lives in one place. Section headers sit
+     at 10px (--cairn-sidebar-heading, v0.10.2 S4 — previously a drifting
+     11px/12px mix) and the kbd/badge at 10px. These change font only;
+     interactive rows keep min-h-11 (44px touch floor), so the a11y
+     touch-target gate is unaffected. */
   --cairn-sidebar-text: 13px;
   --cairn-sidebar-leading: 18px;
+  --cairn-sidebar-heading: 10px;
   /* v0.9.13 C-v3 — sidebar padding/gap tokens. nav px = p-1.5 (6px);
      section gap = mb-1.5 (6px). Tokenized to mirror the text/leading pattern. */
   --cairn-sidebar-px: 6px;
