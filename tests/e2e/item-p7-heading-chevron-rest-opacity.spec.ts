@@ -36,9 +36,7 @@ test.describe('P7 — heading collapse chevron rest opacity', () => {
       .first()
       .evaluate((el) => Number.parseFloat(getComputedStyle(el).opacity));
     expect(restOpacity).toBeCloseTo(0.3, 2);
-    const restPointer = await chevrons
-      .first()
-      .evaluate((el) => getComputedStyle(el).pointerEvents);
+    const restPointer = await chevrons.first().evaluate((el) => getComputedStyle(el).pointerEvents);
     expect(restPointer).not.toBe('none');
 
     // Direct hover → 100% (await the 120ms transition via polling).
