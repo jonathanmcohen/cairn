@@ -5,6 +5,28 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.10.1] - 2026-06-11
+
+Two quality-of-life fixes for self-hosted deployments, straight off the
+v0.10.0 punch list.
+
+### Added
+
+- **Manual OAuth client provisioning:** admins can create OAuth client
+  credentials directly from Settings → Admin → OAuth clients — name,
+  redirect URIs, and a public/confidential toggle. The client secret is
+  shown exactly once at creation (sha256 at rest) with copy buttons, and
+  confidential clients gain a rotate-secret row action. This unblocks MCP
+  clients on LAN-only deployments that cannot use RFC 7591 dynamic
+  registration.
+
+### Fixed
+
+- **Settings navigation dead end:** the settings hub had no route back to
+  the app — the workspace sidebar unmounts on `/settings/*` and every nav
+  target stayed inside the hub. The settings sidebar now leads with a
+  "Back to workspace" link (keyboard-navigable, first in arrow-key order).
+
 ## [0.10.0] - 2026-06-11
 
 The audit-driven hardening + net-new release: 33 items across seven plans
