@@ -57,14 +57,17 @@ describe('listUserWorkspaces', () => {
       .insert(schema.workspaceMembers)
       .values({ workspaceId: b.id, userId, role: 'viewer', joinedAt: new Date(Date.now() + 1000) });
 
-    const list = await listUserWorkspaces(db, userId);
+    const list = await listUserWorkspaces(db, userId, { secret: 'test-secret' });
     expect(list).toHaveLength(2);
     expect(list[0]).toMatchObject({ id: a.id, name: 'Alpha', role: 'owner' });
     expect(list[1]).toMatchObject({ id: b.id, name: 'Beta', role: 'viewer' });
+    // S6 — no `file::` icon set → no signed URL minted.
+    expect(list[0]?.iconUrl).toBeNull();
+    expect(list[1]?.iconUrl).toBeNull();
   });
 
   it('returns an empty array for a member-less user', async () => {
     const userId = await makeUser();
-    expect(await listUserWorkspaces(db, userId)).toEqual([]);
+    expect(await listUserWorkspaces(db, userId, { secret: 'test-secret' })).toEqual([]);
   });
 });
