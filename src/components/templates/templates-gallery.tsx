@@ -67,6 +67,9 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to use template');
+    } finally {
+      // router.refresh() preserves client state, so a no-navigation success
+      // path must still release the button — busy stranded forever here (B1).
       setBusy(null);
     }
   }
@@ -133,7 +136,7 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
             </h2>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4">
               {rows.map((tpl) => (
-                <Card key={tpl.id} className="flex flex-col">
+                <Card key={tpl.id} data-testid="template-card" className="flex flex-col">
                   <CardHeader>
                     <CardTitle className="text-base">{tpl.name}</CardTitle>
                     <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
