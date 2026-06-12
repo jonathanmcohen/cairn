@@ -1,4 +1,5 @@
 import { openQuickCapture } from '@/components/quick-capture/controller';
+import { toggleSidebarCollapsed } from '@/components/sidebar-collapse';
 import { registerShortcut } from '@/lib/shortcuts/registry';
 
 export type ShortcutHandlers = {
@@ -84,6 +85,20 @@ export function ensureAppShortcuts(): void {
     run: () => {
       handlers?.export();
     },
+  });
+
+  // v0.10.2 S1 — sidebar collapse toggle. Mod+\ was unused in the 'global'
+  // scope. The handler is a module-level function (like openQuickCapture), so
+  // no dispatcher handler plumbing is needed; it flips the
+  // `cairn-sidebar-collapsed` root class + `cairn:sidebar-collapsed`
+  // localStorage flag and never touches the persisted resize width.
+  registerShortcut({
+    id: 'sidebar.toggle',
+    keys: 'Mod+\\',
+    scope: 'global',
+    kind: 'action',
+    labelKey: 'shortcut.toggleSidebar',
+    run: toggleSidebarCollapsed,
   });
 
   registerShortcut({
