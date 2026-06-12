@@ -6,8 +6,9 @@ import { useState } from 'react';
 import { resetPageFocusMode } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
-export function NewPageButton({ parentId }: { parentId?: string }) {
+export function NewPageButton({ parentId, className }: { parentId?: string; className?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const allowed = useActionAllowed('page-create');
@@ -40,7 +41,7 @@ export function NewPageButton({ parentId }: { parentId?: string }) {
       disabled={busy || !allowed}
       aria-label="New page"
       title={allowed ? 'New page' : 'Unavailable offline'}
-      className="h-11 w-11"
+      className={cn('h-11 w-11', className)}
     >
       <Plus aria-hidden="true" className="h-4 w-4" />
     </Button>

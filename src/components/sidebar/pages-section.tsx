@@ -19,7 +19,10 @@ export function PagesSection({ tree, spaces }: { tree: FlatPageNode[]; spaces?: 
   const t = useT();
   const [collapseAll, setCollapseAll] = useState(false);
   return (
-    <section className="flex min-h-0 flex-1 flex-col">
+    // v0.10.2 S5 — named group: hovering anywhere in the PAGES section
+    // reveals the header action icons (30% at rest). Named so it cannot
+    // collide with row-level `group` hover reveals inside the tree.
+    <section className="group/pages flex min-h-0 flex-1 flex-col">
       <div
         data-pages-header=""
         className="sticky top-0 z-10 mb-0.5 flex min-h-[28px] items-center justify-between gap-1 bg-card px-2 py-0.5 pointer-coarse:min-h-11 pointer-coarse:py-1.5"
@@ -35,7 +38,7 @@ export function PagesSection({ tree, spaces }: { tree: FlatPageNode[]; spaces?: 
             type="button"
             variant="ghost"
             size="icon"
-            className="h-6 w-6"
+            className="h-6 w-6 opacity-30 transition-opacity focus-visible:opacity-100 group-hover/pages:opacity-100"
             aria-pressed={collapseAll}
             aria-label={collapseAll ? t('sidebar.pages.expandAll') : t('sidebar.pages.collapseAll')}
             onClick={() => setCollapseAll((v) => !v)}
@@ -46,7 +49,10 @@ export function PagesSection({ tree, spaces }: { tree: FlatPageNode[]; spaces?: 
               <ChevronsDownUp aria-hidden="true" className="h-4 w-4" />
             )}
           </Button>
-          <NewPageButton />
+          {/* Dimming injected HERE, not in NewPageButton — the button is
+              reused outside this header (workspace landing) where it must
+              stay full-opacity. */}
+          <NewPageButton className="opacity-30 transition-opacity focus-visible:opacity-100 group-hover/pages:opacity-100" />
         </div>
       </div>
       <div className="min-h-0 flex-1">
