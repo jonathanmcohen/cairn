@@ -15,7 +15,7 @@ export function SidebarRecents({ recents }: { recents: PrefEntry[] }) {
     <section aria-label="Recent pages" className="mb-1.5">
       <div className="mb-1 flex items-center gap-2 px-2">
         <Clock aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
-        <p className="text-[length:var(--cairn-sidebar-heading)] uppercase tracking-wide text-muted-foreground/60">
+        <p className="text-[length:var(--cairn-sidebar-heading)] uppercase tracking-wide text-foreground/60">
           Recents
         </p>
       </div>
