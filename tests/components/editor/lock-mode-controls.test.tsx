@@ -1,15 +1,18 @@
 // @vitest-environment jsdom
 //
 // D3 / #188 — under lock the suggest-edits toggle stays mounted but disabled
-// (not removed) and the bibliography toggle stays rendered. The full <Editor>
-// shell mounts TipTap + Yjs collab in jsdom, which is heavy and tickles a known
-// Radix focus-scope teardown flake; this exercises the two leaf controls
-// directly (the same components editor.tsx mounts) plus the gating booleans,
-// which is where the lock logic lives.
-import { cleanup, render, screen } from '@testing-library/react';
+// (not removed). The full <Editor> shell mounts TipTap + Yjs collab in jsdom,
+// which is heavy and tickles a known Radix focus-scope teardown flake; this
+// exercises the leaf control directly (the same component editor.tsx mounts)
+// plus the gating booleans, which is where the lock logic lives.
+//
+// v0.10.2 P1 — the bibliography toggle moved to the "…" page menu; its lock
+// contract is now "the menu item stays enabled, the editor-side event no-ops
+// while locked", exercised here via useBibliographyVisibility.
+import { act, cleanup, render, renderHook, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { BibliographyToggle } from '@/components/editor/bibliography-toggle';
 import { SuggestionToolbar } from '@/components/editor/suggestion-toolbar';
+import { useBibliographyVisibility } from '@/components/editor/use-bibliography-visibility';
 import { I18nProvider } from '@/lib/i18n/provider';
 import enMessages from '../../../messages/en.json';
 
@@ -60,38 +63,34 @@ describe('lock-mode editor controls (#188)', () => {
     expect((btn as HTMLButtonElement).disabled).toBe(false);
   });
 
-  it('renders the bibliography toggle regardless of lock state', () => {
-    render(
-      wrap(
-        <BibliographyToggle
-          pageId="p1"
-          initialDisabled={false}
-          citationCount={2}
-          onChange={noop}
-        />,
-      ),
+  // v0.10.0 E6 extended the #188 contract to the bibliography toggle;
+  // v0.10.2 P1 re-expresses it event-side: the page-menu item stays enabled,
+  // and the editor ignores its `cairn:bibliography:toggle` event while locked.
+  it('bibliography toggles via the page-menu event when not locked', () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }) as Response);
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const { result } = renderHook(() =>
+      useBibliographyVisibility({ pageId: 'p1', initialDisabled: false, canToggle: true }),
     );
-    const btn = screen.getByRole('button', { name: /bibliography/i });
-    expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(false);
+    act(() => {
+      window.dispatchEvent(new CustomEvent('cairn:bibliography:toggle'));
+    });
+    expect(result.current).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    vi.unstubAllGlobals();
   });
 
-  // v0.10.0 E6 — the consolidated toolbar extends the #188 contract to the
-  // bibliography toggle explicitly: mounted but disabled while locked.
-  it('keeps the bibliography toggle present but disabled when locked', () => {
-    render(
-      wrap(
-        <BibliographyToggle
-          pageId="p1"
-          initialDisabled={false}
-          citationCount={2}
-          onChange={noop}
-          disabled
-        />,
-      ),
+  it('ignores the bibliography toggle event while locked', () => {
+    const fetchMock = vi.fn(async () => ({ ok: true }) as Response);
+    vi.stubGlobal('fetch', fetchMock as unknown as typeof fetch);
+    const { result } = renderHook(() =>
+      useBibliographyVisibility({ pageId: 'p1', initialDisabled: false, canToggle: false }),
     );
-    const btn = screen.getByRole('button', { name: /bibliography/i });
-    expect(btn).not.toBeNull();
-    expect((btn as HTMLButtonElement).disabled).toBe(true);
+    act(() => {
+      window.dispatchEvent(new CustomEvent('cairn:bibliography:toggle'));
+    });
+    expect(result.current).toBe(false);
+    expect(fetchMock).not.toHaveBeenCalled();
+    vi.unstubAllGlobals();
   });
 });

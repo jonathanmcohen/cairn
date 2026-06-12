@@ -150,6 +150,7 @@
   "pageMenu.confirmTrash": "نقل هذه الصفحة إلى المهملات؟",
   "pageMenu.moveTo": "النقل إلى…",
   "pageMenu.moveToTopLevel": "النقل إلى المستوى الأعلى",
+  "pageMenu.unlock": "إلغاء قفل الصفحة",
   "moveTo.title": "نقل الصفحة إلى…",
   "moveTo.description": "اختر صفحة وجهة أو انقلها إلى المستوى الأعلى.",
   "moveTo.searchPlaceholder": "البحث عن الصفحات…",

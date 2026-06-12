@@ -10,11 +10,9 @@ import { useAnnounce } from '@/components/a11y/live-region';
 import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
-import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
 import { computeDiffPreview } from '@/lib/suggestions/diff-preview';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
-import { BibliographyToggle } from './bibliography-toggle';
 import { BlockContextMenu } from './block-context-menu';
 import { BulkUploader } from './bulk-uploader';
 import { CollabOfflineBanner } from './collab-offline-banner';
@@ -34,6 +32,7 @@ import type { SuggestionAutoMarkStorage } from './suggestion-auto-mark';
 import { SuggestionToolbar } from './suggestion-toolbar';
 import { type OpenSuggestion, SuggestionsDrawer } from './suggestions-drawer';
 import { EDITOR_TOOLBAR_SLOT_ID } from './toolbar-slot';
+import { useBibliographyVisibility } from './use-bibliography-visibility';
 import { useBulkDropHandler } from './use-bulk-drop-handler';
 import { useCollabDoc } from './use-collab-doc';
 
@@ -197,8 +196,16 @@ export function Editor({
   const [resolvable, setResolvable] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSuggestions, setOpenSuggestions] = useState<OpenSuggestion[]>([]);
-  // v0.9.7 G19 #166 — live "show bibliography" state, driven by the strip toggle.
-  const [bibDisabled, setBibDisabled] = useState(initialDisableBibliography);
+  // v0.9.7 G19 #166 / v0.10.2 P1 — live "show bibliography" state. The toggle
+  // moved into the "…" page menu, which dispatches `cairn:bibliography:toggle`;
+  // the hook listens, flips + persists, and no-ops while a lock suppresses
+  // editing (the D3/#188 contract the old toolbar toggle expressed as
+  // mounted-but-disabled).
+  const bibDisabled = useBibliographyVisibility({
+    pageId,
+    initialDisabled: initialDisableBibliography,
+    canToggle: mountableEditable && !editLocked,
+  });
   const activeSuggestionRef = useRef<string | null>(null);
 
   // Uploads hit the server, so they are blocked offline (bounded-offline gate).
@@ -632,15 +639,16 @@ export function Editor({
   // (aria-pressed + bg-primary fill) so the cluster reads as distinct,
   // structured controls rather than a row of bare labels — IN EVERY ROLE. The
   // presence+status+outline group always renders (editor AND viewer); the
-  // suggest-edits + bibliography group is gated on `mountableEditable` (#188 —
-  // it stays mounted-but-disabled under lock instead of vanishing, and E6
-  // extends the same `editLocked` disable to the bibliography toggle), and its
-  // trailing separator lives INSIDE that gate so it never dangles when a
-  // viewer omits the group. The status pill rests as a hairline-bordered chip
-  // (no `bg-muted` fill, which read as an active/selected state at rest).
+  // suggest-edits group is gated on `mountableEditable` (#188 — it stays
+  // mounted-but-disabled under lock instead of vanishing), and its trailing
+  // separator lives INSIDE that gate so it never dangles when a viewer omits
+  // the group. The status pill rests as a hairline-bordered chip (no
+  // `bg-muted` fill, which read as an active/selected state at rest).
   // v0.10.0 E6 — this group no longer renders as its own strip above the
   // editor body: it portals into the page action bar's reserved slot (one
   // toolbar row). Handlers/state are unchanged and stay in this component.
+  // v0.10.2 P1 — the bibliography toggle left this group for the "…" page
+  // menu (see useBibliographyVisibility).
   const toolbarControls = (
     <>
       {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
@@ -657,13 +665,6 @@ export function Editor({
             onAccept={(id) => void resolve('accept', id)}
             onReject={(id) => void resolve('reject', id)}
             onOpenDrawer={() => setDrawerOpen(true)}
-            disabled={editLocked}
-          />
-          <BibliographyToggle
-            pageId={pageId}
-            initialDisabled={initialDisableBibliography}
-            citationCount={editor ? aggregateCitations(editor.getJSON(), citationStyle).length : 0}
-            onChange={setBibDisabled}
             disabled={editLocked}
           />
           <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
