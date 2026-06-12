@@ -5,10 +5,12 @@ import { SettingsSidebar } from '@/components/settings/sidebar';
 import { I18nProvider } from '@/lib/i18n/provider';
 import en from '../../messages/en.json';
 
-// Render on an admin route so the Admin section is expanded and its children
-// are in the DOM (the section renders children only when active).
+// Render on the Members route itself so the Admin section is expanded AND the
+// Identity & access group is the active group (v0.10.2 P10 grouped the admin
+// children into collapsible panels that unmount when collapsed — a child link
+// is only in the DOM while its group is expanded).
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/settings/admin/audit',
+  usePathname: () => '/settings/admin/users',
 }));
 
 describe('Admin > Members nav child points at the dedicated users page', () => {
