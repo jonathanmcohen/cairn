@@ -40,10 +40,16 @@ beforeEach(async () => {
   });
 });
 
-afterEach(() => {
+afterEach(async () => {
   cleanup();
   editor.destroy();
   host.remove();
+  // Radix's focus-scope queues a 0ms setTimeout that dispatches a CustomEvent
+  // on unmount. If the file's last test ends before it fires, the timer runs
+  // against a torn-down jsdom realm and Vitest fails the whole shard with an
+  // unhandled "parameter 1 is not of type 'Event'" — the recurring
+  // components-1 flake. Flush one macrotask so the timer fires in-realm.
+  await new Promise((resolve) => setTimeout(resolve, 0));
 });
 
 function paragraphTexts() {
