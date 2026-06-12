@@ -1,5 +1,6 @@
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
+import { env } from '@/lib/env';
 import { listUserWorkspaces } from '@/lib/workspaces/list';
 import { SidebarContent } from './sidebar-content';
 import { SidebarResizeHandle } from './sidebar-resize-handle';
@@ -14,7 +15,9 @@ export const SIDEBAR_ASIDE_CLASS =
 export async function Sidebar({ workspaceId }: { workspaceId: string }) {
   const db = getDb();
   const ctx = await getAuthContext();
-  const workspaces = ctx ? await listUserWorkspaces(db, ctx.userId) : [];
+  const workspaces = ctx
+    ? await listUserWorkspaces(db, ctx.userId, { secret: env().AUTH_SECRET })
+    : [];
 
   return (
     // P19 #42 — width is driven by the `--cairn-sidebar-w` CSS var (set by

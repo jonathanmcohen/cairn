@@ -6,6 +6,7 @@ import { InlineIcon } from '@/components/page-icon-inline';
 import { WorkspaceCreateDialog } from '@/components/workspace-create-dialog';
 import type { MemberRole } from '@/lib/auth/require-role';
 import { useT } from '@/lib/i18n/provider';
+import { parseIcon } from '@/lib/pages/icon-format';
 
 export type SwitcherWorkspace = {
   id: string;
@@ -14,10 +15,57 @@ export type SwitcherWorkspace = {
   // Prefix-encoded icon ("emoji::🪨" / "file::<uuid>") or null. Rendered in the
   // trigger + row badge, falling back to the name's letter initial. (#142)
   icon: string | null;
+  // v0.10.2 S6 — server-minted signed `/api/files/<uuid>?sig=&exp=` URL for
+  // `file::` icons (see listUserWorkspaces), or null. Optional so older
+  // callers/tests without the field still compile; treated as null.
+  iconUrl?: string | null;
 };
 
 function initial(name: string): string {
   return (name.trim()[0] ?? '?').toUpperCase();
+}
+
+/**
+ * v0.10.2 S6 — the single icon chip used by BOTH the trigger and the dropdown
+ * rows (factored so they can't drift):
+ *  - signed `iconUrl` → the real image;
+ *  - emoji (or `file::` without a resolved URL — defensive for old callers) →
+ *    today's neutral InlineIcon badge, unchanged;
+ *  - no icon at all → letter initial on the ACCENT color.
+ */
+function WorkspaceChip({
+  icon,
+  iconUrl,
+  name,
+  className = '',
+}: {
+  icon: string | null;
+  iconUrl: string | null;
+  name: string;
+  className?: string;
+}) {
+  if (iconUrl) {
+    return (
+      // biome-ignore lint/performance/noImgElement: HMAC-signed expiring URL — bypasses next/image loader
+      <img
+        src={iconUrl}
+        alt=""
+        aria-hidden
+        className={`h-5 w-5 shrink-0 rounded object-cover ${className}`}
+      />
+    );
+  }
+  const tone = parseIcon(icon)
+    ? 'bg-muted text-muted-foreground'
+    : 'bg-primary text-primary-foreground';
+  return (
+    <span
+      aria-hidden="true"
+      className={`flex h-5 w-5 shrink-0 items-center justify-center rounded text-[0.65rem] font-medium ${tone} ${className}`}
+    >
+      <InlineIcon value={icon} fallback={initial(name)} />
+    </span>
+  );
 }
 
 const ITEM_CLASS =
@@ -60,12 +108,11 @@ export function WorkspaceSwitcher({
           className="flex min-h-[32px] w-full cursor-pointer items-center justify-between gap-2 rounded px-2 py-0.5 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] font-medium hover:bg-accent pointer-coarse:min-h-11 pointer-coarse:py-1.5"
         >
           <span className="flex min-w-0 items-center gap-2">
-            <span
-              aria-hidden="true"
-              className="flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
-            >
-              <InlineIcon value={active?.icon ?? null} fallback={initial(active?.name ?? '?')} />
-            </span>
+            <WorkspaceChip
+              icon={active?.icon ?? null}
+              iconUrl={active?.iconUrl ?? null}
+              name={active?.name ?? '?'}
+            />
             <span className="truncate">{active?.name ?? 'No workspace'}</span>
           </span>
           <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
@@ -97,12 +144,12 @@ export function WorkspaceSwitcher({
                   <Check
                     className={`mr-1 h-4 w-4 shrink-0 ${w.id === activeId ? 'opacity-100' : 'opacity-0'}`}
                   />
-                  <span
-                    aria-hidden="true"
-                    className="mr-2 flex h-5 w-5 shrink-0 items-center justify-center rounded bg-muted text-[0.65rem] font-medium text-muted-foreground"
-                  >
-                    <InlineIcon value={w.icon} fallback={initial(w.name)} />
-                  </span>
+                  <WorkspaceChip
+                    icon={w.icon}
+                    iconUrl={w.iconUrl ?? null}
+                    name={w.name}
+                    className="mr-2"
+                  />
                   <span className="truncate">{w.name}</span>
                 </DropdownMenu.Item>
               ))}
