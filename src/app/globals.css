@@ -243,6 +243,22 @@
   margin: 2px 0;
 }
 
+/* v0.10.2 P2 — block rhythm. Sibling-scoped (`* + el`) so first children stay
+   flush. MUST sit AFTER the `p`/`ul`/`ol` margin resets above: the selectors
+   tie on specificity (0,2,1), so source order decides margin-top. h1 gets a
+   real section gap; p/list step up from the 6px blanket gap; h2 (24px) was
+   already right and is untouched. */
+.ProseMirror[contenteditable="true"] > * + h1 {
+  margin-top: 32px;
+}
+.ProseMirror[contenteditable="true"] > * + p {
+  margin-top: 12px;
+}
+.ProseMirror[contenteditable="true"] > * + ul,
+.ProseMirror[contenteditable="true"] > * + ol {
+  margin-top: 8px;
+}
+
 /* Blockquotes and code blocks get a uniform 8px vertical rhythm. */
 .ProseMirror[contenteditable="true"] blockquote,
 .ProseMirror[contenteditable="true"] pre {
