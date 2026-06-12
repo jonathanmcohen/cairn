@@ -31,8 +31,10 @@ test.describe('item D4 — admin health panel', () => {
   }) => {
     await signIn(page, seeded);
     // Land on an admin leaf so the Admin section's children render, then
-    // navigate through the real sidebar entry.
+    // navigate through the real sidebar entry. v0.10.2 P10 grouped the admin
+    // nav: Health lives under the collapsed Operations sub-group — expand it.
     await page.goto('/settings/admin/audit');
+    await page.getByTestId('admin-group-operations').click();
     await page.getByRole('link', { name: 'Health', exact: true }).click();
     await page.waitForURL('**/settings/admin/health');
 
