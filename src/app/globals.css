@@ -502,15 +502,16 @@ html.cairn-focus-mode[data-reveal-sidebar="true"] [data-cairn-workspace-sidebar]
    150ms budget. Hidden chevrons get pointer-events: none so they never block
    the drag handle that shares the gutter. Color comes from the
    text-muted-foreground/hover:text-foreground theme tokens on the button. */
+/* v0.10.2 P7 — discoverability: 30% at rest (was invisible — the class that
+   false-FAILed the v0.9.19 sweep), 100% on any hover tier. Clickable at rest. */
 .heading-collapse-chevron {
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0.3;
+  pointer-events: auto;
   transition: opacity 120ms ease;
 }
-/* Pointer anywhere over the heading row → subdued reveal. */
+/* Pointer anywhere over the heading row → full reveal (two-state model). */
 .heading-collapse-chevron[data-row-hovered] {
-  opacity: 0.5;
-  pointer-events: auto;
+  opacity: 1;
 }
 /* Direct hover / keyboard focus / collapsed state → full opacity. A COLLAPSED
    heading keeps its chevron visible with NO hover: the state must be visible. */
