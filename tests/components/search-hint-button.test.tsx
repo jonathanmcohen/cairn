@@ -36,12 +36,13 @@ describe('<SearchHintButton>', () => {
   it('labels the button so it advertises the command palette (not a bare search box, #84)', () => {
     render(<SearchHintButton />);
     const button = screen.getByRole('button', { name: 'Open command palette' });
-    // #84/#97: the visible label names the palette rather than reading as a bare
-    // page-search box. It renders at text-sm (14px) in a single span — there is
-    // no separate sub-12px subtitle (the v0.9.6-audit "W" concern was a
-    // false-positive against this readable, single-line label).
-    expect(button.textContent ?? '').toMatch(/command palette/i);
+    // #84/#97 intent, revised by v0.10.2 S7: the palette identity lives in the
+    // aria-label + the ⌘K kbd chip; the VISIBLE label dropped the
+    // "(command palette)" parenthetical, which wrapped the pill to two lines
+    // at the 240px default sidebar width.
+    expect(button.textContent ?? '').not.toMatch(/\(command palette\)/i);
     expect(button.textContent ?? '').toMatch(/Search or jump to/i);
+    expect(button.querySelector('kbd')?.textContent).toBe('⌘K');
   });
 
   it('still renders the ⌘K keyboard-shortcut badge', () => {
