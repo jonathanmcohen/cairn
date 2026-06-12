@@ -3,13 +3,14 @@
 import { EditorContent, useEditor } from '@tiptap/react';
 import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
+import type { CitationStyle } from '@/lib/citations/format';
 import { numberFootnotes } from '@/lib/citations/numbering';
 import { baseExtensions } from './extensions';
 import { FootnoteSup } from './extensions/footnote';
 import { ReadOnlyMentionExtension } from './mention-readonly-extension';
 import { PublicDatabaseNode } from './public-database-extension';
 
-function publicExtensions() {
+function publicExtensions(citationStyle: CitationStyle) {
   // Swap the editor's `database` node for the public read-only one, and the
   // interactive `mention` node (link + suggestion) for the inert read-only
   // span variant so stored `@[Name](userId)` tokens still render as `@Name`.
@@ -18,8 +19,14 @@ function publicExtensions() {
   // static renderHTML, so they flow through from baseExtensions() unchanged and
   // render the stored snapshot on `/p/` + `/s/`. Only their interactive picker
   // plugin (`pageLinkSuggestion`) is dropped from the read-only path.
+  //
+  // v0.10.2 P5 — the citation node-view (superscript `[n]` chip + attrs-only
+  // hover popover) rides along from baseExtensions(); it's editable-gated
+  // internally so the read-only surface never shows the Add-citation
+  // affordance. `citationStyle` picks the formatted line shown in the popover
+  // (same style the <Bibliography> below the body uses).
   return [
-    ...baseExtensions().filter(
+    ...baseExtensions({ citationStyle }).filter(
       (e) => e.name !== 'database' && e.name !== 'mention' && e.name !== 'pageLinkSuggestion',
     ),
     PublicDatabaseNode,
@@ -27,9 +34,15 @@ function publicExtensions() {
   ];
 }
 
-export function ReadOnlyView({ content }: { content: unknown }) {
+export function ReadOnlyView({
+  content,
+  citationStyle = 'apa',
+}: {
+  content: unknown;
+  citationStyle?: CitationStyle;
+}) {
   const editor = useEditor({
-    extensions: publicExtensions(),
+    extensions: publicExtensions(citationStyle),
     content: content as never,
     editable: false,
     immediatelyRender: false,

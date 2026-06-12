@@ -62,6 +62,8 @@
   "editor.citation.fetching": "Looking up…",
   "editor.citation.fetchFailed": "Lookup failed. Enter details manually.",
   "editor.citation.insert": "Insert",
+  "editor.citation.addLabel": "Add citation",
+  "editor.citation.refLabel": "Citation {number}",
   "editor.footnote.textLabel": "Footnote text",
   "editor.flashcard.front": "Front (question)",
   "editor.flashcard.back": "Back (answer)",

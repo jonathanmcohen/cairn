@@ -29,6 +29,15 @@ export const CitationNode = Node.create({
       raw_authors: { default: [] },
       raw_title: { default: '' },
       raw_year: { default: null },
+      // v0.10.2 P5 — full CitationMeta persisted on the node at insert time so
+      // the superscript chip's hover popover reads ONLY these attrs (no
+      // network fetch post-insert). Nullable defaults keep pre-P5 docs parsing
+      // unchanged. All plain JSON — Yjs-safe.
+      journal: { default: null },
+      volume: { default: null },
+      issue: { default: null },
+      pages: { default: null },
+      url: { default: null },
     };
   },
 

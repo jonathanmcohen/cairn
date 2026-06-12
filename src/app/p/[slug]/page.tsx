@@ -73,7 +73,7 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
           {page.icon && <span aria-hidden>{page.icon}</span>}
           {page.title}
         </h1>
-        <ReadOnlyView content={content} />
+        <ReadOnlyView content={content} citationStyle={citationStyle} />
         {showBibliography && <Bibliography doc={content} style={citationStyle} />}
         {page.allowDuplication && (
           <form

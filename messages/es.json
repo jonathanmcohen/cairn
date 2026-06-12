@@ -62,6 +62,8 @@
   "editor.citation.fetching": "Buscando…",
   "editor.citation.fetchFailed": "Búsqueda fallida. Introduce los datos manualmente.",
   "editor.citation.insert": "Insertar",
+  "editor.citation.addLabel": "Añadir cita",
+  "editor.citation.refLabel": "Cita {number}",
   "editor.footnote.textLabel": "Texto de la nota al pie",
   "editor.flashcard.front": "Anverso (pregunta)",
   "editor.flashcard.back": "Reverso (respuesta)",
