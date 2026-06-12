@@ -49,6 +49,13 @@
       "severity": "high",
       "reason": "Reissued advisory for the same tmp path-traversal class as 1119610 (patched >=0.2.6). Both findings are @lhci/cli-only chains: tmp@0.0.33 via inquirer→external-editor and tmp@0.1.0 as a direct @lhci/cli dep — devDependency-only Lighthouse CI tooling; @lhci/cli never passes user-controlled prefix/postfix to tmp, and the package never reaches the production server bundle. testcontainers' tmp is already 0.2.6 (patched). Re-review when @lhci/cli upgrades its tmp/inquirer chain.",
       "expires": "2026-08-23"
+    },
+    {
+      "id": 1120679,
+      "module": "esbuild",
+      "severity": "high",
+      "reason": "The advisory's vector is esbuild's DENO module downloading platform binaries without integrity verification when NPM_CONFIG_REGISTRY points elsewhere (patched >=0.28.1). All three findings here are pnpm-installed npm devDependency chains (vite/vitest toolchain at 0.28.0, /cli at 0.28.0, drizzle-kit at 0.25.12 and 0.18.20 via -kit) where binaries ship as pinned optionalDependencies resolved through the lockfile, not the Deno download path; nothing reaches the production bundle. A pnpm override to 0.28.1 would force drizzle-kit's pinned 0.18/0.25 esbuild across majors. Re-review when vite/serwist/drizzle-kit ship releases on >=0.28.1.",
+      "expires": "2026-08-23"
     }
   ]
 }
