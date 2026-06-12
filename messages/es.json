@@ -1201,5 +1201,7 @@
   "tour.step.help.title": "Repite el recorrido",
   "tour.step.help.body": "Puedes volver a ver esta guía cuando quieras desde aquí.",
   "settings.nav.backToWorkspace": "Volver al espacio de trabajo",
-  "trash.untitled": "Sin título"
+  "trash.untitled": "Sin título",
+  "editor.bridgeWarning.label": "Las escrituras por API requieren recargar",
+  "editor.bridgeWarning.title": "El puente de colaboración no está configurado: las ediciones hechas por la API REST se guardan, pero no aparecerán en los editores abiertos hasta recargar."
 }

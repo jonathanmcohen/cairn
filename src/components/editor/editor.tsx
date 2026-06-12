@@ -14,6 +14,7 @@ import type { CitationStyle } from '@/lib/citations/format';
 import { computeDiffPreview } from '@/lib/suggestions/diff-preview';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BlockContextMenu } from './block-context-menu';
+import { BridgeDegradedPill } from './bridge-degraded-pill';
 import { BulkUploader } from './bulk-uploader';
 import { CollabOfflineBanner } from './collab-offline-banner';
 import { DragHandle } from './drag-handle';
@@ -75,6 +76,10 @@ export type EditorProps = {
   /** Page-level citation style used by the inserted citation node-views and
    *  the in-editor bibliography preview. Defaults to 'apa'. */
   citationStyle?: CitationStyle;
+  /** v0.10.2 P12 — server-read isCollabBridgeConfigured(); when false, REST
+   *  API content writes never reach open editors, so edit-capable users get
+   *  a degraded pill beside the Live pill. Defaults true (no pill). */
+  collabBridgeConfigured?: boolean;
 };
 
 const STATUS_LABEL = {
@@ -116,6 +121,7 @@ export function Editor({
   lockedUntilIso = null,
   initialDisableBibliography = false,
   citationStyle = 'apa',
+  collabBridgeConfigured = true,
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
@@ -678,6 +684,7 @@ export function Editor({
         </>
       )}
       <PresenceAvatars users={presentUsers} />
+      {!collabBridgeConfigured && mountableEditable && <BridgeDegradedPill />}
       <span
         className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
         title={STATUS_LABEL[status]}
