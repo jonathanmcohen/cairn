@@ -25,6 +25,19 @@ const STATUS_KEY: Record<PageStatus, string> = {
   archived: 'pages.status.archived',
 };
 
+/**
+ * v0.10.2 P4 — semantic color pair per lifecycle status. The pairs are
+ * tokenized in globals.css (`--status-*-bg`/`--status-*-fg` with light + dark
+ * values) and surfaced as Tailwind utilities via the `@theme inline`
+ * `--color-status-*` mappings, replacing the old monochrome border look.
+ */
+const STATUS_PILL_CLASS: Record<PageStatus, string> = {
+  draft: 'bg-status-draft-bg text-status-draft-fg',
+  review: 'bg-status-review-bg text-status-review-fg',
+  published: 'bg-status-published-bg text-status-published-fg',
+  archived: 'bg-status-archived-bg text-status-archived-fg',
+};
+
 export function StatusPicker({
   pageId,
   initialStatus,
@@ -45,7 +58,7 @@ export function StatusPicker({
   if (!canEdit) {
     return (
       <span
-        className="inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium"
+        className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_PILL_CLASS[status]}`}
         data-status={status}
       >
         {t(STATUS_KEY[status])}
@@ -100,7 +113,7 @@ export function StatusPicker({
           aria-label={t('pages.status.change')}
           disabled={busy}
           data-status={status}
-          className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium hover:bg-accent/40 disabled:opacity-50"
+          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium hover:opacity-80 disabled:opacity-50 ${STATUS_PILL_CLASS[status]}`}
         >
           {t(STATUS_KEY[status])}
         </PopoverTrigger>
