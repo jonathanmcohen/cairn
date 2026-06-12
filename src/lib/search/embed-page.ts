@@ -14,6 +14,16 @@ type Db = PostgresJsDatabase<typeof schema>;
 // still computed over the FULL text so any edit still triggers a re-embed.
 const EMBED_INPUT_MAX = 2000;
 
+/**
+ * Canonical content hash for embedding freshness checks: SHA-256 hex of the
+ * page's FULL `content_text`. Every missing-or-stale comparison (embedPage,
+ * reindex-cli, embedding-status) MUST use this exact function so the
+ * "pending" definition can never drift between writers and readers.
+ */
+export function computeContentHash(text: string): string {
+  return createHash('sha256').update(text).digest('hex');
+}
+
 export type EmbedPageResult =
   | { status: 'embedded'; pageId: string }
   | { status: 'skipped'; pageId: string }
@@ -51,7 +61,7 @@ export async function embedPage(db: Db, pageId: string): Promise<EmbedPageResult
   if (page.encrypted) return { status: 'skipped-encrypted', pageId };
 
   const text = page.contentText ?? '';
-  const hash = createHash('sha256').update(text).digest('hex');
+  const hash = computeContentHash(text);
 
   const [existing] = await db
     .select({ contentHash: schema.pageEmbeddings.contentHash })
