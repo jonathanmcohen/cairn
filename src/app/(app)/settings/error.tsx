@@ -23,7 +23,6 @@ export default function SettingsError({
     // Surface the underlying error to the console/observability so ops can
     // still see the real cause (e.g. the missing-migration 42703) even though
     // the user sees a friendly recoverable message.
-    // biome-ignore lint/suspicious/noConsole: error-boundary diagnostics
     console.error('settings segment error:', error);
   }, [error]);
 

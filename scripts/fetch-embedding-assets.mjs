@@ -44,7 +44,6 @@ async function download(url, dest, attempts = 3) {
     } catch (err) {
       if (attempt >= attempts) throw err;
       const delaySeconds = attempt * 5;
-      // biome-ignore lint/suspicious/noConsole: build-time script status output
       console.warn(
         `[embed-assets] attempt ${attempt}/${attempts} failed for ${url} (${err?.cause ?? err?.message}); retrying in ${delaySeconds}s`,
       );
