@@ -29,7 +29,7 @@ export function PagesSection({ tree, spaces }: { tree: FlatPageNode[]; spaces?: 
       >
         <p
           id="sidebar-pages-heading"
-          className="text-[11px] uppercase tracking-wide text-muted-foreground"
+          className="text-[length:var(--cairn-sidebar-heading)] uppercase tracking-wide text-foreground/60"
         >
           {t('sidebar.pages.heading')}
         </p>
