@@ -1,9 +1,8 @@
-import { createHash } from 'node:crypto';
 import { sql as rawSql } from 'drizzle-orm';
 import { drizzle, type PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/db/schema';
-import { embedPage } from '@/lib/search/embed-page';
+import { computeContentHash, embedPage } from '@/lib/search/embed-page';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
@@ -53,7 +52,7 @@ export async function reindexEmbeddings(db: Db, opts: ReindexOpts = {}): Promise
 
   const candidates: string[] = [];
   for (const r of rows) {
-    const hash = createHash('sha256').update(r.content_text).digest('hex');
+    const hash = computeContentHash(r.content_text);
     if (r.stored_hash !== hash) candidates.push(r.id);
   }
 

@@ -751,6 +751,8 @@
   "search.page.description": "Busca en todas las páginas que puedes leer. Añade filtros como type:, in:, from:, before:, after:, tag:, status:.",
   "search.page.empty": "Sin resultados. Prueba otra consulta o quita un filtro.",
   "search.page.resultsCount": "{count} resultados",
+  "search.palette.resultCount": "{count} resultados",
+  "search.palette.indexing": "{count} aún indexándose",
   "search.mode.label": "Modo de búsqueda",
   "search.searching": "Buscando",
   "search.mode.fts": "Palabras clave",
