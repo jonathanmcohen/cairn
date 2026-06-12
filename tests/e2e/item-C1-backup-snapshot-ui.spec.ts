@@ -15,6 +15,9 @@ test.describe('item C1 — backup snapshot UI', () => {
   test('admin reaches the backups page via the settings sidebar', async ({ page, seeded }) => {
     await signIn(page, seeded);
     await page.goto('/settings/admin/audit');
+    // v0.10.2 P10 grouped the admin nav: Backups lives under the collapsed
+    // Operations sub-group — expand it before clicking through.
+    await page.getByTestId('admin-group-operations').click();
     await page.getByRole('link', { name: 'Backups' }).click();
     await page.waitForURL('**/settings/admin/backups');
 
