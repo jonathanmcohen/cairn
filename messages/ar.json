@@ -747,6 +747,8 @@
   "search.page.description": "ابحث في كل صفحة يمكنك قراءتها. أضف عوامل تصفية مثل type: و in: و from: و before: و after: و tag: و status:.",
   "search.page.empty": "لا توجد نتائج. جرّب استعلامًا آخر أو أزل عامل تصفية.",
   "search.page.resultsCount": "{count} نتيجة",
+  "search.palette.resultCount": "{count} نتيجة",
+  "search.palette.indexing": "{count} قيد الفهرسة",
   "search.mode.label": "وضع البحث",
   "search.searching": "جارٍ البحث",
   "search.mode.fts": "كلمات مفتاحية",

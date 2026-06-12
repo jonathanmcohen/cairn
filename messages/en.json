@@ -743,6 +743,8 @@
   "search.page.description": "Search across every page you can read. Add filters like type:, in:, from:, before:, after:, tag:, status:.",
   "search.page.empty": "No results. Try a different query or remove a filter.",
   "search.page.resultsCount": "{count} results",
+  "search.palette.resultCount": "{count} results",
+  "search.palette.indexing": "{count} still indexing",
   "search.mode.label": "Search mode",
   "search.searching": "Searching",
   "search.mode.fts": "Keyword",
