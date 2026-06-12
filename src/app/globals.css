@@ -28,7 +28,9 @@
   --destructive-foreground: 0 0% 98%;
   --success: 142 71% 30%;
   --success-foreground: 0 0% 98%;
-  --warning: 32 90% 34%;
+  /* 32% lightness: text-warning on a warning/10 tint must clear WCAG AA 4.5:1
+     (axe a11y gate; 34% computed 4.45:1 under the P12 bridge pill). */
+  --warning: 32 90% 32%;
   --warning-foreground: 0 0% 98%;
   /* v0.10.2 P4 — lifecycle status pill pairs (Draft / In review / Published /
      Archived). Light mode: soft tinted bg + dark readable fg (≥4.5:1). Review
