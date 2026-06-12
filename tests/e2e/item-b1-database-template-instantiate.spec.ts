@@ -62,8 +62,12 @@ test.describe('B1 — database-kind template instantiate', () => {
     const use = card.getByRole('button', { name: 'Use template' });
     await use.click();
 
-    // Inline error renders and the button leaves the Working… state.
-    await expect(page.getByText('forced failure (spec)')).toBeVisible({ timeout: 15_000 });
+    // Inline error renders and the button leaves the Working… state. Scoped to
+    // the destructive paragraph: P14 added an error toast carrying the same
+    // message, so the bare text locator now matches two elements.
+    await expect(
+      page.locator('p.text-destructive', { hasText: 'forced failure (spec)' }),
+    ).toBeVisible({ timeout: 15_000 });
     await expect(card.getByRole('button', { name: 'Use template' })).toBeEnabled({
       timeout: 15_000,
     });
