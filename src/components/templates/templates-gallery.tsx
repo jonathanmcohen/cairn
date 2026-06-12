@@ -4,6 +4,7 @@ import { Database, FileText } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { resetPageFocusMode } from '@/components/pages/page-mode-shell';
 import { TemplatePreviewDialog } from '@/components/templates/template-preview-dialog';
 import { Button } from '@/components/ui/button';
@@ -49,8 +50,15 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
   async function onUse(id: string) {
     setBusy(id);
     setError(null);
+    // P14 — instantiation can stall server-side; abort after 10s so the user
+    // gets actionable timeout copy instead of an indefinitely spinning button.
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10_000);
     try {
-      const res = await fetch(`/api/templates/${id}/instantiate`, { method: 'POST' });
+      const res = await fetch(`/api/templates/${id}/instantiate`, {
+        method: 'POST',
+        signal: controller.signal,
+      });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
         throw new Error(body?.error ?? `Request failed (${res.status})`);
@@ -66,8 +74,22 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
         router.refresh();
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to use template');
+      let message: string;
+      if ((err instanceof DOMException && err.name === 'AbortError') || controller.signal.aborted) {
+        message = t('templates.use.timeout');
+      } else if (err instanceof Error) {
+        message = err.message;
+      } else {
+        message = t('templates.use.failed');
+      }
+      setError(message);
+      // P14 — the inline <p> can sit below the fold; a toast with one-click
+      // retry keeps the failure visible and recoverable.
+      toast.error(message, {
+        action: { label: t('templates.use.retry'), onClick: () => void onUse(id) },
+      });
     } finally {
+      clearTimeout(timer);
       // router.refresh() preserves client state, so a no-navigation success
       // path must still release the button — busy stranded forever here (B1).
       setBusy(null);
@@ -76,8 +98,8 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
 
   async function onDelete(id: string) {
     const ok = await confirm({
-      title: 'Delete this template? This cannot be undone.',
-      confirmLabel: 'Delete',
+      title: t('templates.delete.confirmTitle'),
+      confirmLabel: t('templates.delete.cta'),
       variant: 'danger',
     });
     if (!ok) return;
@@ -91,7 +113,7 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
       }
       setTemplates((prev) => prev.filter((t) => t.id !== id));
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to delete template');
+      setError(err instanceof Error ? err.message : t('templates.delete.failed'));
     } finally {
       setBusy(null);
     }
@@ -179,21 +201,23 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                       <Button
                         type="button"
                         size="sm"
+                        data-testid="template-use"
                         disabled={busy === tpl.id}
                         onClick={() => void onUse(tpl.id)}
                       >
-                        {busy === tpl.id ? 'Working…' : 'Use template'}
+                        {busy === tpl.id ? t('templates.use.working') : t('templates.use.cta')}
                       </Button>
                       {tpl.builtIn ? null : (
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
+                          data-testid="template-delete"
                           className="text-destructive hover:text-destructive"
                           disabled={busy === tpl.id}
                           onClick={() => void onDelete(tpl.id)}
                         >
-                          Delete
+                          {t('templates.delete.cta')}
                         </Button>
                       )}
                     </div>
