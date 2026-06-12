@@ -1,6 +1,18 @@
 'use client';
 
-import { ArrowLeft, ChevronDown, ChevronRight } from 'lucide-react';
+import {
+  ArrowLeft,
+  Bell,
+  Building2,
+  ChevronDown,
+  ChevronRight,
+  Code2,
+  KeyRound,
+  type LucideIcon,
+  Search,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -14,6 +26,8 @@ type Section = {
   id: string;
   label: string;
   href: Route;
+  /** v0.10.2 P11 — 16px leading icon on the top-level link (aria-hidden). */
+  icon: LucideIcon;
   children?: SubPage[];
   /** When present, children render under collapsible group headers (by `group`). */
   groups?: SubGroup[];
@@ -170,10 +184,11 @@ export function SettingsSidebar({
       // G17 (#164) — full-page search lives outside the settings hub at /search;
       // surface it here so the page is reachable from the nav. Static label,
       // consistent with the route living outside /settings.
-      { id: 'search', label: 'Search', href: '/search' as Route },
+      { id: 'search', label: 'Search', href: '/search' as Route, icon: Search },
       {
         id: 'account',
         label: t('settings.nav.account'),
+        icon: User,
         href: '/settings/account' as Route,
         children: [
           {
@@ -186,6 +201,7 @@ export function SettingsSidebar({
       {
         id: 'workspace',
         label: t('settings.nav.workspace'),
+        icon: Building2,
         href: '/settings/workspace' as Route,
         children: [
           {
@@ -223,6 +239,7 @@ export function SettingsSidebar({
       {
         id: 'admin',
         label: t('settings.nav.admin'),
+        icon: ShieldCheck,
         // Parent click navigates straight to the first real leaf. The bare
         // /settings/admin route renders its own landing page (v0.9.18 #5) and
         // is served no-store (v0.9.19 A5) so a stale cached 308 can't shadow
@@ -234,6 +251,7 @@ export function SettingsSidebar({
       {
         id: 'developer',
         label: t('settings.nav.developer'),
+        icon: Code2,
         href: '/settings/developer' as Route,
         children: [
           {
@@ -274,11 +292,13 @@ export function SettingsSidebar({
       {
         id: 'notifications',
         label: t('settings.nav.notifications'),
+        icon: Bell,
         href: '/settings/notifications' as Route,
       },
       {
         id: 'security',
         label: t('settings.nav.security'),
+        icon: KeyRound,
         href: '/settings/security' as Route,
         children: [
           {
@@ -379,6 +399,7 @@ export function SettingsSidebar({
                 active ? 'bg-accent font-medium text-accent-foreground' : 'hover:bg-accent/50'
               }`}
             >
+              <s.icon aria-hidden="true" className="mr-2 h-4 w-4 shrink-0" />
               {s.label}
             </Link>
             {active && s.children && s.groups ? (
