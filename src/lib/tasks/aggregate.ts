@@ -9,7 +9,9 @@
  * the view because their `content` is empty by contract).
  */
 import { sql } from 'drizzle-orm';
+import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import { getDb } from '@/db/client';
+import type * as schema from '@/db/schema';
 
 export type MyTaskRow = {
   pageId: string;
@@ -84,4 +86,32 @@ export async function listMyTasks(userId: string, opts: ListMyTasksOpts): Promis
     pageTitle: r.page_title,
     pageIcon: r.page_icon,
   }));
+}
+
+/**
+ * v0.10.2 S9 — open-task count for the sidebar "My tasks" badge.
+ *
+ * Same FROM/permission chain as `listMyTasks` with `status: 'open'` and no
+ * workspace filter, collapsed to a single COUNT — so the badge always equals
+ * the row count the /my-tasks page renders in its default (open, all
+ * workspaces) view. db-injected (unlike `listMyTasks`) so unit tests can pass
+ * a Testcontainers handle directly.
+ */
+export async function countMyOpenTasks(
+  db: PostgresJsDatabase<typeof schema>,
+  userId: string,
+): Promise<number> {
+  const rows = (await db.execute(sql`
+    SELECT COUNT(*)::int AS value
+    FROM mv_user_tasks mv
+    JOIN pages p ON p.id = mv.page_id AND p.deleted_at IS NULL AND p.encrypted = false
+    LEFT JOIN workspace_members wm
+      ON wm.workspace_id = mv.workspace_id AND wm.user_id = ${userId}
+    LEFT JOIN page_acls pa
+      ON pa.page_id = mv.page_id AND pa.user_id = ${userId}
+    WHERE mv.user_id = ${userId}
+      AND (wm.user_id IS NOT NULL OR pa.user_id IS NOT NULL)
+      AND mv.checked = false
+  `)) as unknown as Array<{ value: number }>;
+  return rows[0]?.value ?? 0;
 }

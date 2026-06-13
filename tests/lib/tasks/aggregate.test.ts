@@ -1,7 +1,9 @@
+import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { runMigrations } from '@/db/migrate';
-import { listMyTasks } from '@/lib/tasks/aggregate';
+import * as schema from '@/db/schema';
+import { countMyOpenTasks, listMyTasks } from '@/lib/tasks/aggregate';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 
 let sql: ReturnType<typeof postgres>;
@@ -163,5 +165,59 @@ describe('listMyTasks', () => {
     `);
     const tasks = await listMyTasks(U1, {});
     expect(tasks.map((t) => t.text)).toEqual(['shared']);
+  });
+});
+
+// v0.10.2 S9 — db-injected COUNT twin of listMyTasks' default (open, all
+// readable workspaces) view, powering the sidebar "My tasks" badge.
+describe('countMyOpenTasks', () => {
+  const db = () => drizzle(sql, { schema });
+
+  it('counts only the requested user’s OPEN tasks', async () => {
+    await sql.unsafe(`
+      INSERT INTO pages (id, workspace_id, parent_id, title, content, created_by) VALUES
+        ('${P1}', '${W1}', NULL, 'P1', ${jsonbLit(
+          taskListContent([
+            { blockId: 'b1', text: 'open-1', checked: false, assignedTo: U1 },
+            { blockId: 'b2', text: 'open-2', checked: false, assignedTo: U1 },
+            { blockId: 'b3', text: 'done', checked: true, assignedTo: U1 },
+            { blockId: 'b4', text: 'someone-else', checked: false, assignedTo: U2 },
+          ]),
+        )}, '${U1}');
+    `);
+    expect(await countMyOpenTasks(db(), U1)).toBe(2);
+  });
+
+  it('returns 0 when the user has no open tasks', async () => {
+    expect(await countMyOpenTasks(db(), U1)).toBe(0);
+  });
+
+  it('excludes tasks on pages the user cannot read (tenant isolation)', async () => {
+    await sql.unsafe(`
+      INSERT INTO pages (id, workspace_id, parent_id, title, content, created_by) VALUES
+        ('${P2}', '${W2}', NULL, 'P2', ${jsonbLit(
+          taskListContent([{ blockId: 'b1', text: 'secret', checked: false, assignedTo: U1 }]),
+        )}, '${U2}');
+    `);
+    // U1 is NOT a member of W2 and has no page_acls row → not counted even
+    // though assignedTo=U1.
+    expect(await countMyOpenTasks(db(), U1)).toBe(0);
+  });
+
+  it('matches listMyTasks(status: "open") across multiple workspaces', async () => {
+    await sql.unsafe(`
+      INSERT INTO pages (id, workspace_id, parent_id, title, content, created_by) VALUES
+        ('${P1}', '${W1}', NULL, 'P1', ${jsonbLit(
+          taskListContent([{ blockId: 'b1', text: 'w1-task', checked: false, assignedTo: U1 }]),
+        )}, '${U1}'),
+        ('${P2}', '${W2}', NULL, 'P2', ${jsonbLit(
+          taskListContent([{ blockId: 'b2', text: 'w2-task', checked: false, assignedTo: U1 }]),
+        )}, '${U2}');
+      INSERT INTO workspace_members (workspace_id, user_id, role)
+        VALUES ('${W2}', '${U1}', 'viewer');
+    `);
+    const listed = await listMyTasks(U1, { status: 'open' });
+    expect(await countMyOpenTasks(db(), U1)).toBe(listed.length);
+    expect(await countMyOpenTasks(db(), U1)).toBe(2);
   });
 });
