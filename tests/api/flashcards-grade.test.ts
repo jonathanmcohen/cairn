@@ -1,9 +1,10 @@
-import { and, eq } from 'drizzle-orm';
+import { and, count, eq } from 'drizzle-orm';
 import postgres from 'postgres';
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getDb } from '@/db/client';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
+import { upsertWorkspaceFlashcardSettings } from '@/lib/flashcards/settings';
 import { upsertCard } from '@/lib/flashcards/upsert-card';
 import { createPage } from '@/lib/pages/create';
 import { startPostgres, stopPostgres } from '../helpers/db';
@@ -24,7 +25,7 @@ afterAll(async () => {
   await stopPostgres();
 });
 beforeEach(async () => {
-  await sql`TRUNCATE flashcard_reviews, flashcard_cards, pages, workspace_members, users, workspaces RESTART IDENTITY CASCADE`;
+  await sql`TRUNCATE workspace_flashcard_settings, flashcard_review_events, flashcard_reviews, flashcard_cards, flashcard_decks, pages, workspace_members, users, workspaces RESTART IDENTITY CASCADE`;
 });
 
 vi.mock('@/lib/auth/require-role', async () => {
@@ -224,6 +225,225 @@ describe('POST /api/flashcards/grade', () => {
     await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
     const r = await callGrade({ cardId: card.id, grade: 7 });
     expect(r.status).toBe(400);
+  });
+});
+
+// ─── v0.10.2 F3 — review events + leech detection ───────────────────────────
+
+describe('POST /api/flashcards/grade — F3 review events', () => {
+  it('appends a flashcard_review_event row on each grade', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const page = await createPage(getDb(), {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    const card = await upsertCard(getDb(), {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    // Grade twice.
+    await callGrade({ cardId: card.id, grade: 2 });
+    await callGrade({ cardId: card.id, grade: 1 });
+
+    const countRows = await getDb()
+      .select({ total: count() })
+      .from(schema.flashcardReviewEvents)
+      .where(
+        and(
+          eq(schema.flashcardReviewEvents.cardId, card.id),
+          eq(schema.flashcardReviewEvents.userId, u.userId),
+        ),
+      );
+    expect(countRows[0]?.total).toBe(2);
+  });
+
+  it('records the correct grade value in the event', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const page = await createPage(getDb(), {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    const card = await upsertCard(getDb(), {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+    await callGrade({ cardId: card.id, grade: 0 }); // Again
+
+    const events = await getDb()
+      .select()
+      .from(schema.flashcardReviewEvents)
+      .where(
+        and(
+          eq(schema.flashcardReviewEvents.cardId, card.id),
+          eq(schema.flashcardReviewEvents.userId, u.userId),
+        ),
+      );
+    expect(events).toHaveLength(1);
+    expect(events[0]?.grade).toBe(0);
+  });
+});
+
+describe('POST /api/flashcards/grade — F3 leech detection', () => {
+  async function makeCard(u: { workspaceId: string; userId: string; role: schema.MemberRole }) {
+    const page = await createPage(getDb(), {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'leech-p',
+    });
+    return upsertCard(getDb(), {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'leech-b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+  }
+
+  it('suspends card + adds leech tag when Again count reaches leech_threshold', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const THRESHOLD = 3;
+    await upsertWorkspaceFlashcardSettings(getDb(), u.workspaceId, {
+      leechThreshold: THRESHOLD,
+    });
+    const card = await makeCard(u);
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    // Grade Again THRESHOLD times.
+    for (let i = 0; i < THRESHOLD; i++) {
+      const r = await callGrade({ cardId: card.id, grade: 0 });
+      expect(r.status).toBe(200);
+    }
+
+    const [updated] = await getDb()
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.id, card.id));
+
+    expect(updated?.suspendedAt).not.toBeNull();
+    expect(updated?.tags).toContain('leech');
+  });
+
+  it('emits a flashcard.card_leeched audit row on suspension', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const THRESHOLD = 2;
+    await upsertWorkspaceFlashcardSettings(getDb(), u.workspaceId, {
+      leechThreshold: THRESHOLD,
+    });
+    const card = await makeCard(u);
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    for (let i = 0; i < THRESHOLD; i++) {
+      await callGrade({ cardId: card.id, grade: 0 });
+    }
+
+    const auditRows = await getDb()
+      .select()
+      .from(schema.auditLog)
+      .where(
+        and(
+          eq(schema.auditLog.action, 'flashcard.card_leeched'),
+          eq(schema.auditLog.targetId, card.id),
+        ),
+      );
+    expect(auditRows).toHaveLength(1);
+    expect((auditRows[0]?.metadata as Record<string, unknown>)?.cardId).toBe(card.id);
+  });
+
+  it('does NOT suspend when Again count is threshold - 1', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const THRESHOLD = 5;
+    await upsertWorkspaceFlashcardSettings(getDb(), u.workspaceId, {
+      leechThreshold: THRESHOLD,
+    });
+    const card = await makeCard(u);
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    // Grade Again THRESHOLD - 1 times — should NOT suspend.
+    for (let i = 0; i < THRESHOLD - 1; i++) {
+      const r = await callGrade({ cardId: card.id, grade: 0 });
+      expect(r.status).toBe(200);
+    }
+
+    const [notSuspended] = await getDb()
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.id, card.id));
+
+    expect(notSuspended?.suspendedAt).toBeNull();
+    expect(notSuspended?.tags).not.toContain('leech');
+  });
+
+  it('does not double-suspend an already-suspended card', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const THRESHOLD = 2;
+    await upsertWorkspaceFlashcardSettings(getDb(), u.workspaceId, {
+      leechThreshold: THRESHOLD,
+    });
+    const card = await makeCard(u);
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    // Reach threshold — card gets suspended.
+    for (let i = 0; i < THRESHOLD; i++) {
+      await callGrade({ cardId: card.id, grade: 0 });
+    }
+
+    // Grade Again one more time — should NOT create a second audit row.
+    await callGrade({ cardId: card.id, grade: 0 });
+
+    const auditRows = await getDb()
+      .select()
+      .from(schema.auditLog)
+      .where(
+        and(
+          eq(schema.auditLog.action, 'flashcard.card_leeched'),
+          eq(schema.auditLog.targetId, card.id),
+        ),
+      );
+    expect(auditRows).toHaveLength(1);
+  });
+
+  it('uses workspace default threshold (8) when no settings row exists', async () => {
+    const u = await createTestWorkspaceWithUser(getDb(), { role: 'editor' });
+    const card = await makeCard(u);
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    // 7 Again grades — below default threshold of 8.
+    for (let i = 0; i < 7; i++) {
+      await callGrade({ cardId: card.id, grade: 0 });
+    }
+
+    const [notSuspended] = await getDb()
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.id, card.id));
+    expect(notSuspended?.suspendedAt).toBeNull();
+
+    // 8th Again — now at threshold, card should be suspended.
+    await callGrade({ cardId: card.id, grade: 0 });
+
+    const [suspended] = await getDb()
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.id, card.id));
+    expect(suspended?.suspendedAt).not.toBeNull();
+    expect(suspended?.tags).toContain('leech');
   });
 });
 
