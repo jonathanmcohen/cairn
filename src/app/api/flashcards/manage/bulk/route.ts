@@ -18,6 +18,7 @@ import {
   suspendCards,
   unsuspendCards,
 } from '@/lib/flashcards/manage';
+import { keepOrphansStandalone } from '@/lib/flashcards/orphans';
 
 export const runtime = 'nodejs';
 
@@ -55,6 +56,7 @@ const Body = z.discriminatedUnion('action', [
   z.object({ action: z.literal('unsuspend'), cardIds: CardIds }),
   z.object({ action: z.literal('reset'), cardIds: CardIds }),
   z.object({ action: z.literal('reattach'), cardIds: CardIds, pageId: z.uuid() }),
+  z.object({ action: z.literal('keepStandalone'), cardIds: CardIds }),
   z.object({ action: z.literal('delete'), cardIds: CardIds }),
   // The undo path re-inserts a snapshot the `delete` response handed back.
   z.object({ action: z.literal('restore'), snapshot: z.array(z.unknown()).max(1000) }),
@@ -125,6 +127,13 @@ export async function POST(req: Request): Promise<Response> {
           });
           return n;
         });
+        return NextResponse.json({ ok: true, count });
+      }
+      case 'keepStandalone': {
+        // Clear the orphan flag in place — the card studies normally with no
+        // source page. Not audited (it's a UI-state change, not a destructive
+        // or rebinding action; reattach/delete carry the audit weight).
+        const count = await keepOrphansStandalone(db, ctx.workspaceId, body.cardIds);
         return NextResponse.json({ ok: true, count });
       }
       case 'delete': {

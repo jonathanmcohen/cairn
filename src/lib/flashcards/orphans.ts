@@ -143,6 +143,34 @@ export async function keepOrphanStandalone(
 }
 
 /**
+ * Bulk "keep standalone": clear the orphan flag on workspace-scoped card(s),
+ * leaving `page_id` NULL. The card(s) re-enter the study/due system with no
+ * source page. Workspace-scoped (the `workspace_id` predicate guards against a
+ * cross-workspace id reaching this from the bulk route). Returns the count
+ * actually cleared (an already-attached card is skipped via the orphan guard).
+ */
+export async function keepOrphansStandalone(
+  db: Db,
+  workspaceId: string,
+  cardIds: string[],
+  now: Date = new Date(),
+): Promise<number> {
+  if (cardIds.length === 0) return 0;
+  const rows = await db
+    .update(schema.flashcardCards)
+    .set({ sourceOrphanedAt: null, updatedAt: now })
+    .where(
+      and(
+        eq(schema.flashcardCards.workspaceId, workspaceId),
+        inArray(schema.flashcardCards.id, cardIds),
+        isNotNull(schema.flashcardCards.sourceOrphanedAt),
+      ),
+    )
+    .returning({ id: schema.flashcardCards.id });
+  return rows.length;
+}
+
+/**
  * Permanently remove orphaned card(s) and (via FK cascade) their review rows.
  */
 export async function deleteOrphans(db: Db, cardIds: string[]): Promise<number> {

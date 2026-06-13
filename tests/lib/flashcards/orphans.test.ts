@@ -7,6 +7,7 @@ import * as schema from '@/db/schema';
 import {
   deleteOrphans,
   keepOrphanStandalone,
+  keepOrphansStandalone,
   listOrphans,
   reattachOrphan,
   stampOrphanedByPageIds,
@@ -109,6 +110,39 @@ describe('flashcards orphans', () => {
     expect(await listOrphans(db, u.workspaceId)).toHaveLength(0);
     // Sanity: the page id we created still exists (no accidental delete).
     expect(page.id).toBeDefined();
+  });
+
+  it('keepOrphansStandalone: bulk-clears the orphan flag, workspace-scoped', async () => {
+    const { u, card } = await seedCard();
+    // Simulate a permanent page delete: page_id SET NULL + orphan-stamped.
+    await db
+      .update(schema.flashcardCards)
+      .set({ sourceOrphanedAt: new Date(), pageId: null })
+      .where(eq(schema.flashcardCards.id, card.id));
+    expect(await listOrphans(db, u.workspaceId)).toHaveLength(1);
+
+    // A card id from another workspace is a no-op (workspace_id guard).
+    const other = await seedCard({ blockId: 'b-other' });
+    await stampOrphanedByPageIds(db, [other.card.pageId!]);
+    const crossN = await keepOrphansStandalone(db, u.workspaceId, [other.card.id]);
+    expect(crossN).toBe(0);
+    expect(await listOrphans(db, other.u.workspaceId)).toHaveLength(1);
+
+    // In-workspace clear works and is reported. The orphan flag is cleared but
+    // page_id stays NULL — the card studies as a standalone with no source page.
+    const n = await keepOrphansStandalone(db, u.workspaceId, [card.id]);
+    expect(n).toBe(1);
+    const [after] = await db
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.id, card.id));
+    expect(after!.sourceOrphanedAt).toBeNull();
+    expect(after!.pageId).toBeNull();
+    expect(await listOrphans(db, u.workspaceId)).toHaveLength(0);
+
+    // An already-attached (non-orphaned) card is skipped (guard).
+    const n2 = await keepOrphansStandalone(db, u.workspaceId, [card.id]);
+    expect(n2).toBe(0);
   });
 
   it('delete: hard-removes orphaned card(s) and cascades their reviews', async () => {

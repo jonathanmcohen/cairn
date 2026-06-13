@@ -232,6 +232,26 @@ describe('POST /api/flashcards/manage/bulk', () => {
     expect(audits[0]!.workspaceId).toBe(u.workspaceId);
   });
 
+  it('keepStandalone clears the orphan flag in place', async () => {
+    const { u, mk } = await fixture();
+    const c1 = await mk('b1', 'orphaned');
+    // Orphan the card (simulate the page-delete / block-removal stamp).
+    await getDb()
+      .update(schema.flashcardCards)
+      .set({ sourceOrphanedAt: new Date() })
+      .where(eq(schema.flashcardCards.id, c1.id));
+    await setActor({ userId: u.userId, workspaceId: u.workspaceId, role: 'editor' });
+
+    const res = await callBulk({ action: 'keepStandalone', cardIds: [c1.id] });
+    expect(res.status).toBe(200);
+    expect(res.body.count).toBe(1);
+    const [row] = await getDb()
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.id, c1.id));
+    expect(row!.sourceOrphanedAt).toBeNull();
+  });
+
   it('bulk-delete returns a snapshot; restore brings the card AND its reviews back', async () => {
     const { u, mk } = await fixture();
     const c1 = await mk('b1', 'doomed');
