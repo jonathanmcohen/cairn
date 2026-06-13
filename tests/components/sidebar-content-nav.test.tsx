@@ -11,6 +11,11 @@ vi.mock('@/lib/i18n/provider', () => ({ useT: () => (k: string) => k }));
 // The Sign out form imports @/lib/auth/config (env() validation) via the action;
 // mock it so the env-validating graph isn't loaded under jsdom.
 vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
+// S10 — the footer's Help menu reads useShortcutSheet, which throws outside
+// <ShortcutDispatcher>; stub it so the component renders under jsdom.
+vi.mock('@/components/shortcuts/dispatcher', () => ({
+  useShortcutSheet: () => ({ open: false, setOpen: vi.fn() }),
+}));
 
 afterEach(cleanup);
 

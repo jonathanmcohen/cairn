@@ -5,9 +5,11 @@ import {
   CheckSquare,
   HelpCircle,
   Inbox,
-  LayoutTemplate,
+  Keyboard,
   LogOut,
+  RotateCcw,
   Settings,
+  Sparkles,
   Star,
   Trash,
 } from 'lucide-react';
@@ -15,16 +17,24 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
+import { useShortcutSheet } from './shortcuts/dispatcher';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { WhatsNewPanel } from './whats-new/panel';
 import { hasSeenWhatsNew, markWhatsNewSeen } from './whats-new/storage';
 
 /**
- * Lower sidebar navigation: account-level destinations (My tasks, Templates,
- * Settings, Trash), the version footer, and a visually separated Sign out.
+ * Lower sidebar navigation: account-level destinations (My tasks, Settings,
+ * Trash), a consolidated "?" Help menu, the version footer, and a visually
+ * separated Sign out.
  *
  * Extracted from `SidebarContent` so the nav can be unit-tested without
  * rendering the async server component. Nav items use the same weight/contrast
@@ -35,6 +45,10 @@ const NAV_ITEM_CLASS =
 
 export function SidebarFooterNav({ version }: { version: string }) {
   const t = useT();
+  // v0.10.2 S10 — the bare `?` key still opens this sheet via
+  // handleShortcutKeydown; the Help menu's "Keyboard shortcuts" item is the
+  // discoverable, pointer/keyboard-reachable twin of that shortcut.
+  const shortcutSheet = useShortcutSheet();
   // v0.10.0 E2 — What's-new panel + per-user seen-marker badge. The badge is
   // computed in an effect (not at render) so SSR/hydration markup match; it
   // shows until the localStorage marker equals the RUNNING version and is
@@ -67,10 +81,6 @@ export function SidebarFooterNav({ version }: { version: string }) {
         <CheckSquare aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.myTasks')}
       </Link>
-      <Link href="/templates" className={NAV_ITEM_CLASS}>
-        <LayoutTemplate aria-hidden="true" className="h-4 w-4" />
-        {t('sidebar.nav.templates')}
-      </Link>
       <Link href="/settings" className={NAV_ITEM_CLASS}>
         <Settings aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.settings')}
@@ -86,18 +96,54 @@ export function SidebarFooterNav({ version }: { version: string }) {
         <Trash aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.trash')}
       </Link>
-      {/* v0.10.0 F3 — replays the onboarding tour regardless of the seen-marker.
-          The `data-tour="help"` hook doubles as the tour's own last-step anchor. */}
-      <button
-        type="button"
-        data-tour="help"
-        aria-label={t('tour.replay')}
-        onClick={() => window.dispatchEvent(new CustomEvent('cairn:start-tour'))}
-        className={`${NAV_ITEM_CLASS} w-full`}
-      >
-        <HelpCircle aria-hidden="true" className="h-4 w-4" />
-        {t('tour.replay')}
-      </button>
+      {/* v0.10.2 S10 — single "?" Help menu consolidating the help-adjacent
+          actions that used to be standalone footer rows (Replay tour, What's
+          new) plus the keyboard-shortcuts sheet. The `data-tour="help"` hook
+          lives on the TRIGGER (it stays mounted in the sidebar regardless of
+          menu open state), so it doubles as the tour's last-step anchor. The
+          unseen-What's-new dot rides on the trigger so the signal survives the
+          row's removal. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          data-tour="help"
+          aria-label={t('sidebar.nav.help')}
+          className={`${NAV_ITEM_CLASS} relative w-full`}
+        >
+          <HelpCircle aria-hidden="true" className="h-4 w-4" />
+          {t('sidebar.nav.help')}
+          {whatsNewUnseen && (
+            <span
+              data-testid="help-unseen-badge"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+            >
+              <span aria-hidden="true" className="block h-2 w-2 rounded-full bg-primary" />
+              <span className="sr-only">{t('whatsNew.badge')}</span>
+            </span>
+          )}
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="right" sideOffset={8}>
+          <DropdownMenuItem
+            onSelect={() => window.dispatchEvent(new CustomEvent('cairn:start-tour'))}
+          >
+            <RotateCcw aria-hidden="true" className="h-4 w-4" />
+            {t('tour.replay')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => shortcutSheet.setOpen(true)}>
+            <Keyboard aria-hidden="true" className="h-4 w-4" />
+            {t('sidebar.help.shortcuts')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setWhatsNewOpen(true)}>
+            <Sparkles aria-hidden="true" className="h-4 w-4" />
+            {t('sidebar.help.whatsNew')}
+            {whatsNewUnseen && (
+              <span className="ml-auto">
+                <span aria-hidden="true" className="block h-2 w-2 rounded-full bg-primary" />
+                <span className="sr-only">{t('whatsNew.badge')}</span>
+              </span>
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
       {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
           account/destructive Sign out group reads as a distinct boundary, not
           another same-looking nav-row gap. Sign out carries a leading LogOut
@@ -119,27 +165,9 @@ export function SidebarFooterNav({ version }: { version: string }) {
         </form>
         <ThemeToggle />
       </div>
-      {/* E2 — the version chip opens the in-app What's-new panel (the external
-          GitHub release link moved into the panel footer, so that affordance
-          isn't lost). The dot badge marks an unseen version; it is decorative
-          (aria-hidden) with an sr-only i18n twin for screen readers. */}
-      <div className="mt-2 text-center text-xs text-muted-foreground">
-        <button
-          type="button"
-          data-testid="whats-new-chip"
-          aria-label={t('sidebar.releaseNotes', { version })}
-          onClick={() => setWhatsNewOpen(true)}
-          className="relative inline-flex min-h-11 items-center justify-center rounded px-2 underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-        >
-          v{version}
-          {whatsNewUnseen && (
-            <span data-testid="whats-new-badge" className="absolute right-0 top-2.5">
-              <span aria-hidden="true" className="block h-2 w-2 rounded-full bg-primary" />
-              <span className="sr-only">{t('whatsNew.badge')}</span>
-            </span>
-          )}
-        </button>
-      </div>
+      {/* v0.10.2 S10 — the standalone version-chip What's-new trigger was
+          removed; its affordance now lives in the Help menu's "What's new"
+          item above. The panel mount + open/seen state stay here. */}
       <WhatsNewPanel
         version={version}
         open={whatsNewOpen}
