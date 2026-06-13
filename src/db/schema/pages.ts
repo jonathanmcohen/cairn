@@ -3,6 +3,7 @@ import {
   boolean,
   customType,
   index,
+  integer,
   jsonb,
   pgTable,
   text,
@@ -36,6 +37,12 @@ export const pages = pgTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
     parentId: uuid('parent_id'),
+    // v0.10.2 S8 — explicit sibling sort key scoped to (workspace_id,
+    // parent_id), gap-numbered in steps of 1024 (POSITION_GAP) so inserts and
+    // DnD moves bisect between neighbors without renumbering. Tree listers
+    // order by (position ASC, created_at ASC); the created_at tiebreak keeps
+    // legacy rows (still at the default 0) in their historical order.
+    position: integer('position').notNull().default(0),
     title: text('title').notNull().default('Untitled'),
     icon: text('icon'),
     coverUrl: text('cover_url'),
@@ -113,6 +120,12 @@ export const pages = pgTable(
     // v0.9.0 G4 P26 — lifecycle status + translation lookups.
     statusIdx: index('pages_status_idx').on(t.status),
     translationOfIdx: index('pages_translation_of_idx').on(t.translationOfPageId),
+    // v0.10.2 S8 — sibling-ordered tree reads + reorder midpoint lookups.
+    workspaceParentPositionIdx: index('pages_workspace_parent_position_idx').on(
+      t.workspaceId,
+      t.parentId,
+      t.position,
+    ),
   }),
 );
 

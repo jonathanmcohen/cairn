@@ -47,8 +47,24 @@ afterEach(cleanup);
 describe('<VirtualizedPageTree> spaces grouping', () => {
   it('renders a header row per space + an Unfiled group', () => {
     const pages: FlatPageNode[] = [
-      { id: 'p1', parentId: null, title: 'In space A', icon: null, depth: 0, spaceId: 'sa' },
-      { id: 'p2', parentId: null, title: 'Unfiled page', icon: null, depth: 0, spaceId: null },
+      {
+        id: 'p1',
+        parentId: null,
+        title: 'In space A',
+        icon: null,
+        depth: 0,
+        childCount: 0,
+        spaceId: 'sa',
+      },
+      {
+        id: 'p2',
+        parentId: null,
+        title: 'Unfiled page',
+        icon: null,
+        depth: 0,
+        childCount: 0,
+        spaceId: null,
+      },
     ];
     const spaces = [{ id: 'sa', name: 'Space A', icon: null, position: 0 }];
     const { container } = render(<VirtualizedPageTree initial={pages} spaces={spaces} />);
@@ -60,7 +76,7 @@ describe('<VirtualizedPageTree> spaces grouping', () => {
 
   it('omits Unfiled when every page has a space', () => {
     const pages: FlatPageNode[] = [
-      { id: 'p1', parentId: null, title: 'A', icon: null, depth: 0, spaceId: 'sa' },
+      { id: 'p1', parentId: null, title: 'A', icon: null, depth: 0, childCount: 0, spaceId: 'sa' },
     ];
     const spaces = [{ id: 'sa', name: 'Space A', icon: null, position: 0 }];
     const { container } = render(<VirtualizedPageTree initial={pages} spaces={spaces} />);
@@ -69,7 +85,7 @@ describe('<VirtualizedPageTree> spaces grouping', () => {
 
   it('renders flat (legacy) when no spaces prop is given', () => {
     const pages: FlatPageNode[] = [
-      { id: 'p1', parentId: null, title: 'Legacy A', icon: null, depth: 0 },
+      { id: 'p1', parentId: null, title: 'Legacy A', icon: null, depth: 0, childCount: 0 },
     ];
     const { container } = render(<VirtualizedPageTree initial={pages} />);
     expect(container.textContent).toContain('Legacy A');

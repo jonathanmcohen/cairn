@@ -48,6 +48,7 @@ const node = (id: string, title: string, spaceId: string | null) => ({
   spaceId,
   status: 'published' as const,
   position: 0,
+  childCount: 0,
 });
 
 function renderSection() {

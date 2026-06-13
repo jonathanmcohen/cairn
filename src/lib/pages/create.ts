@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNull, sql as rawSql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { emit } from '@/lib/webhooks/dispatch';
@@ -6,6 +6,7 @@ import { buildPageWebhookPayload } from '@/lib/webhooks/payload';
 import { DEFAULT_PAGE_ICON } from './default-icon';
 import { emptyDocument } from './empty-document';
 import { formatIcon } from './icon-format';
+import { POSITION_GAP } from './position';
 
 export type CreatePageInput = {
   workspaceId: string;
@@ -46,11 +47,28 @@ export async function createPage(
       .where(eq(schema.workspaces.id, input.workspaceId))
       .limit(1);
     const defaultStatus = (ws?.defaultPageStatus ?? 'draft') as schema.PageStatus;
+    // v0.10.2 S8 — a brand-new page lands LAST among its siblings: gap-numbered
+    // position = max(sibling position) + POSITION_GAP (the tree orders by
+    // (position ASC, createdAt ASC); see 0076_page_position.sql).
+    const [maxRow] = await tx
+      .select({ max: rawSql<number | null>`max(${schema.pages.position})` })
+      .from(schema.pages)
+      .where(
+        and(
+          eq(schema.pages.workspaceId, input.workspaceId),
+          input.parentId
+            ? eq(schema.pages.parentId, input.parentId)
+            : isNull(schema.pages.parentId),
+          isNull(schema.pages.deletedAt),
+        ),
+      );
+    const position = (maxRow?.max ?? 0) + POSITION_GAP;
     const [page] = await tx
       .insert(schema.pages)
       .values({
         workspaceId: input.workspaceId,
         parentId: input.parentId ?? null,
+        position,
         spaceId: input.spaceId ?? null,
         // v0.9.9 K1 #215/#206 — a brand-new page is born title-less; the editor
         // shows the localized placeholder, never a literal 'Untitled'.

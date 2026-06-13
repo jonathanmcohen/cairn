@@ -23,7 +23,9 @@ export async function getPageTree(
     })
     .from(schema.pages)
     .where(and(eq(schema.pages.workspaceId, workspaceId), isNull(schema.pages.deletedAt)))
-    .orderBy(asc(schema.pages.createdAt));
+    // v0.10.2 S8 — siblings follow the explicit position (DnD reorder);
+    // createdAt tiebreaks rows that never got a position (legacy default 0).
+    .orderBy(asc(schema.pages.position), asc(schema.pages.createdAt));
 
   const byId = new Map<string, PageTreeNode>();
   for (const row of rows) {
@@ -59,6 +61,9 @@ export type FlatPageNode = {
   title: string;
   icon: string | null;
   depth: number;
+  // v0.10.2 S8 — number of direct (visible) children. Drives the per-page
+  // chevron toggle + count badge in the sidebar; 0 means leaf (spacer only).
+  childCount: number;
   // v0.9.0 G2 P11 — optional space pointer used by the sidebar to group rows
   // under a space-header row. `null` (or undefined) means the page lives in
   // the synthetic "Unfiled" bucket at the bottom of the tree.
@@ -97,7 +102,8 @@ export async function flattenedPageTree(
     .where(
       and(eq(schema.pages.workspaceId, workspaceId), isNull(schema.pages.deletedAt), statusFilter),
     )
-    .orderBy(asc(schema.pages.createdAt));
+    // v0.10.2 S8 — sibling order = explicit position, createdAt tiebreak.
+    .orderBy(asc(schema.pages.position), asc(schema.pages.createdAt));
 
   // Bucket children-by-parent so the DFS doesn't re-scan rows per node.
   const childrenByParent = new Map<string | null, typeof rows>();
@@ -120,6 +126,9 @@ export async function flattenedPageTree(
         title: row.title,
         icon: row.icon,
         depth,
+        // v0.10.2 S8 — direct visible children, free from the existing
+        // bucketing pass (no extra SQL).
+        childCount: childrenByParent.get(row.id)?.length ?? 0,
       });
       visit(row.id, depth + 1);
     }
