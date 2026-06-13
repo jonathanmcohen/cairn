@@ -15,6 +15,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
+import { STATUS_DOT, STATUS_LABEL_KEY } from '@/components/collab/collab-status';
+import { useCollabStatus } from '@/components/collab/collab-status-context';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { useShortcutSheet } from './shortcuts/dispatcher';
@@ -62,6 +64,10 @@ export function SidebarFooterNav({
   userEmail?: string;
 }) {
   const t = useT();
+  // v0.10.2 S14 — workspace-level collab-health pill. Mirrors the active
+  // editor's page-header "Live" pill via the shared CollabStatusProvider. When
+  // no page/editor is open the status is null and the pill is hidden.
+  const { status: collabStatus } = useCollabStatus();
   // v0.10.2 S11 — themed sign-out confirmation. Keep the working Server Action
   // <form action={signOutAction}> intact; intercept its submit so the confirm
   // gates it. confirmedRef carries the user's "yes" past the synthetic
@@ -210,6 +216,25 @@ export function SidebarFooterNav({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+      {/* v0.10.2 S14 — workspace-level collab-health pill mirroring the active
+          editor's page-header "Live" pill (same dot-color + i18n labels via the
+          shared collab-status module). Hidden entirely when no page/editor is
+          open (status === null), so it never lingers on non-editor routes. */}
+      {collabStatus !== null && (
+        <div className="mt-1 px-2 py-1">
+          <span
+            data-testid="footer-collab-status"
+            title={t(STATUS_LABEL_KEY[collabStatus])}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
+          >
+            <span
+              className={`size-1.5 rounded-full ${STATUS_DOT[collabStatus]}`}
+              aria-hidden="true"
+            />
+            {t(STATUS_LABEL_KEY[collabStatus])}
+          </span>
+        </div>
+      )}
       {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
           account/destructive Sign out group reads as a distinct boundary, not
           another same-looking nav-row gap. Sign out carries a leading LogOut

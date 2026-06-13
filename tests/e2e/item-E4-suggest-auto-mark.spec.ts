@@ -143,7 +143,11 @@ async function openExistingPage(page: PwPage, pageId: string, sentinel: string):
   const editor = page.locator('.ProseMirror').first();
   await expect(editor).toBeVisible({ timeout: 30_000 });
   await expect(editor).toContainText(sentinel, { timeout: 30_000 });
-  await expect(page.getByTitle('Live')).toBeVisible({ timeout: 30_000 });
+  // v0.10.2 S14 added a second "Live" chip in the sidebar footer; scope to the
+  // page-header toolbar so this stays a single-element match.
+  await expect(page.getByTestId('page-toolbar').getByTitle('Live')).toBeVisible({
+    timeout: 30_000,
+  });
 }
 
 /** Toggle Suggesting ON via the toolbar chip and wait for the active state

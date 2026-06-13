@@ -7,10 +7,13 @@ import { createPortal } from 'react-dom';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useAnnounce } from '@/components/a11y/live-region';
+import { STATUS_DOT, STATUS_LABEL_KEY } from '@/components/collab/collab-status';
+import { CollabStatusReporter } from '@/components/collab/collab-status-context';
 import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
 import type { CitationStyle } from '@/lib/citations/format';
+import { useT } from '@/lib/i18n/provider';
 import { computeDiffPreview } from '@/lib/suggestions/diff-preview';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
 import { BlockContextMenu } from './block-context-menu';
@@ -82,21 +85,11 @@ export type EditorProps = {
   collabBridgeConfigured?: boolean;
 };
 
-const STATUS_LABEL = {
-  connecting: 'Connecting…',
-  connected: 'Live',
-  disconnected: 'Reconnecting…',
-  error: 'Offline',
-} as const;
-
-// a30 #39 — status-pill dot color per collab connection state. Tailwind class
-// strings (not dynamic) so the JIT compiler keeps them.
-const STATUS_DOT = {
-  connecting: 'bg-warning',
-  connected: 'bg-success',
-  disconnected: 'bg-warning',
-  error: 'bg-destructive',
-} as const;
+// v0.10.2 S14 — the STATUS_LABEL literals moved to i18n (collab.status.*) and
+// the STATUS_DOT color map moved to the shared collab-status module so the
+// page-header pill and the new sidebar-footer pill share one source. The en
+// label values are byte-identical to the previous literals, so rendered text
+// (and the `title="Live"` e2e hook) is unchanged.
 
 // #123 — class applied to the .ProseMirror contenteditable. We suppress BOTH
 // `:focus` and `:focus-visible` outlines on this one surface. The global
@@ -126,6 +119,8 @@ export function Editor({
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
   const announce = useAnnounce();
+  const t = useT();
+  const statusLabel = t(STATUS_LABEL_KEY[status]);
   // v0.9.0 G6 P33 — reader mode forces the surface into read-only even for
   // editor-role users. Optional because `/p/<slug>` mounts <Editor> outside
   // the PageModeShell (public viewers don't carry the toggle).
@@ -144,9 +139,8 @@ export function Editor({
   // "Offline" even when the visible status pill is off-focus. Errors go
   // assertive; routine connecting/connected/disconnected stay polite.
   useEffect(() => {
-    const label = STATUS_LABEL[status];
-    announce(label, status === 'error' ? 'assertive' : 'polite');
-  }, [status, announce]);
+    announce(statusLabel, status === 'error' ? 'assertive' : 'polite');
+  }, [status, statusLabel, announce]);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
@@ -685,12 +679,15 @@ export function Editor({
       )}
       <PresenceAvatars users={presentUsers} />
       {!collabBridgeConfigured && mountableEditable && <BridgeDegradedPill />}
+      {/* v0.10.2 S14 — publish this editor's collab status up to the workspace
+          context so the sidebar-footer pill can mirror it. Effect-only. */}
+      <CollabStatusReporter status={status} />
       <span
         className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
-        title={STATUS_LABEL[status]}
+        title={statusLabel}
       >
         <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
-        {STATUS_LABEL[status]}
+        {statusLabel}
       </span>
       <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
       <button
