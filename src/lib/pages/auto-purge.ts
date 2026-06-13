@@ -40,6 +40,29 @@ export async function autoPurge(
       }
     }
 
+    // v0.10.2 F1 — orphan flashcards on the about-to-be-purged page subtrees
+    // BEFORE the DELETE. The card→page FK is ON DELETE SET NULL, so once the
+    // page rows are gone we cannot match cards back; stamp `source_orphaned_at`
+    // here so review history survives the auto-purge. The recursive CTE walks
+    // each expired root down through every descendant (mirrors the cascade).
+    await tx.execute(rawSql`
+      WITH RECURSIVE expired_roots AS (
+        SELECT id FROM pages
+        WHERE deleted_at IS NOT NULL
+          AND deleted_root = true
+          AND deleted_at < now() - (${input.retentionDays} * interval '1 day')
+      ), subtree AS (
+        SELECT id FROM expired_roots
+        UNION ALL
+        SELECT p.id FROM pages p
+        INNER JOIN subtree s ON p.parent_id = s.id
+      )
+      UPDATE flashcard_cards
+      SET source_orphaned_at = now(), updated_at = now()
+      WHERE page_id IN (SELECT id FROM subtree)
+        AND source_orphaned_at IS NULL
+    `);
+
     const result = (await tx.execute(rawSql`
       WITH purged AS (
         DELETE FROM pages

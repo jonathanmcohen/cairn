@@ -7,6 +7,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/db/schema';
 import { getStorage } from '@/lib/files/get-storage';
+import { collectFlashcardsArchive, FLASHCARDS_ARCHIVE_PATH } from './flashcards-archive';
 import { databaseToCsv, databaseToJson, pageToJson, pageToMarkdown } from './renderers';
 
 // archiver v8's `ZipArchive` export is module-augmented in
@@ -56,6 +57,10 @@ async function assemble(
     .select()
     .from(schema.files)
     .where(eq(schema.files.workspaceId, input.workspaceId));
+
+  // F1 Task D — decks, cards, and per-user SM-2 review state. No secrets:
+  // front/back text, deck names, SM-2 numbers, and user emails only.
+  const flashcards = await collectFlashcardsArchive(db, input.workspaceId);
 
   // For each database load its properties + rows + cells.
   const dbBundles = await Promise.all(
@@ -117,11 +122,20 @@ async function assemble(
     }
   }
 
+  // F1 Task D — single flashcards section (decks + cards + per-user SM-2).
+  archive.append(JSON.stringify(flashcards, null, 2), { name: FLASHCARDS_ARCHIVE_PATH });
+
   const manifest = {
     version: process.env.npm_package_version ?? 'unknown',
     exportedAt: new Date().toISOString(),
     workspaceId: input.workspaceId,
-    counts: { pages: pages.length, databases: databases.length, files: files.length },
+    counts: {
+      pages: pages.length,
+      databases: databases.length,
+      files: files.length,
+      flashcardDecks: flashcards.decks.length,
+      flashcardCards: flashcards.cards.length,
+    },
     format: 'cairn-workspace-archive@1',
   };
   archive.append(JSON.stringify(manifest, null, 2), { name: 'manifest.json' });

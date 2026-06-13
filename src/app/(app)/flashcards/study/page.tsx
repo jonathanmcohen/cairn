@@ -1,8 +1,11 @@
 'use client';
 
+import type { Route } from 'next';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { EmptyFlashcardsDue } from '@/components/empty-state/variants';
+import { useT } from '@/lib/i18n/provider';
 
 type DueCard = {
   id: string;
@@ -138,14 +141,37 @@ function StudyInner(): React.JSX.Element {
   );
 }
 
+/**
+ * v0.10.2 F1 Task C — a back-link crumb so the study session sits coherently
+ * under the new `/flashcards` section. The study/grade logic below is unchanged;
+ * this only adds the section anchor (the sidebar nav is Task D).
+ */
+function StudyBackLink(): React.JSX.Element {
+  const t = useT();
+  return (
+    <div className="mx-auto max-w-xl px-6 pt-4">
+      <Link
+        href={'/flashcards' as Route}
+        className="text-sm text-muted-foreground hover:text-foreground"
+        data-testid="study-back-link"
+      >
+        ← {t('flashcards.study.back')}
+      </Link>
+    </div>
+  );
+}
+
 export default function StudyPage(): React.JSX.Element {
   return (
-    <Suspense
-      fallback={
-        <div className="mx-auto max-w-xl p-8 text-center text-muted-foreground">Loading…</div>
-      }
-    >
-      <StudyInner />
-    </Suspense>
+    <>
+      <StudyBackLink />
+      <Suspense
+        fallback={
+          <div className="mx-auto max-w-xl p-8 text-center text-muted-foreground">Loading…</div>
+        }
+      >
+        <StudyInner />
+      </Suspense>
+    </>
   );
 }

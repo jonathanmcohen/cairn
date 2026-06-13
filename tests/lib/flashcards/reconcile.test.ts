@@ -145,7 +145,7 @@ describe('reconcile on page update', () => {
     expect(cards[0]!.deckTag).toBe('tag');
   });
 
-  it('deletes flashcard rows whose blockId vanished from the doc', async () => {
+  it('orphan-marks (does NOT delete) flashcard rows whose blockId vanished, preserving review history', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const page = await createPage(db, {
       workspaceId: u.workspaceId,
@@ -166,7 +166,17 @@ describe('reconcile on page update', () => {
       byUserId: u.userId,
       adminOverride: false,
     });
-    expect(await db.select().from(schema.flashcardCards)).toHaveLength(1);
+    const [card] = await db.select().from(schema.flashcardCards);
+    if (!card) throw new Error('card not created');
+    // Give the card a review row (SM-2 history) before the block is removed.
+    await db.insert(schema.flashcardReviews).values({
+      cardId: card.id,
+      userId: u.userId,
+      ease: 2.3,
+      interval: 6,
+      reps: 4,
+    });
+
     await updatePage(db, {
       pageId: page.id,
       workspaceId: u.workspaceId,
@@ -174,6 +184,14 @@ describe('reconcile on page update', () => {
       byUserId: u.userId,
       adminOverride: false,
     });
-    expect(await db.select().from(schema.flashcardCards)).toHaveLength(0);
+
+    // The card row SURVIVES (orphan-marked, not deleted).
+    const cards = await db.select().from(schema.flashcardCards);
+    expect(cards).toHaveLength(1);
+    expect(cards[0]!.sourceOrphanedAt).not.toBeNull();
+    // Its review history is intact.
+    const reviews = await db.select().from(schema.flashcardReviews);
+    expect(reviews).toHaveLength(1);
+    expect(reviews[0]!.reps).toBe(4);
   });
 });

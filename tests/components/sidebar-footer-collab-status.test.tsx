@@ -20,8 +20,7 @@ import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 
 // Same isolation set as the other footer-nav tests: these children pull in
 // client hooks / env()-validating graphs that error under jsdom.
-vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: () => null }));
-vi.mock('@/components/sidebar/study-link', () => ({ StudyLink: () => null }));
+vi.mock('@/components/sidebar/flashcards-nav', () => ({ FlashcardsNav: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
 vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
 vi.mock('@/components/shortcuts/dispatcher', () => ({

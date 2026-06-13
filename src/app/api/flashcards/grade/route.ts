@@ -55,6 +55,9 @@ export async function POST(req: Request): Promise<Response> {
         ? { ease: existing.ease, interval: existing.interval }
         : { ease: 2.5, interval: 0 };
       const scheduled = scheduleNext(prev, parsed.grade);
+      // v0.10.2 F1 — count every graded repetition (any grade, including
+      // "Again"). New rows start at 1; existing rows increment in place.
+      const reps = (existing?.reps ?? 0) + 1;
       await tx
         .insert(schema.flashcardReviews)
         .values({
@@ -62,6 +65,7 @@ export async function POST(req: Request): Promise<Response> {
           userId: ctx.userId,
           ease: scheduled.ease,
           interval: scheduled.interval,
+          reps,
           dueAt: scheduled.dueAt,
           lastReviewedAt: scheduled.lastReviewedAt,
           lastGrade: scheduled.lastGrade,
@@ -71,6 +75,7 @@ export async function POST(req: Request): Promise<Response> {
           set: {
             ease: scheduled.ease,
             interval: scheduled.interval,
+            reps,
             dueAt: scheduled.dueAt,
             lastReviewedAt: scheduled.lastReviewedAt,
             lastGrade: scheduled.lastGrade,

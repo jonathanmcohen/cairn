@@ -92,6 +92,23 @@ export async function hardDeletePage(
     `)) as unknown as { id: string }[];
     if (found.length === 0) throw new Error('Page not in trash');
 
+    // v0.10.2 F1 — orphan this page's (and its descendants') flashcards BEFORE
+    // the page rows are deleted. The card→page FK is now ON DELETE SET NULL, so
+    // after the DELETE we could no longer match cards back to their page; stamp
+    // `source_orphaned_at` here so review history survives the permanent delete.
+    await tx.execute(rawSql`
+      WITH RECURSIVE descendants AS (
+        SELECT id FROM pages WHERE id = ${input.pageId}
+        UNION ALL
+        SELECT p.id FROM pages p
+        INNER JOIN descendants d ON p.parent_id = d.id
+      )
+      UPDATE flashcard_cards
+      SET source_orphaned_at = now(), updated_at = now()
+      WHERE page_id IN (SELECT id FROM descendants)
+        AND source_orphaned_at IS NULL
+    `);
+
     await tx.execute(rawSql`
       DELETE FROM pages WHERE id = ${input.pageId}
     `);
