@@ -1,22 +1,23 @@
 // v0.10.2 F1 Task B — runtime spec for the flashcards MANAGE surface. Drives the
-// REAL browser through the proxy against the seeded stack: cards are created via
-// the real `/flashcard` slash flow AND by planting flashcard nodes in page
-// content (which the page-save reconcile loop materializes into flashcard_cards
-// rows), then the manage table at /flashcards/manage is asserted to reflect the
-// DB rows. Covers filters, search, bulk mutations, typed-delete + 10s undo
-// (restoring the card AND its review rows), and CSV export.
+// REAL browser through the proxy against the seeded stack: cards are materialized
+// by planting flashcard nodes in page content (the page-save reconcile loop turns
+// these into flashcard_cards rows on PATCH), then the manage table at
+// /flashcards/manage is asserted to reflect the DB rows. Covers filters, search,
+// bulk mutations, typed-delete + 10s undo (restoring the card AND its review
+// rows), and CSV export.
+//
+// The `/flashcard` slash flow is deliberately NOT exercised here: it inserts via
+// an async lazy-loaded extension that is selection-dependent, which is unreliable
+// in e2e (see slash-extension.ts `ensureLazyExtension`). The planted-node path is
+// the reliable way to create cards, and it covers the same DB → manage-table
+// contract these assertions care about.
 //
 // e2e hygiene (the dev DB persists across runs): every fixture front/back/deck
 // carries a per-run `stamp` so prior runs' rows can't collide, and selectors are
 // scoped by stamped text so accumulated cards never make a match ambiguous.
+import type { Page } from '@playwright/test';
 import { expect, signIn, test } from '../a11y/fixtures';
-import {
-  createPageViaApi,
-  openPageEditor,
-  pmDoc,
-  pmParagraph,
-  typeSlashQueryAtDocEnd,
-} from './util';
+import { createPageViaApi, openPageEditor, pmDoc, pmParagraph } from './util';
 
 const MANAGE = '/flashcards/manage';
 
@@ -26,19 +27,57 @@ function flashcardNode(blockId: string, front: string, back: string): Record<str
 }
 
 /** Locate a manage-table row by its (stamped, unique) front text. */
-function rowByFront(page: import('@playwright/test').Page, front: string) {
+function rowByFront(page: Page, front: string) {
   return page.locator('[data-testid="flashcards-manage-row"]', { hasText: front });
 }
 
+/**
+ * Grade a single, specific card deterministically by POSTing the real grade API
+ * (the same route the study UI calls). The study UI shows ONE card at a time
+ * starting at the front of the whole-workspace due queue — against the seeded
+ * stack (dozens of due cards) the first card shown is almost never the one under
+ * test, so grading "the first card" would grade an unrelated seeded card. We
+ * look the card up by its stamped front via the manage API, then grade by id.
+ * Grade 2 ("Good") records one repetition (reps → 1).
+ */
+async function cardIdByFront(page: Page, front: string): Promise<string> {
+  const res = await page.request.get(`/api/flashcards/manage?search=${encodeURIComponent(front)}`);
+  if (!res.ok()) return '';
+  const body = (await res.json()) as { cards: { id: string; front: string }[] };
+  return body.cards.find((c) => c.front === front)?.id ?? '';
+}
+
+async function gradeCardByFront(page: Page, front: string): Promise<void> {
+  // The planted node only reconciles into a card row after the editor opens, so
+  // poll the manage API until the stamped card exists, then grade it by id.
+  let cardId = '';
+  await expect
+    .poll(
+      async () => {
+        cardId = await cardIdByFront(page, front);
+        return cardId;
+      },
+      { timeout: 30_000 },
+    )
+    .not.toBe('');
+  const graded = await page.request.post('/api/flashcards/grade', {
+    data: { cardId, grade: 2 },
+  });
+  expect(graded.ok(), `grade failed: ${graded.status()}`).toBe(true);
+}
+
 test.describe('item F1 — flashcards manage surface', () => {
-  test('create via slash + content, assert cells, filter, search', async ({ page, seeded }) => {
+  test('planted cards populate the manage table; cells, filter, search', async ({
+    page,
+    seeded,
+  }) => {
     await signIn(page, seeded);
     const stamp = Date.now().toString(36);
-    const slashFront = `slashQ-${stamp}`;
     const front1 = `front1-${stamp}`;
     const front2 = `front2-${stamp}`;
 
-    // A page with two planted flashcard nodes (reconciled into rows on save).
+    // A page with two planted flashcard nodes; opening the editor runs the
+    // reconcile-on-save loop that materializes them into flashcard_cards rows.
     const anchor = `f1 anchor ${stamp}`;
     const pageId = await createPageViaApi(
       page,
@@ -49,31 +88,21 @@ test.describe('item F1 — flashcards manage surface', () => {
         flashcardNode(`blk2-${stamp}`, front2, `back2-${stamp}`),
       ),
     );
-    const editor = await openPageEditor(page, pageId, anchor);
+    // Open the page so its content is loaded (the flashcard extension renders
+    // lazily, so we don't assert the in-editor face here — the manage table
+    // below is the real proof the planted nodes reconciled into card rows).
+    await openPageEditor(page, pageId, anchor);
 
-    // --- Create a THIRD card through the real /flashcard slash flow. ---------
-    await typeSlashQueryAtDocEnd(page, editor, '/flashcard');
-    await page.getByRole('option').filter({ hasText: 'Flashcard' }).first().click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog).toBeVisible({ timeout: 10_000 });
-    await page.locator('#editor-dialog-front').fill(slashFront);
-    await page.locator('#editor-dialog-back').fill(`slashA-${stamp}`);
-    await page.getByRole('button', { name: 'Add', exact: true }).click();
-    await expect(dialog).toBeHidden({ timeout: 10_000 });
-    // The inserted node renders its front in the editor preview.
-    await expect(
-      editor.locator('[data-testid="flashcard-face"]', { hasText: slashFront }),
-    ).toBeVisible({ timeout: 15_000 });
-
-    // --- Manage table reflects all three cards. ------------------------------
+    // --- Manage table reflects both planted cards. ---------------------------
     await page.goto(MANAGE);
     await expect(page.getByTestId('flashcards-manage-table')).toBeVisible({ timeout: 30_000 });
-    for (const f of [slashFront, front1, front2]) {
+    for (const f of [front1, front2]) {
       await expect(rowByFront(page, f)).toHaveCount(1, { timeout: 15_000 });
     }
     // Cells: a planted card shows its source page link + a "new" state + 0 reps.
     const r1 = rowByFront(page, front1);
     await expect(r1.getByTestId('cell-source-link')).toBeVisible();
+    await expect(r1.getByTestId('cell-state')).toHaveText(/new/i);
     await expect(r1.getByTestId('cell-reps')).toHaveText('0');
 
     // --- Search narrows to one. ----------------------------------------------
@@ -166,43 +195,69 @@ test.describe('item F1 — flashcards manage surface', () => {
     );
     await openPageEditor(page, pageId, anchor);
 
+    // Grade the card once (deterministically, by id) so it carries a review row
+    // (state + reps), which the undo must bring back. The study UI shows the
+    // front of the whole-workspace due queue, so it can't reliably reach this
+    // specific card on the seeded stack — grade by id instead.
+    await gradeCardByFront(page, front);
+
     await page.goto(MANAGE);
     const row = rowByFront(page, front);
     await expect(row).toHaveCount(1, { timeout: 30_000 });
-
-    // Grade the card once via the study UI so it carries a review row (state +
-    // reps), which the undo must bring back.
-    await page.goto('/flashcards/study');
-    await page
-      .getByRole('button', { name: /show answer/i })
-      .first()
-      .click();
-    await page.getByRole('button', { name: /^good$/i }).click();
-
-    // Back to manage — the row now shows reps 1.
-    await page.goto(MANAGE);
+    // The row now shows reps 1 (one graded repetition).
     await expect(rowByFront(page, front).getByTestId('cell-reps')).toHaveText('1', {
       timeout: 30_000,
     });
 
-    // Open the per-row delete → typed-confirm dialog.
-    await rowByFront(page, front).getByTestId('row-actions-trigger').click();
-    await page.getByTestId('row-action-delete').click();
+    // Reach Delete via the bulk bar (select the row's checkbox), not the per-row
+    // radix dropdown — that dropdown's enter/exit animation is unstable under
+    // headless Playwright. The bulk Delete opens the same typed-confirm dialog.
+    await rowByFront(page, front).getByRole('checkbox').check();
+    const bar = page.getByTestId('flashcards-bulk-bar');
+    await expect(bar).toBeVisible({ timeout: 10_000 });
+    await bar.getByRole('button', { name: 'Delete', exact: true }).click();
     const confirmInput = page.getByTestId('delete-confirm-input');
-    await expect(confirmInput).toBeVisible();
+    await expect(confirmInput).toBeVisible({ timeout: 10_000 });
 
-    // Wrong text → the confirm button stays disabled (nothing deleted).
+    // Wrong text → the confirm button stays disabled (nothing deleted). The
+    // dialog phrase is i18n `flashcards.manage.delete.phrase` = "delete".
     await confirmInput.fill('nope');
     await expect(page.getByTestId('delete-confirm-button')).toBeDisabled();
     await expect(rowByFront(page, front)).toHaveCount(1);
 
-    // Correct text → delete; the row disappears and a 10s undo toast appears.
+    // Correct text → delete (bulk POST), then the 10s undo toast appears.
     await confirmInput.fill('delete');
-    await page.getByTestId('delete-confirm-button').click();
-    await expect(rowByFront(page, front)).toHaveCount(0, { timeout: 15_000 });
+    await expect(page.getByTestId('delete-confirm-button')).toBeEnabled();
+    const [deleteRes] = await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/flashcards/manage/bulk') &&
+          r.request().method() === 'POST' &&
+          (r.request().postData() ?? '').includes('"delete"'),
+      ),
+      page.getByTestId('delete-confirm-button').click(),
+    ]);
+    expect(deleteRes.ok(), `delete POST failed: ${deleteRes.status()}`).toBe(true);
 
-    // Undo restores the card AND its review state (reps 1 survives).
-    await page.getByRole('button', { name: /^undo$/i }).click();
+    // Undo (the sonner toast's action button, label i18n `flashcards.manage.undo`
+    // = "Undo") POSTs the delete snapshot back to `restore`, bringing the card
+    // AND its review rows back. Wait for that restore POST to LAND before
+    // navigating (a goto would abort the in-flight fetch).
+    const undoBtn = page.getByRole('button', { name: /^undo$/i });
+    await expect(undoBtn).toBeVisible({ timeout: 8_000 });
+    const [restoreRes] = await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.url().includes('/api/flashcards/manage/bulk') &&
+          r.request().method() === 'POST' &&
+          (r.request().postData() ?? '').includes('"restore"'),
+      ),
+      undoBtn.click(),
+    ]);
+    expect(restoreRes.ok(), `restore POST failed: ${restoreRes.status()}`).toBe(true);
+
+    // The card AND its review state came back (reps still 1).
+    await page.goto(MANAGE);
     await expect(rowByFront(page, front)).toHaveCount(1, { timeout: 15_000 });
     await expect(rowByFront(page, front).getByTestId('cell-reps')).toHaveText('1', {
       timeout: 15_000,

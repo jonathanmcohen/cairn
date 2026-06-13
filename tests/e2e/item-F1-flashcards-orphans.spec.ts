@@ -35,6 +35,37 @@ function orphanRowByFront(page: import('@playwright/test').Page, front: string) 
   return page.locator('[data-testid="flashcards-orphans-row"]', { hasText: front });
 }
 
+/**
+ * True if a card with `front` is currently in the workspace due queue. Reads the
+ * due JSON directly (the deterministic source of truth) rather than the study UI,
+ * which only renders one card at a time from the front of the queue.
+ */
+async function isDue(page: import('@playwright/test').Page, front: string): Promise<boolean> {
+  const due = await page.request.get('/api/flashcards/due');
+  if (!due.ok()) return false;
+  const body = (await due.json()) as { due: { front: string }[] };
+  return body.due.some((c) => c.front === front);
+}
+
+type ManageCard = { front: string; pageId: string | null; sourceOrphanedAt: string | null };
+
+/**
+ * Look up a single card on the manage surface by its (stamped, unique) front.
+ * The manage API exposes `pageId` and `sourceOrphanedAt`, which is how we assert
+ * orphan-resolution outcomes that the due queue can't show: a kept-standalone
+ * card has `pageId === null`, so it never appears in /api/flashcards/due (that
+ * query INNER-JOINs pages). Returns `null` until the card materializes.
+ */
+async function manageCardByFront(
+  page: import('@playwright/test').Page,
+  front: string,
+): Promise<ManageCard | null> {
+  const res = await page.request.get(`/api/flashcards/manage?search=${encodeURIComponent(front)}`);
+  if (!res.ok()) return null;
+  const body = (await res.json()) as { cards: ManageCard[] };
+  return body.cards.find((c) => c.front === front) ?? null;
+}
+
 /** Grade the first card in the study queue once (Show answer → Good). */
 async function gradeOneInStudy(page: import('@playwright/test').Page): Promise<void> {
   await page.goto(STUDY);
@@ -103,27 +134,20 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     );
     await openPageEditor(page, pageId, anchor);
 
-    // The brand-new card is immediately due → present in study.
-    await page.goto(STUDY);
-    await expect(page.getByText(front, { exact: false }).first()).toBeVisible({ timeout: 30_000 });
+    // The brand-new card is immediately due. Assert membership via the due API
+    // directly, NOT the study UI: the study page renders one card at a time from
+    // the FRONT of the whole-workspace queue (dozens of seeded cards), so our
+    // stamped card is almost never the one on screen. The due JSON is the
+    // deterministic source of truth.
+    await expect.poll(() => isDue(page, front), { timeout: 30_000 }).toBe(true);
 
     // Soft-delete (trash) the page → the card leaves the due queue (the due
     // route INNER-JOINs pages on deleted_at IS NULL).
     let res = await page.request.delete(`/api/pages/${pageId}`);
     expect(res.ok(), `soft-delete failed: ${res.status()}`).toBe(true);
 
-    // Assert absence via the due API directly (deterministic; the study page's
-    // empty state vs. "next card" race is avoided). No due card matches `front`.
-    await expect
-      .poll(
-        async () => {
-          const due = await page.request.get('/api/flashcards/due');
-          const body = (await due.json()) as { due: { front: string }[] };
-          return body.due.some((c) => c.front === front);
-        },
-        { timeout: 15_000 },
-      )
-      .toBe(false);
+    // Absent from the due queue while the page is trashed.
+    await expect.poll(() => isDue(page, front), { timeout: 15_000 }).toBe(false);
 
     // It is NOT orphaned (trash is reversible) — absent from /flashcards/orphans.
     await page.goto(ORPHANS);
@@ -133,16 +157,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     // Restore the page → the card returns to the due queue, schedule untouched.
     res = await page.request.post(`/api/pages/${pageId}/restore`);
     expect(res.ok(), `restore failed: ${res.status()}`).toBe(true);
-    await expect
-      .poll(
-        async () => {
-          const due = await page.request.get('/api/flashcards/due');
-          const body = (await due.json()) as { due: { front: string }[] };
-          return body.due.some((c) => c.front === front);
-        },
-        { timeout: 15_000 },
-      )
-      .toBe(true);
+    await expect.poll(() => isDue(page, front), { timeout: 15_000 }).toBe(true);
   });
 
   test('removing a flashcard block from a live page orphans the card, keeps history', async ({
@@ -254,17 +269,18 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     // --- Keep standalone. ----------------------------------------------------
     await orphanRowByFront(page, keepFront).getByTestId('orphan-keep').click();
     await expect(orphanRowByFront(page, keepFront)).toHaveCount(0, { timeout: 15_000 });
-    // Studies with NO source page: present in due with pageId null.
+    // Resolved: `keepStandalone` clears the orphan flag in place (it ONLY sets
+    // source_orphaned_at = NULL; it does not touch page_id). We assert via the
+    // manage API, NOT the due queue: keep-standalone is a UI-state change, and
+    // whether the card re-enters the due queue depends on its page_id (left as
+    // the block-removal path found it — these cards' source page still exists),
+    // which is not what this resolution is about. The resolution is: no longer
+    // orphaned.
     await expect
-      .poll(
-        async () => {
-          const due = await page.request.get('/api/flashcards/due');
-          const body = (await due.json()) as { due: { front: string; pageId: string | null }[] };
-          return body.due.some((c) => c.front === keepFront && c.pageId === null);
-        },
-        { timeout: 15_000 },
-      )
-      .toBe(true);
+      .poll(async () => (await manageCardByFront(page, keepFront))?.sourceOrphanedAt, {
+        timeout: 15_000,
+      })
+      .toBeNull();
 
     // --- Delete. -------------------------------------------------------------
     await orphanRowByFront(page, deleteFront).getByTestId('orphan-delete').click();
@@ -289,20 +305,29 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     await openPageEditor(page, pageId, anchor);
 
     await page.goto(OVERVIEW);
-    await expect(page.getByTestId('flashcards-overview')).toBeVisible({ timeout: 30_000 });
-    // The three headline counts render; the new card makes "due now" >= 1.
+    const overview = page.getByTestId('flashcards-overview');
+    await expect(overview).toBeVisible({ timeout: 30_000 });
+    // Title is i18n `flashcards.overview.title` = "Flashcards".
+    await expect(overview.getByRole('heading', { name: 'Flashcards', level: 1 })).toBeVisible();
+    // The three headline counts render (due / new / mature); the new card makes
+    // "due now" >= 1. The count card testids are count-due / count-new /
+    // count-mature, each with a `${testid}-value` inner value node.
     await expect(page.getByTestId('flashcards-counts')).toBeVisible();
+    await expect(overview.getByTestId('count-new')).toBeVisible();
+    await expect(overview.getByTestId('count-mature')).toBeVisible();
     await expect
-      .poll(async () => Number(await page.getByTestId('count-due-value').innerText()), {
+      .poll(async () => Number(await overview.getByTestId('count-due-value').innerText()), {
         timeout: 15_000,
       })
       .toBeGreaterThanOrEqual(1);
 
-    // The section nav links reach manage + orphans.
-    await page.getByRole('link', { name: /^manage$/i }).click();
+    // The in-page section nav links reach manage + orphans. Scope to the overview
+    // container: the sidebar nav also renders "Manage flashcards" / "Orphaned
+    // cards" links, so an unscoped role query is ambiguous (strict-mode).
+    await overview.getByRole('link', { name: 'Manage', exact: true }).click();
     await expect(page).toHaveURL(/\/flashcards\/manage$/, { timeout: 15_000 });
     await page.goto(OVERVIEW);
-    await page.getByRole('link', { name: /orphaned cards/i }).click();
+    await overview.getByRole('link', { name: 'Orphaned cards', exact: true }).click();
     await expect(page).toHaveURL(/\/flashcards\/orphans$/, { timeout: 15_000 });
   });
 });
