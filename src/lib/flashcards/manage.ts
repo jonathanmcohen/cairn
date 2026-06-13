@@ -333,6 +333,66 @@ export async function deleteCards(db: Db, workspaceId: string, cardIds: string[]
 }
 
 /**
+ * v0.10.2 F1 Task B — full row snapshot for the undo-delete flow.
+ *
+ * The manage view's delete is hard (the row + its cascaded `flashcard_reviews`
+ * are gone), but the UI offers a 10s undo. To restore the card AND every user's
+ * SM-2 history, the route snapshots both tables BEFORE the delete and hands the
+ * snapshot back to {@link restoreCards} if the user clicks undo. Workspace-
+ * scoped so a caller can't snapshot a card outside their workspace.
+ */
+export type DeletedCardSnapshot = {
+  card: typeof schema.flashcardCards.$inferSelect;
+  reviews: (typeof schema.flashcardReviews.$inferSelect)[];
+};
+
+/** Snapshot card rows + their review rows for the undo-delete buffer. */
+export async function snapshotCards(
+  db: Db,
+  workspaceId: string,
+  cardIds: string[],
+): Promise<DeletedCardSnapshot[]> {
+  if (cardIds.length === 0) return [];
+  const cards = await db.select().from(schema.flashcardCards).where(scoped(workspaceId, cardIds));
+  if (cards.length === 0) return [];
+  const ids = cards.map((c) => c.id);
+  const reviews = await db
+    .select()
+    .from(schema.flashcardReviews)
+    .where(inArray(schema.flashcardReviews.cardId, ids));
+  return cards.map((card) => ({
+    card,
+    reviews: reviews.filter((r) => r.cardId === card.id),
+  }));
+}
+
+/**
+ * Re-insert previously-deleted cards and their review rows (the undo path).
+ * Idempotent-ish: `onConflictDoNothing` skips any row that already exists, so a
+ * double-undo (or an undo of a card that was re-created) can't error. Returns
+ * the number of card rows restored.
+ */
+export async function restoreCards(
+  db: Pick<PostgresJsDatabase<typeof schema>, 'insert'>,
+  snapshots: DeletedCardSnapshot[],
+): Promise<number> {
+  if (snapshots.length === 0) return 0;
+  let restored = 0;
+  for (const snap of snapshots) {
+    const inserted = await db
+      .insert(schema.flashcardCards)
+      .values(snap.card)
+      .onConflictDoNothing()
+      .returning({ id: schema.flashcardCards.id });
+    restored += inserted.length;
+    if (snap.reviews.length > 0) {
+      await db.insert(schema.flashcardReviews).values(snap.reviews).onConflictDoNothing();
+    }
+  }
+  return restored;
+}
+
+/**
  * Reattach orphaned card(s) to a page within the workspace: set page_id +
  * clear the orphan flag. The caller validates the page belongs to the same
  * workspace; this re-checks the card scope.
