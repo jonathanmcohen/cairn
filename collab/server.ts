@@ -2,6 +2,7 @@ import { Database } from '@hocuspocus/extension-database';
 import { Server } from '@hocuspocus/server';
 import postgres from 'postgres';
 import * as Y from 'yjs';
+import { applyProseJsonToFragment } from '../src/lib/collab/apply-prose.js';
 import { authorizeCollab } from '../src/lib/collab/authorize.js';
 import { yjsStateToProseDoc } from '../src/lib/collab/materialize.js';
 import { reconcileFlashcardsRaw } from '../src/lib/flashcards/reconcile-raw.js';
@@ -50,10 +51,26 @@ async function materialize(pageId: string) {
   // v0.9.11 #114/#115 — the collab autosave path previously stopped here, so
   // editor-authored flashcards never reached flashcard_cards (the SRS upsert
   // only ran on the REST PATCH path). Reconcile here too, with the SAME
-  // (page_id, block_id) contract as src/lib/pages/update.ts → reconcileFlashcards,
-  // so the two write paths never drift. Driver-agnostic raw-SQL variant because
-  // this process uses the postgres driver, not Drizzle.
-  await reconcileFlashcardsRaw(sql, { pageId, content: prose });
+  // contract as src/lib/pages/update.ts → reconcileFlashcards, so the two write
+  // paths never drift. Driver-agnostic raw-SQL variant because this process
+  // uses the postgres driver, not Drizzle.
+  //
+  // v0.10.2 F2-D — reconcile may BACKFILL a resolved cardId into a brand-new /
+  // pre-F2 block (mutating `prose` in place) and re-persist pages.content. When
+  // it does, push the stamped content into the LIVE Y.Doc so the open editor's
+  // block gains its cardId without a reload (and the next materialize doesn't
+  // see a stale, cardId-less block). This is the sanctioned in-process apply —
+  // same fragment + helper the internal /replace endpoint uses. Idempotent:
+  // once the block holds its cardId, reconcile reports no change.
+  const { contentChanged } = await reconcileFlashcardsRaw(sql, { pageId, content: prose });
+  if (contentChanged) {
+    const live = docs.get(pageId);
+    if (live) {
+      Y.transact(live, () => {
+        applyProseJsonToFragment(live.getXmlFragment('default'), prose);
+      });
+    }
+  }
 }
 
 // Design (a) per the plan: Hocuspocus already debounces onStoreDocument, so we

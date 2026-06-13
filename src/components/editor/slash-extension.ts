@@ -817,7 +817,7 @@ const items: SlashItem[] = [
   toSlashItem(datetimeMenuItem, 'advanced'),
   {
     title: 'Flashcard',
-    description: 'Spaced-repetition flashcard (front / back / deck tag)',
+    description: 'Spaced-repetition flashcard (front / back / deck)',
     category: 'advanced',
     icon: Layers,
     deferred: true,
@@ -828,7 +828,7 @@ const items: SlashItem[] = [
           cancelSlashTrigger(editor, range);
           return;
         }
-        const { front, back, deck } = result;
+        const { front, back, deckId } = result;
         if (!front || !back) {
           cancelSlashTrigger(editor, range);
           return;
@@ -839,7 +839,10 @@ const items: SlashItem[] = [
           editor
             .chain()
             .focus()
-            .setFlashcard({ front, back, deckTag: deck || null })
+            // v0.10.2 F2-D — the dialog now picks a first-class deck; pass it as
+            // the insert-time `deckId` hint. `deckTag` (legacy free-text) is no
+            // longer collected on insert.
+            .setFlashcard({ front, back, deckId: deckId || null })
             .run();
         });
       });

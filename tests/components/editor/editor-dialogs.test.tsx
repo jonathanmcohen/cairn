@@ -58,14 +58,19 @@ describe('<EditorDialogs>', () => {
     );
   });
 
-  it('flashcard form collects front/back/deck', async () => {
+  it('flashcard form collects front/back + a deck picker (F2-D)', async () => {
     renderDialogs();
     const promise = openEditorDialog({ kind: 'flashcard', title: 'Flashcard' });
     fireEvent.change(await screen.findByLabelText('Front (question)'), {
       target: { value: 'Q?' },
     });
     fireEvent.change(screen.getByLabelText('Back (answer)'), { target: { value: 'A.' } });
+    // The deck picker is rendered (decks fetch is best-effort; in jsdom it
+    // fails closed so the picker is empty and the card still inserts — reconcile
+    // falls back to the workspace Default deck).
+    expect(screen.getByTestId('flashcard-deck-picker')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
-    await waitFor(async () => expect(await promise).toEqual({ front: 'Q?', back: 'A.', deck: '' }));
+    // No free-text deck field anymore; deckId is absent when the fetch failed.
+    await waitFor(async () => expect(await promise).toEqual({ front: 'Q?', back: 'A.' }));
   });
 });

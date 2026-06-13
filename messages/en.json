@@ -76,7 +76,7 @@
   "editor.footnote.textLabel": "Footnote text",
   "editor.flashcard.front": "Front (question)",
   "editor.flashcard.back": "Back (answer)",
-  "editor.flashcard.deck": "Deck tag (optional)",
+  "editor.flashcard.deck": "Deck",
   "editor.link.placeholder": "Paste or type a URL",
   "editor.link.apply": "Apply link",
   "editor.link.remove": "Remove link",

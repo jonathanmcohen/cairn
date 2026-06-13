@@ -76,7 +76,7 @@
   "editor.footnote.textLabel": "Texto de la nota al pie",
   "editor.flashcard.front": "Anverso (pregunta)",
   "editor.flashcard.back": "Reverso (respuesta)",
-  "editor.flashcard.deck": "Etiqueta de mazo (opcional)",
+  "editor.flashcard.deck": "Mazo",
   "editor.link.placeholder": "Pega o escribe una URL",
   "editor.link.apply": "Aplicar enlace",
   "editor.link.remove": "Quitar enlace",

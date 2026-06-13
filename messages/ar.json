@@ -76,7 +76,7 @@
   "editor.footnote.textLabel": "نص الحاشية",
   "editor.flashcard.front": "الوجه (سؤال)",
   "editor.flashcard.back": "الظهر (إجابة)",
-  "editor.flashcard.deck": "وسم المجموعة (اختياري)",
+  "editor.flashcard.deck": "المجموعة",
   "editor.link.placeholder": "الصق أو اكتب عنوان URL",
   "editor.link.apply": "تطبيق الرابط",
   "editor.link.remove": "إزالة الرابط",

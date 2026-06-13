@@ -132,11 +132,13 @@ describe('reconcileFlashcardsRaw', () => {
   });
 
   it('no-ops for a missing page (defensive — never throws)', async () => {
+    // v0.10.2 F2-D — now returns a {contentChanged} flag; a missing page is a
+    // no-op (no content backfill possible).
     await expect(
       reconcileFlashcardsRaw(sql, {
         pageId: '00000000-0000-0000-0000-000000000000',
         content: docWith([{ blockId: 'b1', front: 'q', back: 'a' }]),
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ contentChanged: false });
   });
 });

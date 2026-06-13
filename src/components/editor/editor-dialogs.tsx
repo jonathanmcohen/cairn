@@ -7,6 +7,8 @@ import {
   type CitationStyle,
 } from '@/components/editor/blocks/citation-add-dialog';
 import { EquationAddDialog } from '@/components/editor/blocks/equation-add-dialog';
+import type { DeckTreeNode } from '@/components/flashcards/deck-tree';
+import { DeckTreePicker } from '@/components/flashcards/deck-tree-picker';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -69,10 +71,11 @@ function buildSpecs(t: TFunction): Partial<Record<EditorDialogRequest['kind'], S
     },
     flashcard: {
       confirmLabel: t('common.add'),
+      // v0.10.2 F2-D — the deck is chosen via a first-class deck picker (see the
+      // flashcard branch below), not a free-text field.
       fields: [
         { name: 'front', label: t('editor.flashcard.front'), required: true },
         { name: 'back', label: t('editor.flashcard.back'), required: true },
-        { name: 'deck', label: t('editor.flashcard.deck') },
       ],
     },
   };
@@ -104,6 +107,11 @@ export function EditorDialogs({ editor }: { editor?: Editor | null }) {
   const [doiLoading, setDoiLoading] = useState(false);
   const [doiError, setDoiError] = useState(false);
   const doiAbortRef = useRef<AbortController | null>(null);
+  // v0.10.2 F2-D — decks for the flashcard insert dialog's deck picker. Fetched
+  // when a flashcard dialog opens; the chosen deck is stamped on the inserted
+  // block as the insert-time `deckId` hint (reconcile uses it for the new card).
+  const [decks, setDecks] = useState<DeckTreeNode[]>([]);
+  const decksAbortRef = useRef<AbortController | null>(null);
   const specs = useMemo(() => buildSpecs(t), [t]);
   // Read current specs inside the (stable) subscribe handler without
   // re-subscribing on locale change — only field NAMES are needed there.
@@ -116,6 +124,28 @@ export function EditorDialogs({ editor }: { editor?: Editor | null }) {
       setDoiLoading(false);
       setDoiError(false);
       doiAbortRef.current?.abort();
+      // v0.10.2 F2-D — load decks for the flashcard picker; default the chosen
+      // deckId to the workspace "Default" deck once they arrive.
+      if (req.kind === 'flashcard') {
+        decksAbortRef.current?.abort();
+        const ac = new AbortController();
+        decksAbortRef.current = ac;
+        setDecks([]);
+        void (async () => {
+          try {
+            const res = await fetch('/api/flashcards/decks', { signal: ac.signal });
+            if (!res.ok) return;
+            const data = (await res.json()) as { decks: DeckTreeNode[] };
+            if (ac.signal.aborted) return;
+            setDecks(data.decks ?? []);
+            const def =
+              data.decks?.find((d) => d.name === 'Default') ?? data.decks?.[0] ?? undefined;
+            if (def) setValues((v) => ({ ...v, deckId: def.id }));
+          } catch {
+            // Non-fatal: the card still inserts; reconcile falls back to Default.
+          }
+        })();
+      }
       setRequest(req);
     });
   }, []);
@@ -257,6 +287,18 @@ export function EditorDialogs({ editor }: { editor?: Editor | null }) {
                   />
                 </div>
               ))}
+              {request.kind === 'flashcard' && (
+                <div className="grid gap-1.5">
+                  <Label htmlFor="editor-dialog-deck">{t('editor.flashcard.deck')}</Label>
+                  <DeckTreePicker
+                    decks={decks}
+                    value={values.deckId || undefined}
+                    onValueChange={(deckId) => setValues((v) => ({ ...v, deckId }))}
+                    placeholder={t('editor.flashcard.deck')}
+                    triggerTestId="flashcard-deck-picker"
+                  />
+                </div>
+              )}
               {request.kind === 'citation' && (
                 <div className="space-y-1">
                   <Button
