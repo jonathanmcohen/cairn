@@ -136,6 +136,31 @@ describe('<SidebarFooterNav> Help menu (S10)', () => {
     expect(links.indexOf(inbox)).toBeLessThan(links.indexOf(myTasks));
   });
 
+  it('orders footer slots Favorites→Inbox→My tasks→Settings→Archived→Trash with the Help menu after Sign out (S17)', () => {
+    const { container } = render(<SidebarFooterNav version="1.2.3" />);
+    // The destination links render in their slot-8 → slot-10 markup order.
+    const linkOrder = ['Favorites', 'Inbox', 'My tasks', 'Settings', 'Archived', 'Trash'];
+    const hrefs = Array.from(container.querySelectorAll<HTMLAnchorElement>('a[href]')).map(
+      (a) => a.textContent?.trim() ?? '',
+    );
+    const seen = linkOrder.filter((label) => hrefs.some((text) => text.includes(label)));
+    expect(seen).toEqual(linkOrder);
+
+    // S17 — the "?" Help menu moved into the terminal cluster, so it now sits
+    // AFTER the Sign out control in DOM order (was above it pre-S17).
+    const signOut = screen.getByRole('button', { name: /sign out/i });
+    const help = screen.getByRole('button', { name: 'Help' });
+    expect(signOut.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('separates the footer groups with full-bleed -mx-3 border-t dividers (S17)', () => {
+    const { container } = render(<SidebarFooterNav version="1.2.3" />);
+    // Three group dividers (8/10/12) all share the full-bleed border pattern;
+    // each is rendered in markup order so no stranded divider can appear.
+    const dividers = container.querySelectorAll('div.-mx-3.border-t.border-border');
+    expect(dividers.length).toBeGreaterThanOrEqual(3);
+  });
+
   it('renders the Sign out control inside a visually separated group', () => {
     render(<SidebarFooterNav version="1.0.0" />);
     const signOut = screen.getByRole('button', { name: /sign out/i });

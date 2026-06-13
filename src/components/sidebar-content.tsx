@@ -4,7 +4,7 @@ import * as schema from '@/db/schema';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { flattenedPageTree } from '@/lib/pages/tree';
-import { listFavorites, listRecents } from '@/lib/prefs/user-page-prefs';
+import { listFavorites } from '@/lib/prefs/user-page-prefs';
 import { appVersion } from '@/lib/version';
 import { getWorkspaceBrand } from '@/lib/workspaces/brand';
 import type { UserWorkspace } from '@/lib/workspaces/list';
@@ -12,9 +12,7 @@ import { SearchHintButton } from './search-hint-button';
 import { PagesSection } from './sidebar/pages-section';
 import { PinnedSection } from './sidebar/pinned-section';
 import { SavedSearches } from './sidebar/saved-searches';
-import { SidebarFavorites } from './sidebar-favorites';
 import { SidebarFooterNav } from './sidebar-footer-nav';
-import { SidebarRecents } from './sidebar-recents';
 import { WorkspaceSwitcher } from './workspace-switcher';
 
 /**
@@ -30,8 +28,11 @@ export async function SidebarContent({
   workspaces: UserWorkspace[];
 }) {
   const ctx = await getAuthContext();
+  // v0.10.2 S17 — favorites are no longer rendered as an upper-group section
+  // (the standalone FAVORITES + RECENTS sections were removed; Favorites now
+  // lives only as a footer row). The fetch is kept solely to feed the footer's
+  // gold-star state via favoritesCount; RECENTS was removed entirely.
   const favorites = ctx ? await listFavorites(getDb(), { userId: ctx.userId, workspaceId }) : [];
-  const recents = ctx ? await listRecents(getDb(), { userId: ctx.userId, workspaceId }) : [];
   // v0.10.2 S11 — the sign-out confirm dialog names the account. The JWT
   // session only carries the user id (see auth/config.ts session callback), so
   // the email is read from the users record by id — the same pattern the
@@ -70,12 +71,14 @@ export async function SidebarContent({
       {/*
         v0.9.9 C3 (#209) — the <nav> is a flex column; PagesSection is
         flex-grown and owns the page tree's scroll container. v0.10.0 H3: the
-        upper sections (search/pinned/favorites/recents/saved-searches) are
-        now capped as a GROUP at 45% of the nav with their own scrollbar —
-        unbounded, at laptop-height viewports with favorites/recents at cap
-        they consumed the whole nav and the PAGES tree rendered with ZERO
-        height (the H3 runtime-px guard found it: the virtualizer's scroll
-        container measured 0 and no rows mounted at all).
+        upper sections (search/pinned/saved-searches) are now capped as a GROUP
+        at 45% of the nav with their own scrollbar — unbounded, at laptop-height
+        viewports with the sections at cap they consumed the whole nav and the
+        PAGES tree rendered with ZERO height (the H3 runtime-px guard found it:
+        the virtualizer's scroll container measured 0 and no rows mounted at
+        all). v0.10.2 S17 — the FAVORITES + RECENTS sections were removed from
+        this group: Favorites is now a footer row only and Recents is gone, so
+        the upper order is search → PINNED → SAVED SEARCHES.
       */}
       <nav aria-labelledby="sidebar-pages-heading" className="flex min-h-0 flex-1 flex-col p-1.5">
         {/* v0.10.2 S3 — 1px dividers between conceptual groups. divide-y only
@@ -89,8 +92,6 @@ export async function SidebarContent({
         >
           <SearchHintButton />
           <PinnedSection />
-          <SidebarFavorites favorites={favorites} />
-          <SidebarRecents recents={recents} />
           <SavedSearches />
         </div>
         <PagesSection tree={tree} />

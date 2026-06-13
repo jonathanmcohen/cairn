@@ -1,17 +1,18 @@
 // v0.10.2 S3 — 1px dividers between the sidebar's conceptual groups.
 //
 // Behavior under guard: the upper-group container in sidebar-content.tsx
-// (search pill / Pinned / Favorites / Recents / Saved searches) uses
-// divide-y, which draws a 1px border only BETWEEN rendered children — so
-// sections that return null when empty cannot stack or strand dividers —
-// plus border-b for the upper-group ↔ PAGES boundary.
+// (search pill / Pinned / Saved searches) uses divide-y, which draws a 1px
+// border only BETWEEN rendered children — so sections that return null when
+// empty cannot stack or strand dividers — plus border-b for the upper-group
+// ↔ PAGES boundary. (v0.10.2 S17 moved Favorites into the footer and retired
+// Recents, so the upper group is now search pill / Pinned / Saved searches.)
 //
 // The assertion is a structural invariant measured from COMPUTED styles
 // (a divide-y Tailwind never emits would fail; a class-name grep would
 // not): first rendered child has 0px top border, every later child exactly
 // 1px, the container exactly 1px bottom — under ANY group population. The
 // spec checks it twice: groups maximally populated via real APIs, then
-// after unpinning/unfavoriting (sparser population, no orphan divider).
+// after unpinning (sparser population, no orphan divider).
 import type { Page } from '@playwright/test';
 import { expect, signIn, test } from '../a11y/fixtures';
 import { createPageViaApi } from './util';
@@ -59,25 +60,17 @@ test.describe('item S3 — sidebar group dividers', () => {
   }) => {
     await signIn(page, seeded);
 
-    // Populate every group through the real APIs: a fresh page that is
-    // pinned (admin), favorited, visited (recents), plus a saved search.
+    // Populate the upper groups through the real APIs: a fresh page that is
+    // pinned (admin), plus a saved search. (v0.10.2 S17 — Favorites/Recents
+    // no longer live in the upper group, so they no longer seed it.)
     const title = `S3 divider fixture ${Date.now()}`;
     const pageId = await createPageViaApi(page, title);
-    const fav = await page.request.post('/api/prefs/favorites', { data: { pageId } });
-    expect(fav.ok()).toBeTruthy();
     const pin = await page.request.post('/api/workspace/pins', { data: { pageId } });
     expect(pin.ok()).toBeTruthy();
     const saved = await page.request.post('/api/search/saved', {
       data: { name: `S3 saved ${Date.now()}`, query: 's3 fixture', filters: {} },
     });
     expect(saved.ok()).toBeTruthy();
-    // Record the recents entry deterministically (the in-app visit beacon can
-    // race an immediate navigation away). Tolerated failure: the long-lived
-    // local dev DB is missing migration 0020's user_page_prefs_user_page_unique
-    // index, which 500s this upsert — CI's fresh Postgres has it, so the
-    // recents leg always runs there.
-    const recent = await page.request.post('/api/prefs/recents', { data: { pageId } });
-    const recentsSeeded = recent.ok();
 
     await page.goto('/');
     const groups = page.locator(GROUPS);
@@ -87,29 +80,18 @@ test.describe('item S3 — sidebar group dividers', () => {
     await expect(groups.locator('[data-testid="pinned-section"]')).toBeVisible({
       timeout: 15_000,
     });
-    await expect(groups.locator('section[aria-label="Favorite pages"]')).toBeVisible({
-      timeout: 15_000,
-    });
-    if (recentsSeeded) {
-      await expect(groups.locator('section[aria-label="Recent pages"]')).toBeVisible({
-        timeout: 15_000,
-      });
-    }
     await expect(groups.locator('section[aria-label="Saved searches"]')).toBeVisible({
       timeout: 15_000,
     });
     const populated = await dividerInvariant(page);
-    // Search pill + pinned + favorites + saved searches (+ recents where the
-    // env supports it) all render.
-    expect(populated.children).toBeGreaterThanOrEqual(recentsSeeded ? 5 : 4);
+    // Search pill + pinned + saved searches all render.
+    expect(populated.children).toBeGreaterThanOrEqual(3);
     expectInvariant(populated);
 
-    // Sparser population: unpin + unfavorite, reload — divide-y must not
-    // stack or strand dividers around the vanished sections.
+    // Sparser population: unpin, reload — divide-y must not stack or strand
+    // dividers around the vanished Pinned section.
     const unpin = await page.request.delete(`/api/workspace/pins/${pageId}`);
     expect(unpin.ok()).toBeTruthy();
-    const unfav = await page.request.post('/api/prefs/favorites', { data: { pageId } });
-    expect(unfav.ok()).toBeTruthy();
 
     await page.reload();
     await expect(page.locator(GROUPS)).toBeVisible({ timeout: 30_000 });
