@@ -9,7 +9,9 @@ import { requireSpaceAccess } from '@/lib/spaces/access';
 const CreateInput = z.object({
   parentId: z.uuid().optional(),
   title: z.string().max(200).optional(),
-  icon: z.string().max(8).optional(),
+  // Prefix-encoded ("emoji::🚀" / "file::<uuid>"); see the PATCH route — max(8)
+  // rejected every prefixed value. Widened to the workspaces icon convention.
+  icon: z.string().max(64).optional(),
   // v0.9.0 G2 P11 — optional space to file the new page under.
   spaceId: z.uuid().nullable().optional(),
 });

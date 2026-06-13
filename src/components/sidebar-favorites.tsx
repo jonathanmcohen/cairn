@@ -22,6 +22,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 import type { PrefEntry } from '@/lib/prefs/user-page-prefs';
 
 /**
@@ -173,7 +174,7 @@ function SortableRow({
         className="flex flex-1 items-center gap-2 truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span aria-hidden="true" className="w-4 shrink-0 text-center">
-          {fav.icon ?? ''}
+          <InlineIcon value={fav.icon} fallback={null} />
         </span>
         <span className="truncate">{fav.title}</span>
       </Link>

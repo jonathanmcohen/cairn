@@ -4,6 +4,7 @@ import { Star } from 'lucide-react';
 import type { Route } from 'next';
 import Link from 'next/link';
 import { EmptyFavorites } from '@/components/empty-state/variants';
+import { InlineIcon } from '@/components/page-icon-inline';
 import { useT } from '@/lib/i18n/provider';
 
 export type FavoriteItem = { pageId: string; title: string; icon: string | null };
@@ -24,7 +25,9 @@ export function FavoritesList({ items }: { items: FavoriteItem[] }): React.JSX.E
             href={`/pages/${it.pageId}` as Route}
             className="flex min-h-11 items-center gap-2 rounded px-3 py-2 text-sm hover:bg-accent/50"
           >
-            <span aria-hidden="true">{it.icon ?? <Star className="size-4" />}</span>
+            <span aria-hidden="true">
+              <InlineIcon value={it.icon} fallback={<Star className="size-4" />} />
+            </span>
             <span>{it.title}</span>
           </Link>
         </li>

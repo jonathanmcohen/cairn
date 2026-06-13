@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import { EmptyState } from '@/components/empty-state/empty-state';
+import { InlineIcon } from '@/components/page-icon-inline';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -364,7 +365,11 @@ function PagePickerDialog({
                     data-testid="orphan-page-picker-option"
                     onClick={() => onPick(p.id)}
                   >
-                    {p.icon ? <span aria-hidden="true">{p.icon}</span> : null}
+                    {p.icon ? (
+                      <span aria-hidden="true">
+                        <InlineIcon value={p.icon} fallback={null} fileFallback={null} />
+                      </span>
+                    ) : null}
                     <span className="truncate">
                       {p.title?.trim() || t('flashcards.orphans.picker.untitled')}
                     </span>

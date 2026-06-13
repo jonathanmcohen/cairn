@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 
 /**
  * v0.9.0 G2 P12 — Workspace-pinned section row shape (mirrors `PinRow` from
@@ -61,7 +62,7 @@ export function PinnedSection() {
             >
               {p.icon ? (
                 <span aria-hidden="true" className="text-base leading-none">
-                  {p.icon}
+                  <InlineIcon value={p.icon} fallback={null} />
                 </span>
               ) : null}
               <span className="truncate">{p.title}</span>
