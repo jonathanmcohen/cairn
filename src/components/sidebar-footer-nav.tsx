@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { useShortcutSheet } from './shortcuts/dispatcher';
+import { NavCountPill, useNavCount } from './sidebar/nav-count-pill';
 import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
@@ -43,12 +44,24 @@ import { hasSeenWhatsNew, markWhatsNewSeen } from './whats-new/storage';
 const NAV_ITEM_CLASS =
   'flex min-h-[28px] items-center gap-2 rounded px-2 py-1 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:min-h-11 pointer-coarse:py-1.5';
 
-export function SidebarFooterNav({ version }: { version: string }) {
+export function SidebarFooterNav({
+  version,
+  favoritesCount = 0,
+}: {
+  version: string;
+  /** v0.10.2 S9 — server-computed (SidebarContent already lists favorites). */
+  favoritesCount?: number;
+}) {
   const t = useT();
   // v0.10.2 S10 — the bare `?` key still opens this sheet via
   // handleShortcutKeydown; the Help menu's "Keyboard shortcuts" item is the
   // discoverable, pointer/keyboard-reachable twin of that shortcut.
   const shortcutSheet = useShortcutSheet();
+  // v0.10.2 S9 — personal-hub badges. Counts are fetched client-side on mount
+  // and fail OPEN (error → 0 → no pill), so a broken count endpoint can never
+  // take the footer nav down with it.
+  const inboxCount = useNavCount('/api/inbox/count');
+  const myTasksCount = useNavCount('/api/tasks/count');
   // v0.10.0 E2 — What's-new panel + per-user seen-marker badge. The badge is
   // computed in an effect (not at render) so SSR/hydration markup match; it
   // shows until the localStorage marker equals the RUNNING version and is
@@ -69,17 +82,34 @@ export function SidebarFooterNav({ version }: { version: string }) {
     <div className="border-t p-3 text-sm text-muted-foreground">
       <ReviewDueCounter />
       <StudyLink />
+      {/* S9 — the star goes gold once the user has any favorite (purely
+          cosmetic state echo; no theme token covers gold/amber, so raw
+          yellow-500 with matching fill is the project-sanctioned choice). */}
       <Link href="/favorites" className={NAV_ITEM_CLASS}>
-        <Star aria-hidden="true" className="h-4 w-4" />
+        <Star
+          aria-hidden="true"
+          data-testid="favorites-star"
+          className={favoritesCount > 0 ? 'h-4 w-4 fill-yellow-500 text-yellow-500' : 'h-4 w-4'}
+        />
         {t('sidebar.nav.favorites')}
       </Link>
       <Link href="/inbox" className={NAV_ITEM_CLASS}>
         <Inbox aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.inbox')}
+        <NavCountPill
+          count={inboxCount}
+          label={t('sidebar.nav.inboxCount', { count: inboxCount })}
+          testId="inbox-count-pill"
+        />
       </Link>
       <Link href="/my-tasks" className={NAV_ITEM_CLASS}>
         <CheckSquare aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.myTasks')}
+        <NavCountPill
+          count={myTasksCount}
+          label={t('sidebar.nav.myTasksCount', { count: myTasksCount })}
+          testId="my-tasks-count-pill"
+        />
       </Link>
       <Link href="/settings" className={NAV_ITEM_CLASS}>
         <Settings aria-hidden="true" className="h-4 w-4" />

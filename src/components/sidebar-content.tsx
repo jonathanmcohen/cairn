@@ -82,7 +82,10 @@ export async function SidebarContent({
         </div>
         <PagesSection tree={tree} />
       </nav>
-      <SidebarFooterNav version={appVersion()} />
+      {/* v0.10.2 S9 — favorites are already listed above for the FAVORITES
+          section; reuse the length for the footer's gold-star state instead of
+          a second query or a client fetch. */}
+      <SidebarFooterNav version={appVersion()} favoritesCount={favorites.length} />
     </div>
   );
 }
