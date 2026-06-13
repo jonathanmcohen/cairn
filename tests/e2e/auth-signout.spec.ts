@@ -46,6 +46,11 @@ test.describe('sign-out (#80, P0 security)', () => {
       .locator('[data-cairn-workspace-sidebar]')
       .getByRole('button', { name: /sign out/i })
       .click();
+    // v0.10.2 S11 — Sign out now opens a confirm dialog first (a stray click
+    // can't end the session). Confirm it to proceed to the real Server Action.
+    const confirm = page.getByRole('dialog', { name: 'Sign out?' });
+    await expect(confirm).toBeVisible({ timeout: 15_000 });
+    await confirm.getByRole('button', { name: 'Sign out', exact: true }).click();
     await expect(page).toHaveURL(/\/login/, { timeout: 30_000 });
 
     // Session is actually cleared: a protected route bounces back to login —
