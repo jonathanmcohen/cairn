@@ -1,4 +1,6 @@
+import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
+import * as schema from '@/db/schema';
 import { getAuthContext } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { flattenedPageTree } from '@/lib/pages/tree';
@@ -30,6 +32,17 @@ export async function SidebarContent({
   const ctx = await getAuthContext();
   const favorites = ctx ? await listFavorites(getDb(), { userId: ctx.userId, workspaceId }) : [];
   const recents = ctx ? await listRecents(getDb(), { userId: ctx.userId, workspaceId }) : [];
+  // v0.10.2 S11 — the sign-out confirm dialog names the account. The JWT
+  // session only carries the user id (see auth/config.ts session callback), so
+  // the email is read from the users record by id — the same pattern the
+  // account profile page uses.
+  const [signedInUser] = ctx
+    ? await getDb()
+        .select({ email: schema.users.email })
+        .from(schema.users)
+        .where(eq(schema.users.id, ctx.userId))
+        .limit(1)
+    : [];
   // Server-side flatten so the client renders a windowed flat list (P4); the
   // recursive shape is gone — depth annotation handles indentation visually.
   // v0.9.0 G4 P26 — pass viewer so the lister can show drafts to their author
@@ -85,7 +98,11 @@ export async function SidebarContent({
       {/* v0.10.2 S9 — favorites are already listed above for the FAVORITES
           section; reuse the length for the footer's gold-star state instead of
           a second query or a client fetch. */}
-      <SidebarFooterNav version={appVersion()} favoritesCount={favorites.length} />
+      <SidebarFooterNav
+        version={appVersion()}
+        favoritesCount={favorites.length}
+        userEmail={signedInUser?.email}
+      />
     </div>
   );
 }
