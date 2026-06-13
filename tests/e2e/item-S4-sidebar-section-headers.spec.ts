@@ -92,29 +92,17 @@ test.describe('item S4 — sidebar section headers', () => {
     ).ok();
 
     await page.goto('/');
+    // v0.10.2 S17 — Favorites + Recents were removed from the upper group
+    // (Favorites now lives in the footer; Recents retired). The remaining upper
+    // section headers — Pinned, Saved searches, PAGES — still share the token.
+    void recentsSeeded;
     await expect(page.locator('[data-testid="pinned-section"]')).toBeVisible({ timeout: 30_000 });
-    await expect(page.locator('section[aria-label="Favorite pages"]')).toBeVisible({
-      timeout: 15_000,
-    });
     await expect(page.locator('section[aria-label="Saved searches"]')).toBeVisible({
       timeout: 15_000,
     });
     await expect(page.locator('#sidebar-pages-heading')).toBeVisible({ timeout: 15_000 });
 
     expectHeaderContract('Pinned', await headerStyle(page, '[data-testid="pinned-section"] > div'));
-    expectHeaderContract(
-      'Favorites',
-      await headerStyle(page, 'section[aria-label="Favorite pages"] p'),
-    );
-    if (recentsSeeded) {
-      await expect(page.locator('section[aria-label="Recent pages"]')).toBeVisible({
-        timeout: 15_000,
-      });
-      expectHeaderContract(
-        'Recents',
-        await headerStyle(page, 'section[aria-label="Recent pages"] p'),
-      );
-    }
     expectHeaderContract(
       'Saved searches',
       await headerStyle(page, 'section[aria-label="Saved searches"] p'),

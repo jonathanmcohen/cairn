@@ -121,14 +121,26 @@ export function SidebarFooterNav({
   };
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
-      {/* v0.10.2 F1 Task D — consolidated Flashcards parent (overview link +
-          Due now / Manage / Orphans children + due-count badge), replacing the
-          standalone ReviewDueCounter + StudyLink rows. */}
+      {/* v0.10.2 S17 — footer slot order, top→bottom: (7) Flashcards parent,
+          (8) Favorites · Inbox · My tasks, (10) Settings · Archived · Trash,
+          (12) Sign out · theme toggle · version/What's-new · "?" Help. The four
+          groups are separated by full-bleed `-mx-3 border-t border-border`
+          dividers (the same group-divider mechanism S3 uses upstream and that
+          the Sign-out group already used). All four groups are always
+          populated, so no divider is ever stranded. Ordering is markup order
+          (not CSS `order:`) so tab + screen-reader order match the visual. */}
+
+      {/* Slot 7 — v0.10.2 F1 Task D: consolidated Flashcards parent (overview
+          link + Due now / Manage / Orphans children + due-count badge),
+          replacing the standalone ReviewDueCounter + StudyLink rows. */}
       <FlashcardsNav />
+
+      {/* Slot 8 — Favorites · Inbox · My tasks. */}
+      <div className="-mx-3 mt-2 border-t border-border" />
       {/* S9 — the star goes gold once the user has any favorite (purely
           cosmetic state echo; no theme token covers gold/amber, so raw
           yellow-500 with matching fill is the project-sanctioned choice). */}
-      <Link href="/favorites" className={NAV_ITEM_CLASS}>
+      <Link href="/favorites" className={`${NAV_ITEM_CLASS} mt-2`}>
         <Star
           aria-hidden="true"
           data-testid="favorites-star"
@@ -154,7 +166,10 @@ export function SidebarFooterNav({
           testId="my-tasks-count-pill"
         />
       </Link>
-      <Link href="/settings" className={NAV_ITEM_CLASS}>
+
+      {/* Slot 10 — Settings · Archived · Trash. */}
+      <div className="-mx-3 mt-2 border-t border-border" />
+      <Link href="/settings" className={`${NAV_ITEM_CLASS} mt-2`}>
         <Settings aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.settings')}
       </Link>
@@ -169,6 +184,58 @@ export function SidebarFooterNav({
         <Trash aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.trash')}
       </Link>
+
+      {/* v0.10.2 S14 — workspace-level collab-health pill mirroring the active
+          editor's page-header "Live" pill (same dot-color + i18n labels via the
+          shared collab-status module). Hidden entirely when no page/editor is
+          open (status === null), so it never lingers on non-editor routes. */}
+      {collabStatus !== null && (
+        <div className="mt-1 px-2 py-1">
+          <span
+            data-testid="footer-collab-status"
+            title={t(STATUS_LABEL_KEY[collabStatus])}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
+          >
+            <span
+              className={`size-1.5 rounded-full ${STATUS_DOT[collabStatus]}`}
+              aria-hidden="true"
+            />
+            {t(STATUS_LABEL_KEY[collabStatus])}
+          </span>
+        </div>
+      )}
+
+      {/* Slot 12 — final footer cluster: Sign out + theme toggle row, then the
+          "?" Help menu (v0.10.2 S17 moved it down from its old slot above the
+          Sign-out group into this terminal cluster). The version/What's-new
+          affordance lives inside the Help menu (S10); the WhatsNewPanel mount
+          stays here. */}
+      {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
+          account/destructive Sign out group reads as a distinct boundary, not
+          another same-looking nav-row gap. Sign out carries a leading LogOut
+          icon and muted-foreground treatment so it reads differently from the
+          `text-foreground` nav links above it. */}
+      <div className="-mx-3 mt-3 flex items-center gap-2 border-t border-border px-3 pt-3">
+        {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST to
+            /api/auth/signout that Auth.js v5 rejected → sign-out was broken). */}
+        <form
+          ref={signOutFormRef}
+          action={signOutAction}
+          onSubmit={handleSignOutSubmit}
+          className="flex-1"
+        >
+          <Button
+            variant="ghost"
+            size="sm"
+            className="min-h-[28px] w-full justify-start gap-2 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-muted-foreground pointer-coarse:min-h-11"
+            type="submit"
+          >
+            <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
+            {t('sidebar.signOut')}
+          </Button>
+        </form>
+        <ThemeToggle />
+      </div>
       {/* v0.10.2 S10 — single "?" Help menu consolidating the help-adjacent
           actions that used to be standalone footer rows (Replay tour, What's
           new) plus the keyboard-shortcuts sheet. The `data-tour="help"` hook
@@ -180,7 +247,7 @@ export function SidebarFooterNav({
         <DropdownMenuTrigger
           data-tour="help"
           aria-label={t('sidebar.nav.help')}
-          className={`${NAV_ITEM_CLASS} relative w-full`}
+          className={`${NAV_ITEM_CLASS} relative mt-1 w-full`}
         >
           <HelpCircle aria-hidden="true" className="h-4 w-4" />
           {t('sidebar.nav.help')}
@@ -217,51 +284,6 @@ export function SidebarFooterNav({
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
-      {/* v0.10.2 S14 — workspace-level collab-health pill mirroring the active
-          editor's page-header "Live" pill (same dot-color + i18n labels via the
-          shared collab-status module). Hidden entirely when no page/editor is
-          open (status === null), so it never lingers on non-editor routes. */}
-      {collabStatus !== null && (
-        <div className="mt-1 px-2 py-1">
-          <span
-            data-testid="footer-collab-status"
-            title={t(STATUS_LABEL_KEY[collabStatus])}
-            className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
-          >
-            <span
-              className={`size-1.5 rounded-full ${STATUS_DOT[collabStatus]}`}
-              aria-hidden="true"
-            />
-            {t(STATUS_LABEL_KEY[collabStatus])}
-          </span>
-        </div>
-      )}
-      {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
-          account/destructive Sign out group reads as a distinct boundary, not
-          another same-looking nav-row gap. Sign out carries a leading LogOut
-          icon and muted-foreground treatment so it reads differently from the
-          `text-foreground` nav links above it. */}
-      <div className="-mx-3 mt-3 flex items-center gap-2 border-t border-border px-3 pt-3">
-        {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST to
-            /api/auth/signout that Auth.js v5 rejected → sign-out was broken). */}
-        <form
-          ref={signOutFormRef}
-          action={signOutAction}
-          onSubmit={handleSignOutSubmit}
-          className="flex-1"
-        >
-          <Button
-            variant="ghost"
-            size="sm"
-            className="min-h-[28px] w-full justify-start gap-2 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-muted-foreground pointer-coarse:min-h-11"
-            type="submit"
-          >
-            <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
-            {t('sidebar.signOut')}
-          </Button>
-        </form>
-        <ThemeToggle />
-      </div>
       {/* v0.10.2 S10 — the standalone version-chip What's-new trigger was
           removed; its affordance now lives in the Help menu's "What's new"
           item above. The panel mount + open/seen state stay here. */}
