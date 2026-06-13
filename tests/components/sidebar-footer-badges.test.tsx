@@ -15,6 +15,12 @@ vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: ()
 vi.mock('@/components/sidebar/study-link', () => ({ StudyLink: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
 vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
+// v0.10.2 S10 — the footer's Help menu reads useShortcutSheet, which throws
+// outside <ShortcutDispatcher>. These badge tests don't exercise the menu, so
+// a no-op stub keeps the component renderable.
+vi.mock('@/components/shortcuts/dispatcher', () => ({
+  useShortcutSheet: () => ({ open: false, setOpen: vi.fn() }),
+}));
 vi.mock('@/lib/i18n/provider', async () => {
   const en = (await import('@/../messages/en.json')).default as Record<string, string>;
   // Mirror createT()'s plural resolution: `{count}` params select `.one`/`.other`.
