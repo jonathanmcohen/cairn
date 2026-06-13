@@ -1,4 +1,4 @@
-import { and, eq, notInArray } from 'drizzle-orm';
+import { and, eq, isNull, notInArray, sql } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
 import { extractFlashcardBlocks, type FlashcardBlock } from './extract';
@@ -18,8 +18,16 @@ export { extractFlashcardBlocks, type FlashcardBlock };
  *
  *   - any flashcard block in the doc → upsert into `flashcard_cards` keyed
  *     by `(page_id, block_id)`.
- *   - any existing card whose block-id is no longer in the doc → delete (and
- *     cascade-deletes its review rows).
+ *   - any existing card whose block-id is no longer in the doc → ORPHAN-MARK
+ *     (set `source_orphaned_at = now()`), NOT delete.
+ *
+ * v0.10.2 F1 — block removal no longer HARD-DELETEs the card (which cascaded
+ * away its `flashcard_reviews` and destroyed every user's SM-2 history on a
+ * single save). Instead the card is stamped orphaned: it leaves the due queue /
+ * notify scan but its review history survives, and it surfaces in the manage
+ * view's "orphaned" filter for the user to reattach, keep, or delete. Already
+ * orphaned cards are left untouched (the `source_orphaned_at IS NULL` guard
+ * keeps the original timestamp).
  */
 export async function reconcileFlashcards(
   tx: Tx,
@@ -43,16 +51,19 @@ export async function reconcileFlashcards(
     });
   }
   const liveBlockIds = blocks.map((b) => b.blockId);
-  if (liveBlockIds.length === 0) {
-    await tx.delete(schema.flashcardCards).where(eq(schema.flashcardCards.pageId, input.pageId));
-  } else {
-    await tx
-      .delete(schema.flashcardCards)
-      .where(
-        and(
+  const removedFilter =
+    liveBlockIds.length === 0
+      ? and(
+          eq(schema.flashcardCards.pageId, input.pageId),
+          isNull(schema.flashcardCards.sourceOrphanedAt),
+        )
+      : and(
           eq(schema.flashcardCards.pageId, input.pageId),
           notInArray(schema.flashcardCards.blockId, liveBlockIds),
-        ),
-      );
-  }
+          isNull(schema.flashcardCards.sourceOrphanedAt),
+        );
+  await tx
+    .update(schema.flashcardCards)
+    .set({ sourceOrphanedAt: sql`now()`, updatedAt: sql`now()` })
+    .where(removedFilter);
 }

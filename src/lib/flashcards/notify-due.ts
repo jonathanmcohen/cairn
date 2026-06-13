@@ -27,8 +27,14 @@ export async function notifyDueFlashcards(db: Db, now: Date = new Date()): Promi
   todayStart.setUTCHours(0, 0, 0, 0);
 
   // (workspace, member) pairs with at least one due card for that member.
-  // We join workspace_members → flashcard_cards (same workspace) → reviews
-  // (per user) and count cards whose review is missing or past-due.
+  // We join workspace_members → flashcard_cards (same workspace) → pages
+  // (source page) → reviews (per user) and count cards whose review is missing
+  // or past-due.
+  //
+  // v0.10.2 F1 — mirrors the due-queue eligibility filter: cards on a trashed
+  // page (pages.deleted_at), orphaned cards (source_orphaned_at; also dropped
+  // by the INNER pages join once page_id is NULL), and suspended cards
+  // (suspended_at) never trigger a due notification.
   const dueRows = await db
     .select({
       userId: schema.workspaceMembers.userId,
@@ -40,6 +46,7 @@ export async function notifyDueFlashcards(db: Db, now: Date = new Date()): Promi
       schema.flashcardCards,
       eq(schema.flashcardCards.workspaceId, schema.workspaceMembers.workspaceId),
     )
+    .innerJoin(schema.pages, eq(schema.pages.id, schema.flashcardCards.pageId))
     .leftJoin(
       schema.flashcardReviews,
       and(
@@ -47,7 +54,14 @@ export async function notifyDueFlashcards(db: Db, now: Date = new Date()): Promi
         eq(schema.flashcardReviews.userId, schema.workspaceMembers.userId),
       ),
     )
-    .where(or(isNull(schema.flashcardReviews.dueAt), lte(schema.flashcardReviews.dueAt, now)))
+    .where(
+      and(
+        or(isNull(schema.flashcardReviews.dueAt), lte(schema.flashcardReviews.dueAt, now)),
+        isNull(schema.flashcardCards.sourceOrphanedAt),
+        isNull(schema.flashcardCards.suspendedAt),
+        isNull(schema.pages.deletedAt),
+      ),
+    )
     .groupBy(schema.workspaceMembers.userId, schema.flashcardCards.workspaceId);
 
   let notified = 0;

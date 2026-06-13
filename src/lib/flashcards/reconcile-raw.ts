@@ -11,8 +11,9 @@ import { extractFlashcardBlocks } from './extract';
  * so the collab autosave path and the REST PATCH path never drift:
  *   - every `flashcard` block in the doc → upsert into flashcard_cards keyed by
  *     (page_id, block_id);
- *   - any existing card whose block id is no longer in the doc → delete (its
- *     flashcard_reviews cascade away via the FK).
+ *   - any existing card whose block id is no longer in the doc → ORPHAN-MARK
+ *     (set source_orphaned_at = now()), NOT delete — so the card's
+ *     flashcard_reviews history survives a block removal (v0.10.2 F1).
  *
  * `workspace_id` and `created_by` are derived from the page row itself. The
  * collab hook has no reliable per-edit user (Hocuspocus debounces across
@@ -65,14 +66,22 @@ export async function reconcileFlashcardsRaw(
       }
     }
 
-    // Prune cards whose block id is no longer present in the doc.
+    // Orphan-mark cards whose block id is no longer present in the doc (keep
+    // the row + its reviews; only stamp cards not already orphaned).
     const liveIds = blocks.map((b) => b.blockId);
     if (liveIds.length === 0) {
-      await tx`DELETE FROM flashcard_cards WHERE page_id = ${input.pageId}::uuid`;
+      await tx`
+        UPDATE flashcard_cards
+        SET source_orphaned_at = now(), updated_at = now()
+        WHERE page_id = ${input.pageId}::uuid
+          AND source_orphaned_at IS NULL
+      `;
     } else {
       await tx`
-        DELETE FROM flashcard_cards
+        UPDATE flashcard_cards
+        SET source_orphaned_at = now(), updated_at = now()
         WHERE page_id = ${input.pageId}::uuid
+          AND source_orphaned_at IS NULL
           AND block_id <> ALL(${tx.array(liveIds)})
       `;
     }
