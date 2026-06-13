@@ -34,7 +34,7 @@ export default async function BackupsSettingsPage() {
   const [schedule, runs, workspaces] = await Promise.all([
     getBackupSchedule(db),
     listRecentBackupRuns(db, 20),
-    listUserWorkspaces(db, ctx.userId),
+    listUserWorkspaces(db, ctx.userId, { secret: env().AUTH_SECRET }),
   ]);
   // v0.10.0 C4 — target options for the selective-restore dialog: only
   // workspaces where the caller is admin/owner (the route re-verifies).

@@ -65,7 +65,15 @@ export async function SidebarContent({
         container measured 0 and no rows mounted at all).
       */}
       <nav aria-labelledby="sidebar-pages-heading" className="flex min-h-0 flex-1 flex-col p-1.5">
-        <div className="max-h-[45%] shrink-0 overflow-y-auto cairn-thin-scrollbar">
+        {/* v0.10.2 S3 — 1px dividers between conceptual groups. divide-y only
+            draws between RENDERED children, so sections that return null when
+            empty can't stack or strand dividers; border-b marks the
+            upper-group ↔ PAGES boundary (the search pill always renders, so
+            the group is never empty). */}
+        <div
+          data-testid="sidebar-upper-groups"
+          className="max-h-[45%] shrink-0 divide-y divide-border border-border border-b overflow-y-auto cairn-thin-scrollbar"
+        >
           <SearchHintButton />
           <PinnedSection />
           <SidebarFavorites favorites={favorites} />

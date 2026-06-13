@@ -25,7 +25,14 @@ import { InlineIcon } from '@/components/page-icon-inline';
 import { useT } from '@/lib/i18n/provider';
 import type { FlatPageNode } from '@/lib/pages/tree';
 import { cn } from '@/lib/utils';
-import { DEPTH_INDENT_PX, ROW_HEIGHT_PX } from './density-tokens';
+import {
+  DEPTH_INDENT_PX,
+  getSidebarDensity,
+  ROW_HEIGHT_BY_DENSITY,
+  ROW_HEIGHT_PX,
+  SIDEBAR_DENSITY_EVENT,
+  type SidebarDensity,
+} from './density-tokens';
 import { PageRowActionsMenu } from './page-row-actions-menu';
 import { PageRowContextMenu } from './page-row-context-menu';
 import { usePageRowActions } from './use-page-row-actions';
@@ -237,10 +244,26 @@ export function VirtualizedPageTree({
     return out;
   }, [visiblePages, spaces, collapsed, collapseAll]);
 
+  // v0.10.2 S2 — per-device density (comfortable 26px / compact 22px rows).
+  // SSR and first client render both use 'comfortable' so hydration matches;
+  // the mount effect then reads the persisted value (localStorage) and
+  // subscribes to live changes from the theme settings form.
+  const [density, setDensity] = useState<SidebarDensity>('comfortable');
+  useEffect(() => {
+    setDensity(getSidebarDensity());
+    const onDensityChanged = (e: Event) => {
+      const detail = (e as CustomEvent<SidebarDensity>).detail;
+      setDensity(detail === 'compact' ? 'compact' : 'comfortable');
+    };
+    window.addEventListener(SIDEBAR_DENSITY_EVENT, onDensityChanged);
+    return () => window.removeEventListener(SIDEBAR_DENSITY_EVENT, onDensityChanged);
+  }, []);
+  const rowHeight = ROW_HEIGHT_BY_DENSITY[density];
+
   const rowVirtualizer = useVirtualizer({
     count: rows.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => ROW_HEIGHT_PX,
+    estimateSize: () => rowHeight,
     overscan: OVERSCAN,
     getItemKey: (index) => rows[index]?.key ?? index,
     // Seed the viewport so the initial render window isn't empty before the
@@ -364,6 +387,14 @@ export function VirtualizedPageTree({
   }, [setDropTarget]);
 
   const activeNode = activeId ? nodeById.get(activeId) : undefined;
+
+  // When density changes, the estimateSize closure above already returns the
+  // new height, but TanStack virtual caches measurements — measure() drops
+  // the cache so every row re-sizes and re-offsets (no overlap/gap).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: rowHeight is deliberately listed — the effect must re-run on density change even though measure() doesn't read it
+  useEffect(() => {
+    rowVirtualizer.measure();
+  }, [rowHeight, rowVirtualizer]);
 
   if (initial.length === 0) {
     return (

@@ -132,12 +132,14 @@
 
   /* v0.9.11 #130 — sidebar density. Body links/titles drop from text-sm
      (14px/20px) to 13px/18px with 0.1px tracking for legibility at the smaller
-     size. Tokenized here so the size lives in one place. Section labels stay at
-     12px (text-xs) and the kbd/badge at 10px — only BODY text shrinks. These
-     change font only; interactive rows keep min-h-11 (44px touch floor), so the
-     a11y touch-target gate is unaffected. */
+     size. Tokenized here so the size lives in one place. Section headers sit
+     at 10px (--cairn-sidebar-heading, v0.10.2 S4 — previously a drifting
+     11px/12px mix) and the kbd/badge at 10px. These change font only;
+     interactive rows keep min-h-11 (44px touch floor), so the a11y
+     touch-target gate is unaffected. */
   --cairn-sidebar-text: 13px;
   --cairn-sidebar-leading: 18px;
+  --cairn-sidebar-heading: 10px;
   /* v0.9.13 C-v3 — sidebar padding/gap tokens. nav px = p-1.5 (6px);
      section gap = mb-1.5 (6px). Tokenized to mirror the text/leading pattern. */
   --cairn-sidebar-px: 6px;
@@ -376,6 +378,20 @@ body {
 .cairn-page-container {
   max-width: var(--cairn-page-width-max);
   margin-inline: auto;
+}
+
+/*
+ * v0.10.2 S2 — compact sidebar density. Settings → Account → Theme toggles
+ * `cairn-sidebar-compact` on the html root (persisted per-device in
+ * localStorage under `cairn:sidebar-density`; see
+ * src/components/sidebar/density-tokens.ts). The @theme block above emits the
+ * comfortable defaults (13px/18px) on :root; this html-class rule overrides
+ * the SAME custom properties and wins by specificity. Row height (26→22px) is
+ * driven separately by the virtualizer via ROW_HEIGHT_BY_DENSITY.
+ */
+html.cairn-sidebar-compact {
+  --cairn-sidebar-text: 12px;
+  --cairn-sidebar-leading: 16px;
 }
 
 /*

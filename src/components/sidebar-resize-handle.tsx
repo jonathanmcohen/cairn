@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { applySidebarDensity, getSidebarDensity } from '@/components/sidebar/density-tokens';
 import { applySidebarCollapsedOnMount } from '@/components/sidebar-collapse';
 import { useT } from '@/lib/i18n/provider';
 
@@ -72,6 +73,10 @@ export function SidebarResizeHandle({ storageKey }: { storageKey: string }) {
     const w = stored && !Number.isNaN(stored) ? clamp(stored) : DEFAULT_WIDTH;
     setWidth(w);
     applyWidth(w);
+    // S2 — rehydrate the per-device sidebar density (localStorage →
+    // `cairn-sidebar-compact` root class) alongside the width: this handle is
+    // the sidebar's existing mount-time localStorage rehydration point.
+    applySidebarDensity(getSidebarDensity());
   }, [storageKey]);
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {

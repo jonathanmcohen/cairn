@@ -61,7 +61,7 @@ describe('Plan C #144 — section header (Saved searches)', () => {
     expect(savedSearches).toContain('mb-2'); // section was mb-3
     expect(savedSearches).not.toContain('mb-3');
     expect(savedSearches).toContain('mb-0.5'); // header row was mb-1
-    expect(savedSearches).toContain('text-[11px]'); // label was text-xs
+    expect(savedSearches).toContain('text-[length:var(--cairn-sidebar-heading)]'); // 10px token (S4; was 11px, before that text-xs)
   });
 });
 
@@ -72,7 +72,7 @@ describe('Plan C #144 — PAGES header row', () => {
     expect(pagesSection).toContain('py-0.5'); // was py-1
     expect(pagesSection).toContain('pointer-coarse:py-1.5');
     expect(pagesSection).toContain('mb-0.5'); // header was mb-1
-    expect(pagesSection).toContain('text-[11px]'); // label was text-xs
+    expect(pagesSection).toContain('text-[length:var(--cairn-sidebar-heading)]'); // 10px token (S4; was 11px, before that text-xs)
     // sticky/z/bg chrome from C3 (#209) must remain
     expect(pagesSection).toContain('sticky top-0 z-10');
     expect(pagesSection).toContain('bg-card');

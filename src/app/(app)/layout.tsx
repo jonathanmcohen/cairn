@@ -53,7 +53,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       redirect('/settings/security?enroll=required');
     }
   }
-  const workspaces = await listUserWorkspaces(getDb(), ctx.userId);
+  const workspaces = await listUserWorkspaces(getDb(), ctx.userId, {
+    secret: env().AUTH_SECRET,
+  });
   const onboardingState = await getOnboardingState(getDb(), {
     workspaceId: ctx.workspaceId,
     userId: ctx.userId,
