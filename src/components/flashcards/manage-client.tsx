@@ -31,7 +31,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useT } from '@/lib/i18n/provider';
-import type { CardState, DeckDto, ManageCardDto } from './types';
+import { DeckTreePicker } from './deck-tree-picker';
+import type { CardState, DeckDto, DeckTreeDto, ManageCardDto } from './types';
 
 const STATES: CardState[] = ['new', 'learning', 'review', 'suspended'];
 const UNDO_MS = 10_000;
@@ -49,14 +50,14 @@ export function FlashcardsManageClient({
   initialDecks,
 }: {
   initialCards: ManageCardDto[];
-  initialDecks: DeckDto[];
+  initialDecks: DeckTreeDto[];
 }) {
   const t = useT();
   const prompt = usePrompt();
   const searchId = useId();
 
   const [cards, setCards] = useState<ManageCardDto[]>(initialCards);
-  const [decks, setDecks] = useState<DeckDto[]>(initialDecks);
+  const [decks, setDecks] = useState<DeckTreeDto[]>(initialDecks);
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   // Filters.
@@ -218,7 +219,7 @@ export function FlashcardsManageClient({
       body: JSON.stringify({ name: name.trim() }),
     });
     if (res.ok) {
-      const body = (await res.json()) as { deck: DeckDto };
+      const body = (await res.json()) as { deck: DeckTreeDto };
       setDecks((prev) => [...prev, body.deck].sort((a, b) => a.name.localeCompare(b.name)));
       toast.success(t('flashcards.manage.toast.deckCreated'));
     } else if (res.status === 409) {
@@ -389,24 +390,7 @@ export function FlashcardsManageClient({
           <span className="text-sm font-medium">
             {t('flashcards.manage.bulk.selected', { count: selectedIds.length })}
           </span>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button type="button" variant="outline">
-                {t('flashcards.manage.bulk.moveToDeck')}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              {decks.map((d) => (
-                <DropdownMenuItem key={d.id} onSelect={() => void bulkMoveToDeck(d.id)}>
-                  {d.name}
-                </DropdownMenuItem>
-              ))}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onSelect={() => void bulkMoveToDeck(null)}>
-                {t('flashcards.manage.bulk.noDeck')}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <BulkMoveToDeck decks={decks} onMove={(deckId) => void bulkMoveToDeck(deckId)} />
           <Button type="button" variant="outline" size="sm" onClick={() => void bulkAddTag()}>
             {t('flashcards.manage.bulk.addTag')}
           </Button>
@@ -584,6 +568,38 @@ export function FlashcardsManageClient({
           onConfirm={() => void doDelete(deleteTarget.ids)}
         />
       ) : null}
+    </div>
+  );
+}
+
+/**
+ * Bulk "Move to deck" using the shared deck **tree** picker so nested decks are
+ * choosable (v0.10.2 F2 Task C — was a flat dropdown). A trailing "No deck"
+ * sentinel item clears the deck. The Select value resets to `undefined` after
+ * each pick so the same deck can be chosen again on the next selection.
+ */
+function BulkMoveToDeck({
+  decks,
+  onMove,
+}: {
+  decks: DeckTreeDto[];
+  onMove: (deckId: string | null) => void;
+}) {
+  const t = useT();
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-sm text-muted-foreground">
+        {t('flashcards.manage.bulk.moveToDeck')}
+      </span>
+      <DeckTreePicker
+        decks={decks}
+        value={undefined}
+        onValueChange={(deckId) => onMove(deckId === NONE ? null : deckId)}
+        placeholder={t('flashcards.manage.bulk.moveToDeck')}
+        triggerClassName="h-8 w-48"
+        triggerTestId="bulk-move-deck-picker"
+        extraOptions={[{ value: NONE, label: t('flashcards.manage.bulk.noDeck') }]}
+      />
     </div>
   );
 }
