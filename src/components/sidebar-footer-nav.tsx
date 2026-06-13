@@ -14,7 +14,7 @@ import {
   Trash,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { useShortcutSheet } from './shortcuts/dispatcher';
@@ -23,6 +23,7 @@ import { ReviewDueCounter } from './sidebar/review-due-counter';
 import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
+import { useConfirm } from './ui/confirm-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,12 +48,47 @@ const NAV_ITEM_CLASS =
 export function SidebarFooterNav({
   version,
   favoritesCount = 0,
+  userEmail,
 }: {
   version: string;
   /** v0.10.2 S9 — server-computed (SidebarContent already lists favorites). */
   favoritesCount?: number;
+  /**
+   * v0.10.2 S11 — the signed-in user's email, threaded from SidebarContent's
+   * auth/db lookup so the sign-out confirm dialog can name the account being
+   * signed out. Optional so render-only unit tests don't have to supply it; the
+   * dialog falls back to a generic body when absent.
+   */
+  userEmail?: string;
 }) {
   const t = useT();
+  // v0.10.2 S11 — themed sign-out confirmation. Keep the working Server Action
+  // <form action={signOutAction}> intact; intercept its submit so the confirm
+  // gates it. confirmedRef carries the user's "yes" past the synthetic
+  // requestSubmit() so the second submit runs the real action.
+  const confirm = useConfirm();
+  const signOutFormRef = useRef<HTMLFormElement>(null);
+  const signOutConfirmedRef = useRef(false);
+  const handleSignOutSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (signOutConfirmedRef.current) {
+      signOutConfirmedRef.current = false;
+      return; // allow the real submit through to signOutAction
+    }
+    e.preventDefault();
+    void (async () => {
+      const ok = await confirm({
+        title: t('sidebar.signOutConfirm.title'),
+        description: userEmail ? t('sidebar.signOutConfirm.body', { email: userEmail }) : undefined,
+        confirmLabel: t('sidebar.signOutConfirm.confirm'),
+        cancelLabel: t('common.cancel'),
+        variant: 'danger',
+      });
+      if (ok) {
+        signOutConfirmedRef.current = true;
+        signOutFormRef.current?.requestSubmit();
+      }
+    })();
+  };
   // v0.10.2 S10 — the bare `?` key still opens this sheet via
   // handleShortcutKeydown; the Help menu's "Keyboard shortcuts" item is the
   // discoverable, pointer/keyboard-reachable twin of that shortcut.
@@ -182,7 +218,12 @@ export function SidebarFooterNav({
       <div className="-mx-3 mt-3 flex items-center gap-2 border-t border-border px-3 pt-3">
         {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST to
             /api/auth/signout that Auth.js v5 rejected → sign-out was broken). */}
-        <form action={signOutAction} className="flex-1">
+        <form
+          ref={signOutFormRef}
+          action={signOutAction}
+          onSubmit={handleSignOutSubmit}
+          className="flex-1"
+        >
           <Button
             variant="ghost"
             size="sm"
