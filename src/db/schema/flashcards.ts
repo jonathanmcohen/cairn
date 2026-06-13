@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   index,
   integer,
@@ -29,6 +30,22 @@ export const flashcardDecks = pgTable(
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
     name: text('name').notNull(),
+    // v0.10.2 F2 — hierarchy + per-deck schedule overrides.
+    // NULL on all fields means "inherit workspace default".
+    /** Prefix-encoded icon: "emoji::…" or "file::…" (mirrors pages.icon). */
+    icon: text('icon'),
+    /** Color label for the deck tile. */
+    color: text('color'),
+    /** Self-FK for nested deck tree. ON DELETE SET NULL flattens orphaned children. */
+    parentDeckId: uuid('parent_deck_id').references((): AnyPgColumn => flashcardDecks.id, {
+      onDelete: 'set null',
+    }),
+    /** Per-deck cap on new cards introduced per day. */
+    defaultNewPerDay: integer('default_new_per_day'),
+    /** Per-deck cap on cards reviewed per day. */
+    defaultReviewLimit: integer('default_review_limit'),
+    /** Initial SM-2 ease factor for new cards in this deck. */
+    easeStart: real('ease_start'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
@@ -37,6 +54,7 @@ export const flashcardDecks = pgTable(
       t.workspaceId,
       t.name,
     ),
+    parentDeckIdx: index('flashcard_decks_parent_deck_id_idx').on(t.parentDeckId),
   }),
 );
 

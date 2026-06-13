@@ -1,6 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { ensureDefaultDeck } from '@/lib/flashcards/decks';
 import { registerTrashPurgeCron } from '@/server/cron-register';
 
 export type CreateWorkspaceInput = {
@@ -43,6 +44,7 @@ export async function createWorkspace(
       .insert(schema.workspaceMembers)
       .values({ workspaceId: ws.id, userId: input.ownerUserId, role: 'owner' });
     await registerTrashPurgeCron(tx, { workspaceId: ws.id });
+    await ensureDefaultDeck(tx, ws.id);
     return ws;
   });
 }
