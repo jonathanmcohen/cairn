@@ -96,6 +96,13 @@ export function FlashcardsNav(): React.JSX.Element {
           <Link href={'/flashcards/manage' as Route} className={CHILD_CLASS}>
             {t('flashcards.manage.nav')}
           </Link>
+          <Link
+            href={'/flashcards/decks' as Route}
+            className={CHILD_CLASS}
+            data-testid="flashcards-nav-decks"
+          >
+            {t('flashcards.decks.nav')}
+          </Link>
           <Link href={'/flashcards/orphans' as Route} className={CHILD_CLASS}>
             {t('flashcards.overview.nav.orphans')}
           </Link>
