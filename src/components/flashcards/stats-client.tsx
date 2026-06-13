@@ -141,9 +141,17 @@ export function FlashcardsStatsClient({ stats }: { stats: StatsDto }) {
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-3xl font-semibold">{t('flashcards.stats.title')}</h1>
-        <Button type="button" variant="outline" size="sm" asChild>
-          <Link href={'/flashcards' as Route}>{t('flashcards.overview.nav.study')}</Link>
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" size="sm" asChild>
+            {/* F3-C export route — a real download (no JS); the e2e clicks this. */}
+            <a href="/api/flashcards/export/apkg" download data-testid="flashcards-export-apkg">
+              {t('flashcards.manage.exportApkg')}
+            </a>
+          </Button>
+          <Button type="button" variant="outline" size="sm" asChild>
+            <Link href={'/flashcards' as Route}>{t('flashcards.overview.nav.study')}</Link>
+          </Button>
+        </div>
       </div>
 
       {/* Caveat */}
