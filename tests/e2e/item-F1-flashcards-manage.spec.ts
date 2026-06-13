@@ -158,9 +158,11 @@ test.describe('item F1 — flashcards manage surface', () => {
     const bar = page.getByTestId('flashcards-bulk-bar');
     await expect(bar).toBeVisible();
 
-    // Move to the new deck.
-    await bar.getByRole('button', { name: /move to deck/i }).click();
-    await page.getByRole('menuitem', { name: deckName }).click();
+    // Move to the new deck. v0.10.2 F2-C replaced the flat select with the
+    // shared <DeckTreePicker> (a radix Select: trigger testid + role=option,
+    // content portalled outside the bulk bar).
+    await bar.getByTestId('bulk-move-deck-picker').click();
+    await page.getByRole('option', { name: deckName }).click();
     await expect(rowByFront(page, front).getByTestId('cell-deck')).toHaveText(deckName, {
       timeout: 15_000,
     });

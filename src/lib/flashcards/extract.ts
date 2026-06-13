@@ -5,6 +5,11 @@ export type FlashcardBlock = {
   front: string;
   back: string;
   deckTag: string | null;
+  // v0.10.2 F2-D — the canonical card this block references (null until the
+  // first reconcile backfills it), and the INSERT-TIME deck hint (null unless
+  // the insert dialog stamped a chosen deck on a brand-new block).
+  cardId: string | null;
+  deckId: string | null;
 };
 
 /**
@@ -41,10 +46,56 @@ export function extractFlashcardBlocks(content: unknown): FlashcardBlock[] {
         front: String(attrs.front ?? ''),
         back: String(attrs.back ?? ''),
         deckTag: typeof attrs.deckTag === 'string' ? (attrs.deckTag as string) : null,
+        cardId:
+          typeof attrs.cardId === 'string' && attrs.cardId.length > 0
+            ? (attrs.cardId as string)
+            : null,
+        deckId:
+          typeof attrs.deckId === 'string' && attrs.deckId.length > 0
+            ? (attrs.deckId as string)
+            : null,
       });
     }
     if (Array.isArray(n.content)) for (const child of n.content) walk(child);
   };
   walk(content);
   return out;
+}
+
+/**
+ * v0.10.2 F2-D — stamp a resolved `cardId` (and optionally `blockId`) onto the
+ * `flashcard` node matching `blockId`, MUTATING `content` in place. Returns
+ * `true` iff a write actually happened (the node was found AND its cardId was
+ * not already the target value) — callers use this as the "content changed,
+ * re-persist + republish" signal so the backfill converges (idempotent: a
+ * second pass over already-stamped content returns false).
+ *
+ * Mutating in place is intentional: both reconcile paths hold the exact object
+ * that is about to be persisted / republished, so the backfilled id lands in
+ * the saved JSON and in the live editor without a clone round-trip.
+ *
+ * Dependency-free (only walks plain objects) so the collab process can import
+ * it alongside `extractFlashcardBlocks` without the Drizzle graph.
+ */
+export function stampCardIdOnBlock(content: unknown, blockId: string, cardId: string): boolean {
+  let changed = false;
+  const walk = (node: unknown): void => {
+    if (!node || typeof node !== 'object') return;
+    const n = node as {
+      type?: string;
+      attrs?: Record<string, unknown>;
+      content?: unknown[];
+    };
+    if (n.type === 'flashcard') {
+      if (!n.attrs) n.attrs = {};
+      const attrs = n.attrs;
+      if (attrs.blockId === blockId && attrs.cardId !== cardId) {
+        attrs.cardId = cardId;
+        changed = true;
+      }
+    }
+    if (Array.isArray(n.content)) for (const child of n.content) walk(child);
+  };
+  walk(content);
+  return changed;
 }

@@ -223,6 +223,9 @@ export const AUDIT_ACTIONS = [
   'flashcard.deleted',
   'flashcard.reset',
   'flashcard.reattached',
+  // v0.10.2 F2 — deck lifecycle mutations (merge + delete with disposition).
+  'flashcard.deck_merged',
+  'flashcard.deck_deleted',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -264,4 +267,6 @@ export type AuditTargetType =
   // v0.10.0 F2 — custom slash-command rows (workspace_slash_commands table).
   | 'workspace_slash_command'
   // v0.10.2 F1 — flashcard card rows (flashcard_cards table).
-  | 'flashcard_card';
+  | 'flashcard_card'
+  // v0.10.2 F2 — flashcard deck rows (flashcard_decks table).
+  | 'flashcard_deck';

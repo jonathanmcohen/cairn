@@ -115,12 +115,25 @@ export async function updatePage(
       await reindexPageLinks(tx, current.id, input.patch.content);
       // v0.9.0 G3 P19 — keep flashcard_cards in lockstep with `flashcard`
       // blocks in the saved doc. Same in-tx rationale as page-links.
-      await reconcileFlashcards(tx, {
+      // v0.10.2 F2-D — reconcile may BACKFILL a resolved cardId into a block
+      // (mutating `input.patch.content` in place). When it does, re-persist the
+      // now-stamped content INSIDE the tx so the saved jsonb carries the cardId,
+      // and the post-commit publishContentToCollab (which sends the SAME object
+      // reference) pushes the stamped content into any open editor. The backfill
+      // is idempotent, so a subsequent save resolves by reference and changes
+      // nothing (convergence).
+      const { contentChanged } = await reconcileFlashcards(tx, {
         pageId: current.id,
         workspaceId: input.workspaceId,
         userId: input.byUserId,
         content: input.patch.content,
       });
+      if (contentChanged) {
+        await tx
+          .update(schema.pages)
+          .set({ content: input.patch.content as never })
+          .where(eq(schema.pages.id, current.id));
+      }
     }
     return updated;
   });

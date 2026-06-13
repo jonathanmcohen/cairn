@@ -17,12 +17,14 @@ type DueCard = {
 /**
  * Client-side study session (v0.9.0 G3 P19). Fetches the user's due queue via
  * `/api/flashcards/due`, shows one card at a time, and POSTs each grade to
- * `/api/flashcards/grade`. Optional `?deck=<tag>` filter narrows the queue.
+ * `/api/flashcards/grade`. Optional `?deck=<deckId>` filter narrows the queue
+ * to a single deck (v0.10.2 F2 — was the legacy free-text `deckTag`).
  *
  * `useSearchParams()` requires a `<Suspense>` boundary (Next 16 client bail-out),
  * so the body lives in `StudyInner` and the default export wraps it.
  */
 function StudyInner(): React.JSX.Element {
+  const t = useT();
   const params = useSearchParams();
   const deck = params.get('deck');
   const [queue, setQueue] = useState<DueCard[] | null>(null);
@@ -53,7 +55,13 @@ function StudyInner(): React.JSX.Element {
   if (queue.length === 0) {
     return (
       <div className="mx-auto max-w-xl p-8">
-        <EmptyFlashcardsDue />
+        {deck ? (
+          <p className="rounded border bg-card p-8 text-center text-muted-foreground">
+            {t('flashcards.study.deckQueueEmpty')}
+          </p>
+        ) : (
+          <EmptyFlashcardsDue />
+        )}
       </div>
     );
   }
@@ -88,7 +96,7 @@ function StudyInner(): React.JSX.Element {
     <div className="mx-auto max-w-xl space-y-4 p-6">
       <div className="text-sm text-muted-foreground">
         Card {idx + 1} of {queue.length}
-        {deck ? ` · deck: ${deck}` : card.deckTag ? ` · ${card.deckTag}` : ''}
+        {card.deckTag ? ` · ${card.deckTag}` : ''}
       </div>
       <div className="min-h-48 rounded-lg border bg-card p-8 text-center text-lg">
         {showBack ? card.back : card.front}

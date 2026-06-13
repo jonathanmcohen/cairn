@@ -33,10 +33,13 @@ beforeEach(async () => {
  * flashcards. Proves an editor-authored card reaches the SRS via the collab
  * path (#114) and persists with a non-empty block id (#115).
  */
-async function simulateCollabMaterialize(pageId: string, prose: unknown): Promise<void> {
+async function simulateCollabMaterialize(
+  pageId: string,
+  prose: unknown,
+): Promise<{ contentChanged: boolean }> {
   const contentJson = JSON.stringify(prose);
   await sql`UPDATE pages SET content = ${contentJson}::jsonb, updated_at = now() WHERE id = ${pageId}`;
-  await reconcileFlashcardsRaw(sql, { pageId, content: prose });
+  return reconcileFlashcardsRaw(sql, { pageId, content: prose });
 }
 
 describe('collab materialize → flashcard SRS ingest', () => {
@@ -90,6 +93,41 @@ describe('collab materialize → flashcard SRS ingest', () => {
     await simulateCollabMaterialize(page.id, prose);
     await simulateCollabMaterialize(page.id, prose);
 
+    expect(await db.select().from(schema.flashcardCards)).toHaveLength(1);
+  });
+
+  it('backfills the minted cardId into the live prose, then converges (F2-D)', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    // The collab process keeps the live prose object; mutate it in place across
+    // flushes exactly like materialize() does (same object identity each call).
+    const prose = {
+      type: 'doc',
+      content: [
+        {
+          type: 'flashcard',
+          attrs: { blockId: 'card-1', front: 'Q', back: 'A', deckTag: null },
+        },
+      ],
+    };
+
+    const first = await simulateCollabMaterialize(page.id, prose);
+    expect(first.contentChanged).toBe(true);
+
+    const [card] = await db.select().from(schema.flashcardCards);
+    expect(card).toBeTruthy();
+    // The in-place prose now carries the minted cardId.
+    const block = prose.content[0] as { attrs: Record<string, unknown> };
+    expect(block.attrs.cardId).toBe(card!.id);
+
+    // Second flush over the same (now-stamped) prose resolves by reference,
+    // mints nothing, and reports no content change (convergence).
+    const second = await simulateCollabMaterialize(page.id, prose);
+    expect(second.contentChanged).toBe(false);
     expect(await db.select().from(schema.flashcardCards)).toHaveLength(1);
   });
 });

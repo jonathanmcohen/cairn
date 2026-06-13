@@ -41,6 +41,40 @@ describe('FlashcardNode', () => {
     expect(node?.attrs?.blockId).toBe('b1');
   });
 
+  it('roundtrips the F2-D cardId + deckId attrs through JSON', () => {
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
+    editor.commands.setContent({
+      type: 'doc',
+      content: [
+        {
+          type: 'flashcard',
+          attrs: {
+            front: 'Q',
+            back: 'A',
+            deckTag: null,
+            blockId: 'b1',
+            cardId: 'card-123',
+            deckId: 'deck-456',
+          },
+        },
+      ],
+    });
+    const node = editor.getJSON().content?.[0];
+    expect(node?.attrs?.cardId).toBe('card-123');
+    expect(node?.attrs?.deckId).toBe('deck-456');
+  });
+
+  it('defaults cardId + deckId to null when absent', () => {
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
+    editor.commands.setContent({
+      type: 'doc',
+      content: [{ type: 'flashcard', attrs: { front: 'Q', back: 'A' } }],
+    });
+    const node = editor.getJSON().content?.[0];
+    expect(node?.attrs?.cardId).toBeNull();
+    expect(node?.attrs?.deckId).toBeNull();
+  });
+
   it('setFlashcard command inserts a flashcard node with a non-empty blockId', () => {
     const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
     editor.commands.setContent({ type: 'doc', content: [{ type: 'paragraph' }] });
@@ -70,7 +104,14 @@ describe('FlashcardNode', () => {
       content: [
         {
           type: 'flashcard',
-          attrs: { front: 'Front', back: 'Back', deckTag: 'tag', blockId: 'b1' },
+          attrs: {
+            front: 'Front',
+            back: 'Back',
+            deckTag: 'tag',
+            blockId: 'b1',
+            cardId: 'c1',
+            deckId: 'd1',
+          },
         },
       ],
     });
@@ -80,5 +121,19 @@ describe('FlashcardNode', () => {
     expect(html).toContain('data-back="Back"');
     expect(html).toContain('data-deck-tag="tag"');
     expect(html).toContain('data-block-id="b1"');
+    expect(html).toContain('data-card-id="c1"');
+    expect(html).toContain('data-deck-id="d1"');
+  });
+
+  it('parses data-card-id + data-deck-id back from HTML', () => {
+    const editor = makeEditor({ extensions: [StarterKit, FlashcardNode] });
+    editor.commands.setContent(
+      '<div data-flashcard="1" data-front="F" data-back="B" data-block-id="b9" data-card-id="cardZ" data-deck-id="deckZ"></div>',
+    );
+    const node = editor.getJSON().content?.[0];
+    expect(node?.type).toBe('flashcard');
+    expect(node?.attrs?.cardId).toBe('cardZ');
+    expect(node?.attrs?.deckId).toBe('deckZ');
+    expect(node?.attrs?.blockId).toBe('b9');
   });
 });

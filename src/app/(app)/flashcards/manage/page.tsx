@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 import { FlashcardsManageClient } from '@/components/flashcards/manage-client';
-import type { ManageCardDto } from '@/components/flashcards/types';
+import type { DeckTreeDto, ManageCardDto } from '@/components/flashcards/types';
 import { getDb } from '@/db/client';
 import { getAuthContext } from '@/lib/auth/require-role';
-import { listDecks } from '@/lib/flashcards/decks';
+import { listDeckTree } from '@/lib/flashcards/decks';
 import { listCards } from '@/lib/flashcards/manage';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,7 @@ export default async function FlashcardsManagePage() {
   const db = getDb();
   const [cards, decks] = await Promise.all([
     listCards(db, ctx.workspaceId, ctx.userId),
-    listDecks(db, ctx.workspaceId),
+    listDeckTree(db, ctx.workspaceId),
   ]);
 
   const initialCards: ManageCardDto[] = cards.map((c) => ({
@@ -44,7 +44,16 @@ export default async function FlashcardsManagePage() {
     state: c.state,
   }));
 
-  const initialDecks = decks.map((d) => ({ id: d.id, name: d.name }));
+  const initialDecks: DeckTreeDto[] = decks.map((d) => ({
+    id: d.id,
+    name: d.name,
+    icon: d.icon,
+    color: d.color,
+    parentDeckId: d.parentDeckId,
+    defaultNewPerDay: d.defaultNewPerDay,
+    defaultReviewLimit: d.defaultReviewLimit,
+    easeStart: d.easeStart,
+  }));
 
   return <FlashcardsManageClient initialCards={initialCards} initialDecks={initialDecks} />;
 }
