@@ -2,6 +2,7 @@ import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { LiveRegionProvider } from '@/components/a11y/live-region';
+import { CollabStatusProvider } from '@/components/collab/collab-status-context';
 import { LocaleSwitcher } from '@/components/locale-switcher';
 import { NoWorkspace } from '@/components/no-workspace';
 import { NotificationBell } from '@/components/notifications/bell';
@@ -71,49 +72,54 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
     <UserThemeProvider initialPrefs={themePrefs}>
       <OfflineProvider>
         <LiveRegionProvider>
-          <ShortcutDispatcher>
-            <SkipLink />
-            <div
-              data-cairn-brand-scope=""
-              style={brandPrimaryStyle(brand.appliedPrimary)}
-              className="flex min-h-screen flex-col md:flex-row"
-            >
-              <RegisterSw />
-              <SearchPalette currentUserId={ctx.userId} />
-              <ShortcutSheet />
-              <QuickCaptureModal />
-              <OnboardingWizard workspaceId={ctx.workspaceId} initialState={onboardingState} />
-              {/* v0.10.0 F3 — element-anchored tour. `hasAnyUserPages` lets the
+          {/* v0.10.2 S14 — wraps BOTH the workspace nav (sidebar footer pill)
+              and `children` (the editor that publishes its collab status), so
+              the footer can mirror the active editor's Live state. */}
+          <CollabStatusProvider>
+            <ShortcutDispatcher>
+              <SkipLink />
+              <div
+                data-cairn-brand-scope=""
+                style={brandPrimaryStyle(brand.appliedPrimary)}
+                className="flex min-h-screen flex-col md:flex-row"
+              >
+                <RegisterSw />
+                <SearchPalette currentUserId={ctx.userId} />
+                <ShortcutSheet />
+                <QuickCaptureModal />
+                <OnboardingWizard workspaceId={ctx.workspaceId} initialState={onboardingState} />
+                {/* v0.10.0 F3 — element-anchored tour. `hasAnyUserPages` lets the
                   tour mirror-invert the wizard's show condition so the two
                   first-run surfaces never stack. */}
-              <OnboardingTour
-                workspaceId={ctx.workspaceId}
-                hasAnyUserPages={onboardingState.hasAnyUserPages}
-              />
-              {/* v0.10.0 E5 — /settings/* has its own SettingsSidebar; the
+                <OnboardingTour
+                  workspaceId={ctx.workspaceId}
+                  hasAnyUserPages={onboardingState.hasAnyUserPages}
+                />
+                {/* v0.10.0 E5 — /settings/* has its own SettingsSidebar; the
                   client gate unmounts the workspace nav (desktop aside +
                   mobile drawer) there so two left navs never stack. */}
-              <WorkspaceNavGate>
-                <Sidebar workspaceId={ctx.workspaceId} />
-                <SidebarDrawer>
-                  <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
-                </SidebarDrawer>
-              </WorkspaceNavGate>
-              <main id="main-content" className="flex-1 p-8">
-                <div
-                  data-cairn-workspace-topbar=""
-                  data-tour="topbar"
-                  className="mb-2 flex items-center justify-end gap-4"
-                >
-                  <NotificationBell />
-                  <LocaleSwitcher />
-                  <OfflineIndicator />
-                </div>
-                {children}
-              </main>
-              <Toaster />
-            </div>
-          </ShortcutDispatcher>
+                <WorkspaceNavGate>
+                  <Sidebar workspaceId={ctx.workspaceId} />
+                  <SidebarDrawer>
+                    <SidebarContent workspaceId={ctx.workspaceId} workspaces={workspaces} />
+                  </SidebarDrawer>
+                </WorkspaceNavGate>
+                <main id="main-content" className="flex-1 p-8">
+                  <div
+                    data-cairn-workspace-topbar=""
+                    data-tour="topbar"
+                    className="mb-2 flex items-center justify-end gap-4"
+                  >
+                    <NotificationBell />
+                    <LocaleSwitcher />
+                    <OfflineIndicator />
+                  </div>
+                  {children}
+                </main>
+                <Toaster />
+              </div>
+            </ShortcutDispatcher>
+          </CollabStatusProvider>
         </LiveRegionProvider>
       </OfflineProvider>
     </UserThemeProvider>
