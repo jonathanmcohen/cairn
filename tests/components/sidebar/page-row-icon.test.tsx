@@ -29,7 +29,7 @@ afterEach(cleanup);
 describe('page row icon rendering', () => {
   it('does NOT leak the emoji:: shortcode prefix into the DOM', () => {
     const pages: FlatPageNode[] = [
-      { id: 'p1', parentId: null, title: 'Test', icon: 'emoji::💡', depth: 0 },
+      { id: 'p1', parentId: null, title: 'Test', icon: 'emoji::💡', depth: 0, childCount: 0 },
     ];
     const { container } = render(<VirtualizedPageTree initial={pages} />);
     expect(container.textContent).toContain('Test');

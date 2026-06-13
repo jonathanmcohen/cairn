@@ -533,6 +533,13 @@
       "when": 1780760597504,
       "tag": "0075_workspace_slash_commands",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1781304462000,
+      "tag": "0076_page_position",
+      "breakpoints": true
     }
   ]
 }

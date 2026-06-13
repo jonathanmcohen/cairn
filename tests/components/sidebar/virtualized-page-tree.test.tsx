@@ -58,6 +58,7 @@ function makeNodes(n: number): FlatPageNode[] {
     title: `Page ${i}`,
     icon: null,
     depth: i === 0 ? 0 : Math.min(3, Math.floor(Math.log10(i + 1))),
+    childCount: 0,
   }));
 }
 
@@ -79,9 +80,9 @@ describe('<VirtualizedPageTree>', () => {
 
   it('applies depth-based indentation as inline style', () => {
     const nodes: FlatPageNode[] = [
-      { id: 'a', parentId: null, title: 'A', icon: null, depth: 0 },
-      { id: 'b', parentId: 'a', title: 'B', icon: null, depth: 1 },
-      { id: 'c', parentId: 'b', title: 'C', icon: null, depth: 2 },
+      { id: 'a', parentId: null, title: 'A', icon: null, depth: 0, childCount: 1 },
+      { id: 'b', parentId: 'a', title: 'B', icon: null, depth: 1, childCount: 1 },
+      { id: 'c', parentId: 'b', title: 'C', icon: null, depth: 2, childCount: 0 },
     ];
     const { container } = render(<VirtualizedPageTree initial={nodes} />);
     const rows = container.querySelectorAll('[data-virtual-row]');
