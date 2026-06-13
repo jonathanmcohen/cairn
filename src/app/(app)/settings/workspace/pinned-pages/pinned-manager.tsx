@@ -18,6 +18,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useRouter } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import { toast } from 'sonner';
+import { InlineIcon } from '@/components/page-icon-inline';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -56,7 +57,11 @@ function SortableRow({
         ⋮⋮
       </button>
       <span className="flex-1 truncate">
-        {pin.icon ? `${pin.icon} ` : ''}
+        {pin.icon ? (
+          <span className="mr-1">
+            <InlineIcon value={pin.icon} fallback={null} />
+          </span>
+        ) : null}
         {pin.title}
       </span>
       <Button

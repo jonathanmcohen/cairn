@@ -1,6 +1,7 @@
 'use client';
 
 import { forwardRef, useEffect, useId, useImperativeHandle, useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 
 export type PageItem = { id: string; title: string; icon: string | null };
 
@@ -103,7 +104,9 @@ export const PageLinkList = forwardRef<
                 i === index ? 'bg-accent' : ''
               }`}
             >
-              <span className="mr-1.5">{item.icon ?? '\u{1F4C4}'}</span>
+              <span className="mr-1.5">
+                <InlineIcon value={item.icon} fallback={'\u{1F4C4}'} />
+              </span>
               <span className="font-medium">{item.title || 'Untitled'}</span>
             </button>
           </div>

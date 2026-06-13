@@ -2,6 +2,7 @@ import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 import { Bibliography } from '@/components/editor/extensions/bibliography';
 import { ReadOnlyView } from '@/components/editor/read-only-view';
+import { PageIconRender } from '@/components/page-icon-render';
 import { CoverBanner } from '@/components/pages/cover-banner';
 import { SeeAlsoPanel } from '@/components/pages/see-also-panel';
 import { ThemeProvider as UserThemeProvider } from '@/components/themes/theme-provider';
@@ -70,7 +71,7 @@ export default async function PublicPage({ params }: { params: Promise<{ slug: s
       <CoverBanner cover={cover} alt={page.title} />
       <div className="mx-auto max-w-3xl px-4 py-12">
         <h1 className="mb-6 flex items-center gap-2 text-3xl font-bold">
-          {page.icon && <span aria-hidden>{page.icon}</span>}
+          {page.icon && <PageIconRender value={page.icon} size={30} />}
           {page.title}
         </h1>
         <ReadOnlyView content={content} citationStyle={citationStyle} />

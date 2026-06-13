@@ -471,7 +471,10 @@ export function VirtualizedPageTree({
                       <ChevronDown aria-hidden="true" className="h-3 w-3" />
                     )}
                     <span className="w-4 shrink-0 text-center" aria-hidden="true">
-                      {row.icon ?? <Folder className="inline h-3 w-3" />}
+                      <InlineIcon
+                        value={row.icon}
+                        fallback={<Folder className="inline h-3 w-3" />}
+                      />
                     </span>
                     <span className="truncate" title={row.name}>
                       {row.name}
