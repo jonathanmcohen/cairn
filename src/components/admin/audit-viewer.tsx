@@ -206,6 +206,9 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   'flashcard.deleted': 'Flashcard(s) deleted',
   'flashcard.reset': 'Flashcard SM-2 reset',
   'flashcard.reattached': 'Flashcard(s) reattached',
+  // v0.10.2 F2 — deck lifecycle mutations (merge + delete with disposition).
+  'flashcard.deck_merged': 'Flashcard deck merged',
+  'flashcard.deck_deleted': 'Flashcard deck deleted',
 };
 
 export function actionLabel(action: string): string {
