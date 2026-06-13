@@ -21,6 +21,16 @@ import { createPageViaApi, openPageEditor, pmDoc, pmParagraph } from './util';
 
 const MANAGE = '/flashcards/manage';
 
+// e2e hygiene: pages this spec creates are deleted in afterEach so they don't
+// accumulate in the shared run DB and bloat the virtualized sidebar tree for
+// later specs (e.g. item-p1's move/reparent row lookup).
+const createdPageIds: string[] = [];
+async function mkPage(...args: Parameters<typeof createPageViaApi>): Promise<string> {
+  const id = await createPageViaApi(...args);
+  createdPageIds.push(id);
+  return id;
+}
+
 /** A flashcard TipTap node (the reconcile loop turns these into card rows on save). */
 function flashcardNode(blockId: string, front: string, back: string): Record<string, unknown> {
   return { type: 'flashcard', attrs: { blockId, front, back, deckTag: null } };
@@ -67,6 +77,12 @@ async function gradeCardByFront(page: Page, front: string): Promise<void> {
 }
 
 test.describe('item F1 — flashcards manage surface', () => {
+  test.afterEach(async ({ page }) => {
+    for (const id of createdPageIds.splice(0)) {
+      await page.request.delete(`/api/pages/${id}`).catch(() => {});
+    }
+  });
+
   test('planted cards populate the manage table; cells, filter, search', async ({
     page,
     seeded,
@@ -79,7 +95,7 @@ test.describe('item F1 — flashcards manage surface', () => {
     // A page with two planted flashcard nodes; opening the editor runs the
     // reconcile-on-save loop that materializes them into flashcard_cards rows.
     const anchor = `f1 anchor ${stamp}`;
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 manage ${stamp}`,
       pmDoc(
@@ -121,7 +137,7 @@ test.describe('item F1 — flashcards manage surface', () => {
     const deckName = `Deck-${stamp}`;
 
     const anchor = `f1 bulk anchor ${stamp}`;
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 bulk ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(`bblk-${stamp}`, front, `back-${stamp}`)),
@@ -188,7 +204,7 @@ test.describe('item F1 — flashcards manage surface', () => {
     const front = `del-${stamp}`;
 
     const anchor = `f1 del anchor ${stamp}`;
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 delete ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(`dblk-${stamp}`, front, `back-${stamp}`)),
@@ -270,7 +286,7 @@ test.describe('item F1 — flashcards manage surface', () => {
     const front = `csv-${stamp}`;
 
     const anchor = `f1 csv anchor ${stamp}`;
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 csv ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(`cblk-${stamp}`, front, `back-${stamp}`)),

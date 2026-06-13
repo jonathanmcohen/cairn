@@ -25,6 +25,15 @@ const OVERVIEW = '/flashcards';
 const ORPHANS = '/flashcards/orphans';
 const STUDY = '/flashcards/study';
 
+// e2e hygiene: delete pages this spec creates in afterEach so they don't pile up
+// in the shared run DB and bloat the virtualized sidebar tree for later specs.
+const createdPageIds: string[] = [];
+async function mkPage(...args: Parameters<typeof createPageViaApi>): Promise<string> {
+  const id = await createPageViaApi(...args);
+  createdPageIds.push(id);
+  return id;
+}
+
 /** A flashcard TipTap node (the reconcile loop turns these into card rows on save). */
 function flashcardNode(blockId: string, front: string, back: string): Record<string, unknown> {
   return { type: 'flashcard', attrs: { blockId, front, back, deckTag: null } };
@@ -77,6 +86,12 @@ async function gradeOneInStudy(page: import('@playwright/test').Page): Promise<v
 }
 
 test.describe('item F1 — flashcards orphans + overview', () => {
+  test.afterEach(async ({ page }) => {
+    for (const id of createdPageIds.splice(0)) {
+      await page.request.delete(`/api/pages/${id}`).catch(() => {});
+    }
+  });
+
   test('permanent page delete orphans its cards but keeps review history', async ({
     page,
     seeded,
@@ -86,7 +101,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     const front = `permdel-${stamp}`;
     const anchor = `f1 permdel anchor ${stamp}`;
 
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 permdel ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(`pblk-${stamp}`, front, `back-${stamp}`)),
@@ -127,7 +142,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     const front = `trash-${stamp}`;
     const anchor = `f1 trash anchor ${stamp}`;
 
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 trash ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(`tblk-${stamp}`, front, `back-${stamp}`)),
@@ -170,7 +185,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     const anchor = `f1 blockrm anchor ${stamp}`;
     const blockId = `rblk-${stamp}`;
 
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 blockrm ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(blockId, front, `back-${stamp}`)),
@@ -211,7 +226,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     const anchor = `f1 resolve anchor ${stamp}`;
 
     // One page with three flashcards; remove all three blocks to orphan them.
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 resolve ${stamp}`,
       pmDoc(
@@ -225,11 +240,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
 
     // A SECOND page to reattach to (search-as-you-type picker target).
     const targetTitle = `F1 reattach target ${stamp}`;
-    const targetId = await createPageViaApi(
-      page,
-      targetTitle,
-      pmDoc(pmParagraph(`target ${stamp}`)),
-    );
+    const targetId = await mkPage(page, targetTitle, pmDoc(pmParagraph(`target ${stamp}`)));
 
     // Orphan all three by removing their blocks (PATCH content → reconcile).
     const removed = await page.request.patch(`/api/pages/${pageId}`, {
@@ -297,7 +308,7 @@ test.describe('item F1 — flashcards orphans + overview', () => {
     const front = `ov-${stamp}`;
     const anchor = `f1 ov anchor ${stamp}`;
 
-    const pageId = await createPageViaApi(
+    const pageId = await mkPage(
       page,
       `F1 overview ${stamp}`,
       pmDoc(pmParagraph(anchor), flashcardNode(`oblk-${stamp}`, front, `back-${stamp}`)),
