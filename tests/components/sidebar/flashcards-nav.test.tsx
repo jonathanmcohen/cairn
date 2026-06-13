@@ -47,9 +47,11 @@ describe('<FlashcardsNav>', () => {
     expect(parent.getAttribute('href')).toBe('/flashcards');
   });
 
-  it('renders the three children (Due now / Manage / Orphans) when expanded', async () => {
+  it('renders the three children (Due now / Manage / Orphans) once expanded', async () => {
     mockDue([]);
     render(<FlashcardsNav />);
+    // Collapsed by default — expand first.
+    fireEvent.click(screen.getByRole('button', { name: 'Toggle flashcards menu' }));
     expect(screen.getByRole('link', { name: 'Due now' }).getAttribute('href')).toBe(
       '/flashcards/study',
     );
@@ -61,11 +63,18 @@ describe('<FlashcardsNav>', () => {
     );
   });
 
-  it('collapses the children when the chevron toggle is clicked', async () => {
+  it('is collapsed by default and the chevron toggle expands/collapses the children', async () => {
     mockDue([]);
     render(<FlashcardsNav />);
     const toggle = screen.getByRole('button', { name: 'Toggle flashcards menu' });
+    // Collapsed at mount: children absent, aria-expanded false.
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('link', { name: 'Due now' })).toBeNull();
+    // Click → expands.
+    fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Due now' })).toBeTruthy();
+    // Click again → collapses.
     fireEvent.click(toggle);
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
     expect(screen.queryByRole('link', { name: 'Due now' })).toBeNull();

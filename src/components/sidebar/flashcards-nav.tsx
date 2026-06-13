@@ -50,7 +50,10 @@ function useDueCount(): number {
 
 export function FlashcardsNav(): React.JSX.Element {
   const t = useT();
-  const [expanded, setExpanded] = useState(true);
+  // Collapsed by default: the parent is always visible, but expanding the three
+  // children is opt-in so the nav doesn't permanently push the PAGES tree down
+  // (an always-expanded default shrinks the virtualized tree viewport).
+  const [expanded, setExpanded] = useState(false);
   const dueCount = useDueCount();
 
   return (
