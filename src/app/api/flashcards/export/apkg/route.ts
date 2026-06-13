@@ -45,6 +45,8 @@ export async function GET(): Promise<Response> {
     if (err instanceof HttpError) {
       return NextResponse.json({ error: err.message }, { status: err.status });
     }
+    const { logger } = await import('@/lib/observability/logger');
+    logger.error({ err }, 'apkg export failed');
     return NextResponse.json({ error: 'internal' }, { status: 500 });
   }
 }

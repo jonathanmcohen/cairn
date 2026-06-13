@@ -1,7 +1,5 @@
 import { Buffer } from 'node:buffer';
 import { createHash } from 'node:crypto';
-import { createRequire } from 'node:module';
-import path from 'node:path';
 import { PassThrough } from 'node:stream';
 import { ZipArchive } from 'archiver';
 import { and, asc, eq } from 'drizzle-orm';
@@ -63,19 +61,40 @@ const BASIC_MODEL_ID = 1_000_000_000_001;
 let sqlJsPromise: Promise<SqlJsStatic> | null = null;
 
 /**
- * Instantiate sql.js once. The wasm binary ships next to the package main; in a
- * Next standalone server the file-tracer copies the JS but not the sibling
- * `.wasm` (it's not a JS import), so we resolve it explicitly via
- * `require.resolve` and point sql.js's `locateFile` at the real path. The
- * route module force-includes the wasm in the build trace (see the route's
- * top-level comment) so this path exists at runtime.
+ * Instantiate sql.js once. Two standalone-build hazards are handled here:
+ *
+ *  1. Locating the package on disk. Turbopack rewrites `require`/`require.resolve`
+ *     obtained from a normal `import { createRequire } from 'node:module'` into
+ *     its own bundler shim: a literal `require.resolve('sql.js')` gets folded to
+ *     a NUMERIC module id (so `path.dirname(<number>)` throws), and a dynamic
+ *     specifier throws "Cannot find module as expression is too dynamic". We
+ *     escape the rewrite by pulling the REAL Node builtins from
+ *     `process.getBuiltinModule(...)` (Node 22.3+), which Turbopack does not
+ *     intercept — so `nodeRequire.resolve('sql.js')` is a genuine Node
+ *     resolution returning the on-disk path. (sql.js is `serverExternalPackages`
+ *     in next.config, so the package itself lives in the standalone
+ *     node_modules where Node can find it.)
+ *  2. Loading the wasm. The NFT file-tracer copies the package JS but NOT the
+ *     sibling `sql-wasm.wasm` (it's not a JS import), so the route force-includes
+ *     the wasm in the build trace (outputFileTracingIncludes). We read those
+ *     bytes and hand sql.js `wasmBinary` directly — bypassing its
+ *     `locateFile`/`fetch` loader, which in a server bundle would try to
+ *     `fetch()` a filesystem path.
  */
 function getSqlJs(): Promise<SqlJsStatic> {
   if (!sqlJsPromise) {
-    const require = createRequire(import.meta.url);
-    const mainPath = require.resolve('sql.js');
-    const wasmPath = path.join(path.dirname(mainPath), 'sql-wasm.wasm');
-    sqlJsPromise = initSqlJs({ locateFile: () => wasmPath });
+    // Real Node builtins (NOT the static `import`s) so Turbopack leaves these
+    // resolutions as genuine runtime Node calls — see hazard 1 above.
+    const nodeRequire = process.getBuiltinModule('module').createRequire(import.meta.url);
+    const fs = process.getBuiltinModule('fs');
+    const nodePath = process.getBuiltinModule('path');
+    const mainPath = nodeRequire.resolve('sql.js');
+    const wasmPath = nodePath.join(nodePath.dirname(mainPath), 'sql-wasm.wasm');
+    // readFileSync returns a Buffer (pooled); slice to a tight ArrayBuffer so it
+    // matches initSqlJs's `wasmBinary: ArrayBuffer` type without a pooled-offset tail.
+    const buf = fs.readFileSync(wasmPath);
+    const wasmBinary = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+    sqlJsPromise = initSqlJs({ wasmBinary });
   }
   return sqlJsPromise;
 }

@@ -15,6 +15,16 @@ const nextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
   typedRoutes: true,
+  // Keep sql.js OUT of the bundle (.apkg export, src/lib/flashcards/apkg.ts).
+  // Turbopack statically rewrites `require.resolve('sql.js')` — even through
+  // `createRequire(import.meta.url)` — into the bundled NUMERIC module id, so
+  // `path.dirname(<that number>)` throws "path argument must be of type string"
+  // and the export 500s. Marking sql.js external leaves both the `import` and
+  // the `require.resolve` as real Node runtime calls against
+  // node_modules/sql.js, returning a real filesystem path. The sibling
+  // `sql-wasm.wasm` is pinned into the standalone trace via
+  // outputFileTracingIncludes below (NFT copies the JS but not the .wasm).
+  serverExternalPackages: ['sql.js'],
   // Skip the in-`next build` TypeScript phase. After "Compiled successfully",
   // Next spawns a separate type-checking worker that OOMs (SIGKILL) on the
   // self-hosted CI runner. This phase is redundant: type safety is enforced by
