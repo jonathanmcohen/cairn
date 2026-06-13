@@ -20,9 +20,8 @@ import { useCollabStatus } from '@/components/collab/collab-status-context';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { useShortcutSheet } from './shortcuts/dispatcher';
+import { FlashcardsNav } from './sidebar/flashcards-nav';
 import { NavCountPill, useNavCount } from './sidebar/nav-count-pill';
-import { ReviewDueCounter } from './sidebar/review-due-counter';
-import { StudyLink } from './sidebar/study-link';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
 import { useConfirm } from './ui/confirm-dialog';
@@ -122,8 +121,10 @@ export function SidebarFooterNav({
   };
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
-      <ReviewDueCounter />
-      <StudyLink />
+      {/* v0.10.2 F1 Task D — consolidated Flashcards parent (overview link +
+          Due now / Manage / Orphans children + due-count badge), replacing the
+          standalone ReviewDueCounter + StudyLink rows. */}
+      <FlashcardsNav />
       {/* S9 — the star goes gold once the user has any favorite (purely
           cosmetic state echo; no theme token covers gold/amber, so raw
           yellow-500 with matching fill is the project-sanctioned choice). */}

@@ -3,8 +3,7 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 
-vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: () => null }));
-vi.mock('@/components/sidebar/study-link', () => ({ StudyLink: () => null }));
+vi.mock('@/components/sidebar/flashcards-nav', () => ({ FlashcardsNav: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
 vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
 // S10 — the footer's Help menu reads useShortcutSheet, which throws outside

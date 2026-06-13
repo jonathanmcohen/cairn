@@ -28,8 +28,10 @@ function openHelpMenu() {
   });
 }
 
-// ReviewDueCounter + ThemeToggle pull in client hooks that error under jsdom.
-vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: () => null }));
+// FlashcardsNav fetches /api/flashcards/due on mount + ThemeToggle pulls in
+// client hooks that error under jsdom. Stub both so this suite stays focused on
+// the footer's Help menu / nav-order / sign-out structure.
+vi.mock('@/components/sidebar/flashcards-nav', () => ({ FlashcardsNav: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
 // The Sign out form's `action={signOutAction}` imports @/lib/auth/config, which
 // validates env() at module load and throws under jsdom. Mock the action.

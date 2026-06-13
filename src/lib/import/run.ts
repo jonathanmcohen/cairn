@@ -3,9 +3,11 @@ import { eq } from 'drizzle-orm';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from '@/db/schema';
+import type { FlashcardsArchive } from '@/lib/export/flashcards-archive';
 import { getStorage } from '@/lib/files/get-storage';
 import { collectDatabaseIds } from '@/lib/templates/capture';
 import type { TemplatePayload } from '@/lib/templates/payload';
+import { restoreFlashcards } from './flashcards-restore';
 import { importMarkdownFolder } from './markdown-folder';
 import { importNotion } from './notion';
 import type { ImportReport } from './report';
@@ -54,12 +56,17 @@ export async function runImportWithDb(db: Db, input: RunImportInput): Promise<Im
     let payload: TemplatePayload;
     let report: ImportReport;
     let blobs: Map<string, Buffer> | null = null;
+    // F1 Task D — flashcards section + page-id remap (workspace-archive only).
+    let flashcards: FlashcardsArchive | null = null;
+    let pageIdRemap: Map<string, string> = new Map();
 
     if (input.source === 'workspace-archive') {
       const result = await importWorkspaceArchive(input.file);
       payload = result.payload;
       report = result.report;
       blobs = result.blobs;
+      flashcards = result.flashcards;
+      pageIdRemap = result.pageIdRemap;
     } else if (input.source === 'notion') {
       const files = await readMarkdownTree(input.file);
       const result = importNotion({ files });
@@ -72,7 +79,10 @@ export async function runImportWithDb(db: Db, input: RunImportInput): Promise<Im
       report = result.report;
     }
 
-    await persistImportPayload(db, input.workspaceId, payload, input.actorUserId);
+    await persistImportPayload(db, input.workspaceId, payload, input.actorUserId, {
+      flashcards,
+      pageIdRemap,
+    });
 
     if (blobs) {
       const storage = getStorage();
@@ -149,6 +159,10 @@ async function persistImportPayload(
   workspaceId: string,
   payload: TemplatePayload,
   actorUserId: string,
+  flashcardsInput?: {
+    flashcards: FlashcardsArchive | null;
+    pageIdRemap: Map<string, string>;
+  },
 ): Promise<void> {
   await db.transaction(async (tx) => {
     // Map (new) database id → host page id, derived from content nodes.
@@ -237,6 +251,18 @@ async function persistImportPayload(
           );
         }
       }
+    }
+
+    // 3. Flashcards (decks + cards + per-user SM-2). Inside the same tx as the
+    //    pages so a card's page FK is satisfied and a failed restore rolls the
+    //    whole import back.
+    if (flashcardsInput?.flashcards) {
+      await restoreFlashcards(tx, {
+        workspaceId,
+        actorUserId,
+        archive: flashcardsInput.flashcards,
+        pageIdRemap: flashcardsInput.pageIdRemap,
+      });
     }
   });
 }

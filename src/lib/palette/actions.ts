@@ -76,6 +76,11 @@ export function buildPaletteActions(ctx: PaletteContext): PaletteAction[] {
       run: () => ctx.router.push('/templates'),
     },
     {
+      id: 'flashcards.open',
+      label: 'Open flashcards',
+      run: () => ctx.router.push('/flashcards'),
+    },
+    {
       id: 'flashcards.study',
       label: 'Study flashcards',
       run: () => ctx.router.push('/flashcards/study'),
