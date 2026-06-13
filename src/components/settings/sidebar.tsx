@@ -230,6 +230,11 @@ export function SettingsSidebar({
             href: '/settings/workspace/trash' as Route,
           },
           {
+            id: 'workspace-flashcards',
+            label: t('settings.nav.workspace.flashcards'),
+            href: '/settings/workspace/flashcards' as Route,
+          },
+          {
             id: 'workspace-export-static',
             label: t('settings.nav.workspace.exportStatic'),
             href: '/settings/workspace/export-static-site' as Route,

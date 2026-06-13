@@ -1,6 +1,7 @@
 import { and, countDistinct, eq, gte, isNull, lte, or } from 'drizzle-orm';
 import type { PostgresJsDatabase } from 'drizzle-orm/postgres-js';
 import * as schema from '@/db/schema';
+import { DEFAULT_REMINDER_HOUR, workspacesFireAtHour } from './notify-due-hour';
 
 type Db = PostgresJsDatabase<typeof schema>;
 
@@ -21,10 +22,52 @@ export type NotifyResult = { notified: number };
  * Workspace membership gates the scan — we only consider cards the user is
  * actually a member of the owning workspace for. Stale cards in a workspace
  * the user no longer belongs to don't trigger spam.
+ *
+ * v0.10.2 F3 Task D — per-workspace reminder hour:
+ *
+ * When `tickHour` is provided (0–23), only workspaces whose `reminderHour`
+ * matches are processed in this invocation.  Workspaces with
+ * `reminderHour = null` fall back to `DEFAULT_REMINDER_HOUR` (9 UTC).
+ *
+ * When `tickHour` is NOT provided (legacy / no-arg call), all workspaces
+ * with at least one due card are notified regardless of their hour setting —
+ * this preserves the pre-F3D behavior for callers that haven't been updated
+ * and for unit tests that don't care about hour filtering.
  */
-export async function notifyDueFlashcards(db: Db, now: Date = new Date()): Promise<NotifyResult> {
+export async function notifyDueFlashcards(
+  db: Db,
+  now: Date = new Date(),
+  tickHour?: number,
+): Promise<NotifyResult> {
   const todayStart = new Date(now);
   todayStart.setUTCHours(0, 0, 0, 0);
+
+  // v0.10.2 F3 Task D — when a tickHour is provided, load per-workspace
+  // reminder settings and build an allowSet of workspace IDs that should fire
+  // this tick. When tickHour is absent, all workspaces are eligible (backward
+  // compat / legacy callers).
+  let eligibleWorkspaceIds: Set<string> | null = null;
+  if (tickHour !== undefined) {
+    const allSettings = await db
+      .select({
+        workspaceId: schema.workspaceFlashcardSettings.workspaceId,
+        reminderHour: schema.workspaceFlashcardSettings.reminderHour,
+      })
+      .from(schema.workspaceFlashcardSettings);
+
+    // For workspaces without a settings row, they implicitly use the default
+    // hour (DEFAULT_REMINDER_HOUR). We resolve them by also fetching ALL
+    // workspace IDs and treating any without a settings row as having null.
+    const allWorkspaces = await db.select({ id: schema.workspaces.id }).from(schema.workspaces);
+    const settingsMap = new Map(allSettings.map((s) => [s.workspaceId, s.reminderHour]));
+    const allReminderSettings = allWorkspaces.map((ws) => ({
+      workspaceId: ws.id,
+      reminderHour: settingsMap.has(ws.id) ? (settingsMap.get(ws.id) ?? null) : null,
+    }));
+
+    const firing = workspacesFireAtHour(allReminderSettings, tickHour);
+    eligibleWorkspaceIds = new Set(firing.map((s) => s.workspaceId));
+  }
 
   // (workspace, member) pairs with at least one due card for that member.
   // We join workspace_members → flashcard_cards (same workspace) → pages
@@ -67,6 +110,8 @@ export async function notifyDueFlashcards(db: Db, now: Date = new Date()): Promi
   let notified = 0;
   for (const row of dueRows) {
     if (row.count === 0) continue;
+    // Skip workspaces that don't fire this tick (only when tickHour was given).
+    if (eligibleWorkspaceIds !== null && !eligibleWorkspaceIds.has(row.workspaceId)) continue;
     const [already] = await db
       .select({ id: schema.notifications.id })
       .from(schema.notifications)
