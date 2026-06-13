@@ -12,6 +12,9 @@ vi.mock('@/lib/i18n/provider', async () => {
       (en[key] ?? key).replace(/\{(\w+)\}/g, (_m, k) => vars?.[k] ?? ''),
   };
 });
+// v0.10.2 S8 — the tree itself now consumes useRouter (DnD refresh after a
+// drop); stub the router like the sibling tree tests do.
+vi.mock('next/navigation', () => ({ useRouter: () => ({ refresh: () => {}, push: () => {} }) }));
 // The row actions hook + menus pull in client-only deps; stub them to inert.
 vi.mock('@/components/sidebar/use-page-row-actions', () => ({
   usePageRowActions: () => ({ renaming: false }),
