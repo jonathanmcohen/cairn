@@ -47,6 +47,21 @@ const nextConfig = {
       './.github/**/*',
     ],
   },
+  // The .apkg export route (src/app/api/flashcards/export/apkg) instantiates
+  // sql.js, which loads its wasm binary (`sql-wasm.wasm`) at runtime from beside
+  // the package main in node_modules. Next's NFT tracer copies the imported JS
+  // but NOT the sibling `.wasm` (it's not a JS `require`), so the standalone
+  // server can't find it. Force the wasm (and the JS that loads it) into the
+  // route's trace. The glob covers both the hoisted path and pnpm's virtual
+  // store (`.pnpm/sql.js@*/node_modules/sql.js/...`).
+  outputFileTracingIncludes: {
+    '/api/flashcards/export/apkg': [
+      './node_modules/.pnpm/sql.js@*/node_modules/sql.js/dist/sql-wasm.wasm',
+      './node_modules/.pnpm/sql.js@*/node_modules/sql.js/dist/sql-wasm.js',
+      './node_modules/sql.js/dist/sql-wasm.wasm',
+      './node_modules/sql.js/dist/sql-wasm.js',
+    ],
+  },
   async headers() {
     // Static, request-independent hardening headers (nosniff, frame-DENY,
     // referrer, permissions-policy, HSTS, X-Robots-Tag). The Content-Security-

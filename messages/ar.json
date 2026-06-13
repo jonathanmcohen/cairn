@@ -804,6 +804,7 @@
   "flashcards.manage.title": "إدارة البطاقات",
   "flashcards.manage.empty": "لا توجد بطاقات تطابق هذه المرشّحات.",
   "flashcards.manage.export": "تصدير CSV",
+  "flashcards.manage.exportApkg": "تصدير ‎.apkg‏ (Anki)",
   "flashcards.manage.undo": "تراجع",
   "flashcards.manage.cancel": "إلغاء",
   "flashcards.manage.save": "حفظ",

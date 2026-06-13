@@ -800,6 +800,7 @@
   "flashcards.manage.title": "Gestionar tarjetas",
   "flashcards.manage.empty": "Ninguna tarjeta coincide con estos filtros.",
   "flashcards.manage.export": "Exportar CSV",
+  "flashcards.manage.exportApkg": "Exportar .apkg (Anki)",
   "flashcards.manage.undo": "Deshacer",
   "flashcards.manage.cancel": "Cancelar",
   "flashcards.manage.save": "Guardar",

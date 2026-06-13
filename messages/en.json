@@ -800,6 +800,7 @@
   "flashcards.manage.title": "Manage flashcards",
   "flashcards.manage.empty": "No flashcards match these filters.",
   "flashcards.manage.export": "Export CSV",
+  "flashcards.manage.exportApkg": "Export .apkg (Anki)",
   "flashcards.manage.undo": "Undo",
   "flashcards.manage.cancel": "Cancel",
   "flashcards.manage.save": "Save",
