@@ -6,6 +6,7 @@ import { EmptyTrash } from '@/components/empty-state/variants';
 import { InlineIcon } from '@/components/page-icon-inline';
 import { Button } from '@/components/ui/button';
 import { useConfirm } from '@/components/ui/confirm-dialog';
+import { absoluteLocal, relativeFromNow } from '@/lib/datetime/format';
 import { useT } from '@/lib/i18n/provider';
 
 export type TrashItem = {
@@ -64,8 +65,10 @@ export function TrashList({ initialItems }: { initialItems: TrashItem[] }) {
               {/* B2: pages born title-less store '' — render the i18n fallback.
                   Display-only; the stored title is untouched. */}
               <div className="font-medium">{item.title.trim() || t('trash.untitled')}</div>
-              <div className="text-xs text-muted-foreground">
-                Deleted {new Date(item.deletedAt).toLocaleString()}
+              {/* Q-8: relative phrasing ("3 days ago") with the exact timestamp
+                  on hover, so the row stays scannable without losing precision. */}
+              <div className="text-xs text-muted-foreground" title={absoluteLocal(item.deletedAt)}>
+                Deleted {relativeFromNow(item.deletedAt)}
               </div>
             </div>
           </div>
