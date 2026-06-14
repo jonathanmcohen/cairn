@@ -44,6 +44,14 @@ const PUBLIC_PATHS = [
   // Same lesson as /api/mcp above: a cookieless headless route that is its
   // own access boundary must not be bounced to /login by the cookie gate.
   '/api/search/federated/peer',
+  // v0.10.3 A11Y-0 — the documented public REST API (`/api/v1/*`) is a HEADLESS
+  // bearer surface: callers send `Authorization: Bearer cairn_sk_…` and carry NO
+  // session cookie. Every route is wrapped in `withApiKey` (src/lib/api/rate-limit.ts),
+  // which is its OWN access boundary — it returns 401 JSON on a missing/invalid
+  // key. Without this entry the cookie gate 307-redirected every API call to
+  // /login (HTML), making the published API unusable for any non-browser client
+  // (scripts, the a11y seed exporter, CI). Same lesson as /api/mcp + /api/oauth.
+  '/api/v1',
 ];
 
 // Auth.js v5 sets a cookie at this name when using database sessions.
