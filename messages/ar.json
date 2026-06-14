@@ -1159,6 +1159,7 @@
   "storage.usage.usedOfLimit": "{used} من {limit} مستخدمة",
   "storage.usage.usedUnlimited": "{used} مستخدمة",
   "storage.usage.unlimited": "غير محدود",
+  "storage.usage.unlimitedDocs": "كيفية تعيين حد للتخزين",
   "storage.usage.meterLabel": "استخدام تخزين مساحة العمل",
   "storage.usage.remaining": "{remaining} متبقية",
   "storage.usage.nearLimit": "التخزين ممتلئ تقريبًا — تبقى {remaining}.",

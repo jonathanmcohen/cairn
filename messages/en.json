@@ -1155,6 +1155,7 @@
   "storage.usage.usedOfLimit": "{used} of {limit} used",
   "storage.usage.usedUnlimited": "{used} used",
   "storage.usage.unlimited": "Unlimited",
+  "storage.usage.unlimitedDocs": "How to set a storage limit",
   "storage.usage.meterLabel": "Workspace storage usage",
   "storage.usage.remaining": "{remaining} remaining",
   "storage.usage.nearLimit": "Storage is almost full — {remaining} remaining.",
