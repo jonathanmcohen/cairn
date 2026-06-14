@@ -63,6 +63,14 @@ export type EditorProps = {
    */
   editable: boolean;
   /**
+   * v0.10.3 Q-5 — whether to surface the "Suggest edits" chip. Computed
+   * server-side by `shouldShowSuggestEdits` (owner + draft → hidden, since
+   * suggesting tracked changes to your own private draft is noise). Defaults to
+   * true so hosts that don't compute it (e.g. the public `/p/<slug>` mount,
+   * which is non-editable anyway) keep the prior behavior.
+   */
+  suggestApplicable?: boolean;
+  /**
    * v0.9.0 G3 P15 review fix — when true, diagram blocks (PlantUML/drawio)
    * that would otherwise ship the decrypted source to a 3rd-party server
    * (www.plantuml.com / viewer.diagrams.net) render a placeholder instead.
@@ -115,6 +123,7 @@ export function Editor({
   initialDisableBibliography = false,
   citationStyle = 'apa',
   collabBridgeConfigured = true,
+  suggestApplicable = true,
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
@@ -659,7 +668,11 @@ export function Editor({
   const toolbarControls = (
     <>
       {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
-      {mountableEditable && (
+      {/* v0.10.3 Q-5 — the suggest-edits group is additionally gated on
+          `suggestApplicable`: hidden on a private owned draft (suggest-to-self
+          is noise), shown once the page is in review / published / not owned.
+          Its trailing separator lives inside the gate so it never dangles. */}
+      {mountableEditable && suggestApplicable && (
         <>
           <SuggestionToolbar
             editor={editor}

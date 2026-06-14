@@ -32,6 +32,7 @@ import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
 import { getPageCover } from '@/lib/pages/cover';
 import { isLocked } from '@/lib/pages/lock';
+import { shouldShowSuggestEdits } from '@/lib/pages/suggest-visibility';
 
 export default async function PageView({ params }: { params: Promise<{ pageId: string }> }) {
   const { pageId } = await params;
@@ -55,6 +56,13 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   const cover = await getPageCover(getDb(), page.id, ctx.workspaceId);
   const lockState = await isLocked(getDb(), page.id);
   const canEdit = hasMinRole(ctx.role, 'editor');
+  // v0.10.3 Q-5 — suppress the Suggest-edits chip on a private owned draft
+  // (suggesting tracked changes to your own unsubmitted draft is noise). The
+  // owner proxy is `created_by`, matching the approval flow's self-check.
+  const showSuggestEdits = shouldShowSuggestEdits({
+    isOwner: page.createdBy === ctx.userId,
+    status: page.status,
+  });
   // v0.9.0 G5 P28 — per-device TOC sidebar pref persists as a cookie; the
   // toggle lives at /settings/account/theme. Reading at render time avoids
   // a client-side flicker.
@@ -196,6 +204,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           initialUpdatedAt={page.updatedAt.toISOString()}
           currentUser={currentUser}
           editable={hasMinRole(ctx.role, 'editor')}
+          suggestApplicable={showSuggestEdits}
           encrypted={page.encrypted}
           locked={lockState.locked}
           lockedUntilIso={lockState.lockedUntil ? lockState.lockedUntil.toISOString() : null}
