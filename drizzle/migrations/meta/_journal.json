@@ -554,6 +554,13 @@
       "when": 1781400000000,
       "tag": "0078_flashcard_decks_full",
       "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1781799961300,
+      "tag": "0079_flashcard_stats",
+      "breakpoints": true
     }
   ]
 }

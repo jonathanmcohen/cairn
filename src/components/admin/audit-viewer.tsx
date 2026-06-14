@@ -209,6 +209,8 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.10.2 F2 — deck lifecycle mutations (merge + delete with disposition).
   'flashcard.deck_merged': 'Flashcard deck merged',
   'flashcard.deck_deleted': 'Flashcard deck deleted',
+  // v0.10.2 F3 — leech detection triggered card suspension.
+  'flashcard.card_leeched': 'Flashcard marked as leech (suspended)',
 };
 
 export function actionLabel(action: string): string {

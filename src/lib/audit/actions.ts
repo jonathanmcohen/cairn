@@ -226,6 +226,9 @@ export const AUDIT_ACTIONS = [
   // v0.10.2 F2 — deck lifecycle mutations (merge + delete with disposition).
   'flashcard.deck_merged',
   'flashcard.deck_deleted',
+  // v0.10.2 F3 — leech detection: card suspended after N consecutive Again grades.
+  // metadata: { cardId, againCount, leechThreshold } — ids + counts only.
+  'flashcard.card_leeched',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

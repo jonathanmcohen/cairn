@@ -128,14 +128,20 @@ export async function registerPageAutoUnlockCron(
 }
 
 /**
- * v0.9.0 G3 P19 — global `flashcards:notify-due` cron, daily at 09:00 UTC.
+ * v0.9.0 G3 P19 — global `flashcards:notify-due` cron.
  *
- * One row across the deployment (`workspace_id IS NULL`); the sweep itself
- * inserts one `flashcards_due` notification per (user, workspace) and is
- * idempotent within a UTC day. Identified by an exact command match (no
- * `kind` column on `cron_schedules`). Idempotent on re-register.
+ * v0.10.2 F3 Task D — updated from daily at 09:00 UTC to hourly (`0 * * * *`)
+ * so per-workspace reminder hours are honored. The CLI shim reads the current
+ * UTC hour and only processes workspaces whose `reminderHour` matches (with
+ * null → DEFAULT_REMINDER_HOUR = 9 UTC for backward compatibility). The sweep
+ * itself is idempotent within a UTC day so the per-hour cadence never sends
+ * duplicates.
+ *
+ * One row across the deployment (`workspace_id IS NULL`); identified by an
+ * exact command match (no `kind` column on `cron_schedules`). Idempotent on
+ * re-register.
  */
-const FLASHCARDS_NOTIFY_DUE_CRON = '0 9 * * *';
+const FLASHCARDS_NOTIFY_DUE_CRON = '0 * * * *';
 const FLASHCARDS_NOTIFY_DUE_COMMAND = 'flashcards:notify-due';
 
 export async function registerFlashcardsNotifyDueCron(

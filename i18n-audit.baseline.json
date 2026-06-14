@@ -1627,6 +1627,18 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/(app)/settings/workspace/flashcards/page.tsx",
+      "line": 32,
+      "text": "Flashcard settings",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/workspace/flashcards/page.tsx",
+      "line": 34,
+      "text": "Workspace defaults for the spaced-repetition scheduler and optional daily-reminder email.\n        Members cannot override these workspace-level values individually.",
+      "kind": "jsx_text"
+    },
+    {
       "file": "app/(app)/settings/workspace/general/page.tsx",
       "line": 32,
       "text": "General",
@@ -4598,24 +4610,6 @@
     },
     {
       "file": "components/settings/webhooks-manager.tsx",
-      "line": 330,
-      "text": "Select all",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/settings/webhooks-manager.tsx",
-      "line": 338,
-      "text": "Recommended",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/settings/webhooks-manager.tsx",
-      "line": 346,
-      "text": "Clear",
-      "kind": "jsx_text"
-    },
-    {
-      "file": "components/settings/webhooks-manager.tsx",
       "line": 221,
       "text": "Rotated. Copy now — Cairn won&apos;t show it again. Existing receivers must adopt this\n              secret immediately or signatures will start failing.",
       "kind": "jsx_text"
@@ -4682,14 +4676,32 @@
     },
     {
       "file": "components/settings/webhooks-manager.tsx",
+      "line": 330,
+      "text": "Select all",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
       "line": 333,
       "text": "Cancel",
       "kind": "jsx_text"
     },
     {
       "file": "components/settings/webhooks-manager.tsx",
+      "line": 338,
+      "text": "Recommended",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
       "line": 342,
       "text": "No webhooks yet.",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "components/settings/webhooks-manager.tsx",
+      "line": 346,
+      "text": "Clear",
       "kind": "jsx_text"
     },
     {

@@ -138,9 +138,71 @@ export const flashcardReviews = pgTable(
   }),
 );
 
+/**
+ * Append-only review event log (v0.10.2 F3). One row per review action; used
+ * for time-windowed stats, streak calculation, and leech detection (grade=0
+ * count ≥ workspace_flashcard_settings.leech_threshold triggers suspension).
+ */
+export const flashcardReviewEvents = pgTable(
+  'flashcard_review_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    cardId: uuid('card_id')
+      .notNull()
+      .references(() => flashcardCards.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** SM-2 grade: 0=Again, 1=Hard, 2=Good, 3=Easy. */
+    grade: integer('grade').notNull(),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userReviewedAtIdx: index('flashcard_review_events_user_reviewed_at_idx').on(
+      t.userId,
+      t.reviewedAt,
+    ),
+    cardUserIdx: index('flashcard_review_events_card_user_idx').on(t.cardId, t.userId),
+  }),
+);
+
+/**
+ * Per-workspace flashcard schedule + leech + reminder configuration (v0.10.2
+ * F3). At most one row per workspace; missing row means "use application
+ * defaults" (see getWorkspaceFlashcardSettings).
+ */
+export const workspaceFlashcardSettings = pgTable('workspace_flashcard_settings', {
+  workspaceId: uuid('workspace_id')
+    .primaryKey()
+    .references(() => workspaces.id, { onDelete: 'cascade' }),
+  /** Override the workspace's default deck shown in the study UI. */
+  defaultDeckId: uuid('default_deck_id').references(() => flashcardDecks.id, {
+    onDelete: 'set null',
+  }),
+  /** Max new cards introduced per day (workspace default). */
+  newPerDay: integer('new_per_day').notNull().default(20),
+  /** Max reviews per day (workspace default). */
+  reviewLimit: integer('review_limit').notNull().default(200),
+  /** Initial SM-2 ease factor for new cards. */
+  easeStart: real('ease_start').notNull().default(2.5),
+  /** Again-count threshold that triggers leech suspension. */
+  leechThreshold: integer('leech_threshold').notNull().default(8),
+  /**
+   * UTC hour (0–23) for daily digest email. NULL = no reminder. Honored only
+   * when SMTP is configured.
+   */
+  reminderHour: integer('reminder_hour'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type FlashcardCard = typeof flashcardCards.$inferSelect;
 export type NewFlashcardCard = typeof flashcardCards.$inferInsert;
 export type FlashcardReview = typeof flashcardReviews.$inferSelect;
 export type NewFlashcardReview = typeof flashcardReviews.$inferInsert;
 export type FlashcardDeck = typeof flashcardDecks.$inferSelect;
 export type NewFlashcardDeck = typeof flashcardDecks.$inferInsert;
+export type FlashcardReviewEvent = typeof flashcardReviewEvents.$inferSelect;
+export type NewFlashcardReviewEvent = typeof flashcardReviewEvents.$inferInsert;
+export type WorkspaceFlashcardSettings = typeof workspaceFlashcardSettings.$inferSelect;
+export type NewWorkspaceFlashcardSettings = typeof workspaceFlashcardSettings.$inferInsert;
