@@ -22,7 +22,10 @@ test.describe('A11Y-0 — /api/v1 is a headless bearer surface, not cookie-gated
 
   test('GET /api/v1/pages with a bogus bearer → 401 JSON through the proxy', async ({ page }) => {
     const res = await page.request.get('/api/v1/pages', {
-      headers: { authorization: 'Bearer cairn_sk_0000000000000000000000000000000000000000000000000000000000000000' },
+      headers: {
+        authorization:
+          'Bearer cairn_sk_0000000000000000000000000000000000000000000000000000000000000000',
+      },
       maxRedirects: 0,
     });
     expect(res.status()).toBe(401);
