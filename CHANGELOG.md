@@ -5,6 +5,57 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-06-14
+
+A large UI-polish and flashcards release: a top-to-bottom sidebar redesign, an
+editor/settings polish pass, and a full spaced-repetition study system
+(flashcard management, decks, statistics, and Anki export).
+
+### Added
+
+- **Flashcards study system** (3 phases):
+  - **Management** — a `/flashcards` overview, a filterable `/flashcards/manage`
+    table (bulk move/suspend/delete, CSV export), an orphaned-cards view, a
+    consolidated Flashcards sidebar parent with a live due-count badge, and
+    inclusion in workspace backups (migration 0077).
+  - **Decks** — a hierarchical deck tree with per-deck scheduling options,
+    reparent/merge/delete, a study `?deck=` filter, and block↔card
+    canonicalisation so the editor flashcard block and the stored card stay in
+    sync (migration 0078).
+  - **Statistics, settings & export** — a `/flashcards/stats` page (retention,
+    maturity buckets, 30-day forecast, per-deck breakdown), append-only review
+    events with automatic **leech** suspension, workspace-level scheduler
+    settings with an optional daily-reminder email hour, and **Anki `.apkg`
+    export** (plus CSV) (migration 0079).
+- **Sidebar redesign** — collapse toggle (Mod+\) with a 56px rail and
+  56–400px resize, a comfortable/compact density preference, conceptual group
+  dividers and tracked-uppercase section headers, drag-to-reorder/reparent in
+  the PAGES tree with chevrons and child-count badges, personal-hub count pills
+  (inbox / my-tasks) and a gold favorites star, a workspace-level collab-health
+  "Live" indicator, and uploaded workspace icons in the switcher.
+- **Editor & navigation polish** — a slash-menu category rail with jump-to
+  navigation, citation superscript chips with hover popovers, heading-collapse
+  chevrons visible at rest, a settings nav with icons and collapsible Admin
+  sub-groups, a collab-bridge "degraded" pill on the toolbar, a Cmd-K result
+  count with an "still indexing" indicator, and a 404 page recovery search.
+
+### Changed
+
+- Page header de-cluttered — Lock / Move / Bibliography moved into an overflow
+  menu; editor block rhythm and page-lifecycle status pills use a semantic color
+  hierarchy.
+- Templates moved into the command palette and Replay-tour into the Help menu;
+  the search pill label dropped its "(command palette)" suffix.
+
+### Fixed
+
+- Trash and archived rows now render "Untitled" for empty-title pages.
+- Database-kind template instantiation returns the minted host page id (lands on
+  the new page instead of erroring).
+- The `emoji::` / `file::` icon shortcode prefix no longer leaks into the UI.
+- The `.apkg` export route now works in the Next standalone server (sql.js wasm
+  resolved via real Node builtins past the Turbopack bundler rewrite).
+
 ## [0.10.1] - 2026-06-11
 
 Two quality-of-life fixes for self-hosted deployments, straight off the
