@@ -95,7 +95,7 @@ export async function SeeAlsoPanel(props: SeeAlsoPanelProps) {
                   <span className="font-medium">{r.title}</span>
                   <span
                     className="ml-auto text-xs tabular-nums text-muted-foreground"
-                    title={`similarity ${Math.round(r.score * 100)} percent`}
+                    title={t('seeAlso.similarityTooltip', { percent: Math.round(r.score * 100) })}
                   >
                     {Math.round(r.score * 100)}%
                   </span>

@@ -68,6 +68,20 @@ describe('<SeeAlsoPanel>', () => {
     expect(meters[1]?.getAttribute('aria-valuenow')).toBe('0');
   });
 
+  // v0.10.3 Q-7 — the bare "similarity 95 percent" tooltip didn't explain what
+  // the number means. The legend now names the metric (cosine over embeddings)
+  // and routes through i18n with the percent interpolated.
+  it('explains the similarity metric in the percentage tooltip', async () => {
+    const { SeeAlsoPanel } = await import('@/components/pages/see-also-panel');
+    const ui = await SeeAlsoPanel({ pageId: 'src', viewerUserId: 'u1' });
+    render(<>{ui}</>);
+    const pct = screen.getByText('95%');
+    const title = pct.getAttribute('title') ?? '';
+    expect(title).toContain('95%');
+    expect(title).toMatch(/cosine/i);
+    expect(title).toMatch(/embeddings?/i);
+  });
+
   it('renders an accessible heading and a nav landmark', async () => {
     const { SeeAlsoPanel } = await import('@/components/pages/see-also-panel');
     const ui = await SeeAlsoPanel({ pageId: 'src', viewerUserId: 'u1' });
