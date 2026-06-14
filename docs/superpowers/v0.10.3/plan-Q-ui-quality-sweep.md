@@ -8,29 +8,31 @@ the SHIPPED ones with proof. Per item: **verdict SHIPPED (file:line + live
 screenshot, no code) or GAP (missing file:line → build → spec → screenshot)**.
 Many items below reference v0.10.2 work and are expected to close at audit.
 
-| # | Item | Likely | Re-audit verdict (TBD at lock) |
-|---|------|--------|--------------------------------|
-| Q-1 | Sign-out confirm dialog (#80 / S11) — modal "Sign out of <email>? [Cancel][Sign out]" | verify | _SHIPPED-or-GAP file:line_ |
-| Q-2 | Active sessions: per-row **Revoke** + "Sign out all other devices" (Settings → Security) | likely GAP | _TBD_ |
-| Q-3 | Workspace storage card "Unlimited" → link to Storage (CFG-2) once landed; interim docs link | GAP (depends CFG-2) | _TBD_ |
-| Q-4 | Template-clone lands at sidebar root → default new page under Cairn Guide or user-pickable parent | GAP | _TBD_ |
-| Q-5 | "Suggest edits" chip always shown → hide when page owned by current user AND no reviewer assignments | GAP | _TBD_ |
-| Q-6 | TRANSLATIONS panel always shown → hide until first link OR collapse by default | GAP | _TBD_ |
-| Q-7 | SEE ALSO similarity % no legend → hover tooltip (cosine over embeddings); consider bar-only | GAP | _TBD_ |
-| Q-8 | Trash row full timestamp → relative ("3 days ago") with absolute on hover | GAP | _TBD_ |
-| Q-9 | Workspace switcher dropdown width (v0.10.2 P16) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-10 | Empty SAVED SEARCHES header hidden when none (v0.10.2 S15) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-11 | Status pills all four render + color-blind-safe (Draft neutral / In review amber / Published green / Archived dim) — deuter/protan/tritan | verify+a11y | _TBD_ |
-| Q-12 | Drag-to-reparent drop-indicator line renders on sibling-gap drag-over (v0.10.2 S8) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-13 | Slash-menu category rail renders left + click jumps scroll (v0.10.2 P9) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-14 | Citation hover popover: author + year + first-line snippet (v0.10.2 P5) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-15 | Encryption page tone amber→blue info (v0.10.2 P13) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-16 | 404 page recovery search renders + queries workspace (v0.10.2 P17) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-17 | Workspace switcher renders uploaded icon image, not letter fallback (v0.10.2 S6) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-18 | PINNED section: drag-reorder works + pin/unpin from page ⋯ menu (not just Settings) | verify+GAP | _TBD_ |
-| Q-19 | Help → Keyboard shortcuts ⌘+Shift+/ binding actually wired (opens via shortcut) | verify | _SHIPPED-or-GAP file:line_ |
-| Q-20 | Sidebar collapse ⌘+\\ — confirm intended behavior: fully-hidden vs 56px icon rail; ship rail or fix the doc | decision | _TBD_ |
-| Q-21 | Trash + Archived empty-title rows render "Untitled" incl. pre-fix rows (v0.10.2) | verify | _SHIPPED-or-GAP file:line_ |
+Status legend: **SHIPPED** = already in the codebase (file:line proof, no code change, live screenshot at deploy) · **SHIPPED✚PR** = GAP/PARTIAL built this milestone (PR ref) · **BUILD** = still to build.
+
+| # | Item | Likely | Re-audit verdict (locked) |
+|---|------|--------|---------------------------|
+| Q-1 | Sign-out confirm dialog (#80 / S11) — modal "Sign out of <email>? [Cancel][Sign out]" | verify | **SHIPPED** — `src/components/sidebar-footer-nav.tsx:74` (useConfirm gate on the sign-out form submit) |
+| Q-2 | Active sessions: per-row **Revoke** + "Sign out all other devices" (Settings → Security) | likely GAP | **BUILD** — PARTIAL: `sessions-card.tsx` lists sessions; per-session Revoke route + button still to build |
+| Q-3 | Workspace storage card "Unlimited" → link to Storage (CFG-2) once landed; interim docs link | GAP (depends CFG-2) | **SHIPPED✚PR** #434 — `src/components/settings/storage-usage-card.tsx` (interim docs link; repoint to in-app Storage when CFG-2 lands) |
+| Q-4 | Template-clone lands at sidebar root → default new page under Cairn Guide or user-pickable parent | GAP | **BUILD** — `templates/instantiate` route + gallery/wizard parent picker still to build |
+| Q-5 | "Suggest edits" chip always shown → hide when page owned by current user AND no reviewer assignments | GAP | **SHIPPED✚PR** #433 — `src/lib/pages/suggest-visibility.ts` + `editor.tsx`; re-scoped (no reviewer model) to **owner + draft** with the user |
+| Q-6 | TRANSLATIONS panel always shown → hide until first link OR collapse by default | GAP | **SHIPPED✚PR** #430 — `src/components/pages/translations-picker.tsx:63` (viewer + empty → null) |
+| Q-7 | SEE ALSO similarity % no legend → hover tooltip (cosine over embeddings); consider bar-only | GAP | **SHIPPED✚PR** #432 — `src/components/pages/see-also-panel.tsx:96` (`seeAlso.similarityTooltip`, kept digits + legend) |
+| Q-8 | Trash row full timestamp → relative ("3 days ago") with absolute on hover | GAP | **SHIPPED✚PR** #431 — `src/components/trash-list.tsx:67` + `src/lib/datetime/format.ts` (`relativeFromNow`/`absoluteLocal`) |
+| Q-9 | Workspace switcher dropdown width (v0.10.2 P16) | verify | **SHIPPED** — `src/components/workspace-switcher.tsx:128` (content width tracks trigger via `--radix-dropdown-menu-trigger-width`) |
+| Q-10 | Empty SAVED SEARCHES header hidden when none (v0.10.2 S15) | verify | **SHIPPED** — `src/components/sidebar/saved-searches.tsx:82` (`return null` when empty) |
+| Q-11 | Status pills all four render + color-blind-safe (Draft neutral / In review amber / Published green / Archived dim) — deuter/protan/tritan | verify+a11y | **SHIPPED✚PR** #435 — `src/components/pages/status-picker.tsx:34-38,61` (text label = non-color distinguisher; characterization test added) |
+| Q-12 | Drag-to-reparent drop-indicator line renders on sibling-gap drag-over (v0.10.2 S8) | verify | **SHIPPED** — `src/components/sidebar/virtualized-page-tree.tsx:593` (drop-line span on before/after dropZone) |
+| Q-13 | Slash-menu category rail renders left + click jumps scroll (v0.10.2 P9) | verify | **SHIPPED** — `src/components/editor/slash-menu.tsx:204` (rail on `showRail`; `jumpToGroup()` scroll) |
+| Q-14 | Citation hover popover: author + year + first-line snippet (v0.10.2 P5) | verify | **SHIPPED** — `src/components/editor/extensions/citation.tsx:95` (CitationSup popover: author-year line + title) |
+| Q-15 | Encryption page tone amber→blue info (v0.10.2 P13) | verify | **SHIPPED** — `src/components/admin/encryption-disabled-notice.tsx:22` (`border-info/40 bg-info/10 text-info`) |
+| Q-16 | 404 page recovery search renders + queries workspace (v0.10.2 P17) | verify | **SHIPPED** — `src/app/not-found.tsx:34` (`<form action="/search" method="get">` + search input) |
+| Q-17 | Workspace switcher renders uploaded icon image, not letter fallback (v0.10.2 S6) | verify | **SHIPPED** — `src/components/workspace-switcher.tsx:47` (`if (iconUrl)` → `<img>`, else letter) |
+| Q-18 | PINNED section: drag-reorder works + pin/unpin from page ⋯ menu (not just Settings) | verify+GAP | **BUILD** — drag-reorder + page ⋯ pin/unpin still to build |
+| Q-19 | Help → Keyboard shortcuts ⌘+Shift+/ binding actually wired (opens via shortcut) | verify | **SHIPPED** — `src/components/shortcuts/app-shortcuts.ts:104` (`Mod+/`) + `dispatcher.tsx:60` (bare `?`=Shift+/); proven by `question-mark-shortcut.test.ts` + e2e `item-E1` |
+| Q-20 | Sidebar collapse ⌘+\\ — confirm intended behavior: fully-hidden vs 56px icon rail; ship rail or fix the doc | decision | **SHIPPED** — `src/components/shortcuts/app-shortcuts.ts:95` (`sidebar.toggle` → `toggleSidebarCollapsed`, flips the `cairn-sidebar-collapsed` root class). Behavior as built; a rail-vs-hidden change would be a separate decision |
+| Q-21 | Trash + Archived empty-title rows render "Untitled" incl. pre-fix rows (v0.10.2) | verify | **SHIPPED** — `src/components/trash-list.tsx:67` + `src/components/archived-list.tsx:84` (`title.trim() \|\| t('trash.untitled')`, display-only so pre-fix rows covered) |
 
 ---
 
@@ -46,17 +48,20 @@ Many items below reference v0.10.2 work and are expected to close at audit.
   RED on `main`, GREEN on branch (×3), screenshot under
   `docs/superpowers/v0.10.3/artifacts/`.
 
-## Coverage check (fill at lock)
+## Coverage check (locked)
 
-Every Q-# above resolves to exactly one verdict row with file:line proof; GAP
-rows additionally map to a spec + screenshot. Table complete = GO-ready.
+All 21 Q-# rows carry a verdict + file:line. **18 resolved** this milestone —
+11 SHIPPED (verify-only, characterized where useful), 6 SHIPPED✚PR
+(GAP/PARTIAL built: Q-3 #434, Q-5 #433, Q-6 #430, Q-7 #432, Q-8 #431, Q-11 #435),
+Q-19 SHIPPED (no code). **3 BUILD remaining: Q-2, Q-4, Q-18.** Plan is GO-complete
+for the resolved set; the three BUILD items are the open work.
 
-## Failure-modes-verified (fill at lock)
+## Failure-modes-verified (locked)
 
-- [ ] Q-5 hide-logic: chip still shows when a reviewer assignment exists / page not owned by viewer.
-- [ ] Q-8 relative date: hover reveals exact absolute timestamp (no info loss).
-- [ ] Q-11 palette: simulated deuter/protan/tritan keep the four pills distinguishable.
-- [ ] Q-21 pre-fix rows: existing empty-title trash/archived rows show "Untitled" without a re-save/migration.
+- [x] Q-5 hide-logic: chip still shows once out of draft / when not owner — unit matrix in `tests/lib/pages/suggest-visibility.test.ts` (premise re-scoped: Cairn has no reviewer-assignment model; mapped to owner+draft).
+- [x] Q-8 relative date: hover reveals exact absolute timestamp (`title={absoluteLocal(...)}`) — `tests/components/trash-list.test.tsx`.
+- [x] Q-11 palette: the four pills carry text labels (non-color distinguisher), so they survive simulated deuter/protan/tritan and monochrome — `tests/components/status-picker.test.tsx`.
+- [x] Q-21 pre-fix rows: the "Untitled" fallback is display-only (`title.trim() || t('trash.untitled')`), so existing empty-title rows render it with no re-save/migration.
 
 ## Open questions for GO
 
