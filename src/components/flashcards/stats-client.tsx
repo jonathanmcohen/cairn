@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import type { DailyCount, ForecastDay, Maturity, PerDeck, Retention } from '@/lib/flashcards/stats';
 import { useT } from '@/lib/i18n/provider';
+import type { TFunction } from '@/lib/i18n/t';
 
 // ---------------------------------------------------------------------------
 // Inline SVG helpers (mirrors src/app/(app)/settings/admin/api-keys/sparkline.tsx)
@@ -12,10 +13,12 @@ import { useT } from '@/lib/i18n/provider';
 
 function Sparkline({
   values,
+  t,
   width = 300,
   height = 60,
 }: {
   values: number[];
+  t: TFunction;
   width?: number;
   height?: number;
 }) {
@@ -24,7 +27,7 @@ function Sparkline({
       <svg
         width={width}
         height={height}
-        aria-label="No data"
+        aria-label={t('flashcards.stats.noData')}
         role="img"
         xmlns="http://www.w3.org/2000/svg"
       />
@@ -43,7 +46,7 @@ function Sparkline({
       width={width}
       height={height}
       viewBox={`0 0 ${width} ${height}`}
-      aria-label={`Total ${sum} reviews across last ${values.length} days`}
+      aria-label={t('flashcards.stats.sparkline.summary', { total: sum, days: values.length })}
       role="img"
       className="text-primary"
       xmlns="http://www.w3.org/2000/svg"
@@ -162,7 +165,7 @@ export function FlashcardsStatsClient({ stats }: { stats: StatsDto }) {
       {/* Daily reviews sparkline */}
       <section className="rounded-lg border bg-card p-4 shadow-sm">
         <h2 className="mb-3 text-base font-medium">{t('flashcards.stats.dailyReviews.title')}</h2>
-        <Sparkline values={stats.dailyReviews.map((d) => d.count)} width={600} height={60} />
+        <Sparkline values={stats.dailyReviews.map((d) => d.count)} t={t} width={600} height={60} />
       </section>
 
       {/* Retention */}
@@ -176,7 +179,7 @@ export function FlashcardsStatsClient({ stats }: { stats: StatsDto }) {
           <p className="text-4xl font-bold tabular-nums text-primary">{stats.retention.percent}%</p>
         )}
         <p className="mt-1 text-sm text-muted-foreground">
-          {stats.retention.total} reviews in window
+          {t('flashcards.stats.retention.inWindow', { count: stats.retention.total })}
         </p>
       </section>
 

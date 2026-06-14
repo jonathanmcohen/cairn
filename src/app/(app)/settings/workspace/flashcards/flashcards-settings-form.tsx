@@ -232,7 +232,9 @@ export function FlashcardsSettingsForm({
                 </SelectItem>
                 {hourOptions.map((h) => (
                   <SelectItem key={h} value={String(h)}>
-                    {String(h).padStart(2, '0')}:00 UTC
+                    {t('flashcards.settings.reminderHour.option', {
+                      hour: String(h).padStart(2, '0'),
+                    })}
                   </SelectItem>
                 ))}
               </SelectContent>
