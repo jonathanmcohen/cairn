@@ -16,7 +16,7 @@ Status legend: **SHIPPED** = already in the codebase (file:line proof, no code c
 | Q-2 | Active sessions: per-row **Revoke** + "Sign out all other devices" (Settings → Security) | likely GAP | **BUILD** — PARTIAL: `sessions-card.tsx` lists sessions; per-session Revoke route + button still to build |
 | Q-3 | Workspace storage card "Unlimited" → link to Storage (CFG-2) once landed; interim docs link | GAP (depends CFG-2) | **SHIPPED✚PR** #434 — `src/components/settings/storage-usage-card.tsx` (interim docs link; repoint to in-app Storage when CFG-2 lands) |
 | Q-4 | Template-clone lands at sidebar root → default new page under Cairn Guide or user-pickable parent | GAP | **BUILD** — `templates/instantiate` route + gallery/wizard parent picker still to build |
-| Q-5 | "Suggest edits" chip always shown → hide when page owned by current user AND no reviewer assignments | GAP | **SHIPPED✚PR** #433 — `src/lib/pages/suggest-visibility.ts` + `editor.tsx`; re-scoped (no reviewer model) to **owner + draft** with the user |
+| Q-5 | "Suggest edits" chip always shown → hide when page owned by current user AND no reviewer assignments | GAP | **WON'T-FIX** (#433 closed) — no reviewer model exists; the re-scoped owner+draft hide broke the suggest-edits feature (12 e2e: item-53/53-54/54, E4-suggest-auto-mark, E6-toolbar). Track-changes is authored *on your own draft*, so the chip there is the feature's entry point, not noise. Chip stays always-shown |
 | Q-6 | TRANSLATIONS panel always shown → hide until first link OR collapse by default | GAP | **SHIPPED✚PR** #430 — `src/components/pages/translations-picker.tsx:63` (viewer + empty → null) |
 | Q-7 | SEE ALSO similarity % no legend → hover tooltip (cosine over embeddings); consider bar-only | GAP | **SHIPPED✚PR** #432 — `src/components/pages/see-also-panel.tsx:96` (`seeAlso.similarityTooltip`, kept digits + legend) |
 | Q-8 | Trash row full timestamp → relative ("3 days ago") with absolute on hover | GAP | **SHIPPED✚PR** #431 — `src/components/trash-list.tsx:67` + `src/lib/datetime/format.ts` (`relativeFromNow`/`absoluteLocal`) |
@@ -51,14 +51,16 @@ Status legend: **SHIPPED** = already in the codebase (file:line proof, no code c
 ## Coverage check (locked)
 
 All 21 Q-# rows carry a verdict + file:line. **18 resolved** this milestone —
-11 SHIPPED (verify-only, characterized where useful), 6 SHIPPED✚PR
-(GAP/PARTIAL built: Q-3 #434, Q-5 #433, Q-6 #430, Q-7 #432, Q-8 #431, Q-11 #435),
-Q-19 SHIPPED (no code). **3 BUILD remaining: Q-2, Q-4, Q-18.** Plan is GO-complete
-for the resolved set; the three BUILD items are the open work.
+11 SHIPPED (verify-only, characterized where useful), 5 SHIPPED✚PR
+(GAP/PARTIAL built: Q-3 #434, Q-6 #430, Q-7 #432, Q-8 #431, Q-11 #435),
+Q-19 SHIPPED (no code), **Q-5 WON'T-FIX** (#433 closed — owner+draft hide broke
+the suggest-edits feature; chip stays always-shown). **3 BUILD remaining: Q-2,
+Q-4, Q-18.** Plan is GO-complete for the resolved set; the three BUILD items are
+the open work.
 
 ## Failure-modes-verified (locked)
 
-- [x] Q-5 hide-logic: chip still shows once out of draft / when not owner — unit matrix in `tests/lib/pages/suggest-visibility.test.ts` (premise re-scoped: Cairn has no reviewer-assignment model; mapped to owner+draft).
+- [n/a] Q-5 — WON'T-FIX. No reviewer-assignment model exists, and the re-scoped owner+draft hide broke the suggest-edits feature (it's authored on your own draft; 12 e2e regressed). The chip stays always-shown, so there is no hide-logic to verify.
 - [x] Q-8 relative date: hover reveals exact absolute timestamp (`title={absoluteLocal(...)}`) — `tests/components/trash-list.test.tsx`.
 - [x] Q-11 palette: the four pills carry text labels (non-color distinguisher), so they survive simulated deuter/protan/tritan and monochrome — `tests/components/status-picker.test.tsx`.
 - [x] Q-21 pre-fix rows: the "Untitled" fallback is display-only (`title.trim() || t('trash.untitled')`), so existing empty-title rows render it with no re-save/migration.
