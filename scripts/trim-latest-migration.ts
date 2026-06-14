@@ -25,7 +25,9 @@ const schema = loc[0]?.table_schema;
 if (!schema) {
   console.log('no __drizzle_migrations table found');
 } else {
-  const before = await sql.unsafe(`SELECT count(*)::int AS n FROM "${schema}".__drizzle_migrations`);
+  const before = await sql.unsafe(
+    `SELECT count(*)::int AS n FROM "${schema}".__drizzle_migrations`,
+  );
   await sql.unsafe(
     `DELETE FROM "${schema}".__drizzle_migrations
      WHERE id = (SELECT id FROM "${schema}".__drizzle_migrations ORDER BY created_at DESC, id DESC LIMIT 1)`,
