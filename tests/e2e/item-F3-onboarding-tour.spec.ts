@@ -4,7 +4,8 @@
 // via stable `data-tour` hooks (sidebar, ⌘K search, topbar actions, page menu,
 // help/replay). It auto-starts once per workspace — the seen-marker is
 // localStorage `cairn:tour-seen:<workspaceId>` = TOUR_VERSION — and can be
-// replayed anytime from the sidebar-footer "Replay tour" button, which
+// replayed anytime from the sidebar-footer "?" Help menu's "Replay tour" item
+// (v0.10.2 S10 folded the standalone Replay-tour row into that menu), which
 // dispatches the `cairn:start-tour` CustomEvent.
 //
 // Harness note: every OTHER spec gets the tour suppressed by the shared signIn
@@ -187,7 +188,7 @@ test.describe('item F3 — onboarding tour (element-anchored walkthrough)', () =
     await expect(page.locator(DIALOG)).toHaveCount(0);
   });
 
-  test('(e) the Help "Replay tour" button replays the tour even after the seen-marker is set', async ({
+  test('(e) the Help menu "Replay tour" item replays the tour even after the seen-marker is set', async ({
     page,
     seeded,
   }) => {
@@ -205,13 +206,17 @@ test.describe('item F3 — onboarding tour (element-anchored walkthrough)', () =
     await expect(page.locator('[data-tour="sidebar"]')).toBeVisible({ timeout: 15_000 });
     await expect(page.locator(DIALOG)).toHaveCount(0);
 
-    // …then the sidebar-footer Replay button re-triggers regardless of it.
-    // Scope to the desktop aside: the mobile drawer also renders the footer
-    // nav when open, so the bare selector could be ambiguous.
+    // …then the sidebar-footer Help menu's "Replay tour" item re-triggers
+    // regardless of it (v0.10.2 S10 moved Replay tour off a standalone footer
+    // row into the "?" Help dropdown). Scope to the desktop aside: the mobile
+    // drawer also renders the footer nav when open, so the bare selector could
+    // be ambiguous.
     await page
       .locator('[data-cairn-workspace-sidebar]')
-      .getByRole('button', { name: 'Replay tour', exact: true })
+      .last()
+      .getByRole('button', { name: 'Help' })
       .click();
+    await page.getByRole('menuitem', { name: 'Replay tour' }).click();
     await expect(page.locator(DIALOG)).toBeVisible({ timeout: 15_000 });
     await expect(page.locator(DIALOG)).toContainText(SIDEBAR_TITLE);
   });

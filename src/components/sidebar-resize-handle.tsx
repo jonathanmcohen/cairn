@@ -1,10 +1,14 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
+import { applySidebarDensity, getSidebarDensity } from '@/components/sidebar/density-tokens';
+import { applySidebarCollapsedOnMount } from '@/components/sidebar-collapse';
 import { useT } from '@/lib/i18n/provider';
 
-const MIN_WIDTH = 200;
-const MAX_WIDTH = 480;
+// v0.10.2 S1 — bounds widened from [200, 480] to [56, 400]: 56px matches the
+// collapsed icon-rail width, 400px is the new ceiling.
+const MIN_WIDTH = 56;
+const MAX_WIDTH = 400;
 // C1 (v0.9.18 item) — MUST equal the SSR fallback in sidebar.tsx
 // (`var(--cairn-sidebar-w, 15rem)` = 240px, Notion parity). The v0.9.14 C1 fix
 // changed only that fallback; this runtime default still said 256, so the
@@ -29,7 +33,7 @@ function applyWidth(w: number): void {
  * P19 #42 — drag- and keyboard-resizable sidebar boundary. Drives the sidebar
  * width via the `--cairn-sidebar-w` CSS custom property on <html> and persists
  * it to localStorage (device/viewport preference — no DB migration warranted).
- * Clamped to [200, 480]px; default 240px (= 15rem, C1). Desktop-only affordance
+ * Clamped to [56, 400]px (S1); default 240px (= 15rem, C1). Desktop-only affordance
  * (`hidden md:block`); the mobile drawer is unaffected.
  *
  * The visible grabber is a thin line, but the pointer/touch hit area is widened
@@ -53,8 +57,12 @@ export function SidebarResizeHandle({ storageKey }: { storageKey: string }) {
     [storageKey],
   );
 
-  // On mount, restore the persisted width and apply it.
+  // On mount, restore the persisted width and apply it. S1: also re-apply the
+  // persisted collapse state — this handle is the client component that is
+  // always mounted alongside the desktop aside, so it owns rehydrating both
+  // root-level sidebar prefs (`--cairn-sidebar-w` + `cairn-sidebar-collapsed`).
   useEffect(() => {
+    applySidebarCollapsedOnMount();
     let stored: number | null = null;
     try {
       const raw = localStorage.getItem(storageKey);
@@ -65,6 +73,10 @@ export function SidebarResizeHandle({ storageKey }: { storageKey: string }) {
     const w = stored && !Number.isNaN(stored) ? clamp(stored) : DEFAULT_WIDTH;
     setWidth(w);
     applyWidth(w);
+    // S2 — rehydrate the per-device sidebar density (localStorage →
+    // `cairn-sidebar-compact` root class) alongside the width: this handle is
+    // the sidebar's existing mount-time localStorage rehydration point.
+    applySidebarDensity(getSidebarDensity());
   }, [storageKey]);
 
   function onPointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -104,6 +116,7 @@ export function SidebarResizeHandle({ storageKey }: { storageKey: string }) {
   return (
     // biome-ignore lint/a11y/useSemanticElements: an interactive split-pane resizer needs a focusable, handler-bearing element; <hr> cannot carry tabIndex + pointer/keydown handlers, so role="separator" on a <div> is the correct ARIA pattern here
     <div
+      data-cairn-sidebar-resize-handle=""
       role="separator"
       aria-orientation="vertical"
       aria-label={t('sidebar.resize')}

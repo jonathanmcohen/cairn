@@ -3,10 +3,14 @@ import { cleanup, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SidebarFooterNav } from '@/components/sidebar-footer-nav';
 
-vi.mock('@/components/sidebar/review-due-counter', () => ({ ReviewDueCounter: () => null }));
-vi.mock('@/components/sidebar/study-link', () => ({ StudyLink: () => null }));
+vi.mock('@/components/sidebar/flashcards-nav', () => ({ FlashcardsNav: () => null }));
 vi.mock('@/components/theme-toggle', () => ({ ThemeToggle: () => null }));
 vi.mock('@/lib/auth/sign-out-action', () => ({ signOutAction: vi.fn() }));
+// S10 — the footer's Help menu reads useShortcutSheet, which throws outside
+// <ShortcutDispatcher>; stub it so the component renders under jsdom.
+vi.mock('@/components/shortcuts/dispatcher', () => ({
+  useShortcutSheet: () => ({ open: false, setOpen: vi.fn() }),
+}));
 vi.mock('@/lib/i18n/provider', async () => {
   const en = (await import('@/../messages/en.json')).default as Record<string, string>;
   return { useT: () => (key: string) => en[key] ?? key };

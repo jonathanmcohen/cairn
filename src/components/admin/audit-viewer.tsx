@@ -202,6 +202,15 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.10.0 F2 — custom slash command (trigger word → saved template).
   'workspace.slash_command_created': 'Slash command created',
   'workspace.slash_command_deleted': 'Slash command deleted',
+  // v0.10.2 F1 — flashcard management mutations from the manage surface.
+  'flashcard.deleted': 'Flashcard(s) deleted',
+  'flashcard.reset': 'Flashcard SM-2 reset',
+  'flashcard.reattached': 'Flashcard(s) reattached',
+  // v0.10.2 F2 — deck lifecycle mutations (merge + delete with disposition).
+  'flashcard.deck_merged': 'Flashcard deck merged',
+  'flashcard.deck_deleted': 'Flashcard deck deleted',
+  // v0.10.2 F3 — leech detection triggered card suspension.
+  'flashcard.card_leeched': 'Flashcard marked as leech (suspended)',
 };
 
 export function actionLabel(action: string): string {

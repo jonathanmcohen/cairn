@@ -25,6 +25,8 @@ beforeAll(() => {
 
 afterEach(cleanup);
 
+// v0.10.2 P1 — the Lock trigger left this cluster for the "…" page menu; its
+// accessible-name coverage now lives in tests/components/page-menu-lock.test.tsx.
 describe('PageActionPanels tooltips', () => {
   it('shows a hover tooltip when the comments trigger is focused', async () => {
     render(
@@ -34,27 +36,10 @@ describe('PageActionPanels tooltips', () => {
         currentUserId="u1"
         currentRole="editor"
         canEditVersions
-        canLock
-        canMove={false}
       />,
     );
     const commentsBtn = screen.getByLabelText('Comments');
     fireEvent.focus(commentsBtn);
     expect(await screen.findAllByText('Comments')).not.toHaveLength(0);
-  });
-
-  it('keeps the lock trigger reachable with its own accessible name', () => {
-    render(
-      <PageActionPanels
-        pageId="p1"
-        canComment
-        currentUserId="u1"
-        currentRole="editor"
-        canEditVersions
-        canLock
-        canMove={false}
-      />,
-    );
-    expect(screen.getByLabelText('Lock page')).not.toBeNull();
   });
 });

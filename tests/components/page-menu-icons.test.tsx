@@ -4,6 +4,10 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { PageMenu } from '@/components/page-menu';
 
 // offline-context + share-panel pull in app providers; mock the action gate to "allowed".
+// P1 — PageMenu now calls useRouter() for the lock/unlock refresh.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock('@/components/pwa/offline-context', () => ({ useActionAllowed: () => true }));
 // The component reads strings via useT(); render with the authoritative English copy
 // instead of wiring a full <I18nProvider> tree into the test.

@@ -312,6 +312,13 @@ export const citationLookupMenuItem: CitationSlashEntry = {
               ),
               raw_title: meta.title,
               raw_year: meta.year ?? null,
+              // v0.10.2 P5 — persist the full CitationMeta on the node so the
+              // superscript chip's popover reads attrs only (no re-lookup).
+              journal: meta.journal ?? null,
+              volume: meta.volume ?? null,
+              issue: meta.issue ?? null,
+              pages: meta.pages ?? null,
+              url: meta.url ?? null,
             },
           })
           .run();
@@ -810,7 +817,7 @@ const items: SlashItem[] = [
   toSlashItem(datetimeMenuItem, 'advanced'),
   {
     title: 'Flashcard',
-    description: 'Spaced-repetition flashcard (front / back / deck tag)',
+    description: 'Spaced-repetition flashcard (front / back / deck)',
     category: 'advanced',
     icon: Layers,
     deferred: true,
@@ -821,7 +828,7 @@ const items: SlashItem[] = [
           cancelSlashTrigger(editor, range);
           return;
         }
-        const { front, back, deck } = result;
+        const { front, back, deckId } = result;
         if (!front || !back) {
           cancelSlashTrigger(editor, range);
           return;
@@ -832,7 +839,10 @@ const items: SlashItem[] = [
           editor
             .chain()
             .focus()
-            .setFlashcard({ front, back, deckTag: deck || null })
+            // v0.10.2 F2-D — the dialog now picks a first-class deck; pass it as
+            // the insert-time `deckId` hint. `deckTag` (legacy free-text) is no
+            // longer collected on insert.
+            .setFlashcard({ front, back, deckId: deckId || null })
             .run();
         });
       });

@@ -1,3 +1,5 @@
+import { sql } from 'drizzle-orm';
+import type { AnyPgColumn } from 'drizzle-orm/pg-core';
 import {
   index,
   integer,
@@ -6,11 +8,55 @@ import {
   real,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 import { pages } from './pages';
 import { users } from './users';
 import { workspaces } from './workspaces';
+
+/**
+ * Named decks (v0.10.2 F1). One row per (workspace, name). A "Default" deck is
+ * seeded per workspace by migration 0077; cards reference a deck via
+ * `flashcard_cards.deck_id` (ON DELETE SET NULL). The legacy free-text
+ * `deck_tag` column is kept for read-compat but is deprecated in favor of
+ * `deck_id`.
+ */
+export const flashcardDecks = pgTable(
+  'flashcard_decks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    workspaceId: uuid('workspace_id')
+      .notNull()
+      .references(() => workspaces.id, { onDelete: 'cascade' }),
+    name: text('name').notNull(),
+    // v0.10.2 F2 — hierarchy + per-deck schedule overrides.
+    // NULL on all fields means "inherit workspace default".
+    /** Prefix-encoded icon: "emoji::…" or "file::…" (mirrors pages.icon). */
+    icon: text('icon'),
+    /** Color label for the deck tile. */
+    color: text('color'),
+    /** Self-FK for nested deck tree. ON DELETE SET NULL flattens orphaned children. */
+    parentDeckId: uuid('parent_deck_id').references((): AnyPgColumn => flashcardDecks.id, {
+      onDelete: 'set null',
+    }),
+    /** Per-deck cap on new cards introduced per day. */
+    defaultNewPerDay: integer('default_new_per_day'),
+    /** Per-deck cap on cards reviewed per day. */
+    defaultReviewLimit: integer('default_review_limit'),
+    /** Initial SM-2 ease factor for new cards in this deck. */
+    easeStart: real('ease_start'),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    workspaceNameUnique: unique('flashcard_decks_workspace_id_name_unique').on(
+      t.workspaceId,
+      t.name,
+    ),
+    parentDeckIdx: index('flashcard_decks_parent_deck_id_idx').on(t.parentDeckId),
+  }),
+);
 
 /**
  * Flashcard blocks (v0.9.0 G3 P19). One row per `flashcard` TipTap node, keyed
@@ -25,21 +71,30 @@ import { workspaces } from './workspaces';
  * `front`/`back` carry the rendered text only. The page's TipTap JSON remains
  * the source of truth; this table is purely a join target for the SM-2
  * scheduler and the due-queue UI.
+ *
+ * v0.10.2 F1: `page_id` is now NULLABLE and its FK is ON DELETE SET NULL —
+ * permanently deleting a page orphans its cards (sets `source_orphaned_at`)
+ * rather than cascade-deleting them, so per-user review history survives.
+ * `deck_id` (ON DELETE SET NULL) supersedes the free-text `deck_tag`. `tags`
+ * and `suspended_at` back the manage view's filtering/suspension.
  */
 export const flashcardCards = pgTable(
   'flashcard_cards',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    pageId: uuid('page_id')
-      .notNull()
-      .references(() => pages.id, { onDelete: 'cascade' }),
+    pageId: uuid('page_id').references(() => pages.id, { onDelete: 'set null' }),
     workspaceId: uuid('workspace_id')
       .notNull()
       .references(() => workspaces.id, { onDelete: 'cascade' }),
     blockId: text('block_id').notNull(),
     front: text('front').notNull(),
     back: text('back').notNull(),
+    // Deprecated free-text deck label, kept for read-compat. Use `deckId`.
     deckTag: text('deck_tag'),
+    deckId: uuid('deck_id').references(() => flashcardDecks.id, { onDelete: 'set null' }),
+    sourceOrphanedAt: timestamp('source_orphaned_at', { withTimezone: true }),
+    tags: text('tags').array().notNull().default(sql`'{}'`),
+    suspendedAt: timestamp('suspended_at', { withTimezone: true }),
     createdBy: uuid('created_by')
       .notNull()
       .references(() => users.id, { onDelete: 'cascade' }),
@@ -68,6 +123,9 @@ export const flashcardReviews = pgTable(
       .references(() => users.id, { onDelete: 'cascade' }),
     ease: real('ease').notNull().default(2.5),
     interval: integer('interval').notNull().default(0),
+    // Total successful repetitions recorded for this (card, user) pair. Bumped
+    // on every grade in the grade route; the manage view surfaces it.
+    reps: integer('reps').notNull().default(0),
     dueAt: timestamp('due_at', { withTimezone: true }).notNull().defaultNow(),
     lastReviewedAt: timestamp('last_reviewed_at', { withTimezone: true }),
     lastGrade: integer('last_grade'),
@@ -80,7 +138,71 @@ export const flashcardReviews = pgTable(
   }),
 );
 
+/**
+ * Append-only review event log (v0.10.2 F3). One row per review action; used
+ * for time-windowed stats, streak calculation, and leech detection (grade=0
+ * count ≥ workspace_flashcard_settings.leech_threshold triggers suspension).
+ */
+export const flashcardReviewEvents = pgTable(
+  'flashcard_review_events',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    cardId: uuid('card_id')
+      .notNull()
+      .references(() => flashcardCards.id, { onDelete: 'cascade' }),
+    userId: uuid('user_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'cascade' }),
+    /** SM-2 grade: 0=Again, 1=Hard, 2=Good, 3=Easy. */
+    grade: integer('grade').notNull(),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    userReviewedAtIdx: index('flashcard_review_events_user_reviewed_at_idx').on(
+      t.userId,
+      t.reviewedAt,
+    ),
+    cardUserIdx: index('flashcard_review_events_card_user_idx').on(t.cardId, t.userId),
+  }),
+);
+
+/**
+ * Per-workspace flashcard schedule + leech + reminder configuration (v0.10.2
+ * F3). At most one row per workspace; missing row means "use application
+ * defaults" (see getWorkspaceFlashcardSettings).
+ */
+export const workspaceFlashcardSettings = pgTable('workspace_flashcard_settings', {
+  workspaceId: uuid('workspace_id')
+    .primaryKey()
+    .references(() => workspaces.id, { onDelete: 'cascade' }),
+  /** Override the workspace's default deck shown in the study UI. */
+  defaultDeckId: uuid('default_deck_id').references(() => flashcardDecks.id, {
+    onDelete: 'set null',
+  }),
+  /** Max new cards introduced per day (workspace default). */
+  newPerDay: integer('new_per_day').notNull().default(20),
+  /** Max reviews per day (workspace default). */
+  reviewLimit: integer('review_limit').notNull().default(200),
+  /** Initial SM-2 ease factor for new cards. */
+  easeStart: real('ease_start').notNull().default(2.5),
+  /** Again-count threshold that triggers leech suspension. */
+  leechThreshold: integer('leech_threshold').notNull().default(8),
+  /**
+   * UTC hour (0–23) for daily digest email. NULL = no reminder. Honored only
+   * when SMTP is configured.
+   */
+  reminderHour: integer('reminder_hour'),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type FlashcardCard = typeof flashcardCards.$inferSelect;
 export type NewFlashcardCard = typeof flashcardCards.$inferInsert;
 export type FlashcardReview = typeof flashcardReviews.$inferSelect;
 export type NewFlashcardReview = typeof flashcardReviews.$inferInsert;
+export type FlashcardDeck = typeof flashcardDecks.$inferSelect;
+export type NewFlashcardDeck = typeof flashcardDecks.$inferInsert;
+export type FlashcardReviewEvent = typeof flashcardReviewEvents.$inferSelect;
+export type NewFlashcardReviewEvent = typeof flashcardReviewEvents.$inferInsert;
+export type WorkspaceFlashcardSettings = typeof workspaceFlashcardSettings.$inferSelect;
+export type NewWorkspaceFlashcardSettings = typeof workspaceFlashcardSettings.$inferInsert;

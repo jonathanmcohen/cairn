@@ -23,6 +23,7 @@ describe('E2EEnrollCard disabled state (#193)', () => {
     expect(screen.getByText('Read the encryption admin guide')).toBeTruthy();
     // no destructive red text in the disabled branch
     expect(container.querySelector('.text-destructive')).toBeNull();
-    expect(container.querySelector('.bg-muted\\/40')).not.toBeNull();
+    // v0.10.2 P13 — the shared notice paints info-blue (was neutral bg-muted/40)
+    expect(container.querySelector('.bg-info\\/10')).not.toBeNull();
   });
 });

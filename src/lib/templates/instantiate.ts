@@ -56,8 +56,11 @@ export async function instantiateTemplate(
     }
 
     // 2. Databases. Each needs a host page. For a `database`-kind payload (no
-    //    pages), mint a host page so the FK to pages is satisfied.
+    //    pages), mint a host page so the FK to pages is satisfied. The minted
+    //    id must surface as rootPageId — it is what the client navigates to;
+    //    without it the gallery's success path has nowhere to go (B1).
     let rootDatabaseId: string | undefined;
+    let mintedHostPageId: string | undefined;
     for (const database of rewritten.databases) {
       let pageId = hostPageByDb.get(database.id);
       if (!pageId) {
@@ -75,6 +78,7 @@ export async function instantiateTemplate(
           createdBy: input.createdBy,
         } as never);
         rootDatabaseId = database.id;
+        mintedHostPageId = pageId;
       }
       await tx.insert(schema.databases).values({
         id: database.id,
@@ -126,7 +130,7 @@ export async function instantiateTemplate(
     }
 
     return {
-      rootPageId: rootId ?? undefined,
+      rootPageId: rootId ?? mintedHostPageId,
       rootDatabaseId: rewritten.rootDatabaseId ?? rootDatabaseId,
     };
   });

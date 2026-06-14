@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 
 /**
  * v0.9.0 G2 P12 — Workspace-pinned section row shape (mirrors `PinRow` from
@@ -46,7 +47,10 @@ export function PinnedSection() {
 
   return (
     <section data-testid="pinned-section" className="mb-3 px-2">
-      <div className="mb-1 px-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      {/* v0.10.2 S4 — font-semibold dropped: Pinned was the lone semibold
+          outlier among the five section headers; all now share 10px/60%
+          regular weight. */}
+      <div className="mb-1 px-2 text-[length:var(--cairn-sidebar-heading)] uppercase tracking-wide text-foreground/60">
         Pinned
       </div>
       <ul>
@@ -58,7 +62,7 @@ export function PinnedSection() {
             >
               {p.icon ? (
                 <span aria-hidden="true" className="text-base leading-none">
-                  {p.icon}
+                  <InlineIcon value={p.icon} fallback={null} />
                 </span>
               ) : null}
               <span className="truncate">{p.title}</span>

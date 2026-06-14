@@ -58,7 +58,9 @@ beforeAll(() => {
 afterEach(cleanup);
 
 const PAGE_ID = '11111111-1111-1111-1111-111111111111';
-const nodes: FlatPageNode[] = [{ id: PAGE_ID, parentId: null, title: 'Doc', icon: null, depth: 0 }];
+const nodes: FlatPageNode[] = [
+  { id: PAGE_ID, parentId: null, title: 'Doc', icon: null, depth: 0, childCount: 0 },
+];
 
 describe('PageTreeRow navigation', () => {
   it('the row exposes a single navigating link to /pages/[id] covering the whole row', () => {

@@ -1,8 +1,9 @@
 'use client';
 
 import { LogOut, Monitor } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { useConfirm } from '@/components/ui/confirm-dialog';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
 import { friendlyUserAgent } from '@/lib/security/user-agent-label';
@@ -23,11 +24,38 @@ type ApiSession = {
  * revocable (POST /api/auth/sessions/revoke-all). The current device is matched
  * server-side via the request's sid.
  */
-export function SessionsCard() {
+export function SessionsCard({ userEmail }: { userEmail?: string }) {
   const t = useT();
   const [sessions, setSessions] = useState<ApiSession[] | null>(null);
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
+  // v0.10.2 S11 — themed sign-out confirmation (mirrors the sidebar footer's
+  // intercept). Keep the working Server Action <form action={signOutAction}>;
+  // gate its submit behind the confirm. confirmedRef carries the "yes" past the
+  // synthetic requestSubmit() so the second submit runs the real action.
+  const confirm = useConfirm();
+  const signOutFormRef = useRef<HTMLFormElement>(null);
+  const signOutConfirmedRef = useRef(false);
+  const handleSignOutSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (signOutConfirmedRef.current) {
+      signOutConfirmedRef.current = false;
+      return; // allow the real submit through to signOutAction
+    }
+    e.preventDefault();
+    void (async () => {
+      const ok = await confirm({
+        title: t('sidebar.signOutConfirm.title'),
+        description: userEmail ? t('sidebar.signOutConfirm.body', { email: userEmail }) : undefined,
+        confirmLabel: t('sidebar.signOutConfirm.confirm'),
+        cancelLabel: t('common.cancel'),
+        variant: 'danger',
+      });
+      if (ok) {
+        signOutConfirmedRef.current = true;
+        signOutFormRef.current?.requestSubmit();
+      }
+    })();
+  };
 
   const load = useCallback(async () => {
     setError(false);
@@ -122,7 +150,7 @@ export function SessionsCard() {
         )}
         {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST that Auth.js
             v5 rejected). Same defect as the sidebar footer. */}
-        <form action={signOutAction}>
+        <form ref={signOutFormRef} action={signOutAction} onSubmit={handleSignOutSubmit}>
           <Button variant="default" type="submit" className="min-h-11 gap-2">
             <LogOut aria-hidden="true" className="h-4 w-4 shrink-0" />
             {t('security.sessions.signOut')}

@@ -1,13 +1,9 @@
 'use client';
 
-import { FolderInput } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { CommentsToggle } from '@/components/comments/comments-toggle';
 import { PageExportMenu } from '@/components/pages/export-menu';
-import { LockToggle } from '@/components/pages/lock-toggle';
 import { VersionHistory } from '@/components/pages/version-history';
-import { MoveToPicker } from '@/components/sidebar/move-to-picker';
 import { IconTooltip, TooltipProvider } from '@/components/ui/tooltip';
 import type { MemberRole } from '@/lib/auth/require-role';
 import { useT } from '@/lib/i18n/provider';
@@ -15,7 +11,7 @@ import { useT } from '@/lib/i18n/provider';
 /**
  * v0.9.4 #93 — Shared single-open-panel controller for the page-detail action
  * bar. Hoists "which panel is open" into one piece of state so opening any one
- * of comments / version-history / export / lock structurally closes the others
+ * of comments / version-history / export structurally closes the others
  * (mutual exclusion is not coordinated by side-effects), and a single Escape
  * handler dismisses whichever is open.
  *
@@ -25,8 +21,11 @@ import { useT } from '@/lib/i18n/provider';
  * and outside-click; routing its `onOpenChange` through the controller keeps
  * this component authoritative, and the controller's own Escape listener is an
  * idempotent second path (calling `setActive(null)` twice is harmless).
+ *
+ * v0.10.2 P1 — the Lock and Move-To controls left this bar for the "…" page
+ * menu (PageMenu), so the cluster is now comments / versions / export only.
  */
-type ActivePanel = 'comments' | 'versions' | 'export' | 'lock' | null;
+type ActivePanel = 'comments' | 'versions' | 'export' | null;
 
 type PageActionPanelsProps = {
   pageId: string;
@@ -34,10 +33,6 @@ type PageActionPanelsProps = {
   currentUserId: string;
   currentRole: MemberRole;
   canEditVersions: boolean;
-  canLock: boolean;
-  // v0.9.6 #124 — show the Move-To affordance to users who can reparent
-  // (editor+). The reparent itself is still editor-gated by the move route.
-  canMove: boolean;
 };
 
 export function PageActionPanels({
@@ -46,13 +41,9 @@ export function PageActionPanels({
   currentUserId,
   currentRole,
   canEditVersions,
-  canLock,
-  canMove,
 }: PageActionPanelsProps) {
   const t = useT();
-  const router = useRouter();
   const [active, setActive] = useState<ActivePanel>(null);
-  const [moveOpen, setMoveOpen] = useState(false);
 
   // Single keydown listener dismisses the open panel on Escape. For the
   // non-radix surfaces (the comments + versions drawers) this is the dismissal
@@ -98,32 +89,6 @@ export function PageActionPanels({
         </span>
       </IconTooltip>
       <PageExportMenu pageId={pageId} {...bind('export')} />
-      {canLock && (
-        <IconTooltip label={t('pageActions.tooltip.lock')} side="bottom">
-          <span className="contents">
-            <LockToggle pageId={pageId} {...bind('lock')} />
-          </span>
-        </IconTooltip>
-      )}
-      {canMove && (
-        <>
-          <button
-            type="button"
-            aria-label={t('pageMenu.moveTo')}
-            title={t('pageMenu.moveTo')}
-            onClick={() => setMoveOpen(true)}
-            className="flex min-h-11 min-w-11 items-center justify-center rounded text-muted-foreground hover:bg-accent hover:text-foreground focus-visible:ring-1 focus-visible:ring-ring outline-hidden"
-          >
-            <FolderInput aria-hidden="true" className="h-4 w-4" />
-          </button>
-          <MoveToPicker
-            open={moveOpen}
-            sourceId={pageId}
-            onOpenChange={setMoveOpen}
-            onMoved={() => router.refresh()}
-          />
-        </>
-      )}
     </TooltipProvider>
   );
 }

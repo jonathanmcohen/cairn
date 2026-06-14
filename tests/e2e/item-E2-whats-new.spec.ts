@@ -67,15 +67,18 @@ const FALLBACK_COPY = "Release notes for this version aren't available yet.";
 const TITLE = `What's new in v${appVersion}`;
 
 /**
- * Open the panel via the chip. The click is retried inside toPass because a
- * click landing before hydration is silently lost (no listener yet) — by the
- * time the panel is visible, hydration + the badge effect have provably run.
+ * Open the panel via the footer Help menu → "What's new" (v0.10.2 S10 moved
+ * the affordance off a standalone chip into the Help dropdown). Retried inside
+ * toPass because a click landing before hydration is silently lost (no
+ * listener yet) — by the time the panel is visible, hydration + the badge
+ * effect have provably run.
  */
 async function openPanel(page: PwPage): Promise<void> {
-  const chip = page.getByTestId('whats-new-chip');
-  await expect(chip).toBeVisible({ timeout: 15_000 });
+  const help = page.getByRole('button', { name: 'Help' });
+  await expect(help).toBeVisible({ timeout: 15_000 });
   await expect(async () => {
-    await chip.click({ timeout: 2_000 });
+    await help.click({ timeout: 2_000 });
+    await page.getByRole('menuitem', { name: "What's new" }).click({ timeout: 2_000 });
     await expect(page.getByTestId('whats-new-panel')).toBeVisible({ timeout: 2_000 });
   }).toPass({ timeout: 20_000 });
 }
@@ -115,16 +118,20 @@ test.describe('item E2 — What’s-new panel + per-user seen badge', () => {
     await signIn(page, seeded);
     await page.goto('/');
 
-    const chip = page.getByTestId('whats-new-chip');
-    const badge = page.getByTestId('whats-new-badge');
-    await expect(chip).toBeVisible({ timeout: 15_000 });
-    // The chip shows the DEPLOYED version — pinning it to the repo's
-    // package.json keeps the fs-derived branch choice in (b)+(d) honest.
-    await expect(chip).toContainText(`v${appVersion}`);
+    // v0.10.2 S10 — the affordance moved into the footer Help menu; the
+    // unseen-marker dot now rides the Help trigger.
+    const help = page.getByRole('button', { name: 'Help' });
+    const badge = page.getByTestId('help-unseen-badge');
+    await expect(help).toBeVisible({ timeout: 15_000 });
     // Fresh context = empty localStorage = unseen → badge dot renders.
     await expect(badge).toBeVisible({ timeout: 15_000 });
 
     await openPanel(page);
+    // The panel title pins the DEPLOYED version (was asserted on the old
+    // chip) — keeps the fs-derived branch choice in (b)+(d) honest.
+    await expect(
+      page.getByTestId('whats-new-panel').getByRole('heading', { name: TITLE }),
+    ).toBeVisible();
     // The old chip affordance (external GitHub release link) lives on in the
     // panel footer.
     await expect(page.getByTestId('whats-new-github')).toHaveAttribute(
@@ -160,7 +167,7 @@ test.describe('item E2 — What’s-new panel + per-user seen badge', () => {
     await expectBranchCorrectNotes(page);
   });
 
-  test('(c) viewer role: chip, badge, and panel all work — not admin-gated', async ({
+  test('(c) viewer role: Help menu, badge, and panel all work — not admin-gated', async ({
     browser,
     seeded,
   }) => {
@@ -175,9 +182,9 @@ test.describe('item E2 — What’s-new panel + per-user seen badge', () => {
     const { context, page } = await signInSecondUser(browser, member);
     try {
       await page.goto('/');
-      await expect(page.getByTestId('whats-new-chip')).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByRole('button', { name: 'Help' })).toBeVisible({ timeout: 15_000 });
       // The badge is per-user/per-browser: the viewer's fresh context is unseen.
-      await expect(page.getByTestId('whats-new-badge')).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByTestId('help-unseen-badge')).toBeVisible({ timeout: 15_000 });
       await openPanel(page);
       await expectBranchCorrectNotes(page);
     } finally {

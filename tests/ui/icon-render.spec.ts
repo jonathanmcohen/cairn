@@ -9,6 +9,7 @@ import { cleanup, render } from '@testing-library/react';
 import { createElement } from 'react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { InlineIcon } from '@/components/page-icon-inline';
+import { PageIconRender } from '@/components/page-icon-render';
 
 afterEach(cleanup);
 
@@ -54,6 +55,31 @@ describe('InlineIcon — stored icon rendering (Trash leak regression)', () => {
 
   it('empty string → default document fallback (no blank icon)', () => {
     const { container } = renderIcon('');
+    expect(container.textContent).toBe('📄');
+  });
+});
+
+// v0.10.2 S18 — the public share pages (/s, /p) render page icons through the
+// RSC renderer PageIconRender, which must strip the prefix exactly like
+// InlineIcon (file:: → signed image; covered server-side, not here).
+describe('PageIconRender — emoji prefix stripping (public page leak regression)', () => {
+  function renderServerIcon(value: string | null) {
+    return render(createElement(PageIconRender, { value }));
+  }
+
+  it('emoji:: prefix → bare emoji, no literal "emoji::"', () => {
+    const { container } = renderServerIcon('emoji::🚀');
+    expect(container.textContent).toBe('🚀');
+    expect(container.textContent).not.toContain('emoji::');
+  });
+
+  it('bare legacy emoji passes through unchanged', () => {
+    const { container } = renderServerIcon('📘');
+    expect(container.textContent).toBe('📘');
+  });
+
+  it('null → default document fallback', () => {
+    const { container } = renderServerIcon(null);
     expect(container.textContent).toBe('📄');
   });
 });

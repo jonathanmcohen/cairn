@@ -233,6 +233,9 @@ describe('instantiateTemplate', () => {
       .where(eq(schema.pages.id, newDb.pageId));
     if (!host) throw new Error('host page missing');
     expect(host.workspaceId).toBe(dst.workspaceId);
+    // B1: the minted host page id must surface as rootPageId — it's what the
+    // gallery navigates to. rootDatabaseId alone cannot move the browser.
+    expect(result.rootPageId).toBe(host.id);
 
     // property carried over with a fresh id
     const props = await getDb()

@@ -56,7 +56,11 @@ export async function openPageEditor(page: Page, pageId: string, sentinelText: s
   await expect(editor).toContainText(sentinelText, { timeout: 30_000 });
   // The connection-status chip carries title="Live" when connected (the bare
   // text also appears in the sr-only aria-live announcer, so target the chip).
-  await expect(page.getByTitle('Live')).toBeVisible({ timeout: 30_000 });
+  // v0.10.2 S14 added a SECOND "Live" chip in the sidebar footer, so scope to
+  // the page-header toolbar to keep this a single-element match.
+  await expect(page.getByTestId('page-toolbar').getByTitle('Live')).toBeVisible({
+    timeout: 30_000,
+  });
   return editor;
 }
 

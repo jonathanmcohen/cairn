@@ -6,7 +6,8 @@
 // collapsed heading showed nothing once the pointer left, and touch devices
 // (no hover) never saw the affordance at all. The fix renders a persistent
 // chevron for EVERY visible h1/h2/h3 and reveals it with CSS
-// (.heading-collapse-chevron in globals.css): row hover → opacity .5, direct
+// (.heading-collapse-chevron in globals.css): rest → opacity .3 (P7), row
+// hover → 1, direct
 // hover/focus → 1, collapsed → always 1, (pointer: coarse) → always 1.
 // Opacity-only transitions (<=150ms), so the reveal never shifts the text.
 //
@@ -167,10 +168,11 @@ test.describe('item E3 — heading-collapse chevron discoverability', () => {
       const chevrons = page.locator('[data-heading-collapse-toggle]');
       await expect(chevrons).toHaveCount(2, { timeout: 10_000 });
 
-      // Hidden means opacity 0 (NOT display:none) so the reveal can transition
+      // v0.10.2 P7 updated the rest tier: 30% opacity (discoverable), not 0.
+      // Still opacity-tiered (NOT display:none) so the reveal transitions
       // without layout shift.
       const alphaChevron = chevrons.first();
-      expect(await computedOpacity(alphaChevron)).toBe(0);
+      expect(await computedOpacity(alphaChevron)).toBeCloseTo(0.3, 2);
 
       // The sweep's exact repro: hover the CENTER of the heading text block.
       await alphaHeading.hover();

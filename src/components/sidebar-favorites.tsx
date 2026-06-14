@@ -22,6 +22,7 @@ import type { Route } from 'next';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 import type { PrefEntry } from '@/lib/prefs/user-page-prefs';
 
 /**
@@ -108,7 +109,9 @@ export function SidebarFavorites({ favorites }: { favorites: PrefEntry[] }) {
     <section aria-label="Favorite pages" className="mb-1.5">
       <div className="mb-1 flex items-center gap-2 px-2">
         <Star aria-hidden="true" className="h-3 w-3 text-muted-foreground" />
-        <p className="text-xs uppercase tracking-wide text-muted-foreground">Favorites</p>
+        <p className="text-[length:var(--cairn-sidebar-heading)] uppercase tracking-wide text-foreground/60">
+          Favorites
+        </p>
       </div>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={items.map((f) => f.id)} strategy={verticalListSortingStrategy}>
@@ -171,7 +174,7 @@ function SortableRow({
         className="flex flex-1 items-center gap-2 truncate rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <span aria-hidden="true" className="w-4 shrink-0 text-center">
-          {fav.icon ?? ''}
+          <InlineIcon value={fav.icon} fallback={null} />
         </span>
         <span className="truncate">{fav.title}</span>
       </Link>

@@ -113,11 +113,16 @@ describe('<SettingsSidebar>', () => {
   });
 
   it('expands Admin children (Audit log / Members / SIEM) when on an admin route', () => {
-    pathnameMock.mockReturnValue('/settings/admin');
+    // v0.10.2 P10 — Admin children now sit under collapsible sub-groups. The
+    // group OWNING the active route auto-expands (Audit & Compliance here);
+    // the others need an explicit header click (Identity for Members).
+    pathnameMock.mockReturnValue('/settings/admin/audit');
     renderSidebar({ isAdmin: true });
     expect(screen.getByRole('link', { name: 'Audit log' })).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Members' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'SIEM forwarders' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'Members' })).toBeNull();
+    fireEvent.click(screen.getByTestId('admin-group-identity'));
+    expect(screen.getByRole('link', { name: 'Members' })).toBeTruthy();
   });
 
   it('expands Developer children (Connectors) when on a developer route', () => {
@@ -137,6 +142,11 @@ describe('<SettingsSidebar>', () => {
   it('expands new Admin children (Webhooks / MFA policy / Upgrade / API key quotas) on an admin route', () => {
     pathnameMock.mockReturnValue('/settings/admin');
     renderSidebar({ isAdmin: true });
+    // Bare /settings/admin matches no child, so every sub-group starts
+    // collapsed; expand the four owning groups (P10).
+    for (const slug of ['integrations', 'identity', 'billing', 'quotas']) {
+      fireEvent.click(screen.getByTestId(`admin-group-${slug}`));
+    }
     for (const label of ['Webhooks', 'MFA policy', 'Upgrade', 'API key quotas']) {
       expect(screen.getByRole('link', { name: label })).toBeTruthy();
     }
@@ -145,6 +155,8 @@ describe('<SettingsSidebar>', () => {
   it('links the SSO and chat-bridge admin consoles from Admin (inside the hub)', () => {
     pathnameMock.mockReturnValue('/settings/admin');
     renderSidebar({ isAdmin: true });
+    fireEvent.click(screen.getByTestId('admin-group-identity'));
+    fireEvent.click(screen.getByTestId('admin-group-integrations'));
     expect(screen.getByRole('link', { name: 'SSO & SCIM' }).getAttribute('href')).toBe(
       '/settings/admin/sso',
     );
@@ -154,7 +166,8 @@ describe('<SettingsSidebar>', () => {
   });
 
   it('links chat bridge once, under Admin, inside the hub (#186)', () => {
-    pathnameMock.mockReturnValue('/settings/admin/audit');
+    // Deep link to the chat-bridge console: its Integrations group auto-expands.
+    pathnameMock.mockReturnValue('/settings/admin/chat-bridge');
     renderSidebar({ isAdmin: true });
     const links = screen.getAllByRole('link', { name: 'Chat bridge' });
     expect(links).toHaveLength(1);
@@ -169,11 +182,13 @@ describe('<SettingsSidebar>', () => {
   });
 
   it('shows the E2E encryption child only when e2eEnabled is true', () => {
-    pathnameMock.mockReturnValue('/settings/admin');
+    // /settings/admin/mfa auto-expands the Identity group, where the
+    // flag-gated encryption entry lives (P10).
+    pathnameMock.mockReturnValue('/settings/admin/mfa');
     renderSidebar({ isAdmin: true, e2eEnabled: false });
     expect(screen.queryByRole('link', { name: 'End-to-end encryption' })).toBeNull();
     cleanup();
-    pathnameMock.mockReturnValue('/settings/admin');
+    pathnameMock.mockReturnValue('/settings/admin/mfa');
     renderSidebar({ isAdmin: true, e2eEnabled: true });
     expect(screen.getByRole('link', { name: 'End-to-end encryption' })).toBeTruthy();
   });
@@ -202,5 +217,68 @@ describe('<SettingsSidebar>', () => {
     expect(screen.getByRole('link', { name: 'Theme' }).getAttribute('href')).toBe(
       '/settings/account/theme',
     );
+  });
+
+  // --- v0.10.2 P10 — Admin collapsible sub-groups ---
+
+  it('renders all six Admin group headers, collapsed by default on bare /settings/admin', () => {
+    pathnameMock.mockReturnValue('/settings/admin');
+    renderSidebar({ isAdmin: true });
+    for (const slug of ['identity', 'audit', 'integrations', 'quotas', 'operations', 'billing']) {
+      const header = screen.getByTestId(`admin-group-${slug}`);
+      expect(header.getAttribute('aria-expanded')).toBe('false');
+    }
+    // No child link is mounted while everything is collapsed.
+    expect(screen.queryByRole('link', { name: 'Audit log' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Storage' })).toBeNull();
+  });
+
+  it('auto-expands the group owning the deep-linked route (Quotas for /settings/admin/storage)', () => {
+    pathnameMock.mockReturnValue('/settings/admin/storage');
+    renderSidebar({ isAdmin: true });
+    expect(screen.getByTestId('admin-group-quotas').getAttribute('aria-expanded')).toBe('true');
+    const storage = screen.getByRole('link', { name: 'Storage' });
+    expect(storage.getAttribute('aria-current')).toBe('page');
+    // Sibling groups stay collapsed — their links are NOT in the DOM.
+    expect(screen.getByTestId('admin-group-identity').getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('link', { name: 'SSO & SCIM' })).toBeNull();
+  });
+
+  it('collapsing a group unmounts its links; re-expanding restores them', () => {
+    pathnameMock.mockReturnValue('/settings/admin/users');
+    renderSidebar({ isAdmin: true });
+    const identity = screen.getByTestId('admin-group-identity');
+    expect(identity.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Members' })).toBeTruthy();
+    fireEvent.click(identity);
+    expect(identity.getAttribute('aria-expanded')).toBe('false');
+    expect(screen.queryByRole('link', { name: 'Members' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'SSO & SCIM' })).toBeNull();
+    fireEvent.click(identity);
+    expect(identity.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('link', { name: 'Members' })).toBeTruthy();
+  });
+
+  it('collapsed groups leave the arrow-nav ring (ArrowDown skips their links and the headers)', () => {
+    pathnameMock.mockReturnValue('/settings/admin/audit');
+    renderSidebar({ isAdmin: true });
+    // Only Audit & Compliance is expanded; its last link is SIEM forwarders.
+    // ArrowDown must land on the Developer section link — not on a collapsed
+    // group's link nor on a group header button (headers are tab-only).
+    const siem = screen.getByRole('link', { name: 'SIEM forwarders' });
+    siem.focus();
+    fireEvent.keyDown(siem, { key: 'ArrowDown' });
+    expect(document.activeElement).toBe(screen.getByRole('link', { name: 'Developer' }));
+  });
+
+  it('group headers wire aria-controls to the expanded panel', () => {
+    pathnameMock.mockReturnValue('/settings/admin/audit');
+    renderSidebar({ isAdmin: true });
+    const header = screen.getByTestId('admin-group-audit');
+    const panelId = header.getAttribute('aria-controls');
+    expect(panelId).toBeTruthy();
+    const panel = document.getElementById(panelId as string);
+    expect(panel).toBeTruthy();
+    expect(panel?.querySelectorAll('a[data-settings-nav]').length).toBe(2);
   });
 });

@@ -45,6 +45,7 @@ const node = (id: string, title: string) => ({
   spaceId: null,
   status: 'published' as const,
   position: 0,
+  childCount: 0,
 });
 
 describe('sidebar page-row density (#130)', () => {

@@ -6,6 +6,10 @@ import { I18nProvider } from '@/lib/i18n/provider';
 import en from '../../messages/en.json';
 
 // useActionAllowed must return true so the publish button is enabled
+// P1 — PageMenu now calls useRouter() for the lock/unlock refresh.
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
+}));
 vi.mock('@/components/pwa/offline-context', () => ({ useActionAllowed: () => true }));
 
 const fetchSpy = vi.fn();

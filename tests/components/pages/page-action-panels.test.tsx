@@ -38,8 +38,6 @@ function renderPanels() {
         currentUserId="u1"
         currentRole="editor"
         canEditVersions
-        canLock
-        canMove={false}
       />,
     ),
   );

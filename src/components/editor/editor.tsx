@@ -7,15 +7,17 @@ import { createPortal } from 'react-dom';
 import { prosemirrorJSONToYDoc, yDocToProsemirrorJSON } from 'y-prosemirror';
 import * as Y from 'yjs';
 import { useAnnounce } from '@/components/a11y/live-region';
+import { STATUS_DOT, STATUS_LABEL_KEY } from '@/components/collab/collab-status';
+import { CollabStatusReporter } from '@/components/collab/collab-status-context';
 import { usePageModeOptional } from '@/components/pages/page-mode-shell';
 import { useActionAllowed } from '@/components/pwa/offline-context';
 import { useCollabPresence } from '@/hooks/use-collab-presence';
-import { aggregateCitations } from '@/lib/citations/aggregate';
 import type { CitationStyle } from '@/lib/citations/format';
+import { useT } from '@/lib/i18n/provider';
 import { computeDiffPreview } from '@/lib/suggestions/diff-preview';
 import { acceptSuggestion, type Json, rejectSuggestion } from '@/lib/suggestions/transform';
-import { BibliographyToggle } from './bibliography-toggle';
 import { BlockContextMenu } from './block-context-menu';
+import { BridgeDegradedPill } from './bridge-degraded-pill';
 import { BulkUploader } from './bulk-uploader';
 import { CollabOfflineBanner } from './collab-offline-banner';
 import { DragHandle } from './drag-handle';
@@ -34,6 +36,7 @@ import type { SuggestionAutoMarkStorage } from './suggestion-auto-mark';
 import { SuggestionToolbar } from './suggestion-toolbar';
 import { type OpenSuggestion, SuggestionsDrawer } from './suggestions-drawer';
 import { EDITOR_TOOLBAR_SLOT_ID } from './toolbar-slot';
+import { useBibliographyVisibility } from './use-bibliography-visibility';
 import { useBulkDropHandler } from './use-bulk-drop-handler';
 import { useCollabDoc } from './use-collab-doc';
 
@@ -76,23 +79,17 @@ export type EditorProps = {
   /** Page-level citation style used by the inserted citation node-views and
    *  the in-editor bibliography preview. Defaults to 'apa'. */
   citationStyle?: CitationStyle;
+  /** v0.10.2 P12 — server-read isCollabBridgeConfigured(); when false, REST
+   *  API content writes never reach open editors, so edit-capable users get
+   *  a degraded pill beside the Live pill. Defaults true (no pill). */
+  collabBridgeConfigured?: boolean;
 };
 
-const STATUS_LABEL = {
-  connecting: 'Connecting…',
-  connected: 'Live',
-  disconnected: 'Reconnecting…',
-  error: 'Offline',
-} as const;
-
-// a30 #39 — status-pill dot color per collab connection state. Tailwind class
-// strings (not dynamic) so the JIT compiler keeps them.
-const STATUS_DOT = {
-  connecting: 'bg-warning',
-  connected: 'bg-success',
-  disconnected: 'bg-warning',
-  error: 'bg-destructive',
-} as const;
+// v0.10.2 S14 — the STATUS_LABEL literals moved to i18n (collab.status.*) and
+// the STATUS_DOT color map moved to the shared collab-status module so the
+// page-header pill and the new sidebar-footer pill share one source. The en
+// label values are byte-identical to the previous literals, so rendered text
+// (and the `title="Live"` e2e hook) is unchanged.
 
 // #123 — class applied to the .ProseMirror contenteditable. We suppress BOTH
 // `:focus` and `:focus-visible` outlines on this one surface. The global
@@ -117,10 +114,13 @@ export function Editor({
   lockedUntilIso = null,
   initialDisableBibliography = false,
   citationStyle = 'apa',
+  collabBridgeConfigured = true,
 }: EditorProps) {
   const { ydoc, provider, status } = useCollabDoc(workspaceId, pageId);
   const presentUsers = useCollabPresence(provider);
   const announce = useAnnounce();
+  const t = useT();
+  const statusLabel = t(STATUS_LABEL_KEY[status]);
   // v0.9.0 G6 P33 — reader mode forces the surface into read-only even for
   // editor-role users. Optional because `/p/<slug>` mounts <Editor> outside
   // the PageModeShell (public viewers don't carry the toggle).
@@ -139,9 +139,8 @@ export function Editor({
   // "Offline" even when the visible status pill is off-focus. Errors go
   // assertive; routine connecting/connected/disconnected stay polite.
   useEffect(() => {
-    const label = STATUS_LABEL[status];
-    announce(label, status === 'error' ? 'assertive' : 'polite');
-  }, [status, announce]);
+    announce(statusLabel, status === 'error' ? 'assertive' : 'polite');
+  }, [status, statusLabel, announce]);
   const editorRef = useRef<TiptapEditor | null>(null);
   const seededRef = useRef(false);
   const [outlineOpen, setOutlineOpen] = useState(false);
@@ -197,8 +196,16 @@ export function Editor({
   const [resolvable, setResolvable] = useState<string | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [openSuggestions, setOpenSuggestions] = useState<OpenSuggestion[]>([]);
-  // v0.9.7 G19 #166 — live "show bibliography" state, driven by the strip toggle.
-  const [bibDisabled, setBibDisabled] = useState(initialDisableBibliography);
+  // v0.9.7 G19 #166 / v0.10.2 P1 — live "show bibliography" state. The toggle
+  // moved into the "…" page menu, which dispatches `cairn:bibliography:toggle`;
+  // the hook listens, flips + persists, and no-ops while a lock suppresses
+  // editing (the D3/#188 contract the old toolbar toggle expressed as
+  // mounted-but-disabled).
+  const bibDisabled = useBibliographyVisibility({
+    pageId,
+    initialDisabled: initialDisableBibliography,
+    canToggle: mountableEditable && !editLocked,
+  });
   const activeSuggestionRef = useRef<string | null>(null);
 
   // Uploads hit the server, so they are blocked offline (bounded-offline gate).
@@ -284,6 +291,9 @@ export function Editor({
             user: currentUser,
             // viewers + reader-mode users: no CollaborationCursor → no awareness writes
             withCursor: effectiveEditable,
+            // v0.10.2 P5 — page-level style for the citation chip popover's
+            // full formatted line (matches the Bibliography below).
+            citationStyle,
           }),
           immediatelyRender: false,
           editorProps: {
@@ -359,7 +369,11 @@ export function Editor({
           // server materializes to pages.content. Title/icon/cover still PATCH
           // from their sibling components.
         }
-      : { extensions: baseExtensions(), editable: false, immediatelyRender: false },
+      : {
+          extensions: baseExtensions({ citationStyle }),
+          editable: false,
+          immediatelyRender: false,
+        },
     [provider, effectiveEditable],
   );
 
@@ -632,15 +646,16 @@ export function Editor({
   // (aria-pressed + bg-primary fill) so the cluster reads as distinct,
   // structured controls rather than a row of bare labels — IN EVERY ROLE. The
   // presence+status+outline group always renders (editor AND viewer); the
-  // suggest-edits + bibliography group is gated on `mountableEditable` (#188 —
-  // it stays mounted-but-disabled under lock instead of vanishing, and E6
-  // extends the same `editLocked` disable to the bibliography toggle), and its
-  // trailing separator lives INSIDE that gate so it never dangles when a
-  // viewer omits the group. The status pill rests as a hairline-bordered chip
-  // (no `bg-muted` fill, which read as an active/selected state at rest).
+  // suggest-edits group is gated on `mountableEditable` (#188 — it stays
+  // mounted-but-disabled under lock instead of vanishing), and its trailing
+  // separator lives INSIDE that gate so it never dangles when a viewer omits
+  // the group. The status pill rests as a hairline-bordered chip (no
+  // `bg-muted` fill, which read as an active/selected state at rest).
   // v0.10.0 E6 — this group no longer renders as its own strip above the
   // editor body: it portals into the page action bar's reserved slot (one
   // toolbar row). Handlers/state are unchanged and stay in this component.
+  // v0.10.2 P1 — the bibliography toggle left this group for the "…" page
+  // menu (see useBibliographyVisibility).
   const toolbarControls = (
     <>
       {editable && locked && <LockBadge lockedUntilIso={lockedUntilIso} />}
@@ -659,23 +674,20 @@ export function Editor({
             onOpenDrawer={() => setDrawerOpen(true)}
             disabled={editLocked}
           />
-          <BibliographyToggle
-            pageId={pageId}
-            initialDisabled={initialDisableBibliography}
-            citationCount={editor ? aggregateCitations(editor.getJSON(), citationStyle).length : 0}
-            onChange={setBibDisabled}
-            disabled={editLocked}
-          />
           <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
         </>
       )}
       <PresenceAvatars users={presentUsers} />
+      {!collabBridgeConfigured && mountableEditable && <BridgeDegradedPill />}
+      {/* v0.10.2 S14 — publish this editor's collab status up to the workspace
+          context so the sidebar-footer pill can mirror it. Effect-only. */}
+      <CollabStatusReporter status={status} />
       <span
         className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
-        title={STATUS_LABEL[status]}
+        title={statusLabel}
       >
         <span className={`size-1.5 rounded-full ${STATUS_DOT[status]}`} aria-hidden="true" />
-        {STATUS_LABEL[status]}
+        {statusLabel}
       </span>
       <span className="h-4 w-px shrink-0 bg-border" aria-hidden="true" />
       <button

@@ -26,6 +26,7 @@ import type * as schema from '@/db/schema';
 import type { PageStatus } from '@/db/schema';
 import { auth } from '@/lib/auth/config';
 import { HttpError, hasMinRole, type WorkspaceContext } from '@/lib/auth/require-role';
+import { isCollabBridgeConfigured } from '@/lib/collab/publish-client';
 import { userColor } from '@/lib/collab/user-color';
 import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
@@ -125,17 +126,16 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
               page actions below, separated by a thin rule, so the header reads
               as one coherent control group instead of two competing toolbars. */}
           <PageModeToggles />
-          {/* v0.9.4 #93 — the comments / version-history / export / lock cluster
-              is now a single shared controller that keeps only one panel open
-              at a time and dismisses it on Escape. */}
+          {/* v0.9.4 #93 — the comments / version-history / export cluster is a
+              single shared controller that keeps only one panel open at a time
+              and dismisses it on Escape. (v0.10.2 P1 — Lock and Move-To moved
+              into the PageMenu below.) */}
           <PageActionPanels
             pageId={page.id}
             canComment={hasMinRole(ctx.role, 'editor')}
             currentUserId={ctx.userId}
             currentRole={ctx.role}
             canEditVersions={hasMinRole(ctx.role, 'editor')}
-            canLock={canEdit}
-            canMove={hasMinRole(ctx.role, 'editor')}
           />
           {showEncryptAction && (
             <EncryptPageAction
@@ -152,6 +152,19 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
             initialAllowDuplication={page.allowDuplication}
             initialHasPassword={!!page.linkPasswordHash}
             initialExpiresAt={page.expiresAt ? page.expiresAt.toISOString() : null}
+            // v0.10.2 P1 — Lock/Move relocated from the toolbar into this
+            // menu, with the same role gating the toolbar applied (editor+).
+            // Unlock mirrors the LockBanner rule: locker (self) or admin.
+            canLock={canEdit}
+            canMove={hasMinRole(ctx.role, 'editor')}
+            locked={lockState.locked}
+            canUnlock={
+              lockState.locked &&
+              (lockState.lockedBy === ctx.userId || hasMinRole(ctx.role, 'admin'))
+            }
+            unlockAsAdmin={
+              lockState.locked && lockState.lockedBy !== ctx.userId && hasMinRole(ctx.role, 'admin')
+            }
           />
           {/* v0.10.0 E6 — reserved slot for the editor's control group.
               `display: contents` makes the portaled children direct flex items
@@ -188,6 +201,7 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
           lockedUntilIso={lockState.lockedUntil ? lockState.lockedUntil.toISOString() : null}
           initialDisableBibliography={pageMeta.disable_bibliography ?? false}
           citationStyle={pageMeta.citation_style ?? 'apa'}
+          collabBridgeConfigured={isCollabBridgeConfigured()}
         />
       </PageModeShell>
       {/* v0.9.0 G5 P28 — sticky TOC sidebar, gated by the

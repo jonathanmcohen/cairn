@@ -7,6 +7,8 @@ import * as schema from '@/db/schema';
 import { listDueForUser } from '@/lib/flashcards/due-queue';
 import { upsertCard } from '@/lib/flashcards/upsert-card';
 import { createPage } from '@/lib/pages/create';
+import { softDeletePage } from '@/lib/pages/delete';
+import { restorePage } from '@/lib/pages/trash';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 import { createTestWorkspaceWithUser } from '../../helpers/fixtures';
 
@@ -168,6 +170,90 @@ describe('flashcards due-queue', () => {
     const bDue = await listDueForUser(db, b.id);
     expect(aDue).toHaveLength(0);
     expect(bDue).toHaveLength(1);
+  });
+
+  it('excludes orphaned cards (source_orphaned_at set)', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    const card = await upsertCard(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+    expect(await listDueForUser(db, u.userId)).toHaveLength(1);
+    await db
+      .update(schema.flashcardCards)
+      .set({ sourceOrphanedAt: new Date() })
+      .where(eq(schema.flashcardCards.id, card.id));
+    expect(await listDueForUser(db, u.userId)).toHaveLength(0);
+  });
+
+  it('excludes suspended cards (suspended_at set)', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    const card = await upsertCard(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+    await db
+      .update(schema.flashcardCards)
+      .set({ suspendedAt: new Date() })
+      .where(eq(schema.flashcardCards.id, card.id));
+    expect(await listDueForUser(db, u.userId)).toHaveLength(0);
+  });
+
+  it('excludes cards on a trashed (soft-deleted) page, and returns them after restore', async () => {
+    const u = await createTestWorkspaceWithUser(db);
+    const page = await createPage(db, {
+      workspaceId: u.workspaceId,
+      createdBy: u.userId,
+      title: 'p',
+    });
+    await upsertCard(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      blockId: 'b1',
+      front: 'Q',
+      back: 'A',
+      deckTag: null,
+      createdBy: u.userId,
+    });
+    expect(await listDueForUser(db, u.userId)).toHaveLength(1);
+
+    // Soft-delete the page → card leaves the due queue but is NOT orphaned.
+    await softDeletePage(db, {
+      pageId: page.id,
+      workspaceId: u.workspaceId,
+      actorUserId: u.userId,
+      adminOverride: true,
+    });
+    expect(await listDueForUser(db, u.userId)).toHaveLength(0);
+    const [stillThere] = await db
+      .select()
+      .from(schema.flashcardCards)
+      .where(eq(schema.flashcardCards.pageId, page.id));
+    expect(stillThere?.sourceOrphanedAt).toBeNull(); // un-orphaned
+
+    // Restore the page → card returns to the due queue untouched.
+    await restorePage(db, { pageId: page.id, workspaceId: u.workspaceId });
+    expect(await listDueForUser(db, u.userId)).toHaveLength(1);
   });
 
   it('upsertCard is idempotent on (page_id, block_id) and updates fields', async () => {

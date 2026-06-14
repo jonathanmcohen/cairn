@@ -1,7 +1,7 @@
 'use client';
 
 import { Command } from 'cmdk';
-import { Bookmark } from 'lucide-react';
+import { Bookmark, Clock } from 'lucide-react';
 import type { Route } from 'next';
 import { useRouter } from 'next/navigation';
 import { useTheme } from 'next-themes';
@@ -68,6 +68,9 @@ export function SearchPalette({
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
+  // P18 — pages whose embedding is missing/stale (computed server-side on
+  // each search response); >0 shows the "still indexing" hint.
+  const [pendingEmbeddings, setPendingEmbeddings] = useState(0);
   const [loading, setLoading] = useState(false);
   const [actions, setActions] = useState<PaletteAction[]>([]);
   const [saved, setSaved] = useState<SavedSearch[]>([]);
@@ -172,6 +175,7 @@ export function SearchPalette({
   useEffect(() => {
     if (!query.trim()) {
       setResults([]);
+      setPendingEmbeddings(0);
       return;
     }
     setLoading(true);
@@ -182,8 +186,12 @@ export function SearchPalette({
           signal: controller.signal,
         });
         if (res.ok) {
-          const body = (await res.json()) as { results: SearchResult[] };
+          const body = (await res.json()) as {
+            results: SearchResult[];
+            pending_embeddings?: number;
+          };
           setResults(body.results);
+          setPendingEmbeddings(body.pending_embeddings ?? 0);
         }
       } catch {
         // ignore aborted/network errors
@@ -260,6 +268,23 @@ export function SearchPalette({
           ))}
         </fieldset>
         <Command.List className="max-h-80 overflow-y-auto border-t">
+          {hasQuery && !loading && (
+            <div
+              data-testid="search-result-status"
+              className="flex items-center gap-1.5 px-4 py-1 text-muted-foreground text-xs"
+            >
+              <span>{t('search.palette.resultCount', { count: results.length })}</span>
+              {pendingEmbeddings > 0 ? (
+                <span
+                  data-testid="search-indexing-pending"
+                  className="inline-flex items-center gap-1"
+                >
+                  <Clock aria-hidden="true" className="h-3 w-3 shrink-0" />
+                  {t('search.palette.indexing', { count: pendingEmbeddings })}
+                </span>
+              ) : null}
+            </div>
+          )}
           {hasQuery && results.length > 0 && (
             <Command.Group heading={t('palette.pages')}>
               {results.map((r) => (

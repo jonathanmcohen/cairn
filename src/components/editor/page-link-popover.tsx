@@ -3,6 +3,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { InlineIcon } from '@/components/page-icon-inline';
 
 type Preview = {
   title: string;
@@ -52,7 +53,7 @@ export function PageLinkPopover({ pageId }: { pageId: string }): React.ReactNode
           <p className="mb-1 font-medium">
             {state.preview.icon && (
               <span aria-hidden className="mr-1">
-                {state.preview.icon}
+                <InlineIcon value={state.preview.icon} />
               </span>
             )}
             {state.preview.title}

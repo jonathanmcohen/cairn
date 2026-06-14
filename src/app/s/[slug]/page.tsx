@@ -1,6 +1,7 @@
 import type { Route } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { PageIconRender } from '@/components/page-icon-render';
 import { getDb } from '@/db/client';
 import { env } from '@/lib/env';
 import { getPublicSitePages } from '@/lib/pages/public-site';
@@ -50,7 +51,7 @@ export default async function PublicSitePage({ params }: { params: Promise<{ slu
                 href={`/p/${p.slug}` as Route}
                 className="flex items-center gap-2 text-lg hover:underline"
               >
-                {p.icon && <span aria-hidden>{p.icon}</span>}
+                {p.icon && <PageIconRender value={p.icon} size={20} />}
                 {p.title}
               </Link>
             </li>

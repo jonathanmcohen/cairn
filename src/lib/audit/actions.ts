@@ -214,6 +214,21 @@ export const AUDIT_ACTIONS = [
   // only, never the template payload.
   'workspace.slash_command_created',
   'workspace.slash_command_deleted',
+  // v0.10.2 F1 (flashcards manage, Task B) — sensitive flashcard-management
+  // mutations recorded from the manage surface. Metadata carries ids + counts
+  // only (cardIds, count, deckId, pageId) — never front/back text (could carry
+  // page secrets). `flashcard.deleted` covers single + bulk delete (count
+  // disambiguates); `flashcard.reset` records an SM-2 reset; `flashcard.reattach`
+  // records an orphan reattaching to a page.
+  'flashcard.deleted',
+  'flashcard.reset',
+  'flashcard.reattached',
+  // v0.10.2 F2 — deck lifecycle mutations (merge + delete with disposition).
+  'flashcard.deck_merged',
+  'flashcard.deck_deleted',
+  // v0.10.2 F3 — leech detection: card suspended after N consecutive Again grades.
+  // metadata: { cardId, againCount, leechThreshold } — ids + counts only.
+  'flashcard.card_leeched',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -253,4 +268,8 @@ export type AuditTargetType =
   | 'oauth_client'
   | 'oauth_token'
   // v0.10.0 F2 — custom slash-command rows (workspace_slash_commands table).
-  | 'workspace_slash_command';
+  | 'workspace_slash_command'
+  // v0.10.2 F1 — flashcard card rows (flashcard_cards table).
+  | 'flashcard_card'
+  // v0.10.2 F2 — flashcard deck rows (flashcard_decks table).
+  | 'flashcard_deck';

@@ -533,6 +533,34 @@
       "when": 1780760597504,
       "tag": "0075_workspace_slash_commands",
       "breakpoints": true
+    },
+    {
+      "idx": 76,
+      "version": "7",
+      "when": 1781304462000,
+      "tag": "0076_page_position",
+      "breakpoints": true
+    },
+    {
+      "idx": 77,
+      "version": "7",
+      "when": 1781304463000,
+      "tag": "0077_flashcards_manage",
+      "breakpoints": true
+    },
+    {
+      "idx": 78,
+      "version": "7",
+      "when": 1781400000000,
+      "tag": "0078_flashcard_decks_full",
+      "breakpoints": true
+    },
+    {
+      "idx": 79,
+      "version": "7",
+      "when": 1781799961300,
+      "tag": "0079_flashcard_stats",
+      "breakpoints": true
     }
   ]
 }

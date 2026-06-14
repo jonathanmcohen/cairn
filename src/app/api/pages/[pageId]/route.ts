@@ -21,7 +21,11 @@ export async function GET(_req: Request, { params }: RouteCtx): Promise<Response
 
 const PatchInput = z.object({
   title: z.string().min(1).max(200).optional(),
-  icon: z.string().max(8).nullable().optional(),
+  // Prefix-encoded ("emoji::🚀" / "file::<uuid>"); max(8) (a bare-emoji-era
+  // bound) rejected every prefixed value — "emoji::" alone is 7 chars, an
+  // astral emoji pushes it past 8, and "file::<uuid>" is 42. Widened to match
+  // the workspaces icon convention so the picker can actually persist icons.
+  icon: z.string().max(64).nullable().optional(),
   coverUrl: z.string().nullable().optional(),
   content: z.unknown().optional(),
   metadata: z

@@ -28,8 +28,27 @@
   --destructive-foreground: 0 0% 98%;
   --success: 142 71% 30%;
   --success-foreground: 0 0% 98%;
-  --warning: 32 90% 34%;
+  /* 32% lightness: text-warning on a warning/10 tint must clear WCAG AA 4.5:1
+     (axe a11y gate; 34% computed 4.45:1 under the P12 bridge pill). */
+  --warning: 32 90% 32%;
   --warning-foreground: 0 0% 98%;
+  /* v0.10.2 P13 — informational (non-alarming) notice pair. Blue: used for
+     env-config-off explanations (EncryptionDisabledNotice) where warning
+     amber would overstate severity. */
+  --info: 217 91% 38%;
+  --info-foreground: 0 0% 98%;
+  /* v0.10.2 P4 — lifecycle status pill pairs (Draft / In review / Published /
+     Archived). Light mode: soft tinted bg + dark readable fg (≥4.5:1). Review
+     leans on the --warning hue family, published on --success; draft is
+     neutral gray and archived a dimmer gray than draft. */
+  --status-draft-bg: 240 5% 92%;
+  --status-draft-fg: 240 6% 25%;
+  --status-review-bg: 38 92% 90%;
+  --status-review-fg: 30 90% 28%;
+  --status-published-bg: 142 70% 91%;
+  --status-published-fg: 142 72% 22%;
+  --status-archived-bg: 240 5% 96%;
+  --status-archived-fg: 240 4% 40%;
   --border: 240 5.9% 90%;
   --input: 240 5.9% 90%;
   --ring: 240 5.9% 10%;
@@ -57,6 +76,18 @@
   --success-foreground: 240 10% 3.9%;
   --warning: 38 92% 60%;
   --warning-foreground: 240 10% 3.9%;
+  /* v0.10.2 P13 — dark-mode info pair: lighter blue on dark surfaces. */
+  --info: 217 91% 65%;
+  --info-foreground: 240 10% 3.9%;
+  /* v0.10.2 P4 — dark-mode status pill pairs: desaturated dark bg + light fg. */
+  --status-draft-bg: 240 4% 16%;
+  --status-draft-fg: 240 5% 84%;
+  --status-review-bg: 36 45% 16%;
+  --status-review-fg: 38 90% 70%;
+  --status-published-bg: 142 40% 14%;
+  --status-published-fg: 142 60% 70%;
+  --status-archived-bg: 240 4% 12%;
+  --status-archived-fg: 240 4% 60%;
   --border: 240 3.7% 15.9%;
   --input: 240 3.7% 15.9%;
   --ring: 240 4.9% 83.9%;
@@ -83,18 +114,32 @@
   --color-success-foreground: hsl(var(--success-foreground));
   --color-warning: hsl(var(--warning));
   --color-warning-foreground: hsl(var(--warning-foreground));
+  /* v0.10.2 P13 — info utilities (border-info / bg-info / text-info). */
+  --color-info: hsl(var(--info));
+  --color-info-foreground: hsl(var(--info-foreground));
+  /* v0.10.2 P4 — status pill utilities (bg-status-*-bg / text-status-*-fg). */
+  --color-status-draft-bg: hsl(var(--status-draft-bg));
+  --color-status-draft-fg: hsl(var(--status-draft-fg));
+  --color-status-review-bg: hsl(var(--status-review-bg));
+  --color-status-review-fg: hsl(var(--status-review-fg));
+  --color-status-published-bg: hsl(var(--status-published-bg));
+  --color-status-published-fg: hsl(var(--status-published-fg));
+  --color-status-archived-bg: hsl(var(--status-archived-bg));
+  --color-status-archived-fg: hsl(var(--status-archived-fg));
   --color-border: hsl(var(--border));
   --color-input: hsl(var(--input));
   --color-ring: hsl(var(--ring));
 
   /* v0.9.11 #130 — sidebar density. Body links/titles drop from text-sm
      (14px/20px) to 13px/18px with 0.1px tracking for legibility at the smaller
-     size. Tokenized here so the size lives in one place. Section labels stay at
-     12px (text-xs) and the kbd/badge at 10px — only BODY text shrinks. These
-     change font only; interactive rows keep min-h-11 (44px touch floor), so the
-     a11y touch-target gate is unaffected. */
+     size. Tokenized here so the size lives in one place. Section headers sit
+     at 10px (--cairn-sidebar-heading, v0.10.2 S4 — previously a drifting
+     11px/12px mix) and the kbd/badge at 10px. These change font only;
+     interactive rows keep min-h-11 (44px touch floor), so the a11y
+     touch-target gate is unaffected. */
   --cairn-sidebar-text: 13px;
   --cairn-sidebar-leading: 18px;
+  --cairn-sidebar-heading: 10px;
   /* v0.9.13 C-v3 — sidebar padding/gap tokens. nav px = p-1.5 (6px);
      section gap = mb-1.5 (6px). Tokenized to mirror the text/leading pattern. */
   --cairn-sidebar-px: 6px;
@@ -243,6 +288,22 @@
   margin: 2px 0;
 }
 
+/* v0.10.2 P2 — block rhythm. Sibling-scoped (`* + el`) so first children stay
+   flush. MUST sit AFTER the `p`/`ul`/`ol` margin resets above: the selectors
+   tie on specificity (0,2,1), so source order decides margin-top. h1 gets a
+   real section gap; p/list step up from the 6px blanket gap; h2 (24px) was
+   already right and is untouched. */
+.ProseMirror[contenteditable="true"] > * + h1 {
+  margin-top: 32px;
+}
+.ProseMirror[contenteditable="true"] > * + p {
+  margin-top: 12px;
+}
+.ProseMirror[contenteditable="true"] > * + ul,
+.ProseMirror[contenteditable="true"] > * + ol {
+  margin-top: 8px;
+}
+
 /* Blockquotes and code blocks get a uniform 8px vertical rhythm. */
 .ProseMirror[contenteditable="true"] blockquote,
 .ProseMirror[contenteditable="true"] pre {
@@ -320,6 +381,20 @@ body {
 }
 
 /*
+ * v0.10.2 S2 — compact sidebar density. Settings → Account → Theme toggles
+ * `cairn-sidebar-compact` on the html root (persisted per-device in
+ * localStorage under `cairn:sidebar-density`; see
+ * src/components/sidebar/density-tokens.ts). The @theme block above emits the
+ * comfortable defaults (13px/18px) on :root; this html-class rule overrides
+ * the SAME custom properties and wins by specificity. Row height (26→22px) is
+ * driven separately by the virtualizer via ROW_HEIGHT_BY_DENSITY.
+ */
+html.cairn-sidebar-compact {
+  --cairn-sidebar-text: 12px;
+  --cairn-sidebar-leading: 16px;
+}
+
+/*
  * v0.9.0 G6 P33 — focus mode collapses workspace chrome to the editor only.
  * The page-mode shell (`PageModeShell`) toggles `cairn-focus-mode` on the
  * html root; everything carrying one of the data-cairn-* attributes below is
@@ -344,6 +419,36 @@ html.cairn-focus-mode[data-reveal-sidebar="true"] [data-cairn-workspace-sidebar]
   inset-inline-start: 0;
   z-index: 55;
   box-shadow: 0 0 1.5rem rgb(0 0 0 / 0.25);
+}
+
+/*
+ * v0.10.2 S1 — sidebar collapse (Mod+\). `cairn-sidebar-collapsed` on the html
+ * root (toggled by src/components/sidebar-collapse.ts) forces the desktop
+ * aside down to a 56px icon rail. `width: 56px !important` is required because
+ * the aside carries an inline `width: var(--cairn-sidebar-w, 15rem)`; the CSS
+ * var and the persisted `cairn:sidebar-width` value are left untouched, so
+ * removing the class restores the user's prior custom width. The v1 rail is
+ * non-interactive: content is clipped + visibility-hidden, and the resize
+ * handle is display:none so a collapsed rail cannot be dragged.
+ *
+ * Focus-mode interaction: `html.cairn-focus-mode [data-cairn-workspace-sidebar]`
+ * (above) sets `display: none !important`, which removes the aside from layout
+ * entirely regardless of any width rule here — focus mode wins while active.
+ * The two root classes are toggled by independent code paths, so entering or
+ * leaving focus mode while collapsed never desyncs the collapse state.
+ */
+html.cairn-sidebar-collapsed [data-cairn-workspace-sidebar] {
+  width: 56px !important;
+  min-width: 56px;
+  overflow: hidden;
+}
+
+html.cairn-sidebar-collapsed [data-cairn-workspace-sidebar] > * {
+  visibility: hidden;
+}
+
+html.cairn-sidebar-collapsed [data-cairn-workspace-sidebar] [data-cairn-sidebar-resize-handle] {
+  display: none !important;
 }
 
 /*
@@ -456,15 +561,16 @@ html.cairn-focus-mode[data-reveal-sidebar="true"] [data-cairn-workspace-sidebar]
    150ms budget. Hidden chevrons get pointer-events: none so they never block
    the drag handle that shares the gutter. Color comes from the
    text-muted-foreground/hover:text-foreground theme tokens on the button. */
+/* v0.10.2 P7 — discoverability: 30% at rest (was invisible — the class that
+   false-FAILed the v0.9.19 sweep), 100% on any hover tier. Clickable at rest. */
 .heading-collapse-chevron {
-  opacity: 0;
-  pointer-events: none;
+  opacity: 0.3;
+  pointer-events: auto;
   transition: opacity 120ms ease;
 }
-/* Pointer anywhere over the heading row → subdued reveal. */
+/* Pointer anywhere over the heading row → full reveal (two-state model). */
 .heading-collapse-chevron[data-row-hovered] {
-  opacity: 0.5;
-  pointer-events: auto;
+  opacity: 1;
 }
 /* Direct hover / keyboard focus / collapsed state → full opacity. A COLLAPSED
    heading keeps its chevron visible with NO hover: the state must be visible. */

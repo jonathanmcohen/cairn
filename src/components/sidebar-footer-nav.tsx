@@ -5,26 +5,39 @@ import {
   CheckSquare,
   HelpCircle,
   Inbox,
-  LayoutTemplate,
+  Keyboard,
   LogOut,
+  RotateCcw,
   Settings,
+  Sparkles,
   Star,
   Trash,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { STATUS_DOT, STATUS_LABEL_KEY } from '@/components/collab/collab-status';
+import { useCollabStatus } from '@/components/collab/collab-status-context';
 import { signOutAction } from '@/lib/auth/sign-out-action';
 import { useT } from '@/lib/i18n/provider';
-import { ReviewDueCounter } from './sidebar/review-due-counter';
-import { StudyLink } from './sidebar/study-link';
+import { useShortcutSheet } from './shortcuts/dispatcher';
+import { FlashcardsNav } from './sidebar/flashcards-nav';
+import { NavCountPill, useNavCount } from './sidebar/nav-count-pill';
 import { ThemeToggle } from './theme-toggle';
 import { Button } from './ui/button';
+import { useConfirm } from './ui/confirm-dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from './ui/dropdown-menu';
 import { WhatsNewPanel } from './whats-new/panel';
 import { hasSeenWhatsNew, markWhatsNewSeen } from './whats-new/storage';
 
 /**
- * Lower sidebar navigation: account-level destinations (My tasks, Templates,
- * Settings, Trash), the version footer, and a visually separated Sign out.
+ * Lower sidebar navigation: account-level destinations (My tasks, Settings,
+ * Trash), a consolidated "?" Help menu, the version footer, and a visually
+ * separated Sign out.
  *
  * Extracted from `SidebarContent` so the nav can be unit-tested without
  * rendering the async server component. Nav items use the same weight/contrast
@@ -33,8 +46,63 @@ import { hasSeenWhatsNew, markWhatsNewSeen } from './whats-new/storage';
 const NAV_ITEM_CLASS =
   'flex min-h-[28px] items-center gap-2 rounded px-2 py-1 text-[length:var(--cairn-sidebar-text)] leading-[var(--cairn-sidebar-leading)] tracking-[0.1px] text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring pointer-coarse:min-h-11 pointer-coarse:py-1.5';
 
-export function SidebarFooterNav({ version }: { version: string }) {
+export function SidebarFooterNav({
+  version,
+  favoritesCount = 0,
+  userEmail,
+}: {
+  version: string;
+  /** v0.10.2 S9 — server-computed (SidebarContent already lists favorites). */
+  favoritesCount?: number;
+  /**
+   * v0.10.2 S11 — the signed-in user's email, threaded from SidebarContent's
+   * auth/db lookup so the sign-out confirm dialog can name the account being
+   * signed out. Optional so render-only unit tests don't have to supply it; the
+   * dialog falls back to a generic body when absent.
+   */
+  userEmail?: string;
+}) {
   const t = useT();
+  // v0.10.2 S14 — workspace-level collab-health pill. Mirrors the active
+  // editor's page-header "Live" pill via the shared CollabStatusProvider. When
+  // no page/editor is open the status is null and the pill is hidden.
+  const { status: collabStatus } = useCollabStatus();
+  // v0.10.2 S11 — themed sign-out confirmation. Keep the working Server Action
+  // <form action={signOutAction}> intact; intercept its submit so the confirm
+  // gates it. confirmedRef carries the user's "yes" past the synthetic
+  // requestSubmit() so the second submit runs the real action.
+  const confirm = useConfirm();
+  const signOutFormRef = useRef<HTMLFormElement>(null);
+  const signOutConfirmedRef = useRef(false);
+  const handleSignOutSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    if (signOutConfirmedRef.current) {
+      signOutConfirmedRef.current = false;
+      return; // allow the real submit through to signOutAction
+    }
+    e.preventDefault();
+    void (async () => {
+      const ok = await confirm({
+        title: t('sidebar.signOutConfirm.title'),
+        description: userEmail ? t('sidebar.signOutConfirm.body', { email: userEmail }) : undefined,
+        confirmLabel: t('sidebar.signOutConfirm.confirm'),
+        cancelLabel: t('common.cancel'),
+        variant: 'danger',
+      });
+      if (ok) {
+        signOutConfirmedRef.current = true;
+        signOutFormRef.current?.requestSubmit();
+      }
+    })();
+  };
+  // v0.10.2 S10 — the bare `?` key still opens this sheet via
+  // handleShortcutKeydown; the Help menu's "Keyboard shortcuts" item is the
+  // discoverable, pointer/keyboard-reachable twin of that shortcut.
+  const shortcutSheet = useShortcutSheet();
+  // v0.10.2 S9 — personal-hub badges. Counts are fetched client-side on mount
+  // and fail OPEN (error → 0 → no pill), so a broken count endpoint can never
+  // take the footer nav down with it.
+  const inboxCount = useNavCount('/api/inbox/count');
+  const myTasksCount = useNavCount('/api/tasks/count');
   // v0.10.0 E2 — What's-new panel + per-user seen-marker badge. The badge is
   // computed in an effect (not at render) so SSR/hydration markup match; it
   // shows until the localStorage marker equals the RUNNING version and is
@@ -53,25 +121,55 @@ export function SidebarFooterNav({ version }: { version: string }) {
   };
   return (
     <div className="border-t p-3 text-sm text-muted-foreground">
-      <ReviewDueCounter />
-      <StudyLink />
-      <Link href="/favorites" className={NAV_ITEM_CLASS}>
-        <Star aria-hidden="true" className="h-4 w-4" />
+      {/* v0.10.2 S17 — footer slot order, top→bottom: (7) Flashcards parent,
+          (8) Favorites · Inbox · My tasks, (10) Settings · Archived · Trash,
+          (12) Sign out · theme toggle · version/What's-new · "?" Help. The four
+          groups are separated by full-bleed `-mx-3 border-t border-border`
+          dividers (the same group-divider mechanism S3 uses upstream and that
+          the Sign-out group already used). All four groups are always
+          populated, so no divider is ever stranded. Ordering is markup order
+          (not CSS `order:`) so tab + screen-reader order match the visual. */}
+
+      {/* Slot 7 — v0.10.2 F1 Task D: consolidated Flashcards parent (overview
+          link + Due now / Manage / Orphans children + due-count badge),
+          replacing the standalone ReviewDueCounter + StudyLink rows. */}
+      <FlashcardsNav />
+
+      {/* Slot 8 — Favorites · Inbox · My tasks. */}
+      <div className="-mx-3 mt-2 border-t border-border" />
+      {/* S9 — the star goes gold once the user has any favorite (purely
+          cosmetic state echo; no theme token covers gold/amber, so raw
+          yellow-500 with matching fill is the project-sanctioned choice). */}
+      <Link href="/favorites" className={`${NAV_ITEM_CLASS} mt-2`}>
+        <Star
+          aria-hidden="true"
+          data-testid="favorites-star"
+          className={favoritesCount > 0 ? 'h-4 w-4 fill-yellow-500 text-yellow-500' : 'h-4 w-4'}
+        />
         {t('sidebar.nav.favorites')}
       </Link>
       <Link href="/inbox" className={NAV_ITEM_CLASS}>
         <Inbox aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.inbox')}
+        <NavCountPill
+          count={inboxCount}
+          label={t('sidebar.nav.inboxCount', { count: inboxCount })}
+          testId="inbox-count-pill"
+        />
       </Link>
       <Link href="/my-tasks" className={NAV_ITEM_CLASS}>
         <CheckSquare aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.myTasks')}
+        <NavCountPill
+          count={myTasksCount}
+          label={t('sidebar.nav.myTasksCount', { count: myTasksCount })}
+          testId="my-tasks-count-pill"
+        />
       </Link>
-      <Link href="/templates" className={NAV_ITEM_CLASS}>
-        <LayoutTemplate aria-hidden="true" className="h-4 w-4" />
-        {t('sidebar.nav.templates')}
-      </Link>
-      <Link href="/settings" className={NAV_ITEM_CLASS}>
+
+      {/* Slot 10 — Settings · Archived · Trash. */}
+      <div className="-mx-3 mt-2 border-t border-border" />
+      <Link href="/settings" className={`${NAV_ITEM_CLASS} mt-2`}>
         <Settings aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.settings')}
       </Link>
@@ -86,18 +184,32 @@ export function SidebarFooterNav({ version }: { version: string }) {
         <Trash aria-hidden="true" className="h-4 w-4" />
         {t('sidebar.nav.trash')}
       </Link>
-      {/* v0.10.0 F3 — replays the onboarding tour regardless of the seen-marker.
-          The `data-tour="help"` hook doubles as the tour's own last-step anchor. */}
-      <button
-        type="button"
-        data-tour="help"
-        aria-label={t('tour.replay')}
-        onClick={() => window.dispatchEvent(new CustomEvent('cairn:start-tour'))}
-        className={`${NAV_ITEM_CLASS} w-full`}
-      >
-        <HelpCircle aria-hidden="true" className="h-4 w-4" />
-        {t('tour.replay')}
-      </button>
+
+      {/* v0.10.2 S14 — workspace-level collab-health pill mirroring the active
+          editor's page-header "Live" pill (same dot-color + i18n labels via the
+          shared collab-status module). Hidden entirely when no page/editor is
+          open (status === null), so it never lingers on non-editor routes. */}
+      {collabStatus !== null && (
+        <div className="mt-1 px-2 py-1">
+          <span
+            data-testid="footer-collab-status"
+            title={t(STATUS_LABEL_KEY[collabStatus])}
+            className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-foreground text-xs"
+          >
+            <span
+              className={`size-1.5 rounded-full ${STATUS_DOT[collabStatus]}`}
+              aria-hidden="true"
+            />
+            {t(STATUS_LABEL_KEY[collabStatus])}
+          </span>
+        </div>
+      )}
+
+      {/* Slot 12 — final footer cluster: Sign out + theme toggle row, then the
+          "?" Help menu (v0.10.2 S17 moved it down from its old slot above the
+          Sign-out group into this terminal cluster). The version/What's-new
+          affordance lives inside the Help menu (S10); the WhatsNewPanel mount
+          stays here. */}
       {/* P19 #44 — full-bleed (`-mx-3`) divider + extra breathing room so the
           account/destructive Sign out group reads as a distinct boundary, not
           another same-looking nav-row gap. Sign out carries a leading LogOut
@@ -106,7 +218,12 @@ export function SidebarFooterNav({ version }: { version: string }) {
       <div className="-mx-3 mt-3 flex items-center gap-2 border-t border-border px-3 pt-3">
         {/* A1 (#80) — Server Action sign-out (was a CSRF-less POST to
             /api/auth/signout that Auth.js v5 rejected → sign-out was broken). */}
-        <form action={signOutAction} className="flex-1">
+        <form
+          ref={signOutFormRef}
+          action={signOutAction}
+          onSubmit={handleSignOutSubmit}
+          className="flex-1"
+        >
           <Button
             variant="ghost"
             size="sm"
@@ -119,27 +236,57 @@ export function SidebarFooterNav({ version }: { version: string }) {
         </form>
         <ThemeToggle />
       </div>
-      {/* E2 — the version chip opens the in-app What's-new panel (the external
-          GitHub release link moved into the panel footer, so that affordance
-          isn't lost). The dot badge marks an unseen version; it is decorative
-          (aria-hidden) with an sr-only i18n twin for screen readers. */}
-      <div className="mt-2 text-center text-xs text-muted-foreground">
-        <button
-          type="button"
-          data-testid="whats-new-chip"
-          aria-label={t('sidebar.releaseNotes', { version })}
-          onClick={() => setWhatsNewOpen(true)}
-          className="relative inline-flex min-h-11 items-center justify-center rounded px-2 underline underline-offset-2 hover:text-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+      {/* v0.10.2 S10 — single "?" Help menu consolidating the help-adjacent
+          actions that used to be standalone footer rows (Replay tour, What's
+          new) plus the keyboard-shortcuts sheet. The `data-tour="help"` hook
+          lives on the TRIGGER (it stays mounted in the sidebar regardless of
+          menu open state), so it doubles as the tour's last-step anchor. The
+          unseen-What's-new dot rides on the trigger so the signal survives the
+          row's removal. */}
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          data-tour="help"
+          aria-label={t('sidebar.nav.help')}
+          className={`${NAV_ITEM_CLASS} relative mt-1 w-full`}
         >
-          v{version}
+          <HelpCircle aria-hidden="true" className="h-4 w-4" />
+          {t('sidebar.nav.help')}
           {whatsNewUnseen && (
-            <span data-testid="whats-new-badge" className="absolute right-0 top-2.5">
+            <span
+              data-testid="help-unseen-badge"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+            >
               <span aria-hidden="true" className="block h-2 w-2 rounded-full bg-primary" />
               <span className="sr-only">{t('whatsNew.badge')}</span>
             </span>
           )}
-        </button>
-      </div>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="right" sideOffset={8}>
+          <DropdownMenuItem
+            onSelect={() => window.dispatchEvent(new CustomEvent('cairn:start-tour'))}
+          >
+            <RotateCcw aria-hidden="true" className="h-4 w-4" />
+            {t('tour.replay')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => shortcutSheet.setOpen(true)}>
+            <Keyboard aria-hidden="true" className="h-4 w-4" />
+            {t('sidebar.help.shortcuts')}
+          </DropdownMenuItem>
+          <DropdownMenuItem onSelect={() => setWhatsNewOpen(true)}>
+            <Sparkles aria-hidden="true" className="h-4 w-4" />
+            {t('sidebar.help.whatsNew')}
+            {whatsNewUnseen && (
+              <span className="ml-auto">
+                <span aria-hidden="true" className="block h-2 w-2 rounded-full bg-primary" />
+                <span className="sr-only">{t('whatsNew.badge')}</span>
+              </span>
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      {/* v0.10.2 S10 — the standalone version-chip What's-new trigger was
+          removed; its affordance now lives in the Help menu's "What's new"
+          item above. The panel mount + open/seen state stay here. */}
       <WhatsNewPanel
         version={version}
         open={whatsNewOpen}

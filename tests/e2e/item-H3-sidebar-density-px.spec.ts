@@ -6,8 +6,14 @@
 // contract against the exported ROW_HEIGHT_PX constant — a deliberate token
 // change updates the contract and this spec in one place.
 
-// The contract, not a hardcoded copy of it (#208: 26px compact rows).
-import { ROW_HEIGHT_PX } from '../../src/components/sidebar/density-tokens';
+// The contract, not a hardcoded copy of it (#208: 26px rows). v0.10.2 S2
+// made density a per-device preference — this guard pins the COMFORTABLE
+// (default) contract, clearing any persisted density first so a compact
+// preference left behind by another spec can't skew the measurement.
+import {
+  ROW_HEIGHT_PX,
+  SIDEBAR_DENSITY_STORAGE_KEY,
+} from '../../src/components/sidebar/density-tokens';
 import { expect, signIn, test } from '../a11y/fixtures';
 
 const PAGE_ROW = '[data-cairn-workspace-sidebar] [data-virtual-row][data-row-kind="page"]';
@@ -43,6 +49,9 @@ async function measureSettledRowHeight(page: import('@playwright/test').Page): P
 test.describe('item H3 — sidebar density runtime-px guard', () => {
   test('(a) a rendered page-tree row measures exactly ROW_HEIGHT_PX', async ({ page, seeded }) => {
     await signIn(page, seeded);
+    // S2 guard: pin the COMFORTABLE default — clear any density another spec
+    // persisted in this worker before the page scripts rehydrate it.
+    await page.addInitScript((key) => localStorage.removeItem(key), SIDEBAR_DENSITY_STORAGE_KEY);
     await page.goto(`/pages/${seeded.pageId}`);
     await expect(page.locator(PAGE_ROW).first()).toBeVisible({ timeout: 30_000 });
 
@@ -58,6 +67,9 @@ test.describe('item H3 — sidebar density runtime-px guard', () => {
     seeded,
   }) => {
     await signIn(page, seeded);
+    // S2 guard: pin the COMFORTABLE default — clear any density another spec
+    // persisted in this worker before the page scripts rehydrate it.
+    await page.addInitScript((key) => localStorage.removeItem(key), SIDEBAR_DENSITY_STORAGE_KEY);
     await page.goto(`/pages/${seeded.pageId}`);
     await expect(page.locator(PAGE_ROW).first()).toBeVisible({ timeout: 30_000 });
 

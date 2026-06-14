@@ -22,14 +22,19 @@ afterAll(async () => {
 });
 
 describe('migration 0045 — flashcards', () => {
-  it('creates flashcard_cards with required columns', async () => {
+  it('creates flashcard_cards with the required base columns', async () => {
+    // NOTE: this suite runs against the FULLY migrated DB (through 0077), so it
+    // asserts the columns are PRESENT rather than an exact ordered set — 0077
+    // appends deck_id/source_orphaned_at/tags/suspended_at (see the dedicated
+    // 0077 migration test for those).
     const rows = (await db.execute(drizzleSql`
       SELECT column_name
       FROM information_schema.columns
       WHERE table_name='flashcard_cards'
       ORDER BY ordinal_position
     `)) as unknown as Array<{ column_name: string }>;
-    expect(rows.map((r) => r.column_name)).toEqual([
+    const names = rows.map((r) => r.column_name);
+    for (const col of [
       'id',
       'page_id',
       'workspace_id',
@@ -40,7 +45,9 @@ describe('migration 0045 — flashcards', () => {
       'created_by',
       'created_at',
       'updated_at',
-    ]);
+    ]) {
+      expect(names).toContain(col);
+    }
   });
 
   it('creates flashcard_reviews with composite primary key (card_id, user_id)', async () => {
@@ -67,7 +74,11 @@ describe('migration 0045 — flashcards', () => {
     expect(names).toContain('last_grade');
   });
 
-  it('cards FKs page_id/workspace_id/created_by all CASCADE on delete', async () => {
+  it('cards FKs: workspace_id/created_by CASCADE; page_id is SET NULL post-0077', async () => {
+    // Post-0077 the page_id FK was flipped CASCADE → SET NULL (cards orphan
+    // instead of cascade-deleting when a page is permanently removed). This
+    // suite runs against the fully migrated DB, so it asserts the post-flip
+    // rule. workspace_id/created_by stay CASCADE.
     const fks = (await db.execute(drizzleSql`
       SELECT kcu.column_name AS local_column,
              ccu.table_name AS foreign_table,
@@ -86,7 +97,7 @@ describe('migration 0045 — flashcards', () => {
       ORDER BY local_column
     `)) as unknown as Array<{ local_column: string; foreign_table: string; delete_rule: string }>;
     const byCol = Object.fromEntries(fks.map((r) => [r.local_column, r]));
-    expect(byCol.page_id?.delete_rule).toBe('CASCADE');
+    expect(byCol.page_id?.delete_rule).toBe('SET NULL');
     expect(byCol.workspace_id?.delete_rule).toBe('CASCADE');
     expect(byCol.created_by?.delete_rule).toBe('CASCADE');
   });

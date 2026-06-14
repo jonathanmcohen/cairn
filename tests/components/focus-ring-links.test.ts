@@ -4,7 +4,6 @@ import { describe, expect, it } from 'vitest';
 
 const FILES = [
   'src/components/sidebar-footer-nav.tsx',
-  'src/components/sidebar-recents.tsx',
   'src/components/sidebar/pinned-section.tsx',
   'src/components/sidebar-favorites.tsx',
   'src/components/editor/suggestion-toolbar.tsx',

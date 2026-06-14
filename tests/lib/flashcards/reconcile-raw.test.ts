@@ -112,7 +112,7 @@ describe('reconcileFlashcardsRaw', () => {
     expect(cards[0]?.deckTag).toBe('tag');
   });
 
-  it('prunes rows whose block id vanished from the doc', async () => {
+  it('orphan-marks (does NOT delete) rows whose block id vanished from the doc', async () => {
     const u = await createTestWorkspaceWithUser(db);
     const page = await createPage(db, {
       workspaceId: u.workspaceId,
@@ -126,15 +126,19 @@ describe('reconcileFlashcardsRaw', () => {
     expect(await db.select().from(schema.flashcardCards)).toHaveLength(1);
 
     await reconcileFlashcardsRaw(sql, { pageId: page.id, content: { type: 'doc', content: [] } });
-    expect(await db.select().from(schema.flashcardCards)).toHaveLength(0);
+    const cards = await db.select().from(schema.flashcardCards);
+    expect(cards).toHaveLength(1);
+    expect(cards[0]?.sourceOrphanedAt).not.toBeNull();
   });
 
   it('no-ops for a missing page (defensive — never throws)', async () => {
+    // v0.10.2 F2-D — now returns a {contentChanged} flag; a missing page is a
+    // no-op (no content backfill possible).
     await expect(
       reconcileFlashcardsRaw(sql, {
         pageId: '00000000-0000-0000-0000-000000000000',
         content: docWith([{ blockId: 'b1', front: 'q', back: 'a' }]),
       }),
-    ).resolves.toBeUndefined();
+    ).resolves.toEqual({ contentChanged: false });
   });
 });

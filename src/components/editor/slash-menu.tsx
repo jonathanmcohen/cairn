@@ -106,6 +106,11 @@ export const SlashMenu = forwardRef<
   const [index, setIndex] = useState(0);
   const listId = useId();
   const activeRef = useRef<HTMLButtonElement | null>(null);
+  // P9 — category rail jump-to targets: the scrollable listbox plus each
+  // group's header element, keyed by category. Refs (not ids) so the lookup
+  // never collides across multiple mounted menus.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const headerRefs = useRef(new Map<SlashCategory, HTMLDivElement>());
 
   // #122 — single source of truth for the flat selectable order: the grouped
   // partition flattened. Both keyboard indexing (`ordered[index]`) AND the
@@ -160,11 +165,68 @@ export const SlashMenu = forwardRef<
   }
 
   const activeId = `${listId}-${index}`;
+  // P9 — the rail is a mouse-only jump-to affordance: it scrolls the LISTBOX
+  // scroller (never the page — explicit scrollTo math on the scroller, not
+  // scrollIntoView, which would also scroll every scrollable ancestor).
+  const jumpToGroup = (category: SlashCategory) => {
+    const scroller = scrollerRef.current;
+    const header = headerRefs.current.get(category);
+    if (!scroller || !header) return;
+    // The scroller is `relative`, so the header's offsetTop is its layout
+    // position inside the scroller — exactly the scrollTop that puts the
+    // group header at the top of the visible box.
+    const top = header.offsetTop;
+    // jsdom (test env) doesn't implement Element#scrollTo; fall back to the
+    // settable scrollTop property.
+    if (typeof scroller.scrollTo === 'function') scroller.scrollTo({ top });
+    else scroller.scrollTop = top;
+  };
+  // P9 — highlight the rail entry whose group contains the active option.
+  const activeCategory = ordered[index]?.category;
+  // Hide the rail once filtering collapses the catalog to a single group —
+  // there is nothing to jump between. The popover narrows back down with it.
+  const showRail = groups.length > 1;
   // Running flat index across groups so `aria-activedescendant`/highlight stay
   // correct across group boundaries (the flat order equals `ordered`).
   let flat = -1;
   return (
-    <div className="w-64 rounded-md border bg-popover shadow-md">
+    <div
+      className={`${showRail ? 'w-80' : 'w-64'} flex overflow-hidden rounded-md border bg-popover shadow-md`}
+    >
+      {/*
+        P9 — left category rail. Deliberately OUTSIDE the listbox element and
+        out of the ARIA option machinery: no role="option", tabIndex={-1}, so
+        the flat keyboard index + aria-activedescendant stay coherent. The
+        buttons are mouse affordances; onMouseDown preventDefault keeps DOM
+        focus in the editor so the suggestion keymap (Arrows/Enter) keeps
+        flowing after a jump (the mention-list lesson).
+      */}
+      {showRail && (
+        <div
+          data-testid="slash-category-rail"
+          className="flex w-20 shrink-0 flex-col gap-0.5 border-r p-1"
+        >
+          {groups.map((group) => (
+            <button
+              key={group.category}
+              type="button"
+              tabIndex={-1}
+              aria-label={CATEGORY_LABEL[group.category]}
+              data-testid={`slash-rail-${group.category}`}
+              data-active={group.category === activeCategory || undefined}
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => jumpToGroup(group.category)}
+              className={`rounded px-2 py-1 text-left text-xs hover:bg-accent ${
+                group.category === activeCategory
+                  ? 'bg-accent font-medium text-foreground'
+                  : 'text-muted-foreground'
+              }`}
+            >
+              {CATEGORY_LABEL[group.category]}
+            </button>
+          ))}
+        </div>
+      )}
       {/*
         ARIA listbox built from div + role rather than ul/li: Biome's a11y rules
         forbid putting `role="listbox"`/`role="option"` on `<ul>`/`<li>`, and
@@ -175,11 +237,12 @@ export const SlashMenu = forwardRef<
         and bounded with `max-h-80 overflow-y-auto` so the full catalog scrolls.
       */}
       <div
+        ref={scrollerRef}
         role="listbox"
         aria-label="Slash commands"
         aria-activedescendant={activeId}
         tabIndex={0}
-        className="max-h-80 overflow-y-auto py-1"
+        className="relative max-h-80 min-w-0 flex-1 overflow-y-auto py-1"
       >
         {groups.map((group) => (
           // Layout-only wrapper. The category header below is decorative
@@ -190,7 +253,14 @@ export const SlashMenu = forwardRef<
           // it to <fieldset>, which is wrong inside a listbox.)
           <div key={group.category}>
             <div
+              ref={(el) => {
+                // P9 — rail jump-to target. Map entry per non-empty group;
+                // cleanup on unmount/refilter keeps the map from going stale.
+                if (el) headerRefs.current.set(group.category, el);
+                else headerRefs.current.delete(group.category);
+              }}
               role="presentation"
+              data-testid={`slash-group-header-${group.category}`}
               className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground"
             >
               {CATEGORY_LABEL[group.category]}
