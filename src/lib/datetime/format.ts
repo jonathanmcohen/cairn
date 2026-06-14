@@ -37,6 +37,34 @@ export function formatForViewer(
  *
  * v0.9.0 G3 P20.
  */
+/**
+ * Human-relative phrasing of an ISO instant ("3 days ago", "in 2 hours"),
+ * locale-aware via Luxon's `toRelative`. `base` is injectable so callers/tests
+ * can pin "now"; production callers omit it and get the real clock.
+ *
+ * Returns the raw ISO unchanged if it can't be parsed, so a bad value degrades
+ * to something visible rather than throwing in a render path.
+ *
+ * v0.10.3 Q-6/Q-8 — trash rows show this, with the absolute timestamp on hover.
+ */
+export function relativeFromNow(iso: string, base?: DateTime): string {
+  const dt = DateTime.fromISO(iso);
+  if (!dt.isValid) return iso;
+  return dt.toRelative({ base: base ?? DateTime.now() }) ?? iso;
+}
+
+/**
+ * Absolute, locale-formatted timestamp for the hover/title affordance that
+ * accompanies a relative label — full date + time, no info loss.
+ *
+ * v0.10.3 Q-8.
+ */
+export function absoluteLocal(iso: string): string {
+  const dt = DateTime.fromISO(iso);
+  if (!dt.isValid) return iso;
+  return dt.toLocaleString(DateTime.DATETIME_MED);
+}
+
 export function parseInput(input: { date: string; time: string; tz: string }): string {
   const dt = DateTime.fromISO(`${input.date}T${input.time}`, { zone: input.tz });
   if (!dt.isValid) {
