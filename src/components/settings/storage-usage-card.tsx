@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { OPERATIONS_DOCS_URL } from '@/lib/docs-links';
 import { useT } from '@/lib/i18n/provider';
 import { formatBytes } from '@/lib/quotas/format';
 
@@ -84,7 +85,22 @@ export function StorageUsageCard({ refreshKey = 0 }: { refreshKey?: number }) {
                 })}
           </p>
           {usage.limitBytes === null ? (
-            <p className="text-sm font-medium">{t('storage.usage.unlimited')}</p>
+            <p className="text-sm font-medium">
+              {t('storage.usage.unlimited')}{' '}
+              {/* v0.10.3 Q-3 — "Unlimited" was a dead end. Until CFG-2 ships the
+                  in-app Storage settings page, point admins at the operations
+                  docs section that explains setting a workspace storage limit.
+                  Swap this href for the in-app route when CFG-2 lands. */}
+              <a
+                href={`${OPERATIONS_DOCS_URL}#scheduled-backups-reminders--quotas`}
+                target="_blank"
+                rel="noreferrer"
+                data-testid="storage-unlimited-docs-link"
+                className="font-normal underline underline-offset-2 hover:text-foreground"
+              >
+                {t('storage.usage.unlimitedDocs')}
+              </a>
+            </p>
           ) : (
             <>
               {/* biome-ignore lint/a11y/useSemanticElements: a native meter element cannot be themed consistently across browsers (its fill ignores the Tailwind tokens, including the >=90% warning tint), and the repo bans raw native form/progress controls; role="meter" + explicit aria-value* on a styled div is the equivalent ARIA pattern. */}
