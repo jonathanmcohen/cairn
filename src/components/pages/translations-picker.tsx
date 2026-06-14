@@ -60,6 +60,14 @@ export function TranslationsPicker({ pageId, canEdit }: { pageId: string; canEdi
     }
   }
 
+  // v0.10.3 Q-6 — a viewer with no linked translations sees nothing instead of
+  // an always-present empty "Translations" section. Editors still get it (empty
+  // state + link inputs) so they can add the first translation. Gate on `loaded`
+  // so we don't flash-hide before the initial fetch resolves.
+  if (loaded && !canEdit && items.length === 0) {
+    return null;
+  }
+
   return (
     <section aria-label={t('pages.translations.title')} className="space-y-2">
       <h3 className="text-xs font-medium uppercase tracking-wide text-muted-foreground">

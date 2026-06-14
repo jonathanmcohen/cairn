@@ -38,16 +38,26 @@ describe('<TranslationsPicker>', () => {
     expect(screen.getByText('es')).toBeTruthy();
   });
 
-  it('shows empty state when no translations', async () => {
+  it('shows the empty state to editors when there are no translations', async () => {
     mockFetch({ translations: [] });
-    render(<TranslationsPicker pageId={PAGE_ID} canEdit={false} />);
+    render(<TranslationsPicker pageId={PAGE_ID} canEdit />);
     await waitFor(() => expect(screen.getByText('No linked translations.')).toBeTruthy());
   });
 
-  it('hides the link inputs/button when not editable', async () => {
+  // v0.10.3 Q-6 — a read-only viewer with nothing linked should see no panel at
+  // all, instead of an always-present empty "Translations" section.
+  it('renders nothing for a viewer when there are no translations', async () => {
     mockFetch({ translations: [] });
     render(<TranslationsPicker pageId={PAGE_ID} canEdit={false} />);
-    await waitFor(() => expect(screen.getByText('No linked translations.')).toBeTruthy());
+    // After the fetch resolves the empty viewer panel collapses to null.
+    await waitFor(() => expect(screen.queryByRole('heading', { name: 'Translations' })).toBeNull());
+    expect(screen.queryByText('No linked translations.')).toBeNull();
+  });
+
+  it('hides the link inputs/button when not editable but translations exist', async () => {
+    mockFetch({ translations: [{ id: 'p2', title: 'Hola', locale: 'es' }] });
+    render(<TranslationsPicker pageId={PAGE_ID} canEdit={false} />);
+    await waitFor(() => expect(screen.getByText('Hola')).toBeTruthy());
     expect(screen.queryByRole('button', { name: 'Link translation' })).toBeNull();
   });
 
