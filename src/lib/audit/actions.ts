@@ -232,6 +232,13 @@ export const AUDIT_ACTIONS = [
   // v0.10.3 CFG-1 — instance email (SMTP) config changed via the admin UI.
   // metadata: { source, host, tlsMode } — host/flags only, never the password.
   'config.email_updated',
+  // v0.10.3 CFG-3 — admin edited a cron schedule (cron expression and/or the
+  // enabled flag) from the Schedules console. metadata: { command, cronSpec,
+  // enabled } — operator-facing command + cron + flag, never a secret.
+  'config.schedule_updated',
+  // v0.10.3 CFG-3 — admin clicked "Run now" on a cron schedule, marking it due
+  // immediately for the next poller tick. metadata: { command } — name only.
+  'config.schedule_run',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -277,4 +284,6 @@ export type AuditTargetType =
   // v0.10.2 F2 — flashcard deck rows (flashcard_decks table).
   | 'flashcard_deck'
   // v0.10.3 CFG-1 — instance-global config singleton rows (email, …).
-  | 'instance_config';
+  | 'instance_config'
+  // v0.10.3 CFG-3 — cron_schedules rows (the row id is a real uuid).
+  | 'cron_schedule';
