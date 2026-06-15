@@ -123,6 +123,27 @@ describe('scheduler advisory lock (single-runner election)', () => {
     }
   });
 
+  it('fails OPEN: an unreachable lock connection still runs the tick (single-instance)', async () => {
+    await seedDue();
+
+    // Lock connection points at a refused port (mirrors CI where the existing
+    // scheduler test's DATABASE_URL resolves to a non-listening localhost). The
+    // tick must degrade to single-instance behaviour and still process the row,
+    // NOT silently abort.
+    const handle = startScheduler({
+      db,
+      pollMs: 10_000,
+      lockConnectionString: 'postgres://cairn:cairn@127.0.0.1:1/cairn',
+      lockKey: TEST_LOCK_KEY,
+    });
+    await new Promise((r) => setTimeout(r, 120));
+    await handle.stop();
+
+    expect(mockedSpawn).toHaveBeenCalledOnce();
+    const rows = await db.select().from(schema.cronSchedules);
+    expect(rows[0]?.lastStatus).toBe('success');
+  });
+
   it('two concurrent schedulers do not double-process a due row', async () => {
     await seedDue();
 

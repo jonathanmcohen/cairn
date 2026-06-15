@@ -76,18 +76,25 @@ export function startScheduler(opts: StartSchedulerOpts): SchedulerHandle {
     try {
       // Single-runner election: only the instance that wins the advisory lock
       // processes this tick. Others skip — another instance holds it.
-      let acquired = true;
+      // `acquired` tracks whether we actually hold the lock (so finally unlocks
+      // exactly what we took). A lock-connection FAILURE fails OPEN: we run the
+      // tick without the lock (legacy single-instance behavior) rather than
+      // silently refusing to run — a briefly-unreachable lock DB must never
+      // wedge the scheduler. Only a successfully-acquired-by-someone-else lock
+      // makes us skip.
+      let acquired = false;
       if (lockSql) {
+        let lockUsable = true;
         try {
           const [lock] = await lockSql<
             { locked: boolean }[]
           >`SELECT pg_try_advisory_lock(${lockKey}) AS locked`;
           acquired = lock?.locked === true;
         } catch (err) {
-          console.warn('[scheduler] advisory-lock acquire failed:', err);
-          return;
+          console.warn('[scheduler] advisory-lock acquire failed; running without lock:', err);
+          lockUsable = false; // fail open
         }
-        if (!acquired) return; // another instance is running this tick
+        if (lockUsable && !acquired) return; // another instance is running this tick
       }
 
       try {
