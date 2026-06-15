@@ -176,6 +176,14 @@ export function SettingsSidebar({
         href: '/settings/admin/migrations' as Route,
         group: 'operations',
       },
+      // Aggregated instance config-health dashboard (v0.10.3 CFG-4). Distinct
+      // from the readiness-probe panel above (admin-health → /admin/health).
+      {
+        id: 'admin-system-health',
+        label: t('settings.nav.admin.systemHealth'),
+        href: '/settings/admin/system-health' as Route,
+        group: 'operations',
+      },
       // --- Billing ---
       {
         id: 'admin-upgrade',
