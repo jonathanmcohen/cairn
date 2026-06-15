@@ -58,6 +58,13 @@ async function revokeRoute(body?: unknown) {
   return { status: res.status, body: await res.json() };
 }
 
+async function revokeOneRoute(sessionId: string) {
+  const { POST } = await import('@/app/api/auth/sessions/[sessionId]/revoke/route');
+  const req = new Request(`http://local/api/auth/sessions/${sessionId}/revoke`, { method: 'POST' });
+  const res = await POST(req, { params: Promise.resolve({ sessionId }) });
+  return { status: res.status, body: await res.json() };
+}
+
 describe('/api/auth/sessions', () => {
   it('GET unauthenticated → 401', async () => {
     await setUser(null);
@@ -104,5 +111,35 @@ describe('/api/auth/sessions', () => {
   it('POST unauthenticated → 401', async () => {
     await setUser(null);
     expect((await revokeRoute()).status).toBe(401);
+  });
+
+  // v0.10.3 Q-2 — per-session revoke route.
+  it('POST [sessionId]/revoke revokes one session, leaves the current one', async () => {
+    const me = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const current = await createSession(getDb(), { userId: me.userId, userAgent: 'this' });
+    const phone = await createSession(getDb(), { userId: me.userId, userAgent: 'phone' });
+    await setUser({ userId: me.userId, sid: current });
+    const r = await revokeOneRoute(phone);
+    expect(r.status).toBe(200);
+    expect((r.body as { revoked: boolean }).revoked).toBe(true);
+    const active = await listActiveSessions(getDb(), me.userId);
+    expect(active.map((s) => s.id)).toEqual([current]);
+  });
+
+  it("POST [sessionId]/revoke → 404 for another user's session (no cross-account revoke)", async () => {
+    const me = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const other = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const theirSid = await createSession(getDb(), { userId: other.userId });
+    await setUser({ userId: me.userId, sid: await createSession(getDb(), { userId: me.userId }) });
+    const r = await revokeOneRoute(theirSid);
+    expect(r.status).toBe(404);
+    expect((r.body as { revoked: boolean }).revoked).toBe(false);
+    // their session is untouched
+    expect(await listActiveSessions(getDb(), other.userId)).toHaveLength(1);
+  });
+
+  it('POST [sessionId]/revoke unauthenticated → 401', async () => {
+    await setUser(null);
+    expect((await revokeOneRoute('00000000-0000-0000-0000-000000000000')).status).toBe(401);
   });
 });

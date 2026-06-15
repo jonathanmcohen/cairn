@@ -7,6 +7,7 @@ import {
   isSessionActive,
   listActiveSessions,
   revokeAllSessions,
+  revokeSingleSession,
   touchSession,
 } from '@/lib/auth/session-store';
 import { startPostgres, stopPostgres } from '../../helpers/db';
@@ -85,5 +86,30 @@ describe('session-store', () => {
     const revoked = await revokeAllSessions(getDb(), me.userId, {});
     expect(revoked).toBe(2);
     expect(await listActiveSessions(getDb(), me.userId)).toHaveLength(0);
+  });
+
+  it('revokeSingleSession revokes only the named session, leaves the rest', async () => {
+    const me = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const keep = await createSession(getDb(), { userId: me.userId, userAgent: 'keep' });
+    const drop = await createSession(getDb(), { userId: me.userId, userAgent: 'drop' });
+    expect(await revokeSingleSession(getDb(), me.userId, drop)).toBe(true);
+    const active = await listActiveSessions(getDb(), me.userId);
+    expect(active.map((s) => s.id)).toEqual([keep]);
+  });
+
+  it('revokeSingleSession is idempotent (already-revoked → false)', async () => {
+    const me = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const sid = await createSession(getDb(), { userId: me.userId });
+    expect(await revokeSingleSession(getDb(), me.userId, sid)).toBe(true);
+    expect(await revokeSingleSession(getDb(), me.userId, sid)).toBe(false);
+  });
+
+  it('revokeSingleSession will not revoke another user’s session', async () => {
+    const me = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const other = await createTestWorkspaceWithUser(getDb(), { role: 'owner' });
+    const theirSid = await createSession(getDb(), { userId: other.userId });
+    // me tries to revoke other's session → no-op, their session stays active.
+    expect(await revokeSingleSession(getDb(), me.userId, theirSid)).toBe(false);
+    expect(await isSessionActive(getDb(), other.userId, theirSid)).toBe(true);
   });
 });

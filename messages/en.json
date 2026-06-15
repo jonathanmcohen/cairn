@@ -222,6 +222,8 @@
   "security.sessions.unknownDevice": "Unknown device",
   "security.sessions.lastSeen": "Last active {when}",
   "security.sessions.signOutOthers": "Sign out everywhere else",
+  "security.sessions.revoke": "Revoke",
+  "security.sessions.revokeOne": "Revoke the session on {device}",
   "security.sessions.signOutOthersDone": "Signed out of {count} other session(s).",
   "security.sessions.loading": "Loading sessions…",
   "security.sessions.empty": "No other active sessions.",

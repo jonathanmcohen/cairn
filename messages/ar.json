@@ -222,6 +222,8 @@
   "security.sessions.unknownDevice": "جهاز غير معروف",
   "security.sessions.lastSeen": "آخر نشاط {when}",
   "security.sessions.signOutOthers": "تسجيل الخروج من كل الأجهزة الأخرى",
+  "security.sessions.revoke": "إبطال",
+  "security.sessions.revokeOne": "إبطال الجلسة على {device}",
   "security.sessions.signOutOthersDone": "تم تسجيل الخروج من {count} جلسة أخرى.",
   "security.sessions.loading": "جارٍ تحميل الجلسات…",
   "security.sessions.empty": "لا توجد جلسات نشطة أخرى.",
