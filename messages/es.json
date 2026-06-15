@@ -169,6 +169,8 @@
   "pageMenu.moveTo": "Mover a…",
   "pageMenu.moveToTopLevel": "Mover al nivel superior",
   "pageMenu.unlock": "Desbloquear página",
+  "pageMenu.pin": "Fijar en el espacio de trabajo",
+  "pageMenu.unpin": "Quitar del espacio de trabajo",
   "moveTo.title": "Mover página a…",
   "moveTo.description": "Elige una página de destino o muévela al nivel superior.",
   "moveTo.searchPlaceholder": "Buscar páginas…",

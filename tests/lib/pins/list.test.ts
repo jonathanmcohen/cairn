@@ -3,7 +3,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { getDb } from '@/db/client';
 import { runMigrations } from '@/db/migrate';
 import * as schema from '@/db/schema';
-import { listWorkspacePins } from '@/lib/pins/list';
+import { isWorkspacePinned, listWorkspacePins } from '@/lib/pins/list';
 import { startPostgres, stopPostgres } from '../../helpers/db';
 
 let sql: ReturnType<typeof postgres>;
@@ -91,5 +91,23 @@ describe('listWorkspacePins', () => {
       .returning();
     if (!ws) throw new Error('ws');
     expect(await listWorkspacePins(db, ws.id)).toEqual([]);
+  });
+});
+
+describe('isWorkspacePinned (Q-18)', () => {
+  it('true for a pinned page, false for an unpinned one', async () => {
+    const { db, ws, p1, user } = await seed();
+    expect(await isWorkspacePinned(db, ws.id, p1.id)).toBe(true);
+    const [unpinned] = await db
+      .insert(schema.pages)
+      .values({ workspaceId: ws.id, title: 'D', createdBy: user.id, content: {} })
+      .returning();
+    if (!unpinned) throw new Error('page');
+    expect(await isWorkspacePinned(db, ws.id, unpinned.id)).toBe(false);
+  });
+
+  it('false for the page id under a different workspace', async () => {
+    const { db, p1 } = await seed();
+    expect(await isWorkspacePinned(db, crypto.randomUUID(), p1.id)).toBe(false);
   });
 });
