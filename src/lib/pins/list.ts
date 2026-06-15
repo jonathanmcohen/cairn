@@ -29,6 +29,29 @@ export type PinRow = {
  * delete (HARD delete) means the row will never survive a full delete; this
  * filter handles the trash-state interim.
  */
+/**
+ * v0.10.3 Q-18 — cheap existence check for the page-menu "Pin / Unpin" toggle.
+ * Indexed PK lookup on (workspace_id, page_id); does not join `pages`, so it
+ * answers true even for a trashed page (the row only vanishes on hard delete).
+ */
+export async function isWorkspacePinned(
+  db: PostgresJsDatabase<typeof schema>,
+  workspaceId: string,
+  pageId: string,
+): Promise<boolean> {
+  const [row] = await db
+    .select({ pageId: schema.workspacePins.pageId })
+    .from(schema.workspacePins)
+    .where(
+      and(
+        eq(schema.workspacePins.workspaceId, workspaceId),
+        eq(schema.workspacePins.pageId, pageId),
+      ),
+    )
+    .limit(1);
+  return Boolean(row);
+}
+
 export async function listWorkspacePins(
   db: PostgresJsDatabase<typeof schema>,
   workspaceId: string,

@@ -15,7 +15,7 @@ export async function GET(): Promise<Response> {
   try {
     const ctx = requireWorkspace(await getAuthContext());
     const prefs = await getEmailPrefs(getDb(), ctx.userId, ctx.workspaceId);
-    return NextResponse.json({ prefs, emailEnabled: emailEnabled() });
+    return NextResponse.json({ prefs, emailEnabled: await emailEnabled(getDb()) });
   } catch (err) {
     return errorToResponse(err);
   }

@@ -19,7 +19,7 @@ type Db = PostgresJsDatabase<typeof schema>;
  */
 export async function sendNotificationEmail(db: Db, n: Notification): Promise<boolean> {
   try {
-    if (!emailEnabled()) return false;
+    if (!(await emailEnabled(db))) return false;
 
     const pref = await getEmailPref(db, n.userId, n.workspaceId, n.type as NotificationType);
     if (!pref.emailEnabled || pref.digestOnly) return false;
@@ -31,11 +31,11 @@ export async function sendNotificationEmail(db: Db, n: Notification): Promise<bo
       .limit(1);
     if (!user?.email) return false;
 
-    const transport = getTransport();
+    const transport = await getTransport(db);
     if (!transport) return false;
 
     const { subject, text, html } = await renderNotificationEmail(n);
-    await transport.sendMail({ from: fromAddress(), to: user.email, subject, text, html });
+    await transport.sendMail({ from: await fromAddress(db), to: user.email, subject, text, html });
     return true;
   } catch (err) {
     console.error('[email] sendNotificationEmail failed', err);

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { resetPageFocusMode } from '@/components/pages/page-mode-shell';
+import { TemplateDestinationDialog } from '@/components/templates/template-destination-dialog';
 import { TemplatePreviewDialog } from '@/components/templates/template-preview-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,8 +47,13 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
   const [busy, setBusy] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [previewId, setPreviewId] = useState<string | null>(null);
+  // v0.10.3 Q-4 — template whose destination picker is open (null = closed).
+  const [destForId, setDestForId] = useState<string | null>(null);
 
-  async function onUse(id: string) {
+  // v0.10.3 Q-4 — `parentId` grafts the clone under a chosen page; null (the
+  // one-click "Use" default) keeps the prior root placement. Only sent when a
+  // parent is picked, so the existing one-click POST is byte-identical.
+  async function onUse(id: string, parentId: string | null = null) {
     setBusy(id);
     setError(null);
     // P14 — instantiation can stall server-side; abort after 10s so the user
@@ -58,6 +64,9 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
       const res = await fetch(`/api/templates/${id}/instantiate`, {
         method: 'POST',
         signal: controller.signal,
+        ...(parentId
+          ? { headers: { 'content-type': 'application/json' }, body: JSON.stringify({ parentId }) }
+          : {}),
       });
       if (!res.ok) {
         const body = (await res.json().catch(() => null)) as { error?: string } | null;
@@ -207,6 +216,17 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
                       >
                         {busy === tpl.id ? t('templates.use.working') : t('templates.use.cta')}
                       </Button>
+                      {/* v0.10.3 Q-4 — pick a parent page instead of the root. */}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        data-testid="template-use-under"
+                        disabled={busy === tpl.id}
+                        onClick={() => setDestForId(tpl.id)}
+                      >
+                        {t('templates.use.under')}
+                      </Button>
                       {tpl.builtIn ? null : (
                         <Button
                           type="button"
@@ -236,6 +256,20 @@ export function TemplatesGallery({ initialTemplates, activeWorkspaceId }: Templa
           open
           onOpenChange={(o) => {
             if (!o) setPreviewId(null);
+          }}
+        />
+      ) : null}
+
+      {destForId ? (
+        <TemplateDestinationDialog
+          open
+          onOpenChange={(o) => {
+            if (!o) setDestForId(null);
+          }}
+          onPick={(parentId) => {
+            const id = destForId;
+            setDestForId(null);
+            if (id) void onUse(id, parentId);
           }}
         />
       ) : null}

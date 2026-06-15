@@ -132,6 +132,29 @@ export function SettingsSidebar({
         group: 'quotas',
       },
       // --- Operations ---
+      // Instance email (SMTP) config — DB overrides SMTP_* env (v0.10.3 CFG-1).
+      {
+        id: 'admin-email',
+        label: t('settings.nav.admin.email'),
+        href: '/settings/admin/email' as Route,
+        group: 'operations',
+      },
+      // Instance object-storage (S3) config — DB overrides S3_*/FILE_BACKEND
+      // env (v0.10.3 CFG-2). Distinct from the workspace storage-QUOTA page
+      // (admin-storage) above.
+      {
+        id: 'admin-object-storage',
+        label: t('settings.nav.admin.objectStorage'),
+        href: '/settings/admin/object-storage' as Route,
+        group: 'operations',
+      },
+      // Cron-driven CLI job schedules (v0.10.3 CFG-3).
+      {
+        id: 'admin-schedules',
+        label: t('settings.nav.admin.schedules'),
+        href: '/settings/admin/schedules' as Route,
+        group: 'operations',
+      },
       // Instance backup snapshots (v0.10.0 C1).
       {
         id: 'admin-backups',
@@ -151,6 +174,14 @@ export function SettingsSidebar({
         id: 'admin-migrations',
         label: t('settings.nav.admin.migrations'),
         href: '/settings/admin/migrations' as Route,
+        group: 'operations',
+      },
+      // Aggregated instance config-health dashboard (v0.10.3 CFG-4). Distinct
+      // from the readiness-probe panel above (admin-health → /admin/health).
+      {
+        id: 'admin-system-health',
+        label: t('settings.nav.admin.systemHealth'),
+        href: '/settings/admin/system-health' as Route,
         group: 'operations',
       },
       // --- Billing ---

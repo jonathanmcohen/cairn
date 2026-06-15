@@ -47,4 +47,49 @@ describe('PinnedSection', () => {
       expect(container.querySelector('[data-testid="pinned-section"]')).toBeNull();
     });
   });
+
+  // v0.10.3 Q-18 — admins get inline drag-reorder handles; everyone else gets
+  // plain links.
+  function stubPins() {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(
+        async () =>
+          new Response(
+            JSON.stringify({
+              pins: [
+                {
+                  pageId: 'aaaaaaaa-0000-0000-0000-000000000001',
+                  title: 'Onboarding',
+                  icon: null,
+                  position: 0,
+                },
+                {
+                  pageId: 'aaaaaaaa-0000-0000-0000-000000000002',
+                  title: 'Roadmap',
+                  icon: null,
+                  position: 1,
+                },
+              ],
+            }),
+            { status: 200 },
+          ),
+      ),
+    );
+  }
+
+  it('shows drag-reorder handles for admins (canManage)', async () => {
+    stubPins();
+    render(<PinnedSection canManage />);
+    expect(await screen.findByText('Onboarding')).toBeTruthy();
+    expect(screen.getByTestId('pin-drag-aaaaaaaa-0000-0000-0000-000000000001')).toBeTruthy();
+    expect(screen.getByTestId('pin-drag-aaaaaaaa-0000-0000-0000-000000000002')).toBeTruthy();
+  });
+
+  it('shows no drag handles for non-admins', async () => {
+    stubPins();
+    render(<PinnedSection />);
+    expect(await screen.findByText('Onboarding')).toBeTruthy();
+    expect(screen.queryByTestId('pin-drag-aaaaaaaa-0000-0000-0000-000000000001')).toBeNull();
+  });
 });

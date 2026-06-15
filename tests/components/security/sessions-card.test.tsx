@@ -130,4 +130,56 @@ describe('SessionsCard (#70)', () => {
     );
     await waitFor(() => expect(screen.queryByText('phone')).toBeNull());
   });
+
+  // v0.10.3 Q-2 — per-session Revoke on non-current rows only.
+  it('shows a Revoke button on other devices (not the current one) and POSTs the single-revoke route', async () => {
+    fetchMock
+      .mockResolvedValueOnce(
+        sessionsResponse([
+          {
+            id: 's1',
+            userAgent: 'this',
+            ip: null,
+            createdAt: new Date().toISOString(),
+            lastSeenAt: new Date().toISOString(),
+            current: true,
+          },
+          {
+            id: 's2',
+            userAgent: 'phone',
+            ip: null,
+            createdAt: new Date().toISOString(),
+            lastSeenAt: new Date().toISOString(),
+            current: false,
+          },
+        ]),
+      )
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ revoked: true }) } as Response)
+      .mockResolvedValueOnce(
+        sessionsResponse([
+          {
+            id: 's1',
+            userAgent: 'this',
+            ip: null,
+            createdAt: new Date().toISOString(),
+            lastSeenAt: new Date().toISOString(),
+            current: true,
+          },
+        ]),
+      );
+    render(wrap(<SessionsCard />));
+    await screen.findByText('phone');
+    // Exactly one Revoke button — the non-current row. The current device has none.
+    const revokeButtons = screen.getAllByRole('button', { name: /Revoke the session/ });
+    expect(revokeButtons).toHaveLength(1);
+
+    fireEvent.click(screen.getByTestId('revoke-session-s2'));
+    await waitFor(() =>
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/auth/sessions/s2/revoke',
+        expect.objectContaining({ method: 'POST' }),
+      ),
+    );
+    await waitFor(() => expect(screen.queryByText('phone')).toBeNull());
+  });
 });

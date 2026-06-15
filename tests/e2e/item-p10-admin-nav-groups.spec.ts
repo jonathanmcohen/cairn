@@ -1,6 +1,6 @@
 // v0.10.2 P10 — settings Admin nav collapsible sub-groups.
 //
-// The Admin section's 15 unconditional children (+ flag-gated End-to-end
+// The Admin section's 16 unconditional children (+ flag-gated End-to-end
 // encryption) render under six collapsible group headers (Identity / Audit &
 // Compliance / Integrations / Quotas / Operations / Billing). A collapsed
 // group UNMOUNTS its links (DOM count 0) so the arrow-key ring and tab order
@@ -10,7 +10,7 @@ import { expect, signIn, test } from '../a11y/fixtures';
 const NAV = 'nav[aria-label="Settings sections"]';
 const GROUP_SLUGS = ['identity', 'audit', 'integrations', 'quotas', 'operations', 'billing'];
 
-// The 15 unconditional admin child hrefs (src/components/settings/sidebar.tsx).
+// The 16 unconditional admin child hrefs (src/components/settings/sidebar.tsx).
 const UNCONDITIONAL_HREFS = [
   // Identity
   '/settings/admin/users',
@@ -28,9 +28,13 @@ const UNCONDITIONAL_HREFS = [
   '/settings/admin/api-keys',
   '/settings/admin/storage',
   // Operations
+  '/settings/admin/email',
+  '/settings/admin/schedules',
+  '/settings/admin/object-storage',
   '/settings/admin/backups',
   '/settings/admin/health',
   '/settings/admin/migrations',
+  '/settings/admin/system-health',
   // Billing
   '/settings/admin/upgrade',
 ];
@@ -75,7 +79,7 @@ test.describe('item P10 — admin nav collapsible sub-groups', () => {
     for (const href of UNCONDITIONAL_HREFS) {
       expect(collected, `missing ${href}`).toContain(href);
     }
-    // Anything beyond the 15 must be the flag-gated encryption entry.
+    // Anything beyond the 16 must be the flag-gated encryption entry.
     const extras = collected.filter((h) => !UNCONDITIONAL_HREFS.includes(h));
     for (const extra of extras) {
       expect(OPTIONAL_HREFS, `unexpected admin link ${extra}`).toContain(extra);

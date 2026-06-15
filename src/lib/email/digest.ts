@@ -52,9 +52,10 @@ export async function setWatermark(db: Db, userId: string, now: Date): Promise<v
  * of digest emails handed to the transport.
  */
 export async function scanDigests(db: Db, now: Date = new Date()): Promise<number> {
-  if (!emailEnabled()) return 0;
-  const transport = getTransport();
+  if (!(await emailEnabled(db))) return 0;
+  const transport = await getTransport(db);
   if (!transport) return 0;
+  const from = await fromAddress(db);
 
   const eligible = await db
     .selectDistinct({ userId: schema.notificationEmailPrefs.userId })
@@ -85,7 +86,7 @@ export async function scanDigests(db: Db, now: Date = new Date()): Promise<numbe
       if (!user?.email) continue;
 
       const { subject, text, html } = await renderDigestEmail(unread);
-      await transport.sendMail({ from: fromAddress(), to: user.email, subject, text, html });
+      await transport.sendMail({ from, to: user.email, subject, text, html });
       await setWatermark(db, userId, now);
       sent += 1;
     } catch (err) {

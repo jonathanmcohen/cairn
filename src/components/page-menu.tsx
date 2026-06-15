@@ -14,6 +14,8 @@ import {
   Lock,
   LockOpen,
   MoreHorizontal,
+  Pin,
+  PinOff,
   Trash2,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -64,6 +66,10 @@ type PageMenuProps = {
   canUnlock?: boolean;
   /** True when unlocking someone else's lock as an admin override. */
   unlockAsAdmin?: boolean;
+  /** v0.10.3 Q-18 — admin may pin/unpin this page to the workspace sidebar. */
+  canPin?: boolean;
+  /** Server-rendered current pin state. */
+  initialPinned?: boolean;
 };
 
 export function PageMenu({
@@ -79,6 +85,8 @@ export function PageMenu({
   locked = false,
   canUnlock = false,
   unlockAsAdmin = false,
+  canPin = false,
+  initialPinned = false,
 }: PageMenuProps) {
   const t = useT();
   const router = useRouter();
@@ -97,6 +105,34 @@ export function PageMenu({
   const [shareOpen, setShareOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewCopied, setPreviewCopied] = useState(false);
+  // v0.10.3 Q-18 — workspace pin toggle (admin). Optimistic; rolls back on a
+  // failed request. router.refresh() re-renders the sidebar PINNED section.
+  const [pinned, setPinned] = useState(initialPinned);
+  const [pinBusy, setPinBusy] = useState(false);
+
+  async function togglePin(): Promise<void> {
+    if (pinBusy) return;
+    setPinBusy(true);
+    const wasPinned = pinned;
+    setPinned(!wasPinned);
+    try {
+      const res = wasPinned
+        ? await fetch(`/api/workspace/pins/${pageId}`, { method: 'DELETE' })
+        : await fetch('/api/workspace/pins', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ pageId }),
+          });
+      if (!res.ok) {
+        setPinned(wasPinned); // rollback
+        return;
+      }
+      setOpen(false);
+      router.refresh();
+    } finally {
+      setPinBusy(false);
+    }
+  }
 
   // Treat the popover as a non-modal dialog: keyboard users dismiss via Esc
   // (focus is restored to the trigger) and the surface carries an accessible
@@ -308,6 +344,25 @@ export function PageMenu({
             <button type="button" className={ITEM_CLASS} onClick={() => void unlockPage()}>
               <LockOpen aria-hidden="true" className="h-4 w-4 shrink-0" />
               {t('pageMenu.unlock')}
+            </button>
+          )}
+          {/* v0.10.3 Q-18 — workspace pin/unpin from the page ⋯ menu (admin),
+              so curating the sidebar PINNED section no longer requires the
+              Settings → Pinned pages manager. */}
+          {canPin && (
+            <button
+              type="button"
+              className={ITEM_CLASS}
+              data-testid="page-menu-pin-toggle"
+              disabled={pinBusy}
+              onClick={() => void togglePin()}
+            >
+              {pinned ? (
+                <PinOff aria-hidden="true" className="h-4 w-4 shrink-0" />
+              ) : (
+                <Pin aria-hidden="true" className="h-4 w-4 shrink-0" />
+              )}
+              {pinned ? t('pageMenu.unpin') : t('pageMenu.pin')}
             </button>
           )}
           <div className="my-1 border-t" />

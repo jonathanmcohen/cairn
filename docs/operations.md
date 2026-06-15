@@ -41,8 +41,12 @@ Setting `CAIRN_SCHEDULER_ENABLED=1` boots an in-process scheduler that polls `cr
 every 60 seconds, exec'ing any due, enabled row as `node dist/server/cli.js <command>`. Use it
 to schedule recurring backups, exports, reindexes, or reconciles from inside the container.
 
-Manage schedules by inserting/updating rows directly (no admin UI in v0.7.0). Example for a
-nightly S3 backup:
+Manage schedules from **Settings → Admin → Schedules** (v0.10.3 CFG-3): the page lists every
+`cron_schedules` row (global + per-workspace) with its command, cron expression, next/last run,
+and last status/error. Admins can edit the cron expression, enable/disable a job, and **Run
+now** (which marks the row due immediately — the next poll, within 60 s, runs it; the request
+never spawns the CLI itself, preserving single-runner semantics). You can still insert/update
+rows directly in SQL — example for a nightly S3 backup:
 
 ```sql
 INSERT INTO cron_schedules (command, cron_spec, next_run_at)
@@ -57,9 +61,19 @@ The scheduler advances `next_run_at` via `cron-parser` after each run and writes
 + `last_status` (`'success'` | `'failure'`) + `last_error`. A malformed `cron_spec` disables the
 row to prevent a poison loop.
 
-**SINGLE-INSTANCE only** — same ceiling as `CAIRN_BACKUP_INTERVAL`. Two app processes both poll
-and double-fire each due row. Multi-instance deployments should disable this scheduler and use
-external cron / Kubernetes CronJob to invoke the same CLI.
+**Multi-instance SAFE (v0.10.3 CFG-3), but best run on ONE instance.** Each tick first takes a
+Postgres session-scoped advisory lock (`pg_try_advisory_lock` on key `4021966012`, distinct from
+the migrations lock `4021966011` and the backup lock) on a dedicated single connection. Only the
+instance that wins the lock runs that tick's poll-and-dispatch; other instances see the lock held
+and skip the tick, so a due row fires **exactly once** even with the scheduler enabled on more
+than one replica. The lock is released after the tick (and auto-released if the process dies, so a
+crashed tick never wedges future ticks). A module-scoped re-entry guard additionally prevents a
+slow batch from overlapping its own next tick within a single process.
+
+This makes >1 instance safe (no double-fire), not load-balanced — every tick is still run by a
+single instance. Operators are encouraged to keep `CAIRN_SCHEDULER_ENABLED=1` on one instance,
+or to disable the in-process scheduler entirely and drive recurring CLI work from external cron /
+a Kubernetes CronJob.
 
 ### Scheduled backups (v0.10.0 C3)
 

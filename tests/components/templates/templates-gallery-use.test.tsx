@@ -128,4 +128,35 @@ describe('<TemplatesGallery> use-template (P14)', () => {
     expect(screen.getByTestId('template-use').textContent).toBe(en['templates.use.cta']);
     expect(screen.queryByText(en['templates.use.timeout'] as string)).toBeNull();
   });
+
+  // v0.10.3 Q-4 — "Add under…" opens the destination picker and instantiates
+  // under the chosen page (sends { parentId }); the plain "Use" path stays bodyless.
+  it('Add under… instantiates the template under the picked parent page', async () => {
+    const fetchMock = vi.fn(async (url: string) => {
+      if (typeof url === 'string' && url.startsWith('/api/pages/tree')) {
+        return {
+          ok: true,
+          json: async () => ({
+            nodes: [{ id: 'parent-1', parentId: null, title: 'Cairn Guide', icon: null, depth: 0 }],
+          }),
+        };
+      }
+      return { ok: true, json: async () => ({ rootPageId: 'p2', rootDatabaseId: null }) };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    renderGallery();
+
+    fireEvent.click(screen.getByTestId('template-use-under'));
+    const row = await screen.findByTestId('template-dest-parent-1');
+    fireEvent.click(row);
+
+    await waitFor(() => {
+      const call = fetchMock.mock.calls.find(
+        ([u]) => u === '/api/templates/tpl-1/instantiate',
+      ) as unknown as [string, RequestInit] | undefined;
+      expect(call).toBeTruthy();
+      expect(call?.[1].method).toBe('POST');
+      expect(JSON.parse(call?.[1].body as string)).toEqual({ parentId: 'parent-1' });
+    });
+  });
 });
