@@ -123,12 +123,10 @@ export function NotificationPrefs() {
           >
             {t('notifications.smtp.disabledBanner')}{' '}
             <a
-              href="https://github.com/jonathanmcohen/cairn/blob/main/docs/operations.md#email-smtp"
-              target="_blank"
-              rel="noreferrer"
+              href="/settings/admin/email"
               className="font-medium underline underline-offset-2 hover:text-amber-950 dark:hover:text-amber-100"
             >
-              {t('notifications.smtp.docsLink')}
+              {t('notifications.smtp.configureLink')}
             </a>
           </div>
         )}

@@ -4949,6 +4949,18 @@
       "line": 80,
       "text": "Delete forever",
       "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/email/page.tsx",
+      "line": 25,
+      "text": "Email (SMTP)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/email/page.tsx",
+      "line": 27,
+      "text": "Instance-wide outgoing email server. These values override the SMTP_* environment variables\n        once saved. The password is stored encrypted and never shown again.",
+      "kind": "jsx_text"
     }
   ]
 }

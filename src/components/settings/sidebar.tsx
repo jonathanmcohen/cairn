@@ -132,6 +132,13 @@ export function SettingsSidebar({
         group: 'quotas',
       },
       // --- Operations ---
+      // Instance email (SMTP) config — DB overrides SMTP_* env (v0.10.3 CFG-1).
+      {
+        id: 'admin-email',
+        label: t('settings.nav.admin.email'),
+        href: '/settings/admin/email' as Route,
+        group: 'operations',
+      },
       // Instance backup snapshots (v0.10.0 C1).
       {
         id: 'admin-backups',

@@ -37,6 +37,21 @@ export async function registerNode(): Promise<void> {
       console.error('[templates] startup seed failed', err);
     });
 
+  // v0.10.3 CFG-1 — first-boot migrate of SMTP_* env into the DB-backed
+  // instance_email_config row, so the admin sees today's values in the UI.
+  // Idempotent: no-op once a row exists or when no SMTP host is set.
+  const { migrateEnvEmailConfigOnce } = await import('@/lib/email/config');
+  void migrateEnvEmailConfigOnce(getDb())
+    .then((migrated) => {
+      if (migrated) {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[email] migrated SMTP_* env into instance_email_config');
+      }
+    })
+    .catch((err) => {
+      console.error('[email] env→DB email-config migration failed', err);
+    });
+
   const { env } = await import('@/lib/env');
   const interval = env().CAIRN_DIGEST_INTERVAL;
   if (interval > 0) {

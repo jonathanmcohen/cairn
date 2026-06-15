@@ -15,9 +15,10 @@ import { type NotifyResult, notifyDueFlashcards } from './notify-due';
  *     matches this tick are notified.
  */
 export async function runFlashcardsNotifyDueCli(): Promise<NotifyResult> {
-  if (!emailEnabled()) {
+  const db = getDb();
+  if (!(await emailEnabled(db))) {
     return { notified: 0 };
   }
   const tickHour = new Date().getUTCHours();
-  return notifyDueFlashcards(getDb(), new Date(), tickHour);
+  return notifyDueFlashcards(db, new Date(), tickHour);
 }
