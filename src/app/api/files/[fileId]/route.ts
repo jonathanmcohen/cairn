@@ -6,6 +6,7 @@ import * as schema from '@/db/schema';
 import { env } from '@/lib/env';
 import { getStorage } from '@/lib/files/get-storage';
 import { verifyFileUrl } from '@/lib/files/signing';
+import { getStorageFor } from '@/lib/files/storage-config';
 
 const FileId = z.uuid();
 
@@ -32,8 +33,11 @@ export async function GET(
   const [f] = await getDb().select().from(schema.files).where(eq(schema.files.id, fileId)).limit(1);
   if (!f) return NextResponse.json({ error: 'not found' }, { status: 404 });
 
+  // v0.10.3 CFG-2 — read from the DB-configured S3 backend when uploads are
+  // opted in; otherwise fall back to the legacy local default (never null).
+  const storage = (await getStorageFor(getDb(), 'uploads')) ?? getStorage();
   // @ts-expect-error: Node Readable → web Response works at runtime in Next 16
-  return new Response(getStorage().read(f.path), {
+  return new Response(storage.read(f.path), {
     status: 200,
     headers: {
       'content-type': f.mimeType,

@@ -232,6 +232,10 @@ export const AUDIT_ACTIONS = [
   // v0.10.3 CFG-1 — instance email (SMTP) config changed via the admin UI.
   // metadata: { source, host, tlsMode } — host/flags only, never the password.
   'config.email_updated',
+  // v0.10.3 CFG-2 — instance object-storage (S3) config changed via the admin
+  // UI. metadata: { provider, endpoint, bucket, uploadsEnabled, backupsEnabled,
+  // siemEnabled } — endpoint/bucket/flags only, never the secret key.
+  'config.storage_updated',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
