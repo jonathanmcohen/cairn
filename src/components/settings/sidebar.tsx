@@ -148,6 +148,13 @@ export function SettingsSidebar({
         href: '/settings/admin/object-storage' as Route,
         group: 'operations',
       },
+      // Cron-driven CLI job schedules (v0.10.3 CFG-3).
+      {
+        id: 'admin-schedules',
+        label: t('settings.nav.admin.schedules'),
+        href: '/settings/admin/schedules' as Route,
+        group: 'operations',
+      },
       // Instance backup snapshots (v0.10.0 C1).
       {
         id: 'admin-backups',

@@ -883,6 +883,18 @@
       "kind": "jsx_text"
     },
     {
+      "file": "app/(app)/settings/admin/email/page.tsx",
+      "line": 25,
+      "text": "Email (SMTP)",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/email/page.tsx",
+      "line": 27,
+      "text": "Instance-wide outgoing email server. These values override the SMTP_* environment variables\n        once saved. The password is stored encrypted and never shown again.",
+      "kind": "jsx_text"
+    },
+    {
       "file": "app/(app)/settings/admin/encryption/page.tsx",
       "line": 40,
       "text": "Workspace encryption",
@@ -928,6 +940,18 @@
       "file": "app/(app)/settings/admin/mfa/page.tsx",
       "line": 38,
       "text": "and passkeys at",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/schedules/page.tsx",
+      "line": 27,
+      "text": "Scheduled jobs",
+      "kind": "jsx_text"
+    },
+    {
+      "file": "app/(app)/settings/admin/schedules/page.tsx",
+      "line": 29,
+      "text": "Recurring background jobs (trash purge, page auto-unlock, notifications, and so on). Edit a\n        job&rsquo;s cron expression, turn it on or off, or run it now. Changes take effect on the\n        next scheduler tick.",
       "kind": "jsx_text"
     },
     {
