@@ -56,6 +56,27 @@
       "severity": "high",
       "reason": "The advisory's vector is esbuild's DENO module downloading platform binaries without integrity verification when NPM_CONFIG_REGISTRY points elsewhere (patched >=0.28.1). All three findings here are pnpm-installed npm devDependency chains (vite/vitest toolchain at 0.28.0, /cli at 0.28.0, drizzle-kit at 0.25.12 and 0.18.20 via -kit) where binaries ship as pinned optionalDependencies resolved through the lockfile, not the Deno download path; nothing reaches the production bundle. A pnpm override to 0.28.1 would force drizzle-kit's pinned 0.18/0.25 esbuild across majors. Re-review when vite/serwist/drizzle-kit ship releases on >=0.28.1.",
       "expires": "2026-08-23"
+    },
+    {
+      "id": 1120729,
+      "module": "tmp",
+      "severity": "high",
+      "reason": "Same @lhci/cli devDependency chains as 1119610/1120654 — tmp@0.0.33 via inquirer→external-editor and tmp@0.1.0 as a direct @lhci/cli dep (Lighthouse CI perf-budget tooling). This is the type-confusion variant of the tmp path-traversal class: a non-string prefix/postfix/template bypasses _assertPath (patched >=0.2.6). @lhci/cli never passes user-controlled prefix/postfix to tmp, and the package never reaches the production server bundle; testcontainers' own tmp is already 0.2.6 (patched). Re-review when @lhci/cli upgrades its tmp/inquirer chain.",
+      "expires": "2026-08-23"
+    },
+    {
+      "id": 1120791,
+      "module": "vite",
+      "severity": "high",
+      "reason": "vite@8.0.14 via @vitest/mocker → vitest (devDependency only — Cairn's test toolchain). The advisory is a server.fs.deny bypass on Windows via alternate path syntax (backslash / 8.3 short names) in vite's dev server. Cairn never runs the vite dev server (the app server is Next.js/Turbopack; vite is present only as Vitest's transform engine), CI and production both run Linux so the Windows-only path vector does not apply, and vite never ships in the standalone production bundle. Re-review when vitest's pinned vite dependency moves to a patched release.",
+      "expires": "2026-08-23"
+    },
+    {
+      "id": 1120799,
+      "module": "protobufjs",
+      "severity": "high",
+      "reason": "Same chain as 1117571 — onnx-proto pins protobufjs@6.11.x via @xenova/transformers → onnxruntime-web. DoS through unbounded Any expansion during protobuf JSON conversion; requires attacker-controlled protobuf JSON input. The only protobuf inputs in this codebase are bundled ONNX model files (operator-controlled) — no untrusted protobuf JSON reaches the library. A pnpm override to v7 still silently fails because onnx-proto's compiled output targets the v6 API. Re-review when @xenova/transformers drops onnx-proto or an equivalent ships against protobufjs v7.",
+      "expires": "2026-08-23"
     }
   ]
 }
