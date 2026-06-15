@@ -76,6 +76,29 @@ export async function listActiveSessions(db: Db, userId: string): Promise<Active
 }
 
 /**
+ * Revoke ONE session by id, scoped to the owning user. The user-id match means
+ * a caller can only revoke their own sessions — passing someone else's sid
+ * (or an unknown/already-revoked one) revokes nothing. Idempotent. Returns true
+ * iff a row was newly revoked.
+ *
+ * v0.10.3 Q-2 — per-session "Revoke" in Settings → Security.
+ */
+export async function revokeSingleSession(db: Db, userId: string, sid: string): Promise<boolean> {
+  const rows = await db
+    .update(schema.authSessions)
+    .set({ revokedAt: new Date() })
+    .where(
+      and(
+        eq(schema.authSessions.id, sid),
+        eq(schema.authSessions.userId, userId),
+        isNull(schema.authSessions.revokedAt),
+      ),
+    )
+    .returning({ id: schema.authSessions.id });
+  return rows.length > 0;
+}
+
+/**
  * Revoke sessions for a user. With `exceptSid` the current device stays signed
  * in ("sign out everywhere else"); without it every session including the
  * caller is revoked. Returns the number of rows newly revoked.

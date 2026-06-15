@@ -29,6 +29,9 @@ export function SessionsCard({ userEmail }: { userEmail?: string }) {
   const [sessions, setSessions] = useState<ApiSession[] | null>(null);
   const [error, setError] = useState(false);
   const [busy, setBusy] = useState(false);
+  // v0.10.3 Q-2 — id of the row whose per-session Revoke is in flight, so only
+  // that row's button shows the disabled state.
+  const [revokingId, setRevokingId] = useState<string | null>(null);
   // v0.10.2 S11 — themed sign-out confirmation (mirrors the sidebar footer's
   // intercept). Keep the working Server Action <form action={signOutAction}>;
   // gate its submit behind the confirm. confirmedRef carries the "yes" past the
@@ -88,6 +91,21 @@ export function SessionsCard({ userEmail }: { userEmail?: string }) {
     }
   }, [load]);
 
+  // v0.10.3 Q-2 — revoke a single device. 404 (already gone / not ours) is
+  // treated as success: the row is gone either way, so just reload.
+  const revokeOne = useCallback(
+    async (id: string) => {
+      setRevokingId(id);
+      try {
+        await fetch(`/api/auth/sessions/${id}/revoke`, { method: 'POST' });
+        await load();
+      } finally {
+        setRevokingId(null);
+      }
+    },
+    [load],
+  );
+
   const hasOthers = (sessions ?? []).some((s) => !s.current);
 
   return (
@@ -126,6 +144,24 @@ export function SessionsCard({ userEmail }: { userEmail?: string }) {
                   {s.ip ? ` · ${s.ip}` : ''}
                 </p>
               </div>
+              {/* v0.10.3 Q-2 — per-session revoke (the current device uses the
+                  Sign-out button instead, so it carries no Revoke). */}
+              {!s.current && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="min-h-11 shrink-0 text-muted-foreground hover:text-destructive"
+                  disabled={revokingId === s.id}
+                  data-testid={`revoke-session-${s.id}`}
+                  aria-label={t('security.sessions.revokeOne', {
+                    device: friendlyUserAgent(s.userAgent) ?? t('security.sessions.unknownDevice'),
+                  })}
+                  onClick={() => void revokeOne(s.id)}
+                >
+                  {t('security.sessions.revoke')}
+                </Button>
+              )}
             </li>
           ))}
         </ul>

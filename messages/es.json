@@ -222,6 +222,8 @@
   "security.sessions.unknownDevice": "Dispositivo desconocido",
   "security.sessions.lastSeen": "Última actividad {when}",
   "security.sessions.signOutOthers": "Cerrar sesión en los demás",
+  "security.sessions.revoke": "Revocar",
+  "security.sessions.revokeOne": "Revocar la sesión en {device}",
   "security.sessions.signOutOthersDone": "Se cerró sesión en {count} sesión(es).",
   "security.sessions.loading": "Cargando sesiones…",
   "security.sessions.empty": "No hay otras sesiones activas.",
