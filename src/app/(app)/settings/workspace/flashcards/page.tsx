@@ -44,7 +44,7 @@ export default async function FlashcardsSettingsPage() {
           reminderHour: settings.reminderHour ?? null,
         }}
         decks={decks}
-        smtpConfigured={emailEnabled()}
+        smtpConfigured={await emailEnabled(db)}
       />
     </section>
   );

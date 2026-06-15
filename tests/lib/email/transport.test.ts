@@ -1,55 +1,49 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { EffectiveEmailConfig } from '@/lib/email/config';
 
-const BASE = {
-  DATABASE_URL: 'postgres://u:p@h:5432/d',
-  AUTH_SECRET: 'x'.repeat(32),
-  NEXTAUTH_URL: 'http://localhost:3000',
-};
+// The transport reads the effective config from ./config; mock that so these
+// stay pure unit tests (no DB). A null fake DB is fine — it's never touched.
+let fakeConfig: EffectiveEmailConfig | null = null;
+vi.mock('@/lib/email/config', () => ({
+  getEffectiveEmailConfig: () => Promise.resolve(fakeConfig),
+}));
 
-describe('email transport', () => {
-  const original = { ...process.env };
+const db = {} as never;
 
-  beforeEach(() => {
-    vi.resetModules();
-    process.env = { ...original, ...BASE };
-    process.env.SMTP_HOST = undefined;
-    process.env.SMTP_USER = undefined;
-    process.env.SMTP_FROM = undefined;
-  });
+beforeEach(() => {
+  vi.resetModules();
+  fakeConfig = null;
+});
 
-  afterEach(() => {
-    process.env = { ...original };
-  });
+afterEach(() => {
+  vi.restoreAllMocks();
+});
 
-  it('is disabled (null transport) when SMTP_HOST is unset', async () => {
+describe('email transport (db-aware)', () => {
+  it('is disabled (null transport) when no effective config', async () => {
     const mod = await import('@/lib/email/transport');
     mod.__resetTransport();
-    expect(mod.getTransport()).toBeNull();
-    expect(mod.emailEnabled()).toBe(false);
+    expect(await mod.getTransport(db)).toBeNull();
+    expect(await mod.emailEnabled(db)).toBe(false);
+    expect(await mod.fromAddress(db)).toBe('cairn@localhost');
   });
 
-  it('builds a transport when SMTP_HOST is set', async () => {
-    process.env.SMTP_HOST = 'smtp.example.com';
-    process.env.SMTP_PORT = '465';
-    process.env.SMTP_USER = 'mailer';
-    process.env.SMTP_PASS = 'secret';
+  it('builds a transport from the effective config', async () => {
+    fakeConfig = {
+      host: 'smtp.example.com',
+      port: 465,
+      tlsMode: 'tls',
+      user: 'mailer',
+      pass: 'secret',
+      from: 'noreply@example.com',
+      replyTo: null,
+      source: 'db',
+    };
     const mod = await import('@/lib/email/transport');
     mod.__resetTransport();
-    const t = mod.getTransport();
+    const t = await mod.getTransport(db);
     expect(t).not.toBeNull();
-    expect(mod.emailEnabled()).toBe(true);
-  });
-
-  it('fromAddress prefers SMTP_FROM, then SMTP_USER, then default', async () => {
-    process.env.SMTP_USER = 'mailer@example.com';
-    process.env.SMTP_FROM = 'noreply@example.com';
-    const mod = await import('@/lib/email/transport');
-    expect(mod.fromAddress()).toBe('noreply@example.com');
-
-    vi.resetModules();
-    process.env.SMTP_FROM = undefined;
-    process.env.SMTP_USER = 'mailer@example.com';
-    const mod2 = await import('@/lib/email/transport');
-    expect(mod2.fromAddress()).toBe('mailer@example.com');
+    expect(await mod.emailEnabled(db)).toBe(true);
+    expect(await mod.fromAddress(db)).toBe('noreply@example.com');
   });
 });

@@ -73,21 +73,20 @@ describe('<NotificationPrefs> #73/#74 SMTP-off handling', () => {
     expect(container).toBeTruthy();
   });
 
-  it('shows a docs CTA link inside the disabled banner (#194)', async () => {
+  it('shows a configure-email CTA link inside the disabled banner (#194 / CFG-1)', async () => {
     mockPrefs(false);
     renderWithI18n(<NotificationPrefs />);
-    const link = await screen.findByRole('link', { name: 'Configure email delivery' });
-    expect(link.getAttribute('href')).toBe(
-      'https://github.com/jonathanmcohen/cairn/blob/main/docs/operations.md#email-smtp',
-    );
-    expect(link.getAttribute('target')).toBe('_blank');
+    // v0.10.3 CFG-1 — the banner now links to the in-app email-config settings
+    // page (where SMTP is configured) instead of the external docs page.
+    const link = await screen.findByRole('link', { name: 'Configure email' });
+    expect(link.getAttribute('href')).toBe('/settings/admin/email');
   });
 
-  it('does not show the docs CTA link when SMTP is configured (#194)', async () => {
+  it('does not show the configure-email CTA link when SMTP is configured (#194)', async () => {
     mockPrefs(true);
     renderWithI18n(<NotificationPrefs />);
     await waitFor(() => expect(screen.getByText('Mentions')).toBeTruthy());
-    expect(screen.queryByRole('link', { name: 'Configure email delivery' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'Configure email' })).toBeNull();
   });
 
   it('enables all buttons and hides the banner when SMTP is configured', async () => {

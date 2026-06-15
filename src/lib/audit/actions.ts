@@ -229,6 +229,9 @@ export const AUDIT_ACTIONS = [
   // v0.10.2 F3 — leech detection: card suspended after N consecutive Again grades.
   // metadata: { cardId, againCount, leechThreshold } — ids + counts only.
   'flashcard.card_leeched',
+  // v0.10.3 CFG-1 — instance email (SMTP) config changed via the admin UI.
+  // metadata: { source, host, tlsMode } — host/flags only, never the password.
+  'config.email_updated',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];
@@ -272,4 +275,6 @@ export type AuditTargetType =
   // v0.10.2 F1 — flashcard card rows (flashcard_cards table).
   | 'flashcard_card'
   // v0.10.2 F2 — flashcard deck rows (flashcard_decks table).
-  | 'flashcard_deck';
+  | 'flashcard_deck'
+  // v0.10.3 CFG-1 — instance-global config singleton rows (email, …).
+  | 'instance_config';
