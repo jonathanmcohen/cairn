@@ -5,6 +5,45 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versions: [Sem
 
 ## [Unreleased]
 
+## [0.10.3] - 2026-06-15
+
+A UI quality + self-service configuration release: a 21-item interface polish
+sweep, and four new admin Settings surfaces that move SMTP, S3 storage, and the
+job scheduler out of environment-only config and into the UI (DB overrides env;
+secrets encrypted at rest, write-once, never re-displayed).
+
+### Added
+
+- **Instance configuration in Settings** (Plan CFG) — operators no longer need
+  to redeploy to change these:
+  - **Email (SMTP)** — Settings → Admin → Email: host/port/TLS-mode/credentials
+    with a write-once encrypted password, env→DB migrate-in on first boot, and a
+    "Send test email" that surfaces the SMTP result verbatim. The Notifications
+    "email disabled" banner links here (migration 0080).
+  - **Object storage (S3)** — Settings → Admin → Object storage: S3/R2/MinIO/B2
+    endpoint/bucket/credentials (write-once encrypted secret key) with a real
+    PutObject+DeleteObject "Test connection", plus per-consumer opt-in toggles
+    (uploads / backups / SIEM) that stay disabled until a config is saved
+    (migration 0081).
+  - **Schedules** — Settings → Admin → Schedules: list every cron job with
+    next/last run + status, edit the cron expression, enable/disable, and
+    "Run now". The in-process scheduler now takes a Postgres advisory lock per
+    tick, making >1-instance deployments safe (fails open if the lock DB is
+    unreachable).
+  - **System health** — Settings → Admin → System health: one page aggregating
+    the SMTP / object-storage / scheduler / collab-bridge / E2E-encryption
+    status indicators, each with a Fix link to its settings page.
+
+### Changed
+
+- **UI quality sweep** (Plan Q, 21 items) — relative "deleted N ago" trash
+  timestamps with absolute-time tooltips; a similarity-percent tooltip on the
+  See-also panel; the storage "Unlimited" card links to the operations docs;
+  the ⌘/Ctrl+Shift+/ shortcut-sheet binding; per-row session revoke on the
+  Security page; a template "Add under…" destination picker; and the workspace
+  PINNED sidebar section gains admin drag-reorder plus pin/unpin from the page
+  ⋯ menu. Remaining sweep items were verification- or test-characterisation-only.
+
 ## [0.10.2] - 2026-06-14
 
 A large UI-polish and flashcards release: a top-to-bottom sidebar redesign, an
