@@ -239,6 +239,10 @@ export const AUDIT_ACTIONS = [
   // v0.10.3 CFG-3 — admin clicked "Run now" on a cron schedule, marking it due
   // immediately for the next poller tick. metadata: { command } — name only.
   'config.schedule_run',
+  // v0.10.3 CFG-2 — instance object-storage (S3) config changed via the admin
+  // UI. metadata: { provider, endpoint, bucket, uploadsEnabled, backupsEnabled,
+  // siemEnabled } — endpoint/bucket/flags only, never the secret key.
+  'config.storage_updated',
 ] as const;
 
 export type AuditAction = (typeof AUDIT_ACTIONS)[number];

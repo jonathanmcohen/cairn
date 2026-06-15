@@ -12,9 +12,14 @@ import { createTestWorkspaceWithUser } from '../helpers/fixtures';
 // Stub the storage backend so the 200 path streams an in-memory empty body
 // rather than reading from /data/uploads (which doesn't exist in CI/test) — that
 // would surface an unhandled ENOENT after the status assertion. We only assert
-// on the route's authorization decision, not the bytes.
+// on the route's authorization decision, not the bytes. v0.10.3 CFG-2 — the
+// download route now resolves storage via getStorageFor() (DB-config aware), so
+// that accessor must be stubbed too or it falls through to a real LocalDiskStorage.
 vi.mock('@/lib/files/get-storage', () => ({
   getStorage: () => ({ read: () => Readable.from([]) }),
+}));
+vi.mock('@/lib/files/storage-config', () => ({
+  getStorageFor: async () => ({ read: () => Readable.from([]) }),
 }));
 
 let sql: ReturnType<typeof postgres>;

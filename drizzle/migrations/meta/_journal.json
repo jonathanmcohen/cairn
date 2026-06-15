@@ -568,6 +568,13 @@
 			"when": 1781800000000,
 			"tag": "0080_instance_email_config",
 			"breakpoints": true
+		},
+		{
+			"idx": 81,
+			"version": "7",
+			"when": 1781800100000,
+			"tag": "0081_instance_storage_config",
+			"breakpoints": true
 		}
 	]
 }

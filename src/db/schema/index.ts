@@ -30,6 +30,8 @@ export * from './flashcards';
 export * from './import-jobs';
 // v0.10.3 CFG-1 — instance-global SMTP config (DB overrides SMTP_* env).
 export * from './instance-config';
+// v0.10.3 CFG-2 — instance-global S3 object-storage config (DB overrides S3_* env).
+export * from './instance-storage-config';
 export * from './invite-tokens';
 export * from './notifications';
 // v0.9.16 Plan F — MCP OAuth 2.1 authorization-server tables.

@@ -30,6 +30,7 @@ const UNCONDITIONAL_HREFS = [
   // Operations
   '/settings/admin/email',
   '/settings/admin/schedules',
+  '/settings/admin/object-storage',
   '/settings/admin/backups',
   '/settings/admin/health',
   '/settings/admin/migrations',

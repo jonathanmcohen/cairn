@@ -215,6 +215,7 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.10.3 CFG-3 — cron schedule edited / run-now from the Schedules console.
   'config.schedule_updated': 'Schedule updated',
   'config.schedule_run': 'Schedule run now',
+  'config.storage_updated': 'Object storage (S3) settings updated',
 };
 
 export function actionLabel(action: string): string {
