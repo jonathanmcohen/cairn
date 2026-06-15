@@ -212,6 +212,7 @@ const ACTION_LABEL: Record<AuditAction, string> = {
   // v0.10.2 F3 — leech detection triggered card suspension.
   'flashcard.card_leeched': 'Flashcard marked as leech (suspended)',
   'config.email_updated': 'Email (SMTP) settings updated',
+  'config.storage_updated': 'Object storage (S3) settings updated',
 };
 
 export function actionLabel(action: string): string {

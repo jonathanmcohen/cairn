@@ -3,6 +3,7 @@ import { getDb } from '@/db/client';
 import { HttpError, requireRole } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { getStorage } from '@/lib/files/get-storage';
+import { getStorageFor } from '@/lib/files/storage-config';
 import { storeUpload } from '@/lib/files/upload';
 import { QuotaExceededError } from '@/lib/quotas/errors';
 import { formatBytes } from '@/lib/quotas/format';
@@ -29,10 +30,14 @@ export async function POST(req: Request): Promise<Response> {
       return NextResponse.json({ error: 'file too large' }, { status: 413 });
     }
     const body = Buffer.from(await file.arrayBuffer());
+    // v0.10.3 CFG-2 — prefer the DB-configured S3 backend when uploads are
+    // opted in; otherwise this falls back to LocalDiskStorage (never null),
+    // matching the legacy getStorage() local default.
+    const storage = (await getStorageFor(getDb(), 'uploads')) ?? getStorage();
     try {
       const result = await storeUpload({
         db: getDb(),
-        storage: getStorage(),
+        storage,
         secret: env().AUTH_SECRET,
         workspaceId: ctx.workspaceId,
         uploadedBy: ctx.userId,

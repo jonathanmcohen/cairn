@@ -52,6 +52,21 @@ export async function registerNode(): Promise<void> {
       console.error('[email] env→DB email-config migration failed', err);
     });
 
+  // v0.10.3 CFG-2 — first-boot migrate of S3_* / FILE_BACKEND env into the
+  // DB-backed instance_storage_config row, so the admin sees today's values in
+  // the UI. Idempotent: no-op once a row exists or when FILE_BACKEND≠s3.
+  const { migrateEnvStorageConfigOnce } = await import('@/lib/files/storage-config');
+  void migrateEnvStorageConfigOnce(getDb())
+    .then((migrated) => {
+      if (migrated) {
+        // biome-ignore lint/suspicious/noConsole: server startup
+        console.log('[storage] migrated S3_* env into instance_storage_config');
+      }
+    })
+    .catch((err) => {
+      console.error('[storage] env→DB storage-config migration failed', err);
+    });
+
   const { env } = await import('@/lib/env');
   const interval = env().CAIRN_DIGEST_INTERVAL;
   if (interval > 0) {

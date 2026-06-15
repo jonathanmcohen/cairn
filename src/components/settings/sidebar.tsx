@@ -139,6 +139,15 @@ export function SettingsSidebar({
         href: '/settings/admin/email' as Route,
         group: 'operations',
       },
+      // Instance object-storage (S3) config — DB overrides S3_*/FILE_BACKEND
+      // env (v0.10.3 CFG-2). Distinct from the workspace storage-QUOTA page
+      // (admin-storage) above.
+      {
+        id: 'admin-object-storage',
+        label: t('settings.nav.admin.objectStorage'),
+        href: '/settings/admin/object-storage' as Route,
+        group: 'operations',
+      },
       // Instance backup snapshots (v0.10.0 C1).
       {
         id: 'admin-backups',
