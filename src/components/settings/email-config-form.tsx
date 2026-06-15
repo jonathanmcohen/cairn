@@ -5,6 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useT } from '@/lib/i18n/provider';
 
 type TlsMode = 'starttls' | 'tls' | 'none';
@@ -139,19 +146,18 @@ export function EmailConfigForm({ initial }: { initial: EmailConfigInitial }) {
             </div>
             <div className="space-y-1">
               <Label htmlFor={ids.tls}>{t('emailConfig.tlsMode')}</Label>
-              <select
-                id={ids.tls}
-                data-testid="email-config-tls"
-                value={tlsMode}
-                onChange={(e) => setTlsMode(e.target.value as TlsMode)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-              >
-                {TLS_OPTIONS.map((m) => (
-                  <option key={m} value={m}>
-                    {t(`emailConfig.tls.${m}`)}
-                  </option>
-                ))}
-              </select>
+              <Select value={tlsMode} onValueChange={(next) => setTlsMode(next as TlsMode)}>
+                <SelectTrigger id={ids.tls} data-testid="email-config-tls">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {TLS_OPTIONS.map((m) => (
+                    <SelectItem key={m} value={m}>
+                      {t(`emailConfig.tls.${m}`)}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           <div className="space-y-1">
