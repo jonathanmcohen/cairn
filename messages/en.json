@@ -169,6 +169,8 @@
   "pageMenu.moveTo": "Move to…",
   "pageMenu.moveToTopLevel": "Move to top level",
   "pageMenu.unlock": "Unlock page",
+  "pageMenu.pin": "Pin to workspace",
+  "pageMenu.unpin": "Unpin from workspace",
   "moveTo.title": "Move page to…",
   "moveTo.description": "Choose a destination page or move to the top level.",
   "moveTo.searchPlaceholder": "Search pages…",

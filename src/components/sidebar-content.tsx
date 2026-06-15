@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '@/db/client';
 import * as schema from '@/db/schema';
-import { getAuthContext } from '@/lib/auth/require-role';
+import { getAuthContext, hasMinRole } from '@/lib/auth/require-role';
 import { env } from '@/lib/env';
 import { flattenedPageTree } from '@/lib/pages/tree';
 import { listFavorites } from '@/lib/prefs/user-page-prefs';
@@ -91,7 +91,8 @@ export async function SidebarContent({
           className="max-h-[45%] shrink-0 divide-y divide-border border-border border-b overflow-y-auto cairn-thin-scrollbar"
         >
           <SearchHintButton />
-          <PinnedSection />
+          {/* v0.10.3 Q-18 — admins can drag-reorder the workspace pins inline. */}
+          <PinnedSection canManage={ctx?.role ? hasMinRole(ctx.role, 'admin') : false} />
           <SavedSearches />
         </div>
         <PagesSection tree={tree} />

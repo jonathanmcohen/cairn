@@ -32,6 +32,7 @@ import { env } from '@/lib/env';
 import { requirePageAccess } from '@/lib/pages/access';
 import { getPageCover } from '@/lib/pages/cover';
 import { isLocked } from '@/lib/pages/lock';
+import { isWorkspacePinned } from '@/lib/pins/list';
 
 export default async function PageView({ params }: { params: Promise<{ pageId: string }> }) {
   const { pageId } = await params;
@@ -55,6 +56,11 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
   const cover = await getPageCover(getDb(), page.id, ctx.workspaceId);
   const lockState = await isLocked(getDb(), page.id);
   const canEdit = hasMinRole(ctx.role, 'editor');
+  // v0.10.3 Q-18 — workspace pin/unpin is an admin curation action surfaced in
+  // the page ⋯ menu. Pinned state is server-rendered and refreshed via
+  // router.refresh() after the toggle.
+  const canPin = hasMinRole(ctx.role, 'admin');
+  const initialPinned = canPin ? await isWorkspacePinned(getDb(), ctx.workspaceId, page.id) : false;
   // v0.9.0 G5 P28 — per-device TOC sidebar pref persists as a cookie; the
   // toggle lives at /settings/account/theme. Reading at render time avoids
   // a client-side flicker.
@@ -165,6 +171,8 @@ export default async function PageView({ params }: { params: Promise<{ pageId: s
             unlockAsAdmin={
               lockState.locked && lockState.lockedBy !== ctx.userId && hasMinRole(ctx.role, 'admin')
             }
+            canPin={canPin}
+            initialPinned={initialPinned}
           />
           {/* v0.10.0 E6 — reserved slot for the editor's control group.
               `display: contents` makes the portaled children direct flex items
