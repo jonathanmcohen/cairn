@@ -5,16 +5,60 @@
 #
 # @xenova/transformers@2 pins sharp@0.32.6, which has no Node 24 prebuilt (its
 # install produces no native binary on the runtime image). Force every sharp
-# instance to 0.34.5 — modern @img/* prebuilts ship a Node 24 ABI binary — so
+# instance to 0.35.3 - modern @img/* prebuilts ship a Node 24 ABI binary - so
 # the transitive copy dedupes to the version Cairn already depends on directly.
+# 0.35.0 is also the floor for GHSA 1124066 (inherited libvips CVEs).
 overrides:
-  sharp: '0.34.5'
+  sharp: '0.35.3'
   # GHSA 1120743: form-data <4.0.6 CRLF injection via unescaped multipart field
-  # names/filenames. Reaches production via @slack/bolt → @slack/web-api/axios →
+  # names/filenames. Reaches production via @slack/bolt -> @slack/web-api/axios ->
   # form-data@4.0.5, so this is the one new advisory we PATCH rather than ignore.
   # 4.0.6 is a semver-compatible patch within the ^4.0.0 range both consumers
   # declare; dedupes to a single copy. Re-review when Slack SDK bumps form-data.
   form-data: '^4.0.6'
+  # --- 2026-08-19 advisory sweep (see audit-ci-ignore.json for what stayed) ---
+  # Every pin below is the LOWEST published version that clears the advisory,
+  # so the override is a security floor rather than an unrelated feature jump.
+  #
+  # brace-expansion: three live majors in the tree (glob/minimatch chains under
+  # archiver, serwist, testcontainers, @lhci/cli). 1130734/1130736/1130737 are
+  # the OOM bypass of the earlier CVE-2026-14257 mitigation, so each major needs
+  # its own floor. archiver -> readdir-glob is RUNTIME (zip export).
+  'brace-expansion@>=1.0.0 <2.0.0': '1.1.18'
+  'brace-expansion@>=2.0.0 <3.0.0': '2.1.4'
+  'brace-expansion@>=4.0.0 <6.0.0': '5.0.9'
+  # undici: 7.x reaches only dev tooling (testcontainers, jsdom via vitest);
+  # 6.x is RUNTIME via discord.js (chat integration outbound HTTP).
+  'undici@>=6.0.0 <7.0.0': '6.27.0'
+  'undici@>=7.0.0 <8.0.0': '7.29.0'
+  # js-yaml: 3.x line is gray-matter (RUNTIME - markdown front-matter import)
+  # and @lhci/utils (dev). The 4.x floor is needed on top of the direct dep
+  # bump because @apidevtools/json-schema-ref-parser keeps its own copy that
+  # does not dedupe to 4.3.1 on its own.
+  'js-yaml@>=3.0.0 <4.0.0': '3.15.1'
+  'js-yaml@>=4.0.0 <5.0.0': '4.3.1'
+  # nanoid 3.x arrives under postcss (build-time); 5.x under docx (RUNTIME
+  # .docx export). Both loop forever on a hostile size argument.
+  'nanoid@>=3.0.0 <4.0.0': '3.3.18'
+  'nanoid@>=5.0.0 <6.0.0': '5.1.16'
+  # postcss is pulled by next and @tailwindcss/postcss as well as directly;
+  # the sourceMappingURL arbitrary-.map-read needs a single floor everywhere.
+  postcss: '8.5.18'
+  # fast-uri under ajv via @apidevtools/swagger-parser (dev, OpenAPI contract
+  # test). Host confusion on a backslash authority.
+  fast-uri: '3.1.5'
+  # axios under @slack/bolt - RUNTIME. Inherited proxy after interceptor
+  # config cloning.
+  axios: '1.18.0'
+  # ip-address under socks-proxy-agent via @lhci/cli/puppeteer (dev only).
+  ip-address: '10.3.1'
+  # tmp >=0.2.x is testcontainers (dev). The @lhci/cli 0.0.33/0.1.0 copies
+  # cannot move and stay ignored (see audit-ci-ignore.json 1120654).
+  'tmp@>=0.2.0 <0.3.0': '0.2.7'
+  # adm-zip under onnxruntime-node. onnxruntime-node declares ^0.5.16, so this
+  # crosses its range deliberately; adm-zip 0.6.0 keeps the same API surface
+  # and engines (node >=14). Only vendor-supplied archives are ever opened.
+  adm-zip: '0.6.0'
 allowBuilds:
   '@scarf/scarf': false
   cpu-features: true # ssh2 native speedup (testcontainers transport)

@@ -27,10 +27,12 @@ RUN --mount=type=cache,id=pnpm,target=/root/.local/share/pnpm/store \
 # file-trace drops (onnxruntime-node + sharp/@img). Globbing here keeps the copy
 # architecture-agnostic: the deps stage only installs the @img package matching
 # the build platform (sharp-linux-x64 on amd64, sharp-linux-arm64 on arm64), so
-# a hardcoded arch name would break the other arch's build.
+# a hardcoded arch name would break the other arch's build. The version numbers
+# are globbed for the same reason: a hardcoded sharp@0.34.5 broke the runtime
+# image build the moment the audit sweep pinned sharp to 0.35.3.
 FROM deps AS natives
 RUN set -eux; mkdir -p /pnpm-extra; cd /app/node_modules/.pnpm; \
-    cp -a sharp@0.34.5 onnxruntime-node@1.14.0 /pnpm-extra/; \
+    cp -a sharp@* onnxruntime-node@* /pnpm-extra/; \
     cp -a @img+sharp-linux-* @img+sharp-libvips-linux-* /pnpm-extra/
 
 FROM base AS builder

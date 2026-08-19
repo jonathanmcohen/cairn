@@ -89,7 +89,9 @@ export default function PdfRenderer({ fileId, defaultPage, pageId }: Props) {
           default: string;
         };
         pdfjs.GlobalWorkerOptions.workerSrc = workerMod.default;
-        const doc = await pdfjs.getDocument(signedUrl).promise;
+        // pdfjs-dist v6 dropped the bare-string overload of getDocument;
+        // the URL now has to arrive as DocumentInitParameters.
+        const doc = await pdfjs.getDocument({ url: signedUrl }).promise;
         if (cancelled) return;
         setPages(Array.from({ length: doc.numPages }, (_, i) => i + 1));
         // Wait one paint so the canvas refs land in the map before we render.

@@ -29,9 +29,10 @@ describe('PdfRenderer signed-url flow', () => {
     global.fetch = fetchMock as unknown as typeof fetch;
     render(<PdfRenderer fileId="abc" defaultPage={1} pageId="p1" />);
     await waitFor(() => {
-      expect(pdfjs.getDocument as unknown as ReturnType<typeof vi.fn>).toHaveBeenCalledWith(
-        'https://signed/example.pdf',
-      );
+      // pdfjs-dist v6 takes DocumentInitParameters, not a bare URL string.
+      expect(pdfjs.getDocument as unknown as ReturnType<typeof vi.fn>).toHaveBeenCalledWith({
+        url: 'https://signed/example.pdf',
+      });
     });
     expect(fetchMock).toHaveBeenCalledWith('/api/files/abc/signed-url');
     expect(fetchMock).toHaveBeenCalledWith('/api/pdf/abc/annotations');
