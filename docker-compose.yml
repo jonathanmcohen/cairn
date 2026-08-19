@@ -47,13 +47,13 @@ services:
         condition: service_healthy
 
   db:
-    # ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine — Postgres 18 +
-    # pgvector compiled in (see docker/postgres-pgvector/Dockerfile,
-    # published by the postgres-pgvector-image workflow). v0.7.0 P11 added
+    # ghcr.io/jonathanmcohen/pgvector:18-0.8.6 - Postgres 18 +
+    # pgvector compiled in, built and published by the pgvector repo at
+    # github.com/jonathanmcohen/pgvector. v0.7.0 P11 added
     # a migration that runs `CREATE EXTENSION IF NOT EXISTS vector`, so
     # the bare postgres image is not enough. Every consumer (CI services,
     # Testcontainers, compose) points at the same ref.
-    image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+    image: ghcr.io/jonathanmcohen/pgvector:18-0.8.6
     restart: unless-stopped
     environment:
       POSTGRES_USER: cairn

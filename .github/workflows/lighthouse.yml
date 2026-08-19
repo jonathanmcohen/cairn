@@ -15,17 +15,18 @@ jobs:
     # Run only when the CI workflow that triggered us actually succeeded.
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
-    # packages: read so the runner can pull the private GHCR
-    # postgres-pgvector image declared as a service below.
+    # packages: read is belt-and-braces; the pgvector package is public and
+    # lives on another repo, so this grant does not cover it. GHCR
+    # pgvector image declared as a service below.
     permissions:
       contents: read
       packages: read
     services:
       postgres:
-        # ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine — matches CI
+        # ghcr.io/jonathanmcohen/pgvector:18-0.8.6 - matches CI
         # services + Testcontainers + compose. See
-        # docker/postgres-pgvector/Dockerfile.
-        image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+        # github.com/jonathanmcohen/pgvector.
+        image: ghcr.io/jonathanmcohen/pgvector:18-0.8.6
         credentials:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}

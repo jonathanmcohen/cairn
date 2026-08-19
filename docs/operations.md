@@ -177,8 +177,7 @@ sweep evicts idle sessions every 60 seconds.
 
 ## CI / Release runners
 
-All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`,
-`postgres-pgvector-image.yml`) run on **self-hosted runners**:
+All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`) run on **self-hosted runners**:
 
 - amd64: `[self-hosted, linux, x64]` (Linux box w/ Docker)
 - arm64 (release matrix only): `[self-hosted, macOS, arm64]` (Apple
@@ -188,8 +187,7 @@ All workflows (`ci.yml`, `lighthouse.yml`, `release.yml`,
 Runners must carry the labels above verbatim. Docker + recent
 `pnpm`/`node` available. The arm64 runner is used only by the release
 workflow's per-arch image build; everything else (CI, lighthouse,
-manifest merge, GitHub Release step, postgres-pgvector image build)
-runs on the x64 runner.
+manifest merge, GitHub Release step) runs on the x64 runner.
 
 GHA-hosted runners are not used — GH Actions minute budget has hit the
 ceiling twice during 0.x development, so self-hosted is the durable
@@ -214,13 +212,18 @@ above (no-op on GHA images).
 
 ## Postgres image (v0.8.0)
 
-Cairn ships its own Postgres image with pgvector compiled in:
+Cairn consumes a Postgres image with pgvector compiled in. **It no longer
+builds one.** The in-house Dockerfile and its workflow were removed on
+2026-08-19: GitHub had auto-disabled the workflow for repository inactivity on
+2026-08-14, which stops silently rather than failing, and the pgvector repo
+already maintains the same thing properly.
 
-- **Source:** `docker/postgres-pgvector/Dockerfile` (postgres:18-alpine + pgvector master, built `with_llvm=no`).
-- **Published to:** `ghcr.io/jonathanmcohen/postgres-pgvector` (tags `:18-alpine`, `:latest`), multi-arch (linux/amd64, linux/arm64).
-- **Built by:** `.github/workflows/postgres-pgvector-image.yml` on every change to the Dockerfile.
+- **Source:** [github.com/jonathanmcohen/pgvector](https://github.com/jonathanmcohen/pgvector), which rebuilds on every upstream postgres or pgvector release with no human action.
+- **Consumed as:** `ghcr.io/jonathanmcohen/pgvector:18-0.8.6`, multi-arch (linux/amd64, linux/arm64). The tag is pinned to a pgvector version deliberately; `:18` moves.
+- **The tag is pinned to a pgvector version rather than the moving `:18`, but it is NOT immutable.** The pgvector repo republishes `:18-0.8.6` when the alpine base drifts, which is how a base-image CVE reaches you without a version bump. That is the behaviour you want; it does mean the digest changes underneath the tag. `:18.6-0.8.6` is the full pin if an incident ever needs one.
+- **To move Postgres major or pgvector version:** `grep -rn 'pgvector:18-0.8.6' $(git ls-files)` and change every hit - there are 15 across 10 files, including this document, `README.md`, `docs/deployment.md` and `src/server/__tests__/cli-backup.test.ts`, which are easy to miss. Read `Homelab Lessons` in the vault first: PG 18 moved PGDATA, so a volume mount that was right for 17 silently does not persist on 18.
 
-The package is **private** — every consumer (CI services, Testcontainers, docker-compose) authenticates against GHCR before pulling.
+The package is **public**, and so was the one it replaced - the long-standing claim here that it was private was simply wrong. No `docker login` is required to pull it. The login steps that remain in CI and `scripts/deploy.sh` are harmless belt-and-braces, and **`packages: read` in cairn's workflows does not grant anything on it either way**: the package is linked to the `jonathanmcohen/pgvector` repository, not to cairn, so a cross-repo `GITHUB_TOKEN` has no claim on it. It works because it is public. If it is ever made private, `ci.yml`, `release.yml`, `lighthouse.yml`, `embeddings-smoke.yml` and Testcontainers all break at once and that is the place to look.
 
 **CI workflows.** `ci.yml` and `lighthouse.yml` set `permissions: packages: read`. CI services declare `credentials:` blocks; the `ci` job's `docker login` step authenticates the daemon so Testcontainers can pull during `pnpm test`.
 

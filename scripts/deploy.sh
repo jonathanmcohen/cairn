@@ -18,7 +18,7 @@
 #   --with-proxy  also deploy the Caddy TLS reverse proxy
 #
 # Secrets are never baked into this script. They live in your local env file
-# (copied to the remote as .env) and, for the private Postgres image on GHCR,
+# (copied to the remote as .env). The Postgres image on GHCR is public, so
 # in GHCR_USER + GHCR_TOKEN — when GHCR_TOKEN is exported the script runs
 # `docker login ghcr.io` on the remote before pulling.
 set -euo pipefail
@@ -62,7 +62,7 @@ if [[ "$WITH_PROXY" == 1 ]]; then
 fi
 
 if [[ -n "${GHCR_TOKEN:-}" ]]; then
-	echo "==> Logging remote Docker into ghcr.io (needed for the private Postgres image)"
+	echo "==> Logging remote Docker into ghcr.io (optional; the Postgres image is public)"
 	ssh "$HOST" "echo '$GHCR_TOKEN' | docker login ghcr.io -u '${GHCR_USER:-jonathanmcohen}' --password-stdin"
 fi
 

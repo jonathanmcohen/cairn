@@ -29,13 +29,13 @@ jobs:
       packages: read
     env:
       NET: cairn-embed-smoke
-      DB_IMG: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+      DB_IMG: ghcr.io/jonathanmcohen/pgvector:18-0.8.6
       APP_IMG: cairn-embed-smoke:ci
       AUTH_SECRET: ci-only-secret-not-used-in-production-padding-padding
     steps:
       - uses: actions/checkout@v6
 
-      # Private postgres-pgvector image lives on GHCR.
+      # pgvector image lives on GHCR and the package is PUBLIC.
       - name: GHCR login
         uses: docker/login-action@v4
         with:

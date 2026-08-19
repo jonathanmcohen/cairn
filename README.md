@@ -109,7 +109,7 @@ A full deploy is **three containers**, all wired up in `docker-compose.yml`:
 |---|---|---|---|
 | `cairn` | `ghcr.io/jonathanmcohen/cairn` | `3000` | The app (Next.js, single process) |
 | `cairn-collab` | `ghcr.io/jonathanmcohen/cairn-collab` | `1234` | Real-time collaboration server (Hocuspocus) |
-| `db` | `ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine` | — | Postgres 18 + `pgvector` (for semantic search) |
+| `db` | `ghcr.io/jonathanmcohen/pgvector:18-0.8.6` | - | Postgres 18 + `pgvector` (for semantic search) |
 
 Persistent state lives in two named volumes: `cairn_uploads` (uploaded files)
 and `cairn_db` (the database).

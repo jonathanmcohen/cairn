@@ -6,18 +6,18 @@ Cairn ships as three containers wired together in `docker-compose.yml`:
 | -------------- | -------------------------------------------------- | -------------------------------- |
 | `cairn`        | `ghcr.io/jonathanmcohen/cairn`                     | Next.js app (HTTP on :3000)      |
 | `cairn-collab` | `ghcr.io/jonathanmcohen/cairn-collab`              | Hocuspocus real-time server      |
-| `db`           | `ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine` | Postgres 18 + pgvector         |
+| `db`           | `ghcr.io/jonathanmcohen/pgvector:18-0.8.6` | Postgres 18 + pgvector         |
 
-> **The Postgres image is a private GHCR package.** Every host that pulls it
-> must `docker login ghcr.io` first with a GitHub PAT (classic) carrying
-> `read:packages`. The `cairn` / `cairn-collab` images are public.
+> **The Postgres image is a public GHCR package.** Every host can pull it
+> anonymously - no `docker login ghcr.io` and no GitHub PAT. The `cairn` /
+> `cairn-collab` images are public too.
 
 ## Prerequisites on the target host
 
 - Docker Engine + the Compose v2 plugin (`docker compose version` ≥ 2.24 if you
   use the TLS proxy overlay — it relies on the `!reset` list directive).
   Quick install: `curl -fsSL https://get.docker.com | sh`.
-- A GitHub PAT with `read:packages` (for the private Postgres image).
+- No GitHub PAT is needed for the Postgres image: the GHCR package is public.
 
 ## Quick deploy with `scripts/deploy.sh`
 
@@ -36,9 +36,12 @@ cp .env.example .env
 #      PUBLIC_URL=http://10.1.50.109:3000
 #      COLLAB_URL=ws://10.1.50.109:1234
 
-# 2. Deploy (GHCR_TOKEN triggers an automatic `docker login` on the remote).
-export GHCR_USER=<your-github-username>
-export GHCR_TOKEN=<your-read-packages-PAT>
+# 2. Deploy. All three images are public, so no GHCR login is required.
+#    Optional: exporting GHCR_TOKEN makes the script run `docker login` on
+#    the remote first. Only useful for a private image or to lift the
+#    anonymous pull rate limit; leave both unset for a normal deploy.
+#      export GHCR_USER=<your-github-username>
+#      export GHCR_TOKEN=<a classic PAT with read:packages>
 ./scripts/deploy.sh --host jonco@10.1.50.109 --dir /home/jonco/apps/cairn
 ```
 
