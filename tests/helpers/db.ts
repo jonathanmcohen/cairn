@@ -15,11 +15,11 @@ export async function startPostgres(): Promise<string> {
     }
     return container.getConnectionUri();
   }
-  // ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine — Postgres 18 +
-  // pgvector. Built by .github/workflows/postgres-pgvector-image.yml from
-  // docker/postgres-pgvector/Dockerfile. Same ref across CI services,
+  // ghcr.io/jonathanmcohen/pgvector:18-0.8.6 - Postgres 18 +
+  // pgvector. Built and published by github.com/jonathanmcohen/pgvector.
+  // Same ref across CI services,
   // Testcontainers, and docker-compose.
-  container = await new PostgreSqlContainer('ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine')
+  container = await new PostgreSqlContainer('ghcr.io/jonathanmcohen/pgvector:18-0.8.6')
     .withDatabase('cairn_test')
     .withUsername('cairn')
     .withPassword('cairn')

@@ -6,7 +6,7 @@ Cairn ships as three containers wired together in `docker-compose.yml`:
 | -------------- | -------------------------------------------------- | -------------------------------- |
 | `cairn`        | `ghcr.io/jonathanmcohen/cairn`                     | Next.js app (HTTP on :3000)      |
 | `cairn-collab` | `ghcr.io/jonathanmcohen/cairn-collab`              | Hocuspocus real-time server      |
-| `db`           | `ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine` | Postgres 18 + pgvector         |
+| `db`           | `ghcr.io/jonathanmcohen/pgvector:18-0.8.6` | Postgres 18 + pgvector         |
 
 > **The Postgres image is a private GHCR package.** Every host that pulls it
 > must `docker login ghcr.io` first with a GitHub PAT (classic) carrying

@@ -68,7 +68,7 @@ jobs:
       packages: read
     services:
       postgres:
-        image: ghcr.io/jonathanmcohen/postgres-pgvector:18-alpine
+        image: ghcr.io/jonathanmcohen/pgvector:18-0.8.6
         credentials:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
