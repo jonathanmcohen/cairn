@@ -220,9 +220,10 @@ already maintains the same thing properly.
 
 - **Source:** [github.com/jonathanmcohen/pgvector](https://github.com/jonathanmcohen/pgvector), which rebuilds on every upstream postgres or pgvector release with no human action.
 - **Consumed as:** `ghcr.io/jonathanmcohen/pgvector:18-0.8.6`, multi-arch (linux/amd64, linux/arm64). The tag is pinned to a pgvector version deliberately; `:18` moves.
-- **To move Postgres major or pgvector version:** change the tag here and in `docker-compose.yml`, `tests/helpers/db.ts`, `ci.yml`, `release.yml`, `lighthouse.yml` and `embeddings-smoke.yml`, and read `Homelab Lessons` in the vault first - PG 18 moved PGDATA, so a volume mount that was right for 17 silently does not persist on 18.
+- **The tag is pinned to a pgvector version rather than the moving `:18`, but it is NOT immutable.** The pgvector repo republishes `:18-0.8.6` when the alpine base drifts, which is how a base-image CVE reaches you without a version bump. That is the behaviour you want; it does mean the digest changes underneath the tag. `:18.6-0.8.6` is the full pin if an incident ever needs one.
+- **To move Postgres major or pgvector version:** `grep -rn 'pgvector:18-0.8.6' $(git ls-files)` and change every hit - there are 15 across 10 files, including this document, `README.md`, `docs/deployment.md` and `src/server/__tests__/cli-backup.test.ts`, which are easy to miss. Read `Homelab Lessons` in the vault first: PG 18 moved PGDATA, so a volume mount that was right for 17 silently does not persist on 18.
 
-The package is **private** — every consumer (CI services, Testcontainers, docker-compose) authenticates against GHCR before pulling.
+The package is **public**, and so was the one it replaced - the long-standing claim here that it was private was simply wrong. No `docker login` is required to pull it. The login steps that remain in CI and `scripts/deploy.sh` are harmless belt-and-braces, and **`packages: read` in cairn's workflows does not grant anything on it either way**: the package is linked to the `jonathanmcohen/pgvector` repository, not to cairn, so a cross-repo `GITHUB_TOKEN` has no claim on it. It works because it is public. If it is ever made private, `ci.yml`, `release.yml`, `lighthouse.yml`, `embeddings-smoke.yml` and Testcontainers all break at once and that is the place to look.
 
 **CI workflows.** `ci.yml` and `lighthouse.yml` set `permissions: packages: read`. CI services declare `credentials:` blocks; the `ci` job's `docker login` step authenticates the daemon so Testcontainers can pull during `pnpm test`.
 

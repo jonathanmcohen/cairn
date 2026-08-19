@@ -15,10 +15,9 @@ export async function startPostgres(): Promise<string> {
     }
     return container.getConnectionUri();
   }
-  // ghcr.io/jonathanmcohen/pgvector:18-0.8.6 - Postgres 18 +
-  // pgvector. Built and published by github.com/jonathanmcohen/pgvector.
-  // Same ref across CI services,
-  // Testcontainers, and docker-compose.
+  // ghcr.io/jonathanmcohen/pgvector:18-0.8.6 - Postgres 18 + pgvector, built
+  // and published by github.com/jonathanmcohen/pgvector. The same ref is used
+  // across CI services, Testcontainers and docker-compose.
   container = await new PostgreSqlContainer('ghcr.io/jonathanmcohen/pgvector:18-0.8.6')
     .withDatabase('cairn_test')
     .withUsername('cairn')

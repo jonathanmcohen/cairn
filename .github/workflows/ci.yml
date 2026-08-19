@@ -78,7 +78,8 @@ env:
 jobs:
   ci:
     runs-on: ubuntu-latest
-    # ghcr.io/jonathanmcohen/pgvector is a private package; the
+    # ghcr.io/jonathanmcohen/pgvector is a PUBLIC package owned by another
+    # repo, so packages: read does not grant anything on it. The
     # Testcontainers helper pulls it on `pnpm test`. `packages: read` lets
     # the docker login step exchange GITHUB_TOKEN for a pull-capable creds
     # blob against GHCR.
@@ -255,7 +256,7 @@ jobs:
     # default contents: read. Without these, the action throws
     # "Resource not accessible by integration".
     # packages: read — the security suite uses Testcontainers, which pulls the
-    # private pgvector GHCR image (the self-hosted box had a cached
+    # public pgvector GHCR image (the self-hosted box had a cached
     # image + persistent docker login masking this).
     permissions:
       contents: read
@@ -313,7 +314,7 @@ jobs:
 
   a11y:
     runs-on: ubuntu-latest
-    # Private GHCR image needs packages: read for the services credentials
+    # Public GHCR image; the packages: read below is belt-and-braces
     # block + the explicit docker login step (used by the Playwright web
     # server which spawns its own db:migrate before pnpm test:a11y).
     permissions:
@@ -327,7 +328,7 @@ jobs:
         # consumer (CI services, Testcontainers, compose) points at the
         # same ref so the dev/test/CI matrix doesn't drift.
         image: ghcr.io/jonathanmcohen/pgvector:18-0.8.6
-        # Private GHCR package — runner has to authenticate to pull the
+        # Public GHCR package - no authentication is required to pull the
         # service image before the job starts.
         credentials:
           username: ${{ github.actor }}

@@ -35,7 +35,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # Private pgvector image lives on GHCR.
+      # pgvector image lives on GHCR and the package is PUBLIC.
       - name: GHCR login
         uses: docker/login-action@v4
         with:

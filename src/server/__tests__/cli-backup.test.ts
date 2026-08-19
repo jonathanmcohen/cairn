@@ -39,9 +39,7 @@ describe.skipIf(!hasPgDump16)('backup/restore round-trip', () => {
     // backup smoke doesn't itself use pgvector, but every other Postgres
     // consumer in the repo uses the same ref, and pinning here keeps
     // pg_dump's wire-version assumptions consistent across the suite.
-    pg = await new PostgreSqlContainer(
-      'ghcr.io/jonathanmcohen/pgvector:18-0.8.6',
-    ).start();
+    pg = await new PostgreSqlContainer('ghcr.io/jonathanmcohen/pgvector:18-0.8.6').start();
     url = pg.getConnectionUri();
     outDir = mkdtempSync(join(tmpdir(), 'cairn-bak-'));
     const sql = postgres(url);

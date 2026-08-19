@@ -8,7 +8,7 @@ Cairn ships as three containers wired together in `docker-compose.yml`:
 | `cairn-collab` | `ghcr.io/jonathanmcohen/cairn-collab`              | Hocuspocus real-time server      |
 | `db`           | `ghcr.io/jonathanmcohen/pgvector:18-0.8.6` | Postgres 18 + pgvector         |
 
-> **The Postgres image is a private GHCR package.** Every host that pulls it
+> **The Postgres image is a public GHCR package.** Every host that pulls it
 > must `docker login ghcr.io` first with a GitHub PAT (classic) carrying
 > `read:packages`. The `cairn` / `cairn-collab` images are public.
 
@@ -17,7 +17,7 @@ Cairn ships as three containers wired together in `docker-compose.yml`:
 - Docker Engine + the Compose v2 plugin (`docker compose version` ≥ 2.24 if you
   use the TLS proxy overlay — it relies on the `!reset` list directive).
   Quick install: `curl -fsSL https://get.docker.com | sh`.
-- A GitHub PAT with `read:packages` (for the private Postgres image).
+- No GitHub PAT is needed for the Postgres image: the GHCR package is public.
 
 ## Quick deploy with `scripts/deploy.sh`
 
