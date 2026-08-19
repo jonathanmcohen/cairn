@@ -1,82 +1,61 @@
 {
-  "$comment": "Reviewed, time-boxed advisory ignores for `pnpm audit --audit-level=high`. Each entry MUST have a reason and an expiry; CI fails any entry past expiry so ignores can't rot. Empty by default — add only un-fixable transitive advisories.",
+  "$comment": "Reviewed, time-boxed advisory ignores for `pnpm audit --audit-level=high`. Each entry MUST have a reason and an expiry; CI fails any entry past expiry so ignores can't rot. Empty by default - add only un-fixable transitive advisories. Swept 2026-08-19: every advisory with a published patched version was fixed by a bump or a pnpm override (see pnpm-workspace.yaml), which took high+critical from 51 findings / 44 blocking down to the 8 below. Five entries were DELETED rather than renewed because the advisories they covered are no longer reported at all: 1119610 and 1120729 (tmp - superseded, and the testcontainers copy is now overridden to 0.2.7), 1120679 (esbuild), 1120791 (vite - superseded by 1123527, fixed by vite 8.0.16), 1120799 (protobufjs - superseded by 1123488). The two remaining chains share one expiry, 2026-11-30, because they also share one re-review: each is blocked on a named upstream change, not on anything Cairn can bump.",
   "ignores": [
     {
       "id": 1117571,
       "module": "protobufjs",
       "severity": "critical",
-      "reason": "Pinned at 6.11.6 by @xenova/transformers → onnxruntime-web → onnx-proto@4.0.4 (declares ^6.11.2 — won't accept v7). pnpm override to v7 silently fails because onnx-proto's compiled pbjs output targets the v6 API. The advisory is RCE via protobufjs decode of attacker-controlled wire bytes; the only protobuf inputs in this codebase are bundled ONNX model files (operator-controlled). No untrusted protobuf wire traffic reaches the library. Re-review when @xenova/transformers ships a release that drops onnx-proto, or when an onnx-proto-equivalent ships against protobufjs v7.",
-      "expires": "2026-08-23"
+      "reason": "DEV/BUILD-INPUT ONLY, not request-reachable. Pinned at 6.11.6 by @xenova/transformers -> onnxruntime-web -> onnx-proto@4.0.4 (declares ^6.11.2 - won't accept v7). A pnpm override to v7 silently fails because onnx-proto's compiled pbjs output targets the v6 API. The advisory is RCE via protobufjs decode of attacker-controlled wire bytes; the only protobuf inputs in this codebase are the bundled ONNX embedding models (operator-controlled, fetched at build by scripts/fetch-embedding-assets.mjs). No untrusted protobuf wire traffic reaches the library. EXIT: migrate off the unmaintained @xenova/transformers@2 to @huggingface/transformers@4, whose onnxruntime-web dependency has no onnx-proto and therefore no protobufjs 6.x pin. That is a code migration, not a bump, which is why it is time-boxed rather than done here.",
+      "expires": "2026-11-30"
     },
     {
       "id": 1118641,
       "module": "protobufjs",
       "severity": "high",
-      "reason": "Same chain as 1117571 (onnx-proto pinned). Code-injection through bytes-field defaults in generated toObject — requires attacker control over the protobuf schema, not the wire bytes. No untrusted schemas in this codebase (bundled ONNX models only).",
-      "expires": "2026-08-23"
+      "reason": "Same onnx-proto chain and same exit as 1117571. Code injection through bytes-field defaults in generated toObject - requires attacker control over the protobuf SCHEMA, not the wire bytes. No untrusted schemas in this codebase (bundled ONNX models only).",
+      "expires": "2026-11-30"
     },
     {
       "id": 1118928,
       "module": "protobufjs",
       "severity": "high",
-      "reason": "Same chain as 1117571. Code-generation gadget after prototype pollution — requires a prior prototype-pollution primitive plus attacker control over the schema. Bundled ONNX models only.",
-      "expires": "2026-08-23"
+      "reason": "Same onnx-proto chain and same exit as 1117571. Code-generation gadget after prototype pollution - requires a prior prototype-pollution primitive plus attacker control over the schema. Bundled ONNX models only.",
+      "expires": "2026-11-30"
     },
     {
       "id": 1118930,
       "module": "protobufjs",
       "severity": "high",
-      "reason": "Same chain as 1117571. Process-wide DoS through unsafe option paths in protobufjs codegen. Requires attacker control over option paths in the schema. Bundled ONNX models only.",
-      "expires": "2026-08-23"
+      "reason": "Same onnx-proto chain and same exit as 1117571. Process-wide DoS through unsafe option paths in protobufjs codegen. Requires attacker control over option paths in the schema. Bundled ONNX models only.",
+      "expires": "2026-11-30"
     },
     {
       "id": 1118932,
       "module": "protobufjs",
       "severity": "high",
-      "reason": "Same chain as 1117571. DoS through unbounded protobuf recursion in decode. Wire-byte input only — no untrusted protobuf wire traffic reaches this library in this codebase.",
-      "expires": "2026-08-23"
+      "reason": "Same onnx-proto chain and same exit as 1117571. DoS through unbounded protobuf recursion in decode. Wire-byte input only - no untrusted protobuf wire traffic reaches this library in this codebase.",
+      "expires": "2026-11-30"
     },
     {
-      "id": 1119610,
-      "module": "tmp",
+      "id": 1123488,
+      "module": "protobufjs",
       "severity": "high",
-      "reason": "Pinned at 0.0.33 by @lhci/cli@0.15.1 → inquirer@6.5.2 → external-editor@3.1.0 → tmp@0.0.33 (devDependency only — Lighthouse CI for the perf budget check in CI). The advisory is path traversal via unsanitized prefix/postfix arguments to tmp.dirSync/fileSync; @lhci/cli never passes user-controlled values to those calls, and the package is never loaded by the production server bundle. Re-review when @lhci/cli ships a release that upgrades inquirer (or replaces external-editor).",
-      "expires": "2026-08-23"
+      "reason": "NEW 2026-08-19, same onnx-proto chain and same exit as 1117571 (it replaces the superseded 1120799). DoS through unbounded Any expansion during protobuf JSON conversion; requires attacker-controlled protobuf JSON input, and the only protobuf inputs here are the bundled ONNX model files. Patched in protobufjs >=7.6.1, which the v6-API-bound onnx-proto still cannot accept.",
+      "expires": "2026-11-30"
     },
     {
       "id": 1120654,
       "module": "tmp",
       "severity": "high",
-      "reason": "Reissued advisory for the same tmp path-traversal class as 1119610 (patched >=0.2.6). Both findings are @lhci/cli-only chains: tmp@0.0.33 via inquirer→external-editor and tmp@0.1.0 as a direct @lhci/cli dep — devDependency-only Lighthouse CI tooling; @lhci/cli never passes user-controlled prefix/postfix to tmp, and the package never reaches the production server bundle. testcontainers' tmp is already 0.2.6 (patched). Re-review when @lhci/cli upgrades its tmp/inquirer chain.",
-      "expires": "2026-08-23"
+      "reason": "DEV-ONLY. Now scoped to @lhci/cli@0.15.1 alone: tmp@0.0.33 via inquirer@6.5.2 -> external-editor@3.1.0, and tmp@0.1.0 as a direct @lhci/cli dep. Lighthouse CI runs the perf-budget check in CI and never ships in the production bundle. The advisory is path traversal via unsanitized prefix/postfix to tmp.dirSync/fileSync; @lhci/cli never passes user-controlled values to those calls. The testcontainers copy that used to appear under this class is now forced to 0.2.7 by a pnpm override, so this entry no longer covers it. EXIT: @lhci/cli shipping a release that upgrades its tmp/inquirer chain - 0.15.1 is still the latest published version as of 2026-08-19.",
+      "expires": "2026-11-30"
     },
     {
-      "id": 1120679,
-      "module": "esbuild",
+      "id": 1139346,
+      "module": "extract-zip",
       "severity": "high",
-      "reason": "The advisory's vector is esbuild's DENO module downloading platform binaries without integrity verification when NPM_CONFIG_REGISTRY points elsewhere (patched >=0.28.1). All three findings here are pnpm-installed npm devDependency chains (vite/vitest toolchain at 0.28.0, /cli at 0.28.0, drizzle-kit at 0.25.12 and 0.18.20 via -kit) where binaries ship as pinned optionalDependencies resolved through the lockfile, not the Deno download path; nothing reaches the production bundle. A pnpm override to 0.28.1 would force drizzle-kit's pinned 0.18/0.25 esbuild across majors. Re-review when vite/serwist/drizzle-kit ship releases on >=0.28.1.",
-      "expires": "2026-08-23"
-    },
-    {
-      "id": 1120729,
-      "module": "tmp",
-      "severity": "high",
-      "reason": "Same @lhci/cli devDependency chains as 1119610/1120654 — tmp@0.0.33 via inquirer→external-editor and tmp@0.1.0 as a direct @lhci/cli dep (Lighthouse CI perf-budget tooling). This is the type-confusion variant of the tmp path-traversal class: a non-string prefix/postfix/template bypasses _assertPath (patched >=0.2.6). @lhci/cli never passes user-controlled prefix/postfix to tmp, and the package never reaches the production server bundle; testcontainers' own tmp is already 0.2.6 (patched). Re-review when @lhci/cli upgrades its tmp/inquirer chain.",
-      "expires": "2026-08-23"
-    },
-    {
-      "id": 1120791,
-      "module": "vite",
-      "severity": "high",
-      "reason": "vite@8.0.14 via @vitest/mocker → vitest (devDependency only — Cairn's test toolchain). The advisory is a server.fs.deny bypass on Windows via alternate path syntax (backslash / 8.3 short names) in vite's dev server. Cairn never runs the vite dev server (the app server is Next.js/Turbopack; vite is present only as Vitest's transform engine), CI and production both run Linux so the Windows-only path vector does not apply, and vite never ships in the standalone production bundle. Re-review when vitest's pinned vite dependency moves to a patched release.",
-      "expires": "2026-08-23"
-    },
-    {
-      "id": 1120799,
-      "module": "protobufjs",
-      "severity": "high",
-      "reason": "Same chain as 1117571 — onnx-proto pins protobufjs@6.11.x via @xenova/transformers → onnxruntime-web. DoS through unbounded Any expansion during protobuf JSON conversion; requires attacker-controlled protobuf JSON input. The only protobuf inputs in this codebase are bundled ONNX model files (operator-controlled) — no untrusted protobuf JSON reaches the library. A pnpm override to v7 still silently fails because onnx-proto's compiled output targets the v6 API. Re-review when @xenova/transformers drops onnx-proto or an equivalent ships against protobufjs v7.",
-      "expires": "2026-08-23"
+      "reason": "DEV-ONLY and UNPATCHABLE TODAY - there is no fixed release to bump to. The advisory says patched >=2.0.2 but 2.0.1 is still the newest version published to npm as of 2026-08-19, so no override can clear it. Reached only through @lhci/cli -> lighthouse -> puppeteer-core -> @puppeteer/browsers, i.e. the CI perf-budget tool unpacking Chrome builds it downloaded itself; the vulnerable path is a symlink escape from a zip, and the only zips involved are Google's Chrome-for-Testing archives. Never present in the production bundle. EXIT: @puppeteer/browsers@3.x already dropped extract-zip entirely (it uses modern-tar), so this clears as soon as @lhci/cli bumps lighthouse/puppeteer-core - or immediately if extract-zip 2.0.2 is ever published.",
+      "expires": "2026-11-30"
     }
   ]
 }
